@@ -1,0 +1,145 @@
+/**
+ * Proxy do painel operacional Bateu Bet.
+ *
+ * Existe por um motivo só: o token do webhook n8n é dado financeiro do cliente
+ * e NÃO pode aparecer no código-fonte da página. O navegador chama
+ * /api/dashboard, esta função injeta o token (variável de ambiente, só no
+ * servidor) e devolve a resposta do n8n como veio.
+ *
+ * Variável de ambiente obrigatória no projeto Vercel:
+ *   N8N_DASHBOARD_TOKEN
+ *
+ * CommonJS de propósito: sem package.json, o runtime Node da Vercel trata
+ * api/*.js como CJS. `fetch` é global no Node 18+.
+ */
+
+const UPSTREAM = 'https://n8n.srv1865704.hstgr.cloud/webhook/dashboard-operacao';
+
+// o n8n leva ~10s numa consulta de período. Margem generosa, mas finita.
+const UPSTREAM_TIMEOUT_MS = 45000;
+const MAX_RANGE_DIAS = 366;
+const TZ = 'America/Sao_Paulo';
+
+function hojeSP() {
+  // en-CA devolve YYYY-MM-DD, que é exatamente o formato do contrato
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(new Date());
+}
+
+function dataValida(s) {
+  if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const d = new Date(s + 'T00:00:00Z');
+  return !isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
+}
+
+function diasEntre(de, ate) {
+  const a = Date.parse(de + 'T00:00:00Z');
+  const b = Date.parse(ate + 'T00:00:00Z');
+  return Math.round((b - a) / 86400000);
+}
+
+/** Espelha a validação que o n8n já faz, pra devolver erro claro sem gastar 10s. */
+function validarPeriodo(de, ate) {
+  if (de == null && ate == null) return null;
+  if (de == null || ate == null) return 'Informe de e ate juntos.';
+  if (!dataValida(de) || !dataValida(ate)) return 'Datas devem estar no formato YYYY-MM-DD.';
+  const hoje = hojeSP();
+  if (ate > hoje) return 'A data final não pode estar no futuro.';
+  if (de > ate) return 'A data inicial não pode ser depois da final.';
+  if (diasEntre(de, ate) > MAX_RANGE_DIAS) return 'Período máximo de ' + MAX_RANGE_DIAS + ' dias.';
+  return null;
+}
+
+module.exports = async function handler(req, res) {
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Allow', 'GET, OPTIONS');
+    return res.status(204).end();
+  }
+  if (req.method !== 'GET') {
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(405).json({ error: 'method_not_allowed' });
+  }
+
+  const token = process.env.N8N_DASHBOARD_TOKEN;
+  if (!token) {
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(500).json({
+      error: 'missing_env',
+      detail: 'N8N_DASHBOARD_TOKEN não está definida no projeto Vercel.'
+    });
+  }
+
+  const q = req.query || {};
+  const de = typeof q.de === 'string' && q.de ? q.de : null;
+  const ate = typeof q.ate === 'string' && q.ate ? q.ate : null;
+
+  const erro = validarPeriodo(de, ate);
+  if (erro) {
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(400).json({ error: 'periodo_invalido', detail: erro });
+  }
+
+  const url = new URL(UPSTREAM);
+  url.searchParams.set('token', token);
+  if (de && ate) {
+    url.searchParams.set('de', de);
+    url.searchParams.set('ate', ate);
+  }
+
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), UPSTREAM_TIMEOUT_MS);
+
+  try {
+    const r = await fetch(url.toString(), {
+      signal: ctrl.signal,
+      headers: { accept: 'application/json' }
+    });
+    const texto = await r.text();
+
+    if (!r.ok) {
+      res.setHeader('Cache-Control', 'no-store');
+      // 401 aqui é token errado do NOSSO lado, não do cliente: vira 502.
+      const status = r.status === 401 || r.status === 403 ? 502 : 502;
+      return res.status(status).json({
+        error: 'upstream_error',
+        upstream_status: r.status,
+        detail: r.status === 401
+          ? 'O n8n recusou o token do servidor. Conferir N8N_DASHBOARD_TOKEN.'
+          : texto.slice(0, 300)
+      });
+    }
+
+    let dados;
+    try {
+      dados = JSON.parse(texto);
+    } catch (e) {
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(502).json({ error: 'upstream_invalid_json' });
+    }
+
+    // Dado do dia muda o tempo todo: cache curto na borda só pra não bater
+    // 10 segundos de n8n a cada aba aberta. Período fechado não muda mais.
+    const isHoje = !dados || !dados.periodo || dados.periodo.is_hoje !== false;
+    res.setHeader(
+      'Cache-Control',
+      isHoje
+        ? 'public, max-age=0, s-maxage=45, stale-while-revalidate=120'
+        : 'public, max-age=0, s-maxage=600, stale-while-revalidate=1800'
+    );
+    return res.status(200).json(dados);
+  } catch (e) {
+    res.setHeader('Cache-Control', 'no-store');
+    const abortou = e && (e.name === 'AbortError' || e.name === 'TimeoutError');
+    return res.status(abortou ? 504 : 502).json({
+      error: abortou ? 'upstream_timeout' : 'upstream_unreachable',
+      detail: abortou
+        ? 'O n8n não respondeu em ' + Math.round(UPSTREAM_TIMEOUT_MS / 1000) + 's.'
+        : String((e && e.message) || e).slice(0, 200)
+    });
+  } finally {
+    clearTimeout(timer);
+  }
+};

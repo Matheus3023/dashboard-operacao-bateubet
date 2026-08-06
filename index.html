@@ -1,0 +1,3142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>Bateu Bet · Operação ao vivo</title>
+<meta name="description" content="Painel interno da operação Bateu Bet: investimento em Meta Ads e funil TAP por expert, atualizado a cada 5 minutos.">
+<meta name="theme-color" content="#2C0028">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Operação BB">
+
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+<!-- Card do WhatsApp. A página é privada (noindex), mas o link circula no grupo
+     do time, então o preview precisa parecer profissional. Nenhum número
+     financeiro entra no card, só a identidade. BASE_URL trocada no deploy. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Bateu Bet · TechAds">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:url" content="https://painel-bateubet.vercel.app/">
+<meta property="og:title" content="Bateu Bet · Operação ao vivo">
+<meta property="og:description" content="Meta Ads + funil TAP por expert, atualizado a cada 5 minutos. Painel interno, acesso restrito ao time.">
+<meta property="og:image" content="https://painel-bateubet.vercel.app/og-image.jpg">
+<meta property="og:image:secure_url" content="https://painel-bateubet.vercel.app/og-image.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Bateu Bet · Operação ao vivo · painel interno TechAds">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Bateu Bet · Operação ao vivo">
+<meta name="twitter:description" content="Meta Ads + funil TAP por expert, atualizado a cada 5 minutos. Painel interno.">
+<meta name="twitter:image" content="https://painel-bateubet.vercel.app/og-image.jpg">
+
+<!--
+═══════════════════════════════════════════════════════════════════════════════
+PAINEL OPERACIONAL BATEU BET · DESIGN v2 (dados de EXEMPLO estáticos)
+Entregue pelo agent `designer`. Handoff para o agent `web-designer`.
+═══════════════════════════════════════════════════════════════════════════════
+
+O QUE ESTE ARQUIVO É
+  Layout + visual completos, renderizáveis offline (zero JS, zero CDN, zero fonte
+  externa). Todos os números visíveis são placeholder estático.
+
+O QUE MUDOU DA v1
+  1. Paleta trocada pela identidade real da Bateu Bet (cores extraídas do CSS de
+     bateu.bet.br via getComputedStyle). Sai o azul/violeta genérico, entra
+     ameixa + magenta + dourado. Cores de SAÚDE (verde/âmbar/vermelho) ficam
+     fora da identidade de propósito: são função, não marca.
+  2. Nova prateleira "Criativos ativos" no rodapé de cada card de expert,
+     alimentada pelo campo novo `criativos` da API.
+  3. Experts ordenados por investimento_total decrescente (regra de dados).
+  4. Auto-refresh alinhado com a decisão do cliente: 5 min (era 60s).
+  5. Valor nulo agora imprime "n/d" no lugar do travessão.
+  6. Marca no topo: lockup provisório com slot pronto pra logo oficial, fio
+     magenta que fecha em dourado, canvas mais fundo que a base da marca pra
+     dar profundidade (a base #3B0038 virou a cor dos cards).
+  7. FILTRO DE PERÍODO no header (hoje / ontem / 7 / 30 / intervalo).
+     ⚠️ Depende de mudança no n8n, ver o bloco do filtro no HTML.
+  8. Nova seção COMPARATIVO por expert: ranking de verba, FTD, custo por FTD,
+     depósito e retorno numa tela só, antes de descer pros cards detalhados.
+     Não pede nenhum campo novo da API.
+  9. A página virou DUAS ABAS (radio + :checked, zero JS):
+       · Visão geral  -> veredito do dia, 3 sinais, totais, participação,
+                         comparativo e os 5 criativos de maior CTR da operação.
+                         É a tela de bater o olho e saber se está bom.
+       · Por expert   -> os 7 cards detalhados com Grupo, Direto, TAP e a
+                         prateleira de criativos de cada um.
+     Nenhum dado novo: é a mesma resposta da API, reorganizada em dois níveis
+     de leitura (decisão primeiro, diagnóstico depois).
+
+O QUE AINDA FALTA (não é design, é insumo)
+  · arquivo da logo oficial (SVG de preferência). O site é SPA e não entrega o
+    asset no HTML, então não dá pra puxar por scraping simples.
+  · meta oficial de custo por FTD do cliente (as faixas seguem provisórias).
+  · n8n aceitando `de` e `ate` NAS TRÊS BUSCAS (Meta Insights, Buscar Criativos
+    Ativos e relatório da TAP). Hoje nenhuma delas olha pra data pedida, todas
+    estão presas em "hoje". Detalhe de cada uma no comentário do filtro, mais
+    a pegadinha do effective_status ACTIVE nos criativos e o campo `periodo`
+    que a resposta precisa passar a devolver.
+
+O QUE O `web-designer` FEZ (esta versão já é a de produção)
+  1. Dados reais: a página chama /api/dashboard, do próprio domínio. Quem fala
+     com o n8n é uma função serverless, e é ela que guarda o token (variável de
+     ambiente). Nem o token nem a URL do webhook chegam ao navegador.
+  2. Auto-refresh de 5 min, ligado só quando a API responde periodo.is_hoje.
+     Período fechado desliga o timer e a pílula do header avisa.
+  3. Filtro de período ligado de verdade, com a escolha guardada no localStorage.
+  4. Abas viraram rota de hash (#geral / #experts), pra o refresh não jogar a
+     pessoa de volta na primeira aba. Os <input> ficaram no mesmo lugar.
+  5. Kit de ícones, card de OG 1200x630 e headers de privacidade.
+  Detalhes e limites: ver o comentário no <script>, no fim do arquivo.
+
+CONTRATO DE DADOS
+  Raiz da injeção:  <div id="dashboard-root">
+  Todo valor que vem da API tem  data-field="<caminho.no.json>".
+    Header ...... data-field="atualizado_em" | "data"
+    Totais ...... data-field="totais.investimento_total" etc.
+    Experts ..... data-field="grupo.valor_investido", "tap.ftd", ... (relativo ao expert)
+    Criativos ... data-field="criativos" no bloco, e criativo.nome / .campanha /
+                  .thumbnail_url / .ctr / .clicks / .spend dentro de cada .crtv
+  Campos DERIVADOS (não vêm da API, o JS calcula) têm  data-derived="<fórmula>".
+  Lista de experts: <div id="experts-list">. Use o PRIMEIRO <article class="expert">
+  como modelo: clone, troque os [data-field], aplique as classes de estado abaixo.
+  Não existe segundo <template> de propósito, pra não divergir do card real.
+
+ORDENAÇÃO (regra de dados, não de layout)
+  experts.sort((a,b) => b.investimento_total - a.investimento_total)
+  Quem consome mais verba aparece primeiro. O HTML estático já está nessa ordem.
+  O selo dourado "maior investimento" vai SEMPRE no primeiro card depois do sort
+  (e só nele). Se houver empate no topo, aplique no primeiro e não repita.
+
+CLASSES DE ESTADO (já estilizadas, o JS só aplica)
+  .block--off        -> em [data-block="grupo"|"direto"] quando ativo === false.
+                        Nesse caso substitua o miolo por:
+                        <p class="block__off">Sem campanha ativa hoje</p>
+                        NUNCA renderizar "R$ 0,00" num bloco inativo.
+  .val--na           -> valor null ("n/d" nos secundários, "Aguardando" no chip de custo/FTD)
+  .chip--good        -> custo por FTD  <  R$ 120,00
+  .chip--warn        -> custo por FTD  entre R$ 120,00 e R$ 200,00
+  .chip--bad         -> custo por FTD  >  R$ 200,00
+  .chip--na          -> custo por FTD null (sem FTD ainda)
+      (thresholds calibrados no custo/FTD médio da operação, R$ 183,28.
+       Continuam provisórios: o cliente ainda não passou a meta oficial.
+       Trocar em 1 lugar só, no JS.)
+  .num--neg / .num--pos -> net dep e net PL, pelo sinal
+  .status--live / .status--stale / .status--error -> pílula de frescor no header
+      live  = fetch OK há menos de 6 min (2 ciclos de refresh)
+      stale = último fetch OK há mais de 6 min (dado envelhecendo)
+      error = fetch falhou (mostrar #erro-banner e manter o último dado na tela)
+  #erro-banner       -> está com [hidden]; remova o atributo pra exibir
+
+BLOCO DE CRIATIVOS (campo novo `criativos`, array por expert)
+  Fica no rodapé do card, numa prateleira <details> aberta por padrão, com
+  rolagem horizontal. Não empurra o miolo Grupo/Direto/TAP: é apoio.
+  · array com itens  -> <details class="crtvs" open> + N <article class="crtv">
+  · array vazio      -> trocar o <details> inteiro por
+                        <div class="crtvs crtvs--empty"> (ver EDERSON, QZL e
+                        GREGORIO BIG no HTML). Vazio é estado normal, não erro.
+  · thumbnail_url null -> deixar só o tile de fallback (o SVG .crtv__ph).
+    Com URL, injetar dentro de .crtv__thumb:
+      <img src="{{thumbnail_url}}" alt="" loading="lazy"
+           referrerpolicy="no-referrer" onerror="this.remove()">
+    O onerror é importante: a URL do Facebook expira e não pode virar ícone
+    de imagem quebrada num painel que fica o dia todo na tela.
+  · ctr null -> imprimir "n/d" e aplicar .val--na no <b> do CTR.
+  · ordenar os criativos por spend decrescente (o operador olha os 3 primeiros).
+  · .crtv--top -> maior CTR do expert. Só aplicar se houver 2+ criativos e o
+    ctr não for null. É o único destaque dourado dentro da prateleira.
+
+FORMATAÇÃO (fazer no JS, exemplos abaixo já formatados)
+  Moeda:  v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})   -> R$ 1.234,56
+  %:      v.toFixed(1).replace('.',',') + '%'    (CTR usa 2 casas: 3,27%)
+  Hora:   new Date(atualizado_em).toLocaleTimeString('pt-BR',
+            {timeZone:'America/Sao_Paulo', hour:'2-digit', minute:'2-digit'})
+          (atualizado_em vem em UTC; 15:03Z = 12:03 Brasília, é assim no exemplo)
+
+NOTA SOBRE OS DADOS DE EXEMPLO
+  EDERSON, GP DADOS e QZL são dados reais de 06/08/2026. DEKO, CHARLES, TANOS e
+  GREGORIO BIG foram preenchidos de forma plausível, mas com integridade: a soma
+  das 7 linhas bate exatamente com o bloco de totais (investimento 2.749,25 /
+  cadastros 61 / FTD 15 / depósito 60.007,01). O gasto dos criativos de cada
+  expert também soma exatamente o investimento_total dele. Dá pra usar como
+  fixture de teste.
+  Estados cobertos de propósito: grupo ativo + direto inativo (GP DADOS, DEKO,
+  CHARLES, TANOS, GREGORIO, EDERSON), direto ativo + grupo inativo (QZL),
+  custo/FTD nulo (GREGORIO, EDERSON), conversão 0,0% com cadastros > 0
+  (GREGORIO), net dep negativo (QZL, GREGORIO), net PL negativo (DEKO),
+  criativos: muitos com rolagem (TANOS, 9), vários (DEKO 7, GP DADOS 6),
+  um só sem selo de destaque (CHARLES), vazio (QZL, GREGORIO, EDERSON),
+  CTR nulo (último criativo de GP DADOS).
+  A contagem de criativos por expert espelha o teste ao vivo de 06/08 16:49 UTC.
+  Em produção os totais vêm prontos do bloco `totais` da API: não somar no front.
+-->
+
+<style>
+/* ── TOKENS ────────────────────────────────────────────────────────────────
+   IDENTIDADE BATEU BET (hex extraídos do CSS de bateu.bet.br, não são chute):
+     ameixa escura  #3B0038  fundo principal
+     ameixa header  #570433  superfícies elevadas (topo de card)
+     magenta ação   #E20266 -> #C80062, variação #BB0154
+     dourado prêmio #FFC824 / #E2B43B   (uso contido, ver abaixo)
+     cinza neutro   #3F4142  elementos desligados
+     texto          branco puro
+
+   ONDE O DOURADO APARECE, E SÓ AÍ (3 significados no painel inteiro):
+     1. selo "maior investimento" no primeiro expert
+     2. retorno sobre o investido (múltiplo no card de Depósito e o maior
+        múltiplo do comparativo: é a mesma leitura, em dois lugares)
+     3. criativo de maior CTR dentro de cada expert
+   Se dourado virar cor de uso corrente, ele para de significar "isso é alto
+   valor" e vira decoração.
+
+   CANAL: grupo = magenta da marca (é 90,8% da verba, merece a cor de ação),
+   direto = dourado fosco #E2B43B. Escolhido por contraste de matiz sobre
+   ameixa. Se o cliente quiser o dourado 100% reservado a destaque, trocar
+   --direto por um lilás (#C08CFF) resolve num token só, o layout não muda.
+
+   SAÚDE (verde/âmbar/vermelho) fica FORA da identidade de propósito: é função.
+   O âmbar foi puxado pro laranja (#FF9E2C) pra não colidir com o dourado da
+   marca, e o vermelho pro puro (#FF4D4D) pra não se confundir com o magenta.
+   Limiares de custo por FTD: bom < 120 · atenção 120-200 · alto > 200.
+   ────────────────────────────────────────────────────────────────────────── */
+:root{
+  /* escada de profundidade: canvas mais fundo que a base da marca, card na base
+     da marca (#3B0038), topo de card no header da marca (#570433). Assim os dois
+     hex oficiais aparecem inteiros na tela e ainda sobra contraste entre camadas. */
+  --bg:#2C0028;
+  --surface:#3B0038;
+  --surface-2:#570433;
+  --surface-sunk:#340030;
+  --surface-3:#63093F;
+
+  --line:rgba(255,255,255,.14);
+  --line-soft:rgba(255,255,255,.075);
+  --line-strong:rgba(255,255,255,.24);
+
+  --txt:#FFFFFF;
+  --txt-2:rgba(255,255,255,.72);
+  --txt-3:rgba(255,255,255,.50);
+
+  --acao:#E20266;
+  --acao-2:#C80062;
+  --acao-3:#BB0154;
+  --acao-soft:rgba(226,2,102,.16);
+  --acao-line:rgba(226,2,102,.46);
+
+  --gold:#FFC824;
+  --gold-2:#E2B43B;
+  --gold-soft:rgba(255,200,36,.13);
+  --gold-line:rgba(255,200,36,.38);
+
+  --neutro:#3F4142;
+
+  --grupo:#FF3D85;
+  --grupo-soft:rgba(226,2,102,.18);
+  --grupo-line:rgba(255,61,133,.42);
+
+  --direto:#E2B43B;
+  --direto-soft:rgba(226,180,59,.13);
+  --direto-line:rgba(226,180,59,.40);
+
+  --good:#2ED47A;
+  --good-soft:rgba(46,212,122,.14);
+  --warn:#FF9E2C;
+  --warn-soft:rgba(255,158,44,.14);
+  --bad:#FF4D4D;
+  --bad-soft:rgba(255,77,77,.15);
+
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+
+  --r:10px;
+  --gap:14px;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  /* brilho magenta muito baixo no topo: dá profundidade sem virar "gamer".
+     Fixo, não acompanha o scroll, pra não competir com o conteúdo. */
+  background:
+    radial-gradient(1100px 420px at 50% -180px, rgba(226,2,102,.22), transparent 70%),
+    var(--bg);
+  background-attachment:fixed;
+  color:var(--txt);
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.4;
+  -webkit-font-smoothing:antialiased;
+}
+/* painel costuma ficar aberto em monitor grande / TV da sala */
+@media (min-width:1700px){ body{font-size:17px} }
+
+h1,h2,h3,h4,p{margin:0}
+.num{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.eyebrow{
+  font-family:var(--mono);
+  font-size:.625rem;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--txt-3);
+}
+
+.wrap{max-width:1560px;margin:0 auto;padding:0 20px 56px}
+
+/* ── TOPBAR ─────────────────────────────────────────────────────────────── */
+.topbar{
+  position:sticky;top:0;z-index:20;
+  background:rgba(59,0,56,.94);
+  backdrop-filter:saturate(150%) blur(9px);
+  border-bottom:1px solid var(--line);
+}
+/* assinatura da marca: fio magenta que fecha em dourado */
+.topbar::before{
+  content:"";position:absolute;inset:0 0 auto;height:3px;
+  background:linear-gradient(90deg,var(--acao) 0%,var(--acao-2) 58%,var(--gold-2) 100%);
+}
+.topbar__in{
+  max-width:1560px;margin:0 auto;padding:15px 20px 11px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+}
+.brand{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0}
+/* ═══ SLOT DA LOGO ═══════════════════════════════════════════════════════
+   O site é SPA e não entrega o arquivo da logo no HTML, então isto aqui é um
+   LOCKUP PROVISÓRIO na paleta da marca, não a logo oficial.
+   Pra trocar: coloque o arquivo em /logo-bateubet.svg e substitua o bloco
+   <a class="brand__lockup"> inteiro por:
+     <img class="brand__logo" src="logo-bateubet.svg" alt="Bateu Bet" width="132" height="28">
+   Só isso. O resto do header não muda.
+   ──────────────────────────────────────────────────────────────────────── */
+.brand__logo{height:28px;width:auto;display:block}
+.brand__lockup{display:inline-flex;align-items:center;gap:9px;text-decoration:none;color:inherit}
+.brand__mark{
+  width:30px;height:30px;border-radius:9px;flex:none;
+  display:grid;place-items:center;
+  background:linear-gradient(140deg,var(--acao),var(--acao-3));
+  box-shadow:0 0 0 1px rgba(255,255,255,.14) inset, 0 2px 10px rgba(226,2,102,.35);
+  font-weight:800;font-size:.9375rem;letter-spacing:-.03em;color:#fff;
+}
+.brand__word{
+  font-size:1.0625rem;font-weight:750;letter-spacing:-.015em;line-height:1;
+  text-transform:uppercase;
+}
+.brand__word i{font-style:normal;color:var(--acao);margin-left:.16em}
+.brand__name{font-size:.8125rem;font-weight:500;color:var(--txt-2)}
+.brand__sep{color:var(--line-strong);font-weight:300}
+.brand__ctx{font-size:.8125rem;color:var(--txt-2)}
+
+/* ── FILTRO DE PERÍODO ────────────────────────────────────────────────────
+   Segmented control em radio + label: funciona e mostra estado ativo sem JS.
+   O JS só lê o valor e refaz o fetch. Ver contrato no HTML.
+   ────────────────────────────────────────────────────────────────────────── */
+.rangebar{
+  max-width:1560px;margin:0 auto;
+  padding:0 20px 13px;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.rangebar__lbl{
+  font-family:var(--mono);font-size:.5625rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--txt-3);
+}
+.seg{
+  display:flex;gap:2px;padding:3px;
+  background:var(--surface-sunk);border:1px solid var(--line);border-radius:9px;
+}
+.seg input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.seg label{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:30px;padding:0 13px;border-radius:6px;cursor:pointer;
+  font-size:.75rem;font-weight:560;color:var(--txt-2);white-space:nowrap;
+  transition:background .14s ease,color .14s ease;
+}
+.seg label:hover{color:var(--txt);background:rgba(255,255,255,.06)}
+.seg input:checked + label{
+  background:linear-gradient(135deg,var(--acao),var(--acao-2));
+  color:#fff;font-weight:640;
+  box-shadow:0 1px 8px rgba(226,2,102,.35);
+}
+.seg input:focus-visible + label{outline:2px solid var(--gold);outline-offset:2px}
+.range-custom{display:flex;align-items:center;gap:7px;font-size:.75rem;color:var(--txt-3)}
+.range-custom input[type=date]{
+  min-height:32px;padding:0 9px;border-radius:7px;color-scheme:dark;
+  background:var(--surface-sunk);border:1px solid var(--line);color:var(--txt);
+  font-family:var(--mono);font-size:.75rem;
+}
+.range-custom input[type=date]:focus-visible{outline:2px solid var(--acao);outline-offset:1px}
+.range-apply{
+  min-height:32px;padding:0 15px;border-radius:7px;cursor:pointer;
+  border:1px solid var(--acao-line);background:var(--acao-soft);color:#FF9AC4;
+  font-family:var(--sans);font-size:.75rem;font-weight:640;
+  transition:background .14s ease,color .14s ease,border-color .14s ease;
+}
+.range-apply:hover{background:linear-gradient(135deg,var(--acao),var(--acao-2));color:#fff;border-color:transparent}
+.range-apply:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+/* aviso de dependência: some quando a API aceitar período */
+.rangebar__warn{
+  margin-left:auto;display:inline-flex;align-items:center;gap:7px;
+  padding:4px 10px;border-radius:999px;
+  border:1px dashed var(--gold-line);background:var(--gold-soft);
+  color:var(--gold);font-size:.6875rem;
+}
+
+.freshness{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.status{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px 6px 10px;
+  border:1px solid var(--line);border-radius:999px;
+  background:var(--surface);
+  font-size:.8125rem;color:var(--txt);
+}
+.status__dot{
+  width:7px;height:7px;border-radius:50%;background:var(--good);
+  box-shadow:0 0 0 0 rgba(46,212,122,.5);
+  animation:pulse 2.4s ease-out infinite;
+}
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(46,212,122,.45)}
+  70%{box-shadow:0 0 0 7px rgba(46,212,122,0)}
+  100%{box-shadow:0 0 0 0 rgba(46,212,122,0)}
+}
+.status--stale .status__dot{background:var(--warn);animation:none}
+.status--stale{border-color:rgba(255,158,44,.38)}
+.status--error .status__dot{background:var(--bad);animation:none}
+.status--error{border-color:rgba(255,77,77,.42)}
+.status__time{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.freshness__meta{font-size:.75rem;color:var(--txt-3)}
+@media (prefers-reduced-motion:reduce){.status__dot{animation:none}}
+
+/* ── BANNER DE ERRO ─────────────────────────────────────────────────────── */
+.errbar{
+  margin:14px 0 0;padding:11px 14px;
+  border:1px solid rgba(255,77,77,.42);border-left-width:3px;
+  border-radius:8px;background:var(--bad-soft);
+  color:#FFD3CD;font-size:.8125rem;
+}
+.errbar[hidden]{display:none}
+/* aviso de período divergente: não é erro, é dado certo de outro dia */
+.errbar--warn{
+  border-color:var(--gold-line);
+  background:var(--gold-soft);
+  color:#FFE1A0;
+}
+.errbar b{color:#fff;font-weight:640}
+
+/* ── TOTAIS ─────────────────────────────────────────────────────────────── */
+.section-head{
+  display:flex;align-items:center;gap:12px;
+  margin:26px 0 12px;
+}
+.section-head::after{content:"";flex:1;height:1px;background:var(--line-soft)}
+
+.totals{
+  display:grid;gap:var(--gap);
+  grid-template-columns:repeat(6,minmax(0,1fr));
+}
+.tcard{
+  position:relative;
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  padding:15px 16px 14px;
+  min-width:0;
+}
+.tcard--hero{
+  background:linear-gradient(150deg,var(--acao-soft),transparent 64%),var(--surface-2);
+  border-color:var(--acao-line);
+}
+.tcard--hero::before{
+  content:"";position:absolute;inset:-1px -1px auto;height:3px;
+  border-radius:var(--r) var(--r) 0 0;
+  background:linear-gradient(90deg,var(--acao),var(--acao-2));
+}
+.tcard__lbl{
+  display:flex;align-items:center;gap:7px;
+  font-family:var(--mono);font-size:.625rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--txt-3);
+}
+.tcard__val{
+  display:block;margin-top:9px;
+  font-size:1.5rem;font-weight:640;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.tcard--hero .tcard__val{font-size:1.875rem}
+.tcard__sub{
+  display:block;margin-top:6px;
+  font-size:.75rem;color:var(--txt-2);
+  font-variant-numeric:tabular-nums;
+}
+/* único múltiplo que merece dourado: retorno sobre o investido */
+.tcard__sub--gold{color:var(--gold);font-weight:600}
+.dot{width:7px;height:7px;border-radius:2px;display:inline-block;flex:none}
+.dot--grupo{background:var(--grupo)}
+.dot--direto{background:var(--direto)}
+.tcard--grupo{border-color:var(--grupo-line);background:linear-gradient(180deg,var(--grupo-soft),transparent 78%),var(--surface)}
+.tcard--direto{border-color:var(--direto-line);background:linear-gradient(180deg,var(--direto-soft),transparent 78%),var(--surface)}
+
+/* barra de participação grupo x direto */
+.splitbar{margin-top:var(--gap)}
+.splitbar__track{
+  display:flex;height:8px;border-radius:999px;overflow:hidden;
+  background:var(--surface-sunk);border:1px solid var(--line);
+}
+.splitbar__seg{height:100%}
+.splitbar__seg--grupo{background:linear-gradient(90deg,var(--acao),var(--grupo))}
+.splitbar__seg--direto{background:var(--direto)}
+.splitbar__legend{
+  display:flex;gap:20px;flex-wrap:wrap;
+  margin-top:8px;font-size:.75rem;color:var(--txt-2);
+}
+.splitbar__legend span{display:inline-flex;align-items:center;gap:7px}
+
+/* ── LISTA DE EXPERTS ───────────────────────────────────────────────────── */
+.experts{display:grid;gap:var(--gap)}
+
+.expert{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  overflow:hidden;
+}
+.expert__head{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  padding:13px 16px;
+  background:var(--surface-2);
+  border-bottom:1px solid var(--line);
+}
+.expert__id{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0}
+.expert__name{
+  font-size:1rem;font-weight:650;letter-spacing:.02em;text-transform:uppercase;
+  white-space:nowrap;
+}
+/* selo dourado: só no expert de maior investimento do dia */
+.badge-top{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:3px 9px 3px 7px;border-radius:999px;
+  background:linear-gradient(135deg,var(--gold),var(--gold-2));
+  color:#3B0038;
+  font-family:var(--mono);font-size:.5625rem;letter-spacing:.1em;
+  text-transform:uppercase;font-weight:700;white-space:nowrap;
+}
+.badge-top svg{width:11px;height:11px;flex:none}
+
+.chans{display:flex;gap:6px}
+.chan-tag{
+  font-family:var(--mono);font-size:.5625rem;letter-spacing:.1em;text-transform:uppercase;
+  padding:3px 7px;border-radius:4px;
+  border:1px dashed var(--line);color:var(--txt-3);background:transparent;
+}
+.chan-tag.is-on{border-style:solid}
+.chan-tag--grupo.is-on{color:var(--grupo);border-color:var(--grupo-line);background:var(--grupo-soft)}
+.chan-tag--direto.is-on{color:var(--direto);border-color:var(--direto-line);background:var(--direto-soft)}
+
+.expert__head-metrics{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.hm{display:flex;flex-direction:column;gap:3px}
+.hm__lbl{font-family:var(--mono);font-size:.5625rem;letter-spacing:.12em;text-transform:uppercase;color:var(--txt-3)}
+.hm__val{font-size:1.0625rem;font-weight:620;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+
+.chip{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:3px 9px;border-radius:5px;
+  font-size:.9375rem;font-weight:620;font-variant-numeric:tabular-nums;letter-spacing:-.01em;
+  border:1px solid transparent;
+}
+.chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.85}
+.chip--good{color:var(--good);background:var(--good-soft);border-color:rgba(46,212,122,.32)}
+.chip--warn{color:var(--warn);background:var(--warn-soft);border-color:rgba(255,158,44,.32)}
+.chip--bad{color:var(--bad);background:var(--bad-soft);border-color:rgba(255,77,77,.32)}
+.chip--na{color:var(--txt-2);background:var(--neutro);border-color:var(--line);font-size:.8125rem;font-weight:500}
+.chip--na::before{opacity:.45}
+
+/* corpo: grupo | direto | tap */
+.expert__body{
+  display:grid;gap:1px;background:var(--line-soft);
+}
+@media (min-width:1180px){
+  .expert__body{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.9fr)}
+}
+@media (min-width:760px) and (max-width:1179px){
+  .expert__body{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .block--tap{grid-column:1 / -1}
+}
+
+.block{background:var(--surface);padding:15px 16px 16px;min-width:0}
+.block__title{
+  display:flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:.625rem;letter-spacing:.13em;text-transform:uppercase;
+  font-weight:600;
+}
+.block__title small{
+  font-family:var(--sans);font-size:.6875rem;letter-spacing:0;text-transform:none;
+  font-weight:400;color:var(--txt-3);
+}
+.block__title svg{width:13px;height:13px;flex:none}
+.block--grupo{box-shadow:inset 3px 0 0 var(--acao)}
+.block--grupo .block__title{color:var(--grupo)}
+.block--direto{box-shadow:inset 3px 0 0 var(--direto)}
+.block--direto .block__title{color:var(--direto)}
+.block--tap{background:var(--surface-sunk)}
+.block--tap .block__title{color:var(--txt-2)}
+
+/* bloco sem campanha ativa: hachura no cinza neutro da marca.
+   Desligado é cinza, nunca magenta nem dourado. */
+.block--off{
+  background:
+    repeating-linear-gradient(-45deg,
+      transparent,transparent 7px,
+      rgba(63,65,66,.55) 7px,rgba(63,65,66,.55) 14px),
+    var(--surface);
+}
+.block--off .block__title{color:var(--txt-3)}
+.block--off.block--grupo,
+.block--off.block--direto{box-shadow:inset 3px 0 0 var(--neutro)}
+.block--off .block__title svg{opacity:.4}
+.block__off{
+  margin-top:16px;padding:12px;
+  border:1px dashed var(--line);border-radius:7px;
+  text-align:center;font-size:.8125rem;color:var(--txt-3);
+}
+
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}
+.m{min-width:0}
+.m__lbl{
+  display:block;font-size:.6875rem;color:var(--txt-3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.m__val{
+  display:block;margin-top:3px;
+  font-size:1.0625rem;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.01em;
+  white-space:nowrap;
+}
+.m--wide .m__val{font-size:1rem}
+.val--na{color:var(--txt-3);font-weight:400}
+.num--neg{color:var(--bad)}
+.num--pos{color:var(--good)}
+
+/* TAP: funil em cima (4), financeiro embaixo (5) */
+.tap-funnel{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:14px}
+.tap-fin{
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;
+  margin-top:13px;padding-top:12px;border-top:1px solid var(--line-soft);
+}
+.tap-fin .m__val{font-size:.875rem;font-weight:560;color:var(--txt-2)}
+.tap-fin .m__lbl{font-size:.625rem}
+.tap-fin .num--neg,.tap-fin .num--pos{font-weight:620}
+
+/* ── CRIATIVOS ATIVOS (prateleira no rodapé do card) ─────────────────────
+   Apoio, não protagonista: altura fixa baixa, rolagem horizontal, colapsável
+   nativamente com <details> (sem JS). Fundo rebaixado pra ler como prateleira
+   e não como mais um bloco de métrica.
+   ────────────────────────────────────────────────────────────────────────── */
+.crtvs{
+  background:var(--surface-sunk);
+  border-top:1px solid var(--line-soft);
+}
+.crtvs__sum{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 16px;
+  cursor:pointer;list-style:none;
+  font-family:var(--mono);font-size:.625rem;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--txt-3);
+  transition:color .15s ease;
+}
+.crtvs__sum::-webkit-details-marker{display:none}
+.crtvs__sum:hover{color:var(--txt-2)}
+.crtvs__sum:focus-visible{outline:2px solid var(--acao);outline-offset:-2px}
+.crtvs__count{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:18px;height:16px;padding:0 5px;border-radius:4px;
+  background:var(--acao-soft);border:1px solid var(--acao-line);
+  color:#FF7FB0;font-size:.5625rem;font-variant-numeric:tabular-nums;letter-spacing:.04em;
+}
+.crtvs__hint{margin-left:auto;color:var(--txt-3);opacity:.75;letter-spacing:.08em}
+.crtvs__chev{width:11px;height:11px;flex:none;transition:transform .18s ease}
+.crtvs[open] .crtvs__chev{transform:rotate(180deg)}
+@media (prefers-reduced-motion:reduce){.crtvs__chev{transition:none}}
+
+.crtvs__strip{
+  display:flex;gap:8px;
+  padding:0 16px 14px;
+  overflow-x:auto;overscroll-behavior-x:contain;
+  scroll-snap-type:x proximity;
+  scrollbar-width:thin;scrollbar-color:rgba(226,2,102,.6) transparent;
+}
+.crtvs__strip::-webkit-scrollbar{height:6px}
+.crtvs__strip::-webkit-scrollbar-track{background:transparent}
+.crtvs__strip::-webkit-scrollbar-thumb{background:rgba(226,2,102,.55);border-radius:999px}
+.crtvs__strip::-webkit-scrollbar-thumb:hover{background:var(--acao)}
+
+.crtv{
+  flex:0 0 218px;min-width:0;scroll-snap-align:start;
+  display:flex;flex-direction:column;
+  padding:8px;
+  background:var(--surface);
+  border:1px solid var(--line-soft);border-radius:8px;
+}
+.crtv__top{display:flex;gap:9px;min-width:0}
+.crtv__thumb{
+  position:relative;flex:none;width:48px;height:48px;
+  border-radius:6px;overflow:hidden;
+  display:grid;place-items:center;
+  background:linear-gradient(140deg,var(--surface-3),var(--surface-sunk));
+  box-shadow:0 0 0 1px var(--line-soft) inset;
+}
+.crtv__thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.crtv__ph{width:17px;height:17px;color:rgba(255,255,255,.30)}
+.crtv__meta{min-width:0;display:flex;flex-direction:column;gap:2px;flex:1}
+.crtv__name{
+  font-size:.75rem;font-weight:600;line-height:1.24;
+  display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.crtv__camp{
+  font-family:var(--mono);font-size:.5625rem;line-height:1.3;color:var(--txt-3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.crtv__stats{
+  display:flex;align-items:center;justify-content:space-between;gap:6px;
+  margin-top:8px;padding-top:7px;border-top:1px solid var(--line-soft);
+  font-size:.625rem;color:var(--txt-3);white-space:nowrap;
+}
+.crtv__st{display:inline-flex;align-items:baseline;gap:3px;min-width:0}
+.crtv__st b{
+  font-size:.75rem;font-weight:640;color:var(--txt);
+  font-variant-numeric:tabular-nums;letter-spacing:-.01em;
+}
+.crtv__st .val--na{font-size:.75rem}
+/* maior CTR do expert: o terceiro e último uso do dourado no painel */
+.crtv--top{border-color:var(--gold-line);background:linear-gradient(180deg,var(--gold-soft),transparent 60%),var(--surface)}
+.crtv--top .crtv__ctr b{color:var(--gold)}
+
+/* estado vazio: linha única, sem interação, sem cara de erro */
+.crtvs--empty{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:10px 16px;
+  font-family:var(--mono);font-size:.625rem;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--txt-3);
+}
+.crtvs__none{
+  font-family:var(--sans);font-size:.75rem;letter-spacing:0;text-transform:none;
+  color:var(--txt-3);
+}
+
+/* ── ABAS (Visão geral | Por expert) ──────────────────────────────────────
+   Radio + :checked + irmão. Troca de aba sem uma linha de JS, e o arquivo
+   continua abrindo offline no Chrome.
+   PRO `web-designer`: quando plugar o JS, promova pra rota de hash
+   (#geral / #experts) pra dar link direto e não perder a aba no refresh de
+   5 min. A estrutura já está pronta pra isso, é só ouvir o hashchange e
+   marcar o radio correspondente.
+   ────────────────────────────────────────────────────────────────────────── */
+.views{position:relative}
+.views > input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.tabs{
+  display:flex;gap:2px;margin:22px 0 0;
+  border-bottom:1px solid var(--line);
+}
+.tabs label{
+  display:inline-flex;align-items:center;gap:9px;
+  padding:11px 16px;cursor:pointer;
+  font-size:.875rem;font-weight:600;color:var(--txt-3);
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+  transition:color .14s ease,border-color .14s ease;
+}
+.tabs label:hover{color:var(--txt)}
+.tab__badge{
+  font-family:var(--mono);font-size:.5625rem;letter-spacing:.06em;
+  padding:2px 6px;border-radius:4px;
+  background:rgba(255,255,255,.08);color:var(--txt-2);
+}
+.view{display:none}
+#v-geral:checked ~ .view--geral,
+#v-experts:checked ~ .view--experts{display:block}
+#v-geral:checked ~ .tabs label[for="v-geral"],
+#v-experts:checked ~ .tabs label[for="v-experts"]{
+  color:var(--txt);border-bottom-color:var(--acao);
+}
+#v-geral:checked ~ .tabs label[for="v-geral"] .tab__badge,
+#v-experts:checked ~ .tabs label[for="v-experts"] .tab__badge{
+  background:var(--acao-soft);color:#FF9AC4;
+}
+#v-geral:focus-visible ~ .tabs label[for="v-geral"],
+#v-experts:focus-visible ~ .tabs label[for="v-experts"]{outline:2px solid var(--gold);outline-offset:-3px}
+.tablink{
+  display:inline-flex;align-items:center;gap:6px;cursor:pointer;
+  border:0;background:none;padding:0;
+  font-family:var(--sans);font-size:.75rem;font-weight:640;color:#FF9AC4;
+}
+.tablink:hover{color:#fff}
+.tablink svg{width:12px;height:12px}
+
+/* ── PLACAR DO DIA (o "bateu o olho") ─────────────────────────────────────
+   Primeira coisa da tela: veredito em texto, não número solto. Quem passa na
+   frente do painel tem que sair sabendo se está bom, ruim ou atenção.
+   O tom do veredito é cor de SAÚDE, não de marca: aqui vermelho quer dizer
+   vermelho mesmo.
+   ────────────────────────────────────────────────────────────────────────── */
+.placar{
+  display:grid;gap:var(--gap);margin-top:20px;
+  grid-template-columns:minmax(300px,1.25fr) repeat(3,minmax(0,1fr));
+}
+.verdict{
+  position:relative;overflow:hidden;
+  display:flex;flex-direction:column;justify-content:center;gap:9px;
+  padding:18px 20px;border-radius:var(--r);
+  border:1px solid var(--line);
+  background:linear-gradient(140deg,rgba(87,4,51,.9),var(--surface) 70%);
+}
+.verdict::before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--txt-3)}
+.verdict__lbl{
+  font-family:var(--mono);font-size:.5625rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--txt-3);
+}
+.verdict__txt{
+  font-size:1.375rem;font-weight:750;letter-spacing:-.02em;line-height:1.14;
+  display:flex;align-items:center;gap:10px;
+}
+.verdict__txt svg{width:22px;height:22px;flex:none}
+.verdict__why{font-size:.8125rem;color:rgba(255,255,255,.78);line-height:1.45;max-width:46ch}
+.verdict--good::before{background:var(--good)}
+.verdict--good .verdict__txt{color:var(--good)}
+.verdict--warn::before{background:var(--warn)}
+.verdict--warn .verdict__txt{color:var(--warn)}
+.verdict--bad::before{background:var(--bad)}
+.verdict--bad .verdict__txt{color:var(--bad)}
+
+.sinal{
+  display:flex;flex-direction:column;justify-content:center;gap:5px;
+  padding:14px 16px;border-radius:var(--r);
+  background:var(--surface);border:1px solid var(--line);
+}
+.sinal__lbl{
+  font-family:var(--mono);font-size:.5625rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--txt-3);
+}
+.sinal__who{font-size:.9375rem;font-weight:680;text-transform:uppercase;letter-spacing:.02em}
+.sinal__val{font-size:.8125rem;color:var(--txt-2);font-variant-numeric:tabular-nums}
+.sinal--good{box-shadow:inset 3px 0 0 var(--good);border-color:rgba(46,212,122,.28)}
+.sinal--good .sinal__val{color:var(--good)}
+.sinal--bad{box-shadow:inset 3px 0 0 var(--bad);border-color:rgba(255,77,77,.28)}
+.sinal--bad .sinal__val{color:var(--bad)}
+.sinal--na{box-shadow:inset 3px 0 0 var(--neutro)}
+
+/* faixa de criativos da operação inteira, na visão geral */
+.topcrtvs{
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r);padding-top:14px;
+}
+.crtv__owner{
+  font-family:var(--mono);font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;
+  color:#FF9AC4;
+}
+
+@media (max-width:1179px){
+  .placar{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .verdict{grid-column:1 / -1}
+}
+@media (max-width:759px){
+  .placar{grid-template-columns:minmax(0,1fr);gap:10px}
+  .verdict__txt{font-size:1.1875rem}
+  .tabs label{padding:12px 13px;font-size:.8125rem;min-height:46px}
+}
+
+/* ── COMPARATIVO POR EXPERT ───────────────────────────────────────────────
+   Ranking em uma tela só, pra decidir onde mexer antes de descer pros cards.
+   Mesma ordem dos cards (investimento decrescente). A barra é proporcional ao
+   MAIOR investimento do dia (não ao total), senão nenhuma barra passa de 26%
+   e o comparativo não comunica nada de longe.
+   ────────────────────────────────────────────────────────────────────────── */
+.cmp{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  overflow:hidden;
+}
+.cmp__row{
+  display:grid;align-items:center;gap:14px;
+  grid-template-columns:132px 96px minmax(120px,1fr) 46px 104px 112px 66px;
+  padding:11px 16px;
+  border-top:1px solid var(--line-soft);
+}
+.cmp__row:first-child{border-top:0}
+.cmp__row--head{
+  background:var(--surface-2);
+  padding-top:9px;padding-bottom:9px;
+  font-family:var(--mono);font-size:.5625rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--txt-3);
+}
+.cmp__row--head span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmp__body .cmp__row{transition:background .14s ease}
+.cmp__body .cmp__row:hover{background:rgba(255,255,255,.035)}
+.cmp__name{
+  font-size:.8125rem;font-weight:640;letter-spacing:.02em;text-transform:uppercase;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.cmp__num{font-size:.875rem;font-weight:620;font-variant-numeric:tabular-nums;letter-spacing:-.01em;white-space:nowrap}
+.cmp__num--soft{font-weight:520;color:var(--txt-2)}
+.cmp__bar{display:block;position:relative;height:7px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden}
+.cmp__bar i{
+  display:block;height:100%;border-radius:999px;
+  background:linear-gradient(90deg,var(--acao),var(--grupo));
+}
+.cmp__share{
+  display:block;margin-top:5px;
+  font-size:.625rem;color:var(--txt-3);font-variant-numeric:tabular-nums;
+}
+.cmp__mult{
+  font-size:.8125rem;font-weight:640;font-variant-numeric:tabular-nums;
+  color:var(--txt-2);white-space:nowrap;text-align:right;
+}
+.cmp__mult--gold{color:var(--gold)}
+.chip--sm{font-size:.75rem;font-weight:600;padding:2px 8px}
+.chip--sm.chip--na{font-size:.6875rem}
+.cmp__foot{
+  padding:9px 16px;border-top:1px solid var(--line-soft);
+  background:var(--surface-sunk);
+  font-size:.6875rem;color:var(--txt-3);
+}
+@media (max-width:1179px){
+  .cmp__row{grid-template-columns:120px 92px minmax(90px,1fr) 40px 100px 62px;gap:11px}
+  .cmp__dep{display:none}
+}
+@media (max-width:759px){
+  /* sobram nome, investido, custo por FTD e retorno: o que decide ação */
+  .cmp__row{grid-template-columns:minmax(0,1fr) 84px 92px 52px;gap:9px;padding:10px 14px}
+  .cmp__bar-cell,.cmp__ftd{display:none}
+  .cmp__row--head{font-size:.5rem;letter-spacing:.08em}
+}
+
+/* ── RODAPÉ ─────────────────────────────────────────────────────────────── */
+.foot{
+  margin-top:28px;padding-top:16px;border-top:1px solid var(--line-soft);
+  display:flex;gap:26px;flex-wrap:wrap;
+  font-size:.75rem;color:var(--txt-3);line-height:1.55;
+}
+.foot p{max-width:52ch}
+.foot b{color:var(--txt-2);font-weight:600}
+
+/* ── RESPONSIVO ─────────────────────────────────────────────────────────── */
+@media (max-width:1179px){
+  .totals{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width:759px){
+  .wrap{padding:0 14px 44px}
+  .topbar__in{padding:14px 14px 10px}
+  /* alvo de toque confortável no celular */
+  .rangebar{padding:0 14px 12px;gap:8px}
+  .seg{width:100%;overflow-x:auto;scrollbar-width:none}
+  .seg::-webkit-scrollbar{display:none}
+  .seg label{min-height:40px;padding:0 14px;font-size:.8125rem}
+  .range-custom{width:100%;flex-wrap:wrap}
+  .range-custom input[type=date]{flex:1 1 120px;min-height:44px}
+  .range-apply{min-height:44px;flex:1 1 100%}
+  .rangebar__warn{margin-left:0}
+  .totals{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .tcard__val{font-size:1.25rem}
+  .tcard--hero{grid-column:1 / -1}
+  .tcard--hero .tcard__val{font-size:1.625rem}
+  .expert__body{grid-template-columns:minmax(0,1fr)}
+  .expert__head{padding:12px 14px}
+  .expert__head-metrics{gap:16px;width:100%;justify-content:space-between}
+  .block{padding:14px}
+  .tap-funnel{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tap-fin{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .m__val{font-size:.9375rem}
+  .crtvs__sum{padding:9px 14px}
+  .crtvs__hint{display:none}
+  .crtvs__strip{padding:0 14px 12px}
+  .crtv{flex:0 0 196px}
+  .crtvs--empty{padding:10px 14px}
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ADIÇÕES DO `web-designer` · só estado de dados, nada de identidade nova.
+   Tudo aqui existe porque a página deixou de ser estática: carregamento,
+   pausa do auto-refresh e o veredito sem FTD, que o design previu no
+   comentário mas não tinha regra própria.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* [hidden] tem que ganhar de display:flex/grid do autor. Sem isto, esconder
+   um elemento por JS (pílula de carga, banners, faixa de criativos) não
+   esconde nada: a regra do UA perde na cascata. */
+[hidden]{display:none !important}
+
+/* recado do filtro (substitui o antigo .rangebar__warn de dependência) */
+.rangebar__note{
+  margin-left:auto;display:inline-flex;align-items:center;gap:7px;
+  padding:4px 10px;border-radius:999px;
+  border:1px solid var(--line);background:var(--surface-sunk);
+  color:var(--txt-3);font-size:.6875rem;
+}
+.rangebar__note--pausado{
+  border-color:var(--gold-line);background:var(--gold-soft);color:var(--gold);
+}
+
+/* veredito sem FTD: o design pediu .verdict--na e não tinha regra */
+.verdict--na::before{background:var(--neutro)}
+.verdict--na .verdict__txt{color:var(--txt-2)}
+
+/* PRIMEIRA CARGA. A API leva ~10s, então o conteúdo de exemplo não pode
+   ficar legível fingindo ser real: desfoca até o primeiro dado bom entrar. */
+#dashboard-root[data-state="carregando"] .views{
+  filter:blur(4px);opacity:.4;pointer-events:none;user-select:none;
+}
+#dashboard-root[data-state="atualizando"] .views{opacity:.72;transition:opacity .18s ease}
+#dashboard-root[data-state="pronto"] .views{opacity:1;transition:opacity .18s ease}
+
+.boot{
+  position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:60;
+  display:flex;align-items:center;gap:11px;
+  padding:13px 20px;border-radius:999px;
+  background:var(--surface);border:1px solid var(--line-strong);
+  box-shadow:0 12px 40px rgba(0,0,0,.45);
+  font-size:.8125rem;color:var(--txt-2);
+}
+.boot__spin{
+  width:15px;height:15px;flex:none;border-radius:50%;
+  border:2px solid rgba(255,255,255,.18);border-top-color:var(--acao);
+  animation:boot-spin .7s linear infinite;
+}
+@keyframes boot-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){
+  .boot__spin{animation-duration:2.4s}
+}
+
+/* o intervalo customizado só aparece quando "Período" está escolhido:
+   em 360px de largura, dois campos de data e um botão sempre visíveis
+   empurravam o painel pra baixo sem necessidade. */
+.range-custom{display:none}
+.rangebar.is-custom .range-custom{display:flex}
+.range-msg{
+  width:100%;color:var(--bad);font-size:.6875rem;
+}
+
+@media (max-width:759px){
+  .rangebar__note{margin-left:0}
+  .boot{width:calc(100% - 28px);justify-content:center}
+}
+</style>
+</head>
+
+<body>
+
+<!-- ═══ RAIZ DA INJEÇÃO DE DADOS ═══
+     O fetch está ligado (ver <script> no fim do arquivo). O data-endpoint
+     original saiu daqui de propósito: a página chama /api/dashboard, do próprio
+     domínio, e é a função serverless que conhece o n8n e o token. Nem a URL do
+     webhook nem o token aparecem no código-fonte que o navegador baixa.
+     data-refresh-ms = 5 min, conforme decisão do cliente. -->
+<div id="dashboard-root"
+     data-refresh-ms="300000">
+
+  <header class="topbar">
+    <div class="topbar__in">
+      <div class="brand">
+        <!-- Logo oficial, baixada do site da marca. Substituiu o lockup
+             provisório exatamente como o designer documentou no CSS. -->
+        <img class="brand__logo" src="logo-bateubet.svg" alt="Bateu Bet" width="132" height="28" fetchpriority="high">
+        <span class="brand__sep">/</span>
+        <h1 class="brand__name">Operação ao vivo · Meta Ads + TAP</h1>
+      </div>
+      <div class="freshness">
+        <span class="status status--live" id="status-pill">
+          <span class="status__dot" aria-hidden="true"></span>
+          Atualizado às <span class="status__time" data-field="atualizado_em">12:03</span>
+        </span>
+        <span class="freshness__meta">horário de Brasília · atualiza a cada 5 min</span>
+      </div>
+    </div>
+
+    <!-- ═══ FILTRO DE PERÍODO ═══════════════════════════════════════════════
+         CONTRATO PRO `web-designer`:
+           · o valor escolhido vira query na chamada:
+             ?de=YYYY-MM-DD&ate=YYYY-MM-DD   (sempre os dois, mesmo em 1 dia só)
+             hoje    -> de = ate = hoje
+             ontem   -> de = ate = ontem
+             7 dias  -> de = hoje-6, ate = hoje
+             30 dias -> de = hoje-29, ate = hoje
+             período -> valores dos dois <input type="date">
+           · guardar a escolha em localStorage e reaplicar no load
+           · o auto-refresh de 5 min só continua ligado em "Hoje". Em período
+             fechado não faz sentido ficar repuxando: pausar o timer e trocar a
+             pílula de status por .status--stale com o texto do período.
+           · [data-field="periodo_label"] recebe o rótulo do período escolhido.
+
+         SITUAÇÃO ATUAL (web-designer): a dependência do n8n foi resolvida antes
+         desta entrega. Os três pontos que faltavam (Meta Insights por
+         time_range, Buscar Criativos Ativos por time_range e o relatório da TAP
+         nas mesmas datas) já aceitam `de` e `ate`, e a resposta devolve
+         "periodo": { de, ate, is_hoje }. O filtro está ligado de verdade.
+
+         O QUE A TELA FAZ COM ISSO
+           · "Hoje" não manda de/ate: quem decide o dia é o servidor, no fuso
+             certo. Os outros presets mandam os dois, calculados em Brasília.
+           · O front compara o período pedido com o devolvido. Se divergirem,
+             o #periodo-banner aparece: a tela nunca finge estar certa.
+           · Fora de "hoje", a prateleira vira "Criativos com entrega no
+             período". A busca de criativos ainda filtra effective_status
+             ACTIVE, então anúncio que rodou e depois foi pausado não aparece
+             na lista de um período passado, mesmo tendo gasto. É por isso que
+             o rótulo muda: em período fechado a soma dos criativos pode ficar
+             abaixo do investimento do expert, e isso é esperado, não é bug.
+         ═══════════════════════════════════════════════════════════════════ -->
+    <form class="rangebar" id="range-filter">
+      <span class="rangebar__lbl">Período</span>
+
+      <div class="seg" role="group" aria-label="Período do relatório">
+        <input type="radio" name="range" id="r-hoje" value="hoje" checked>
+        <label for="r-hoje">Hoje</label>
+        <input type="radio" name="range" id="r-ontem" value="ontem">
+        <label for="r-ontem">Ontem</label>
+        <input type="radio" name="range" id="r-7" value="7d">
+        <label for="r-7">7 dias</label>
+        <input type="radio" name="range" id="r-30" value="30d">
+        <label for="r-30">30 dias</label>
+        <input type="radio" name="range" id="r-custom" value="custom">
+        <label for="r-custom">Período</label>
+      </div>
+
+      <div class="range-custom">
+        <input type="date" id="range-de" name="de" value="2026-08-06" aria-label="Data inicial">
+        <span>até</span>
+        <input type="date" id="range-ate" name="ate" value="2026-08-06" aria-label="Data final">
+        <button type="button" class="range-apply" id="range-apply">Aplicar</button>
+      </div>
+
+      <!-- O aviso de dependência saiu daqui: o n8n já aceita de/ate nas três
+           buscas (Meta, criativos e TAP) e o filtro está ligado de verdade.
+           No lugar entra o recado de atualização, escrito pelo JS: "ao vivo"
+           em Hoje, "período fechado, atualização pausada" no histórico.
+           A checagem de período divergente segue de pé no #periodo-banner. -->
+      <span class="rangebar__note" id="range-note" hidden></span>
+      <span class="range-msg" id="range-msg" hidden role="alert"></span>
+    </form>
+  </header>
+
+  <div class="wrap">
+
+    <!-- Pílula de primeira carga. O JS mostra enquanto o painel ainda não tem
+         nenhum dado real na tela e esconde no primeiro fetch bom. -->
+    <div class="boot" id="boot" hidden><span class="boot__spin" aria-hidden="true"></span>Carregando dados ao vivo…</div>
+
+    <!-- Banner de falha de fetch. Remover [hidden] via JS. O painel mantém o
+         último dado bom na tela, só avisa que parou de atualizar. -->
+    <div class="errbar" id="erro-banner" hidden role="status">
+      Falha ao atualizar. Os números abaixo são da última leitura bem-sucedida
+      (<span data-field="atualizado_em">12:03</span>). Tentando de novo…
+    </div>
+
+    <!-- PERÍODO DIVERGENTE. Não é erro de rede: é a API devolvendo um período
+         diferente do pedido (hoje ela devolve sempre "hoje", veja o contrato no
+         filtro). Exibir sempre que resposta.periodo != filtro escolhido.
+         Enquanto o n8n não aceitar de/ate, este banner é a única coisa que
+         impede a tela de mentir com cara de certa. -->
+    <div class="errbar errbar--warn" id="periodo-banner" hidden role="status">
+      Você pediu <b data-field="periodo_pedido">01/08 a 06/08</b>, mas a API
+      devolveu <b data-field="periodo_api">06/08/2026</b>. Os números abaixo são
+      do período devolvido, não do pedido.
+    </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       ABAS. Os dois <input> precisam continuar sendo IRMÃOS ANTERIORES das
+       .view e da .tabs, senão o seletor ~ do CSS quebra e some tudo.
+       Aba 1 (Visão geral): veredito, sinais, totais, comparativo, criativos.
+       Aba 2 (Por expert): os cards detalhados, um por expert.
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="views">
+    <input type="radio" name="view" id="v-geral" checked>
+    <input type="radio" name="view" id="v-experts">
+
+    <nav class="tabs" aria-label="Seções do painel">
+      <label for="v-geral">Visão geral</label>
+      <label for="v-experts">Por expert <span class="tab__badge" data-derived="experts.length">7</span></label>
+    </nav>
+
+    <!-- ══════════════════ ABA 1 · VISÃO GERAL ══════════════════ -->
+    <div class="view view--geral">
+
+    <!-- ═══ PLACAR DO DIA ═══
+         O veredito é TEXTO, não número: é o que a pessoa lê de longe.
+         data-derived (tudo calculado no front, nada novo na API):
+           classe   -> totais.investimento_total / totais.ftd  contra os limiares
+                       (< 120 good · 120 a 200 warn · > 200 bad)
+           frase    -> template por faixa, ver abaixo
+           reforço  -> nº de experts com custo_por_ftd > 200 e quanto de verba
+                       eles somam
+         Se totais.ftd === 0, usar .verdict--na, texto "Ainda sem FTD hoje" e
+         o reforço vira "R$ X investidos até agora". NUNCA dividir por zero. -->
+    <section class="placar" aria-label="Placar do dia">
+
+      <div class="verdict verdict--warn">
+        <span class="verdict__lbl">Como está o dia</span>
+        <p class="verdict__txt">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v5"/><circle cx="12" cy="17.5" r=".6" fill="currentColor"/><path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+          Custo por FTD acima do confortável
+        </p>
+        <p class="verdict__why">
+          R$ 183,28 por FTD hoje, contra R$ 120 da faixa boa. Dois experts acima
+          de R$ 200 estão levando 40,4% da verba do dia.
+        </p>
+      </div>
+
+      <div class="sinal sinal--good">
+        <span class="sinal__lbl">Melhor custo por FTD</span>
+        <span class="sinal__who" data-derived="menor tap.custo_por_ftd não nulo">QZL</span>
+        <span class="sinal__val">R$ 84,41 · 3 FTD</span>
+      </div>
+
+      <div class="sinal sinal--bad">
+        <span class="sinal__lbl">Pior custo por FTD</span>
+        <span class="sinal__who" data-derived="maior tap.custo_por_ftd não nulo">Charles</span>
+        <span class="sinal__val">R$ 498,31 · 1 FTD</span>
+      </div>
+
+      <div class="sinal sinal--na">
+        <span class="sinal__lbl">Ainda sem FTD</span>
+        <span class="sinal__who" data-derived="experts com tap.ftd === 0">2 experts</span>
+        <span class="sinal__val">Gregório Big, Ederson · R$ 276,71 investidos</span>
+      </div>
+
+    </section>
+
+    <!-- ═══ TOTAIS DA OPERAÇÃO ═══
+         [data-field="periodo_label"] muda com o filtro: "hoje, 06/08/2026",
+         "ontem, 05/08/2026", "31/07 a 06/08/2026" etc. -->
+    <div class="section-head">
+      <h2 class="eyebrow">Totais · <span data-field="periodo_label">hoje, 06/08/2026</span></h2>
+    </div>
+
+    <section class="totals" aria-label="Totais da operação">
+
+      <div class="tcard tcard--hero">
+        <span class="tcard__lbl">Investimento total</span>
+        <span class="tcard__val" data-field="totais.investimento_total">R$ 2.749,25</span>
+        <span class="tcard__sub" data-derived="totais.investimento_total / totais.ftd">R$ 183,28 por FTD</span>
+      </div>
+
+      <div class="tcard tcard--grupo">
+        <span class="tcard__lbl"><i class="dot dot--grupo"></i> Investimento grupo</span>
+        <span class="tcard__val" data-field="totais.investimento_grupo">R$ 2.496,03</span>
+        <span class="tcard__sub" data-derived="grupo / total; soma dos resultados de grupo">90,8% do total · 295 entradas</span>
+      </div>
+
+      <div class="tcard tcard--direto">
+        <span class="tcard__lbl"><i class="dot dot--direto"></i> Investimento direto</span>
+        <span class="tcard__val" data-field="totais.investimento_direto">R$ 253,22</span>
+        <span class="tcard__sub" data-derived="direto / total; soma dos resultados de direto">9,2% do total · 850 resultados</span>
+      </div>
+
+      <div class="tcard">
+        <span class="tcard__lbl">Cadastros</span>
+        <span class="tcard__val" data-field="totais.cadastros">61</span>
+        <span class="tcard__sub" data-derived="investimento_total / cadastros">R$ 45,07 por cadastro</span>
+      </div>
+
+      <div class="tcard">
+        <span class="tcard__lbl">FTD</span>
+        <span class="tcard__val" data-field="totais.ftd">15</span>
+        <span class="tcard__sub" data-derived="ftd / cadastros * 100">24,6% dos cadastros</span>
+      </div>
+
+      <div class="tcard">
+        <span class="tcard__lbl">Depósito</span>
+        <span class="tcard__val" data-field="totais.deposito">R$ 60.007,01</span>
+        <!-- uso 2 de 3 do dourado: retorno sobre o investido -->
+        <span class="tcard__sub tcard__sub--gold" data-derived="deposito / investimento_total">21,8× o investido</span>
+      </div>
+
+    </section>
+
+    <!-- Participação de cada tipo de tráfego no investimento do dia.
+         width dos segmentos = % de grupo e de direto sobre o total. -->
+    <div class="splitbar">
+      <div class="splitbar__track" role="img" aria-label="Grupo 90,8% do investimento, direto 9,2%">
+        <div class="splitbar__seg splitbar__seg--grupo" style="width:90.8%"></div>
+        <div class="splitbar__seg splitbar__seg--direto" style="width:9.2%"></div>
+      </div>
+      <div class="splitbar__legend">
+        <span><i class="dot dot--grupo"></i> Grupo · WhatsApp / Telegram · <b class="num">90,8%</b></span>
+        <span><i class="dot dot--direto"></i> Direto · Perfil · <b class="num">9,2%</b></span>
+      </div>
+    </div>
+
+    <!-- ═══ COMPARATIVO POR EXPERT ═══
+         Mesma fonte de dados dos cards, nenhum campo novo na API.
+         data-derived:
+           barra  = investimento_total / max(investimento_total) * 100
+           share  = investimento_total / totais.investimento_total * 100
+           retorno= tap.deposito / investimento_total
+         Ordem idêntica à da lista de cards (o mesmo array já ordenado). -->
+    <div class="section-head"><h2 class="eyebrow">Comparativo · onde a verba está indo</h2></div>
+
+    <section class="cmp" aria-label="Comparativo por expert">
+      <div class="cmp__row cmp__row--head" aria-hidden="true">
+        <span>Expert</span>
+        <span>Investido</span>
+        <span class="cmp__bar-cell">Participação na verba</span>
+        <span class="cmp__ftd">FTD</span>
+        <span>Custo por FTD</span>
+        <span class="cmp__dep">Depósito</span>
+        <span style="text-align:right">Retorno</span>
+      </div>
+
+      <div class="cmp__body">
+
+        <div class="cmp__row" data-expert="GP DADOS">
+          <span class="cmp__name">GP Dados</span>
+          <span class="cmp__num">R$ 706,06</span>
+          <span class="cmp__bar-cell">
+            <span class="cmp__bar"><i style="width:100%"></i></span>
+            <span class="cmp__share">25,7% da verba do dia</span>
+          </span>
+          <span class="cmp__num cmp__ftd">6</span>
+          <span><span class="chip chip--sm chip--good">R$ 117,68</span></span>
+          <span class="cmp__num cmp__num--soft cmp__dep">R$ 10.585,51</span>
+          <span class="cmp__mult">15,0×</span>
+        </div>
+
+        <div class="cmp__row" data-expert="DEKO">
+          <span class="cmp__name">Deko</span>
+          <span class="cmp__num">R$ 612,80</span>
+          <span class="cmp__bar-cell">
+            <span class="cmp__bar"><i style="width:86.8%"></i></span>
+            <span class="cmp__share">22,3% da verba do dia</span>
+          </span>
+          <span class="cmp__num cmp__ftd">2</span>
+          <span><span class="chip chip--sm chip--bad">R$ 306,40</span></span>
+          <span class="cmp__num cmp__num--soft cmp__dep">R$ 12.480,30</span>
+          <span class="cmp__mult">20,4×</span>
+        </div>
+
+        <div class="cmp__row" data-expert="CHARLES">
+          <span class="cmp__name">Charles</span>
+          <span class="cmp__num">R$ 498,31</span>
+          <span class="cmp__bar-cell">
+            <span class="cmp__bar"><i style="width:70.6%"></i></span>
+            <span class="cmp__share">18,1% da verba do dia</span>
+          </span>
+          <span class="cmp__num cmp__ftd">1</span>
+          <span><span class="chip chip--sm chip--bad">R$ 498,31</span></span>
+          <span class="cmp__num cmp__num--soft cmp__dep">R$ 6.320,90</span>
+          <span class="cmp__mult">12,7×</span>
+        </div>
+
+        <div class="cmp__row" data-expert="TANOS">
+          <span class="cmp__name">Tanos</span>
+          <span class="cmp__num">R$ 402,15</span>
+          <span class="cmp__bar-cell">
+            <span class="cmp__bar"><i style="width:56.9%"></i></span>
+            <span class="cmp__share">14,6% da verba do dia</span>
+          </span>
+          <span class="cmp__num cmp__ftd">3</span>
+          <span><span class="chip chip--sm chip--warn">R$ 134,05</span></span>
+          <span class="cmp__num cmp__num--soft cmp__dep">R$ 9.740,10</span>
+          <span class="cmp__mult">24,2×</span>
+        </div>
+
+        <div class="cmp__row" data-expert="QZL">
+          <span class="cmp__name">QZL</span>
+          <span class="cmp__num">R$ 253,22</span>
+          <span class="cmp__bar-cell">
+            <span class="cmp__bar"><i style="width:35.9%"></i></span>
+            <span class="cmp__share">9,2% da verba do dia</span>
+          </span>
+          <span class="cmp__num cmp__ftd">3</span>
+          <span><span class="chip chip--sm chip--good">R$ 84,41</span></span>
+          <span class="cmp__num cmp__num--soft cmp__dep">R$ 800,00</span>
+          <span class="cmp__mult">3,2×</span>
+        </div>
+
+        <div class="cmp__row" data-expert="GREGORIO BIG">
+          <span class="cmp__name">Gregório Big</span>
+          <span class="cmp__num">R$ 240,26</span>
+          <span class="cmp__bar-cell">
+            <span class="cmp__bar"><i style="width:34.0%"></i></span>
+            <span class="cmp__share">8,7% da verba do dia</span>
+          </span>
+          <span class="cmp__num cmp__ftd">0</span>
+          <span><span class="chip chip--sm chip--na">Aguardando</span></span>
+          <span class="cmp__num cmp__num--soft cmp__dep">R$ 3.350,20</span>
+          <span class="cmp__mult">13,9×</span>
+        </div>
+
+        <div class="cmp__row" data-expert="EDERSON">
+          <span class="cmp__name">Ederson</span>
+          <span class="cmp__num">R$ 36,45</span>
+          <span class="cmp__bar-cell">
+            <span class="cmp__bar"><i style="width:5.2%"></i></span>
+            <span class="cmp__share">1,3% da verba do dia</span>
+          </span>
+          <span class="cmp__num cmp__ftd">0</span>
+          <span><span class="chip chip--sm chip--na">Aguardando</span></span>
+          <span class="cmp__num cmp__num--soft cmp__dep">R$ 16.730,00</span>
+          <!-- uso 3 de 3 do dourado: retorno fora da curva. O JS marca .cmp__mult--gold
+               no maior retorno do dia. Aqui é herança de base antiga com verba mínima
+               hoje, por isso o número explode. É real, não é bug de formatação. -->
+          <span class="cmp__mult cmp__mult--gold">459,0×</span>
+        </div>
+
+      </div>
+
+      <p class="cmp__foot">
+        Barra proporcional ao maior investimento do dia. Retorno é depósito da TAP
+        dividido pelo investido no Meta no mesmo período, então quem tem base antiga
+        depositando e pouca verba hoje aparece com múltiplo alto.
+        <br>
+        <!-- label, não link: troca de aba sem JS -->
+        <label class="tablink" for="v-experts">
+          Abrir o detalhe por expert
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
+        </label>
+      </p>
+    </section>
+
+    <!-- ═══ CRIATIVOS DA OPERAÇÃO ═══
+         Os 5 maiores CTR do dia somando todos os experts. Mesmo componente
+         .crtv usado nos cards, só que aqui a linha de apoio mostra o dono.
+         data-derived: experts.flatMap(e => e.criativos.map(c => ({...c, expert: e.expert_name})))
+                       .filter(c => c.ctr != null).sort((a,b) => b.ctr - a.ctr).slice(0,5)
+         Se ninguém tiver criativo, esconder a seção inteira (não mostrar faixa vazia). -->
+    <div class="section-head"><h2 class="eyebrow">Criativos puxando hoje · 5 maiores CTR da operação</h2></div>
+
+    <div class="topcrtvs">
+      <div class="crtvs__strip">
+
+        <article class="crtv crtv--top">
+          <div class="crtv__top">
+            <span class="crtv__thumb"><svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg></span>
+            <div class="crtv__meta">
+              <span class="crtv__owner">GP Dados</span>
+              <span class="crtv__name">GP 05 print de saque</span>
+            </div>
+          </div>
+          <div class="crtv__stats">
+            <span class="crtv__st crtv__ctr"><b>4,12%</b> CTR</span>
+            <span class="crtv__st"><b>88</b> cliq</span>
+            <span class="crtv__st"><b>R$ 121,05</b></span>
+          </div>
+        </article>
+
+        <article class="crtv">
+          <div class="crtv__top">
+            <span class="crtv__thumb"><svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg></span>
+            <div class="crtv__meta">
+              <span class="crtv__owner">Tanos</span>
+              <span class="crtv__name">Tanos 02 chamada de grupo</span>
+            </div>
+          </div>
+          <div class="crtv__stats">
+            <span class="crtv__st crtv__ctr"><b>3,91%</b> CTR</span>
+            <span class="crtv__st"><b>37</b> cliq</span>
+            <span class="crtv__st"><b>R$ 71,25</b></span>
+          </div>
+        </article>
+
+        <article class="crtv">
+          <div class="crtv__top">
+            <span class="crtv__thumb"><svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg></span>
+            <div class="crtv__meta">
+              <span class="crtv__owner">GP Dados</span>
+              <span class="crtv__name">Novo anúncio de Vendas</span>
+            </div>
+          </div>
+          <div class="crtv__stats">
+            <span class="crtv__st crtv__ctr"><b>3,27%</b> CTR</span>
+            <span class="crtv__st"><b>115</b> cliq</span>
+            <span class="crtv__st"><b>R$ 202,39</b></span>
+          </div>
+        </article>
+
+        <article class="crtv">
+          <div class="crtv__top">
+            <span class="crtv__thumb"><svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg></span>
+            <div class="crtv__meta">
+              <span class="crtv__owner">Deko</span>
+              <span class="crtv__name">Deko 03 convite direto</span>
+            </div>
+          </div>
+          <div class="crtv__stats">
+            <span class="crtv__st crtv__ctr"><b>3,04%</b> CTR</span>
+            <span class="crtv__st"><b>55</b> cliq</span>
+            <span class="crtv__st"><b>R$ 98,20</b></span>
+          </div>
+        </article>
+
+        <article class="crtv">
+          <div class="crtv__top">
+            <span class="crtv__thumb"><svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg></span>
+            <div class="crtv__meta">
+              <span class="crtv__owner">Tanos</span>
+              <span class="crtv__name">Tanos 06 print de saque</span>
+            </div>
+          </div>
+          <div class="crtv__stats">
+            <span class="crtv__st crtv__ctr"><b>2,88%</b> CTR</span>
+            <span class="crtv__st"><b>22</b> cliq</span>
+            <span class="crtv__st"><b>R$ 32,60</b></span>
+          </div>
+        </article>
+
+      </div>
+    </div>
+
+    </div><!-- ══════════ /ABA 1 · VISÃO GERAL ══════════ -->
+
+    <!-- ══════════════════ ABA 2 · POR EXPERT ══════════════════ -->
+    <div class="view view--experts">
+
+    <!-- ═══ EXPERTS ═══
+         ORDEM = investimento_total decrescente (sort no JS, ver contrato no topo).
+         Hoje: GP DADOS, DEKO, CHARLES, TANOS, QZL, GREGORIO BIG, EDERSON.
+         O selo dourado "maior investimento" acompanha o primeiro do sort. -->
+    <div class="section-head"><h2 class="eyebrow">Por expert · 7 ativos · maior investimento primeiro</h2></div>
+
+    <section class="experts" id="experts-list" aria-label="Desempenho por expert">
+
+      <!-- ▼▼▼ CARD MODELO: clonar este <article> para renderizar os demais ▼▼▼ -->
+      <article class="expert" data-expert="GP DADOS">
+        <header class="expert__head">
+          <div class="expert__id">
+            <h3 class="expert__name" data-field="expert_name">GP Dados</h3>
+            <!-- uso 1 de 3 do dourado: só no primeiro card depois do sort -->
+            <span class="badge-top" data-derived="maior investimento_total do dia">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16"/><path d="M4 19V9l5 4 3-7 3 7 5-4v10"/></svg>
+              Maior investimento
+            </span>
+            <div class="chans">
+              <!-- .is-on quando grupo.ativo / direto.ativo === true -->
+              <span class="chan-tag chan-tag--grupo is-on">Grupo</span>
+              <span class="chan-tag chan-tag--direto">Direto</span>
+            </div>
+          </div>
+          <div class="expert__head-metrics">
+            <div class="hm">
+              <span class="hm__lbl">Investido hoje</span>
+              <span class="hm__val" data-field="investimento_total">R$ 706,06</span>
+            </div>
+            <div class="hm">
+              <span class="hm__lbl">Custo por FTD</span>
+              <span class="chip chip--good" data-field="tap.custo_por_ftd">R$ 117,68</span>
+            </div>
+          </div>
+        </header>
+
+        <div class="expert__body">
+
+          <section class="block block--grupo" data-block="grupo">
+            <h4 class="block__title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13h6M8 9h8"/><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M3.5 20.5 5 16"/></svg>
+              Grupo <small>WhatsApp / Telegram</small>
+            </h4>
+            <div class="metrics">
+              <div class="m"><span class="m__lbl">Investido</span><span class="m__val" data-field="grupo.valor_investido">R$ 706,06</span></div>
+              <div class="m"><span class="m__lbl">Entradas</span><span class="m__val" data-field="grupo.resultado">85</span></div>
+              <div class="m"><span class="m__lbl">Custo / entrada</span><span class="m__val" data-field="grupo.custo_por_resultado">R$ 8,31</span></div>
+            </div>
+          </section>
+
+          <!-- ESTADO INATIVO: direto.ativo === false -->
+          <section class="block block--direto block--off" data-block="direto">
+            <h4 class="block__title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0-9-9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 19a6 6 0 0 1 11 0"/></svg>
+              Direto <small>Perfil</small>
+            </h4>
+            <p class="block__off">Sem campanha ativa hoje</p>
+          </section>
+
+          <section class="block block--tap">
+            <h4 class="block__title">Funil TAP <small>blend do expert, não separa grupo e direto</small></h4>
+            <div class="tap-funnel">
+              <div class="m"><span class="m__lbl">Cadastros</span><span class="m__val" data-field="tap.cadastros">13</span></div>
+              <div class="m"><span class="m__lbl">FTD</span><span class="m__val" data-field="tap.ftd">6</span></div>
+              <div class="m"><span class="m__lbl">Conv. cad → FTD</span><span class="m__val" data-field="tap.conversao_cadastro_ftd">46,2%</span></div>
+              <div class="m"><span class="m__lbl">Custo por FTD</span><span class="m__val" data-field="tap.custo_por_ftd">R$ 117,68</span></div>
+            </div>
+            <div class="tap-fin">
+              <div class="m"><span class="m__lbl">Valor FTD</span><span class="m__val" data-field="tap.valor_ftd">R$ 909,00</span></div>
+              <div class="m"><span class="m__lbl">Depósito</span><span class="m__val" data-field="tap.deposito">R$ 10.585,51</span></div>
+              <div class="m"><span class="m__lbl">Net dep</span><span class="m__val num--pos" data-field="tap.net_dep">R$ 3.174,34</span></div>
+              <div class="m"><span class="m__lbl">Net PL</span><span class="m__val num--pos" data-field="tap.net_pl">R$ 1.570,62</span></div>
+              <div class="m"><span class="m__lbl">Volume</span><span class="m__val" data-field="tap.volume">R$ 19.647,35</span></div>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- ▼ PRATELEIRA DE CRIATIVOS · clonar esta estrutura por criativo ▼ -->
+        <details class="crtvs" data-field="criativos" open>
+          <summary class="crtvs__sum">
+            <span>Criativos ativos</span>
+            <span class="crtvs__count num" data-derived="criativos.length">6</span>
+            <span class="crtvs__hint">role para ver todos →</span>
+            <svg class="crtvs__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </summary>
+          <div class="crtvs__strip">
+
+            <!-- ▼▼ CRIATIVO MODELO ▼▼ -->
+            <article class="crtv" data-crtv-id="6907412694879">
+              <div class="crtv__top">
+                <span class="crtv__thumb" data-field="thumbnail_url">
+                  <!-- JS: se thumbnail_url != null, injetar ANTES do svg:
+                       <img src="{{thumbnail_url}}" alt="" loading="lazy"
+                            referrerpolicy="no-referrer" onerror="this.remove()">
+                       Sem URL (ou com URL expirada) fica este tile de fallback. -->
+                  <svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg>
+                </span>
+                <div class="crtv__meta">
+                  <span class="crtv__name" data-field="nome">Novo anúncio de Vendas</span>
+                  <span class="crtv__camp" data-field="campanha" title="[GPDADOS][02/07] [01/08] [SEM ADV] AD3">[GPDADOS][02/07] [01/08] [SEM ADV] AD3</span>
+                </div>
+              </div>
+              <div class="crtv__stats">
+                <span class="crtv__st crtv__ctr"><b data-field="ctr">3,27%</b> CTR</span>
+                <span class="crtv__st"><b data-field="clicks">115</b> cliq</span>
+                <span class="crtv__st"><b data-field="spend">R$ 202,39</b></span>
+              </div>
+            </article>
+            <!-- ▲▲ FIM DO CRIATIVO MODELO ▲▲ -->
+
+            <article class="crtv" data-crtv-id="6907412691102">
+              <div class="crtv__top">
+                <span class="crtv__thumb" data-field="thumbnail_url">
+                  <svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg>
+                </span>
+                <div class="crtv__meta">
+                  <span class="crtv__name" data-field="nome">GP 01 vídeo depoimento</span>
+                  <span class="crtv__camp" data-field="campanha" title="[GPDADOS][02/07] [01/08] [SEM ADV] AD1">[GPDADOS][02/07] [01/08] [SEM ADV] AD1</span>
+                </div>
+              </div>
+              <div class="crtv__stats">
+                <span class="crtv__st crtv__ctr"><b data-field="ctr">2,84%</b> CTR</span>
+                <span class="crtv__st"><b data-field="clicks">96</b> cliq</span>
+                <span class="crtv__st"><b data-field="spend">R$ 158,74</b></span>
+              </div>
+            </article>
+
+            <!-- .crtv--top = maior CTR do expert (só com 2+ criativos e ctr != null) -->
+            <article class="crtv crtv--top" data-crtv-id="6907412688431" data-derived="maior ctr do expert">
+              <div class="crtv__top">
+                <span class="crtv__thumb" data-field="thumbnail_url">
+                  <svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg>
+                </span>
+                <div class="crtv__meta">
+                  <span class="crtv__name" data-field="nome">GP 05 print de saque</span>
+                  <span class="crtv__camp" data-field="campanha" title="[GPDADOS][02/07] [01/08] [SEM ADV] AD5">[GPDADOS][02/07] [01/08] [SEM ADV] AD5</span>
+                </div>
+              </div>
+              <div class="crtv__stats">
+                <span class="crtv__st crtv__ctr"><b data-field="ctr">4,12%</b> CTR</span>
+                <span class="crtv__st"><b data-field="clicks">88</b> cliq</span>
+                <span class="crtv__st"><b data-field="spend">R$ 121,05</b></span>
+              </div>
+            </article>
+
+            <article class="crtv" data-crtv-id="6907412684007">
+              <div class="crtv__top">
+                <span class="crtv__thumb" data-field="thumbnail_url">
+                  <svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg>
+                </span>
+                <div class="crtv__meta">
+                  <span class="crtv__name" data-field="nome">GP 02 carrossel de odds</span>
+                  <span class="crtv__camp" data-field="campanha" title="[GPDADOS][02/07] [01/08] [SEM ADV] AD2">[GPDADOS][02/07] [01/08] [SEM ADV] AD2</span>
+                </div>
+              </div>
+              <div class="crtv__stats">
+                <span class="crtv__st crtv__ctr"><b data-field="ctr">1,96%</b> CTR</span>
+                <span class="crtv__st"><b data-field="clicks">51</b> cliq</span>
+                <span class="crtv__st"><b data-field="spend">R$ 96,42</b></span>
+              </div>
+            </article>
+
+            <article class="crtv" data-crtv-id="6907412681556">
+              <div class="crtv__top">
+                <span class="crtv__thumb" data-field="thumbnail_url">
+                  <svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg>
+                </span>
+                <div class="crtv__meta">
+                  <span class="crtv__name" data-field="nome">GP 04 story bastidor</span>
+                  <span class="crtv__camp" data-field="campanha" title="[GPDADOS][02/07] [01/08] [SEM ADV] AD4">[GPDADOS][02/07] [01/08] [SEM ADV] AD4</span>
+                </div>
+              </div>
+              <div class="crtv__stats">
+                <span class="crtv__st crtv__ctr"><b data-field="ctr">2,41%</b> CTR</span>
+                <span class="crtv__st"><b data-field="clicks">44</b> cliq</span>
+                <span class="crtv__st"><b data-field="spend">R$ 74,31</b></span>
+              </div>
+            </article>
+
+            <!-- ESTADO: ctr null (anúncio recém-publicado, sem leitura ainda) -->
+            <article class="crtv" data-crtv-id="6907412679213">
+              <div class="crtv__top">
+                <span class="crtv__thumb" data-field="thumbnail_url">
+                  <svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg>
+                </span>
+                <div class="crtv__meta">
+                  <span class="crtv__name" data-field="nome">GP 06 vídeo novo</span>
+                  <span class="crtv__camp" data-field="campanha" title="[GPDADOS][02/07] [01/08] [SEM ADV] AD6">[GPDADOS][02/07] [01/08] [SEM ADV] AD6</span>
+                </div>
+              </div>
+              <div class="crtv__stats">
+                <span class="crtv__st crtv__ctr"><b class="val--na" data-field="ctr">n/d</b> CTR</span>
+                <span class="crtv__st"><b data-field="clicks">0</b> cliq</span>
+                <span class="crtv__st"><b data-field="spend">R$ 53,15</b></span>
+              </div>
+            </article>
+
+          </div>
+        </details>
+        <!-- ▲ FIM DA PRATELEIRA DE CRIATIVOS ▲ -->
+
+      </article>
+      <!-- ▲▲▲ FIM DO CARD MODELO ▲▲▲ -->
+
+      <article class="expert" data-expert="DEKO">
+        <header class="expert__head">
+          <div class="expert__id">
+            <h3 class="expert__name" data-field="expert_name">Deko</h3>
+            <div class="chans">
+              <span class="chan-tag chan-tag--grupo is-on">Grupo</span>
+              <span class="chan-tag chan-tag--direto">Direto</span>
+            </div>
+          </div>
+          <div class="expert__head-metrics">
+            <div class="hm">
+              <span class="hm__lbl">Investido hoje</span>
+              <span class="hm__val" data-field="investimento_total">R$ 612,80</span>
+            </div>
+            <div class="hm">
+              <span class="hm__lbl">Custo por FTD</span>
+              <span class="chip chip--bad" data-field="tap.custo_por_ftd">R$ 306,40</span>
+            </div>
+          </div>
+        </header>
+        <div class="expert__body">
+          <section class="block block--grupo" data-block="grupo">
+            <h4 class="block__title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13h6M8 9h8"/><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M3.5 20.5 5 16"/></svg>
+              Grupo <small>WhatsApp / Telegram</small>
+            </h4>
+            <div class="metrics">
+              <div class="m"><span class="m__lbl">Investido</span><span class="m__val" data-field="grupo.valor_investido">R$ 612,80</span></div>
+              <div class="m"><span class="m__lbl">Entradas</span><span class="m__val" data-field="grupo.resultado">74</span></div>
+              <div class="m"><span class="m__lbl">Custo / entrada</span><span class="m__val" data-field="grupo.custo_por_resultado">R$ 8,28</span></div>
+            </div>
+          </section>
+          <section class="block block--direto block--off" data-block="direto">
+            <h4 class="block__title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0-9-9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 19a6 6 0 0 1 11 0"/></svg>
+              Direto <small>Perfil</small>
+            </h4>
+            <p class="block__off">Sem campanha ativa hoje</p>
+          </section>
+          <section class="block block--tap">
+            <h4 class="block__title">Funil TAP <small>blend do expert, não separa grupo e direto</small></h4>
+            <div class="tap-funnel">
+              <div class="m"><span class="m__lbl">Cadastros</span><span class="m__val" data-field="tap.cadastros">9</span></div>
+              <div class="m"><span class="m__lbl">FTD</span><span class="m__val" data-field="tap.ftd">2</span></div>
+              <div class="m"><span class="m__lbl">Conv. cad → FTD</span><span class="m__val" data-field="tap.conversao_cadastro_ftd">22,2%</span></div>
+              <div class="m"><span class="m__lbl">Custo por FTD</span><span class="m__val" data-field="tap.custo_por_ftd">R$ 306,40</span></div>
+            </div>
+            <div class="tap-fin">
+              <div class="m"><span class="m__lbl">Valor FTD</span><span class="m__val" data-field="tap.valor_ftd">R$ 320,00</span></div>
+              <div class="m"><span class="m__lbl">Depósito</span><span class="m__val" data-field="tap.deposito">R$ 12.480,30</span></div>
+              <div class="m"><span class="m__lbl">Net dep</span><span class="m__val num--pos" data-field="tap.net_dep">R$ 4.210,55</span></div>
+              <div class="m"><span class="m__lbl">Net PL</span><span class="m__val num--neg" data-field="tap.net_pl">-R$ 318,40</span></div>
+              <div class="m"><span class="m__lbl">Volume</span><span class="m__val" data-field="tap.volume">R$ 15.340,90</span></div>
+            </div>
+          </section>
+        </div>
+
+        <details class="crtvs" data-field="criativos" open>
+          <summary class="crtvs__sum">
+            <span>Criativos ativos</span>
+            <span class="crtvs__count num" data-derived="criativos.length">7</span>
+            <span class="crtvs__hint">role para ver todos →</span>
+            <svg class="crtvs__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </summary>
+          <div class="crtvs__strip">
+            <article class="crtv">
+              <div class="crtv__top">
+                <span class="crtv__thumb"><svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg></span>
+                <div class="crtv__meta">
+                  <span class="crtv__name">Deko 01 hook apostador</span>
+                  <span class="crtv__camp" title="[DEKO][21/07] [05/08] [SEM ADV] AD1">[DEKO][21/07] [05/08] [SEM ADV] AD1</span>
+                </div>
+              </div>
+              <div class="crtv__stats">
+                <span class="crtv__st crtv__ctr"><b>2,15%</b> CTR</span>
+                <span class="crtv__st"><b>74</b> cliq</span>
+                <span class="crtv__st"><b>R$ 168,90</b></span>
+              </div>
+            </article>
+            <article class="crtv">
+              <div class="crtv__top">
+                <span class="crtv__thumb"><svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg></span>
+                <div class="crtv__meta">
+                  <span class="crtv__name">Deko 02 reels resultado</span>
+                  <span class="crtv__camp" title="[DEKO][21/07] [05/08] [SEM ADV] AD2">[DEKO][21/07] [05/08] [SEM ADV] AD2</span>
+                </div>
+              </div>
+              <div class="crtv__stats">
+                <span class="crtv__st crtv__ctr"><b>1,88%</b> CTR</span>
+                <span class="crtv__st"><b>61</b> cliq</span>
+                <span class="crtv__st"><b>R$ 132,44</b></span>
+              </div>
+            </article>
+            <article class="crtv crtv--top" data-derived="maior ctr do expert">
+              <div class="crtv__top">
+                <span class="crtv__thumb"><svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg></span>
+                <div class="crtv__meta">
+                  <span class="crtv__name">Deko 03 convite direto</span>
+                  <span class="crtv__camp" title="[DEKO][21/07] [05/08] [SEM ADV] AD3">[DEKO][21/07] [05/08] [SEM ADV] AD3</span>
+                </div>
+              </div>
+              <div class="crtv__stats">
+                <span class="crtv__st crtv__ctr"><b>3,04%</b> CTR</span>
+                <span class="crtv__st"><b>55</b> cliq</span>
+                <span class="crtv__st"><b>R$ 98,20</b></span>
+              </div>
+            </article>
+            <article class="crtv">
+              <div class="crtv__top">
+                <span class="crtv__thumb"><svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg></span>
+                <div class="crtv__meta">
+                  <span class="crtv__name">Deko 04 estático oferta</span>
+                  <span class="crtv__camp" title="[DEKO][21/07] [05/08] [SEM ADV] AD4">[DEKO][21/07] [05/08] [SEM ADV] AD4</span>
+                </div>
+              </div>
+              <div class="crtv__stats">
+                <span class="crtv__st crtv__ctr"><b>1,42%</b> CTR</span>
+                <span class="crtv__st"><b>33</b> cliq</span>
+                <span class="crtv__st"><b>R$ 76,55</b></span>
+              </div>
+            </article>
+            <article class="crtv">
+              <div class="crtv__top">
+                <span class="crtv__thumb"><svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg></span>
+                <div class="crtv__meta">
+                  <span class="crtv__name">Deko 05 depoimento curto</span>
+                  <span class="crtv__camp" title="[DEKO][21/07] [05/08] [SEM ADV] AD5">[DEKO][21/07] [05/08] [SEM ADV] AD5</span>
+                </div>
+              </div>
+              <div class="crtv__stats">
+                <span class="crtv__st crtv__ctr"><b>2,66%</b> CTR</span>
+                <span class="crtv__st"><b>29</b> cliq</span>
+                <span class="crtv__st"><b>R$ 58,31</b></span>
+              </div>
+            </article>
+            <article class="crtv">
+              <div class="crtv__top">
+                <span class="crtv__thumb"><svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg></span>
+                <div class="crtv__meta">
+                  <span class="crtv__name">Deko 06 print de grupo</span>
+                  <span class="crtv__camp" title="[DEKO][21/07] [05/08] [SEM ADV] AD6">[DEKO][21/07] [05/08] [SEM ADV] AD6</span>
+                </div>
+              </div>
+              <div class="crtv__stats">
+                <span class="crtv__st crtv__ctr"><b>0,97%</b> CTR</span>
+                <span class="crtv__st"><b>12</b> cliq</span>
+                <span class="crtv__st"><b>R$ 44,90</b></span>
+              </div>
+            </article>
+            <article class="crtv">
+              <div class="crtv__top">
+                <span class="crtv__thumb"><svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg></span>
+                <div class="crtv__meta">
+                  <span class="crtv__name">Deko 07 teste de gancho</span>
+                  <span class="crtv__camp" title="[DEKO][21/07] [05/08] [SEM ADV] AD7">[DEKO][21/07] [05/08] [SEM ADV] AD7</span>
+                </div>
+              </div>
+              <div class="crtv__stats">
+                <span class="crtv__st crtv__ctr"><b>1,73%</b> CTR</span>
+                <span class="crtv__st"><b>15</b> cliq</span>
+                <span class="crtv__st"><b>R$ 33,50</b></span>
+              </div>
+            </article>
+          </div>
+        </details>
+      </article>
+
+      <article class="expert" data-expert="CHARLES">
+        <header class="expert__head">
+          <div class="expert__id">
+            <h3 class="expert__name" data-field="expert_name">Charles</h3>
+            <div class="chans">
+              <span class="chan-tag chan-tag--grupo is-on">Grupo</span>
+              <span class="chan-tag chan-tag--direto">Direto</span>
+            </div>
+          </div>
+          <div class="expert__head-metrics">
+            <div class="hm">
+              <span class="hm__lbl">Investido hoje</span>
+              <span class="hm__val" data-field="investimento_total">R$ 498,31</span>
+            </div>
+            <div class="hm">
+              <span class="hm__lbl">Custo por FTD</span>
+              <span class="chip chip--bad" data-field="tap.custo_por_ftd">R$ 498,31</span>
+            </div>
+          </div>
+        </header>
+        <div class="expert__body">
+          <section class="block block--grupo" data-block="grupo">
+            <h4 class="block__title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13h6M8 9h8"/><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M3.5 20.5 5 16"/></svg>
+              Grupo <small>WhatsApp / Telegram</small>
+            </h4>
+            <div class="metrics">
+              <div class="m"><span class="m__lbl">Investido</span><span class="m__val" data-field="grupo.valor_investido">R$ 498,31</span></div>
+              <div class="m"><span class="m__lbl">Entradas</span><span class="m__val" data-field="grupo.resultado">61</span></div>
+              <div class="m"><span class="m__lbl">Custo / entrada</span><span class="m__val" data-field="grupo.custo_por_resultado">R$ 8,17</span></div>
+            </div>
+          </section>
+          <section class="block block--direto block--off" data-block="direto">
+            <h4 class="block__title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0-9-9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 19a6 6 0 0 1 11 0"/></svg>
+              Direto <small>Perfil</small>
+            </h4>
+            <p class="block__off">Sem campanha ativa hoje</p>
+          </section>
+          <section class="block block--tap">
+            <h4 class="block__title">Funil TAP <small>blend do expert, não separa grupo e direto</small></h4>
+            <div class="tap-funnel">
+              <div class="m"><span class="m__lbl">Cadastros</span><span class="m__val" data-field="tap.cadastros">7</span></div>
+              <div class="m"><span class="m__lbl">FTD</span><span class="m__val" data-field="tap.ftd">1</span></div>
+              <div class="m"><span class="m__lbl">Conv. cad → FTD</span><span class="m__val" data-field="tap.conversao_cadastro_ftd">14,3%</span></div>
+              <div class="m"><span class="m__lbl">Custo por FTD</span><span class="m__val" data-field="tap.custo_por_ftd">R$ 498,31</span></div>
+            </div>
+            <div class="tap-fin">
+              <div class="m"><span class="m__lbl">Valor FTD</span><span class="m__val" data-field="tap.valor_ftd">R$ 150,00</span></div>
+              <div class="m"><span class="m__lbl">Depósito</span><span class="m__val" data-field="tap.deposito">R$ 6.320,90</span></div>
+              <div class="m"><span class="m__lbl">Net dep</span><span class="m__val num--pos" data-field="tap.net_dep">R$ 1.890,25</span></div>
+              <div class="m"><span class="m__lbl">Net PL</span><span class="m__val num--pos" data-field="tap.net_pl">R$ 742,10</span></div>
+              <div class="m"><span class="m__lbl">Volume</span><span class="m__val" data-field="tap.volume">R$ 8.120,60</span></div>
+            </div>
+          </section>
+        </div>
+
+        <!-- 1 criativo só: sem selo de destaque (não faz sentido "melhor" de um) -->
+        <details class="crtvs" data-field="criativos" open>
+          <summary class="crtvs__sum">
+            <span>Criativos ativos</span>
+            <span class="crtvs__count num" data-derived="criativos.length">1</span>
+            <svg class="crtvs__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </summary>
+          <div class="crtvs__strip">
+            <article class="crtv">
+              <div class="crtv__top">
+                <span class="crtv__thumb"><svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg></span>
+                <div class="crtv__meta">
+                  <span class="crtv__name">Charles 01 vídeo entrada</span>
+                  <span class="crtv__camp" title="[CHARLES][30/07] [01/08] [SEM ADV] AD1">[CHARLES][30/07] [01/08] [SEM ADV] AD1</span>
+                </div>
+              </div>
+              <div class="crtv__stats">
+                <span class="crtv__st crtv__ctr"><b>1,12%</b> CTR</span>
+                <span class="crtv__st"><b>62</b> cliq</span>
+                <span class="crtv__st"><b>R$ 498,31</b></span>
+              </div>
+            </article>
+          </div>
+        </details>
+      </article>
+
+      <article class="expert" data-expert="TANOS">
+        <header class="expert__head">
+          <div class="expert__id">
+            <h3 class="expert__name" data-field="expert_name">Tanos</h3>
+            <div class="chans">
+              <span class="chan-tag chan-tag--grupo is-on">Grupo</span>
+              <span class="chan-tag chan-tag--direto">Direto</span>
+            </div>
+          </div>
+          <div class="expert__head-metrics">
+            <div class="hm">
+              <span class="hm__lbl">Investido hoje</span>
+              <span class="hm__val" data-field="investimento_total">R$ 402,15</span>
+            </div>
+            <div class="hm">
+              <span class="hm__lbl">Custo por FTD</span>
+              <span class="chip chip--warn" data-field="tap.custo_por_ftd">R$ 134,05</span>
+            </div>
+          </div>
+        </header>
+        <div class="expert__body">
+          <section class="block block--grupo" data-block="grupo">
+            <h4 class="block__title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13h6M8 9h8"/><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M3.5 20.5 5 16"/></svg>
+              Grupo <small>WhatsApp / Telegram</small>
+            </h4>
+            <div class="metrics">
+              <div class="m"><span class="m__lbl">Investido</span><span class="m__val" data-field="grupo.valor_investido">R$ 402,15</span></div>
+              <div class="m"><span class="m__lbl">Entradas</span><span class="m__val" data-field="grupo.resultado">47</span></div>
+              <div class="m"><span class="m__lbl">Custo / entrada</span><span class="m__val" data-field="grupo.custo_por_resultado">R$ 8,56</span></div>
+            </div>
+          </section>
+          <section class="block block--direto block--off" data-block="direto">
+            <h4 class="block__title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0-9-9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 19a6 6 0 0 1 11 0"/></svg>
+              Direto <small>Perfil</small>
+            </h4>
+            <p class="block__off">Sem campanha ativa hoje</p>
+          </section>
+          <section class="block block--tap">
+            <h4 class="block__title">Funil TAP <small>blend do expert, não separa grupo e direto</small></h4>
+            <div class="tap-funnel">
+              <div class="m"><span class="m__lbl">Cadastros</span><span class="m__val" data-field="tap.cadastros">8</span></div>
+              <div class="m"><span class="m__lbl">FTD</span><span class="m__val" data-field="tap.ftd">3</span></div>
+              <div class="m"><span class="m__lbl">Conv. cad → FTD</span><span class="m__val" data-field="tap.conversao_cadastro_ftd">37,5%</span></div>
+              <div class="m"><span class="m__lbl">Custo por FTD</span><span class="m__val" data-field="tap.custo_por_ftd">R$ 134,05</span></div>
+            </div>
+            <div class="tap-fin">
+              <div class="m"><span class="m__lbl">Valor FTD</span><span class="m__val" data-field="tap.valor_ftd">R$ 640,00</span></div>
+              <div class="m"><span class="m__lbl">Depósito</span><span class="m__val" data-field="tap.deposito">R$ 9.740,10</span></div>
+              <div class="m"><span class="m__lbl">Net dep</span><span class="m__val num--pos" data-field="tap.net_dep">R$ 3.120,80</span></div>
+              <div class="m"><span class="m__lbl">Net PL</span><span class="m__val num--pos" data-field="tap.net_pl">R$ 1.980,35</span></div>
+              <div class="m"><span class="m__lbl">Volume</span><span class="m__val" data-field="tap.volume">R$ 11.450,25</span></div>
+            </div>
+          </section>
+        </div>
+
+        <!-- 9 criativos: caso de rolagem horizontal (o pior caso de hoje) -->
+        <details class="crtvs" data-field="criativos" open>
+          <summary class="crtvs__sum">
+            <span>Criativos ativos</span>
+            <span class="crtvs__count num" data-derived="criativos.length">9</span>
+            <span class="crtvs__hint">role para ver todos →</span>
+            <svg class="crtvs__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </summary>
+          <div class="crtvs__strip">
+            <article class="crtv">
+              <div class="crtv__top">
+                <span class="crtv__thumb"><svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg></span>
+                <div class="crtv__meta">
+                  <span class="crtv__name">Tanos 01 green ao vivo</span>
+                  <span class="crtv__camp" title="[TANOS][15/07] [04/08] [SEM ADV] AD1">[TANOS][15/07] [04/08] [SEM ADV] AD1</span>
+                </div>
+              </div>
+              <div class="crtv__stats">
+                <span class="crtv__st crtv__ctr"><b>2,58%</b> CTR</span>
+                <span class="crtv__st"><b>41</b> cliq</span>
+                <span class="crtv__st"><b>R$ 88,40</b></span>
+              </div>
+            </article>
+            <article class="crtv crtv--top" data-derived="maior ctr do expert">
+              <div class="crtv__top">
+                <span class="crtv__thumb"><svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg></span>
+                <div class="crtv__meta">
+                  <span class="crtv__name">Tanos 02 chamada de grupo</span>
+                  <span class="crtv__camp" title="[TANOS][15/07] [04/08] [SEM ADV] AD2">[TANOS][15/07] [04/08] [SEM ADV] AD2</span>
+                </div>
+              </div>
+              <div class="crtv__stats">
+                <span class="crtv__st crtv__ctr"><b>3,91%</b> CTR</span>
+                <span class="crtv__st"><b>37</b> cliq</span>
+                <span class="crtv__st"><b>R$ 71,25</b></span>
+              </div>
+            </article>
+            <article class="crtv">
+              <div class="crtv__top">
+                <span class="crtv__thumb"><svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg></span>
+                <div class="crtv__meta">
+                  <span class="crtv__name">Tanos 03 antes e depois</span>
+                  <span class="crtv__camp" title="[TANOS][15/07] [04/08] [SEM ADV] AD3">[TANOS][15/07] [04/08] [SEM ADV] AD3</span>
+                </div>
+              </div>
+              <div class="crtv__stats">
+                <span class="crtv__st crtv__ctr"><b>1,74%</b> CTR</span>
+                <span class="crtv__st"><b>28</b> cliq</span>
+                <span class="crtv__st"><b>R$ 56,90</b></span>
+              </div>
+            </article>
+            <article class="crtv">
+              <div class="crtv__top">
+                <span class="crtv__thumb"><svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg></span>
+                <div class="crtv__meta">
+                  <span class="crtv__name">Tanos 04 estático odds</span>
+                  <span class="crtv__camp" title="[TANOS][15/07] [04/08] [SEM ADV] AD4">[TANOS][15/07] [04/08] [SEM ADV] AD4</span>
+                </div>
+              </div>
+              <div class="crtv__stats">
+                <span class="crtv__st crtv__ctr"><b>2,02%</b> CTR</span>
+                <span class="crtv__st"><b>25</b> cliq</span>
+                <span class="crtv__st"><b>R$ 48,30</b></span>
+              </div>
+            </article>
+            <article class="crtv">
+              <div class="crtv__top">
+                <span class="crtv__thumb"><svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg></span>
+                <div class="crtv__meta">
+                  <span class="crtv__name">Tanos 05 reels rápido</span>
+                  <span class="crtv__camp" title="[TANOS][15/07] [04/08] [SEM ADV] AD5">[TANOS][15/07] [04/08] [SEM ADV] AD5</span>
+                </div>
+              </div>
+              <div class="crtv__stats">
+                <span class="crtv__st crtv__ctr"><b>1,45%</b> CTR</span>
+                <span class="crtv__st"><b>18</b> cliq</span>
+                <span class="crtv__st"><b>R$ 39,75</b></span>
+              </div>
+            </article>
+            <article class="crtv">
+              <div class="crtv__top">
+                <span class="crtv__thumb"><svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg></span>
+                <div class="crtv__meta">
+                  <span class="crtv__name">Tanos 06 print de saque</span>
+                  <span class="crtv__camp" title="[TANOS][15/07] [04/08] [SEM ADV] AD6">[TANOS][15/07] [04/08] [SEM ADV] AD6</span>
+                </div>
+              </div>
+              <div class="crtv__stats">
+                <span class="crtv__st crtv__ctr"><b>2,88%</b> CTR</span>
+                <span class="crtv__st"><b>22</b> cliq</span>
+                <span class="crtv__st"><b>R$ 32,60</b></span>
+              </div>
+            </article>
+            <article class="crtv">
+              <div class="crtv__top">
+                <span class="crtv__thumb"><svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg></span>
+                <div class="crtv__meta">
+                  <span class="crtv__name">Tanos 07 carrossel</span>
+                  <span class="crtv__camp" title="[TANOS][15/07] [04/08] [SEM ADV] AD7">[TANOS][15/07] [04/08] [SEM ADV] AD7</span>
+                </div>
+              </div>
+              <div class="crtv__stats">
+                <span class="crtv__st crtv__ctr"><b>1,19%</b> CTR</span>
+                <span class="crtv__st"><b>11</b> cliq</span>
+                <span class="crtv__st"><b>R$ 26,45</b></span>
+              </div>
+            </article>
+            <article class="crtv">
+              <div class="crtv__top">
+                <span class="crtv__thumb"><svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg></span>
+                <div class="crtv__meta">
+                  <span class="crtv__name">Tanos 08 teste de copy</span>
+                  <span class="crtv__camp" title="[TANOS][15/07] [04/08] [SEM ADV] AD8">[TANOS][15/07] [04/08] [SEM ADV] AD8</span>
+                </div>
+              </div>
+              <div class="crtv__stats">
+                <span class="crtv__st crtv__ctr"><b>0,84%</b> CTR</span>
+                <span class="crtv__st"><b>7</b> cliq</span>
+                <span class="crtv__st"><b>R$ 21,30</b></span>
+              </div>
+            </article>
+            <article class="crtv">
+              <div class="crtv__top">
+                <span class="crtv__thumb"><svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg></span>
+                <div class="crtv__meta">
+                  <span class="crtv__name">Tanos 09 chamada curta</span>
+                  <span class="crtv__camp" title="[TANOS][15/07] [04/08] [SEM ADV] AD9">[TANOS][15/07] [04/08] [SEM ADV] AD9</span>
+                </div>
+              </div>
+              <div class="crtv__stats">
+                <span class="crtv__st crtv__ctr"><b>2,31%</b> CTR</span>
+                <span class="crtv__st"><b>13</b> cliq</span>
+                <span class="crtv__st"><b>R$ 17,20</b></span>
+              </div>
+            </article>
+          </div>
+        </details>
+      </article>
+
+      <!-- ESTADO ESPELHADO: grupo inativo + direto ativo -->
+      <article class="expert" data-expert="QZL">
+        <header class="expert__head">
+          <div class="expert__id">
+            <h3 class="expert__name" data-field="expert_name">QZL</h3>
+            <div class="chans">
+              <span class="chan-tag chan-tag--grupo">Grupo</span>
+              <span class="chan-tag chan-tag--direto is-on">Direto</span>
+            </div>
+          </div>
+          <div class="expert__head-metrics">
+            <div class="hm">
+              <span class="hm__lbl">Investido hoje</span>
+              <span class="hm__val" data-field="investimento_total">R$ 253,22</span>
+            </div>
+            <div class="hm">
+              <span class="hm__lbl">Custo por FTD</span>
+              <span class="chip chip--good" data-field="tap.custo_por_ftd">R$ 84,41</span>
+            </div>
+          </div>
+        </header>
+        <div class="expert__body">
+          <section class="block block--grupo block--off" data-block="grupo">
+            <h4 class="block__title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13h6M8 9h8"/><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M3.5 20.5 5 16"/></svg>
+              Grupo <small>WhatsApp / Telegram</small>
+            </h4>
+            <p class="block__off">Sem campanha ativa hoje</p>
+          </section>
+          <section class="block block--direto" data-block="direto">
+            <h4 class="block__title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0-9-9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 19a6 6 0 0 1 11 0"/></svg>
+              Direto <small>Perfil</small>
+            </h4>
+            <div class="metrics">
+              <div class="m"><span class="m__lbl">Investido</span><span class="m__val" data-field="direto.valor_investido">R$ 253,22</span></div>
+              <div class="m"><span class="m__lbl">Resultados</span><span class="m__val" data-field="direto.resultado">850</span></div>
+              <div class="m"><span class="m__lbl">Custo / resultado</span><span class="m__val" data-field="direto.custo_por_resultado">R$ 0,30</span></div>
+            </div>
+          </section>
+          <section class="block block--tap">
+            <h4 class="block__title">Funil TAP <small>blend do expert, não separa grupo e direto</small></h4>
+            <div class="tap-funnel">
+              <div class="m"><span class="m__lbl">Cadastros</span><span class="m__val" data-field="tap.cadastros">20</span></div>
+              <div class="m"><span class="m__lbl">FTD</span><span class="m__val" data-field="tap.ftd">3</span></div>
+              <div class="m"><span class="m__lbl">Conv. cad → FTD</span><span class="m__val" data-field="tap.conversao_cadastro_ftd">15,0%</span></div>
+              <div class="m"><span class="m__lbl">Custo por FTD</span><span class="m__val" data-field="tap.custo_por_ftd">R$ 84,41</span></div>
+            </div>
+            <div class="tap-fin">
+              <div class="m"><span class="m__lbl">Valor FTD</span><span class="m__val" data-field="tap.valor_ftd">R$ 120,00</span></div>
+              <div class="m"><span class="m__lbl">Depósito</span><span class="m__val" data-field="tap.deposito">R$ 800,00</span></div>
+              <div class="m"><span class="m__lbl">Net dep</span><span class="m__val num--neg" data-field="tap.net_dep">-R$ 30,00</span></div>
+              <div class="m"><span class="m__lbl">Net PL</span><span class="m__val num--pos" data-field="tap.net_pl">R$ 55,00</span></div>
+              <div class="m"><span class="m__lbl">Volume</span><span class="m__val" data-field="tap.volume">R$ 620,00</span></div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ESTADO VAZIO: criativos === []. Linha única, sem <details>, sem cara de erro.
+             (no teste ao vivo de 06/08 QZL, GREGORIO e EDERSON vieram com 0 criativos) -->
+        <div class="crtvs crtvs--empty" data-field="criativos">
+          <span>Criativos ativos</span>
+          <span class="crtvs__none">Nenhum criativo ativo no momento</span>
+        </div>
+      </article>
+
+      <article class="expert" data-expert="GREGORIO BIG">
+        <header class="expert__head">
+          <div class="expert__id">
+            <h3 class="expert__name" data-field="expert_name">Gregório Big</h3>
+            <div class="chans">
+              <span class="chan-tag chan-tag--grupo is-on">Grupo</span>
+              <span class="chan-tag chan-tag--direto">Direto</span>
+            </div>
+          </div>
+          <div class="expert__head-metrics">
+            <div class="hm">
+              <span class="hm__lbl">Investido hoje</span>
+              <span class="hm__val" data-field="investimento_total">R$ 240,26</span>
+            </div>
+            <div class="hm">
+              <span class="hm__lbl">Custo por FTD</span>
+              <span class="chip chip--na" data-field="tap.custo_por_ftd">Aguardando</span>
+            </div>
+          </div>
+        </header>
+        <div class="expert__body">
+          <section class="block block--grupo" data-block="grupo">
+            <h4 class="block__title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13h6M8 9h8"/><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M3.5 20.5 5 16"/></svg>
+              Grupo <small>WhatsApp / Telegram</small>
+            </h4>
+            <div class="metrics">
+              <div class="m"><span class="m__lbl">Investido</span><span class="m__val" data-field="grupo.valor_investido">R$ 240,26</span></div>
+              <div class="m"><span class="m__lbl">Entradas</span><span class="m__val" data-field="grupo.resultado">22</span></div>
+              <div class="m"><span class="m__lbl">Custo / entrada</span><span class="m__val" data-field="grupo.custo_por_resultado">R$ 10,92</span></div>
+            </div>
+          </section>
+          <section class="block block--direto block--off" data-block="direto">
+            <h4 class="block__title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0-9-9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 19a6 6 0 0 1 11 0"/></svg>
+              Direto <small>Perfil</small>
+            </h4>
+            <p class="block__off">Sem campanha ativa hoje</p>
+          </section>
+          <section class="block block--tap">
+            <h4 class="block__title">Funil TAP <small>blend do expert, não separa grupo e direto</small></h4>
+            <div class="tap-funnel">
+              <div class="m"><span class="m__lbl">Cadastros</span><span class="m__val" data-field="tap.cadastros">4</span></div>
+              <div class="m"><span class="m__lbl">FTD</span><span class="m__val" data-field="tap.ftd">0</span></div>
+              <div class="m"><span class="m__lbl">Conv. cad → FTD</span><span class="m__val" data-field="tap.conversao_cadastro_ftd">0,0%</span></div>
+              <div class="m"><span class="m__lbl">Custo por FTD</span><span class="m__val val--na" data-field="tap.custo_por_ftd">Aguardando</span></div>
+            </div>
+            <div class="tap-fin">
+              <div class="m"><span class="m__lbl">Valor FTD</span><span class="m__val" data-field="tap.valor_ftd">R$ 0,00</span></div>
+              <div class="m"><span class="m__lbl">Depósito</span><span class="m__val" data-field="tap.deposito">R$ 3.350,20</span></div>
+              <div class="m"><span class="m__lbl">Net dep</span><span class="m__val num--neg" data-field="tap.net_dep">-R$ 420,15</span></div>
+              <div class="m"><span class="m__lbl">Net PL</span><span class="m__val num--pos" data-field="tap.net_pl">R$ 210,90</span></div>
+              <div class="m"><span class="m__lbl">Volume</span><span class="m__val" data-field="tap.volume">R$ 4.180,70</span></div>
+            </div>
+          </section>
+        </div>
+
+        <div class="crtvs crtvs--empty" data-field="criativos">
+          <span>Criativos ativos</span>
+          <span class="crtvs__none">Nenhum criativo ativo no momento</span>
+        </div>
+      </article>
+
+      <article class="expert" data-expert="EDERSON">
+        <header class="expert__head">
+          <div class="expert__id">
+            <h3 class="expert__name" data-field="expert_name">Ederson</h3>
+            <div class="chans">
+              <span class="chan-tag chan-tag--grupo is-on">Grupo</span>
+              <span class="chan-tag chan-tag--direto">Direto</span>
+            </div>
+          </div>
+          <div class="expert__head-metrics">
+            <div class="hm">
+              <span class="hm__lbl">Investido hoje</span>
+              <span class="hm__val" data-field="investimento_total">R$ 36,45</span>
+            </div>
+            <div class="hm">
+              <span class="hm__lbl">Custo por FTD</span>
+              <span class="chip chip--na" data-field="tap.custo_por_ftd">Aguardando</span>
+            </div>
+          </div>
+        </header>
+        <div class="expert__body">
+          <section class="block block--grupo" data-block="grupo">
+            <h4 class="block__title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13h6M8 9h8"/><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M3.5 20.5 5 16"/></svg>
+              Grupo <small>WhatsApp / Telegram</small>
+            </h4>
+            <div class="metrics">
+              <div class="m"><span class="m__lbl">Investido</span><span class="m__val" data-field="grupo.valor_investido">R$ 36,45</span></div>
+              <div class="m"><span class="m__lbl">Entradas</span><span class="m__val" data-field="grupo.resultado">6</span></div>
+              <div class="m"><span class="m__lbl">Custo / entrada</span><span class="m__val" data-field="grupo.custo_por_resultado">R$ 6,08</span></div>
+            </div>
+          </section>
+          <section class="block block--direto block--off" data-block="direto">
+            <h4 class="block__title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0-9-9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 19a6 6 0 0 1 11 0"/></svg>
+              Direto <small>Perfil</small>
+            </h4>
+            <p class="block__off">Sem campanha ativa hoje</p>
+          </section>
+          <section class="block block--tap">
+            <h4 class="block__title">Funil TAP <small>blend do expert, não separa grupo e direto</small></h4>
+            <div class="tap-funnel">
+              <div class="m"><span class="m__lbl">Cadastros</span><span class="m__val" data-field="tap.cadastros">0</span></div>
+              <div class="m"><span class="m__lbl">FTD</span><span class="m__val" data-field="tap.ftd">0</span></div>
+              <div class="m"><span class="m__lbl">Conv. cad → FTD</span><span class="m__val val--na" data-field="tap.conversao_cadastro_ftd">n/d</span></div>
+              <div class="m"><span class="m__lbl">Custo por FTD</span><span class="m__val val--na" data-field="tap.custo_por_ftd">n/d</span></div>
+            </div>
+            <div class="tap-fin">
+              <div class="m"><span class="m__lbl">Valor FTD</span><span class="m__val" data-field="tap.valor_ftd">R$ 0,00</span></div>
+              <div class="m"><span class="m__lbl">Depósito</span><span class="m__val" data-field="tap.deposito">R$ 16.730,00</span></div>
+              <div class="m"><span class="m__lbl">Net dep</span><span class="m__val num--pos" data-field="tap.net_dep">R$ 6.730,00</span></div>
+              <div class="m"><span class="m__lbl">Net PL</span><span class="m__val num--pos" data-field="tap.net_pl">R$ 3.026,80</span></div>
+              <div class="m"><span class="m__lbl">Volume</span><span class="m__val" data-field="tap.volume">R$ 20.728,05</span></div>
+            </div>
+          </section>
+        </div>
+
+        <div class="crtvs crtvs--empty" data-field="criativos">
+          <span>Criativos ativos</span>
+          <span class="crtvs__none">Nenhum criativo ativo no momento</span>
+        </div>
+      </article>
+
+    </section>
+
+    </div><!-- ══════════ /ABA 2 · POR EXPERT ══════════ -->
+  </div><!-- /.views -->
+
+    <footer class="foot">
+      <p>
+        <b>Grupo</b> são as campanhas de WhatsApp e Telegram (a pessoa entra num grupo antes).
+        <b>Direto</b> são as campanhas de Perfil (a pessoa vai direto pro link, sem grupo).
+      </p>
+      <p>
+        O <b>funil TAP</b> é blend do expert: a plataforma de afiliados não identifica de qual
+        campanha do Meta veio cada cadastro, então cadastros, FTD e depósito não se separam
+        entre grupo e direto.
+      </p>
+      <p>
+        <b>Custo por FTD</b> colorido por faixa: verde abaixo de R$ 120, âmbar entre
+        R$ 120 e R$ 200, vermelho acima de R$ 200.
+        <span data-derived="totais.investimento_total / totais.ftd" id="foot-media">Média da operação hoje: R$ 183,28.</span>
+        Faixas provisórias, ajustar quando o cliente definir a meta oficial.
+      </p>
+      <p>
+        <b>Criativos ativos</b> são os anúncios com status ACTIVE no Meta neste momento,
+        com números do dia corrente. O selo dourado marca o de maior CTR do expert.
+        Experts ordenados por investimento do dia, do maior para o menor.
+      </p>
+      <p>
+        Investimento do Meta Ads e funil da TAP, do dia corrente.
+        Dado financeiro interno, <b>não compartilhar o link fora do time</b>.
+      </p>
+    </footer>
+
+  </div><!-- /wrap -->
+</div><!-- /#dashboard-root -->
+
+<script>
+(function () {
+'use strict';
+/* ══════════════════════════════════════════════════════════════════════════
+   CAMADA DE DADOS · entregue pelo `web-designer`
+   O design veio pronto e não foi redesenhado: este bloco só troca os números
+   de exemplo por dado real e liga o que era casca. O que vale saber:
+
+   · O TOKEN DO N8N NÃO ESTÁ NESTA PÁGINA. O fetch vai em /api/dashboard, uma
+     função serverless na Vercel que injeta o token (variável de ambiente) do
+     lado do servidor e repassa a resposta. Ver api/dashboard.js.
+   · Auto-refresh de 5 min só roda quando a resposta traz periodo.is_hoje.
+     Período fechado não muda mais: o timer é desligado e a pílula avisa.
+   · As abas viraram rota de hash (#geral / #experts). Sem isso o refresh
+     jogaria a pessoa de volta pra "Visão geral" no meio da leitura. Os dois
+     <input> continuam exatamente onde estavam, o JS só marca .checked.
+   · Faixa de custo por FTD: FAIXA_BOA / FAIXA_ALTA logo abaixo. Um lugar só,
+     como o design pediu. Continuam provisórias até o cliente passar a meta.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+var ROOT       = document.getElementById('dashboard-root');
+var ENDPOINT   = '/api/dashboard';
+var REFRESH_MS = parseInt(ROOT.getAttribute('data-refresh-ms'), 10) || 300000;
+var STALE_MS   = REFRESH_MS + 60000;          /* 6 min: dado envelhecendo */
+var RETRY_MS   = 60000;                        /* nova tentativa depois de falha */
+var TZ         = 'America/Sao_Paulo';
+var FAIXA_BOA  = 120;                          /* custo por FTD bom  (< 120)  */
+var FAIXA_ALTA = 200;                          /* custo por FTD alto (> 200)  */
+var LS_KEY     = 'bb-dash-periodo';
+
+/* ── 1. utilidades ──────────────────────────────────────────────────────── */
+function $(sel, ctx) { return (ctx || document).querySelector(sel); }
+function $$(sel, ctx) { return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); }
+function campo(ctx, nome) { return ctx.querySelector('[data-field="' + nome + '"]'); }
+
+function ehNum(v) { return typeof v === 'number' && isFinite(v); }
+function brl(v) {
+  if (!ehNum(v)) return null;
+  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+function inteiro(v) { return ehNum(v) ? v.toLocaleString('pt-BR', { maximumFractionDigits: 0 }) : null; }
+function pct(v, casas) {
+  if (!ehNum(v)) return null;
+  return v.toFixed(casas == null ? 1 : casas).replace('.', ',') + '%';
+}
+function vezes(v) { return ehNum(v) ? v.toFixed(1).replace('.', ',') + '×' : null; }
+
+/* escreve valor formatado e aplica .val--na quando é nulo */
+function escreve(el, txt, textoNulo) {
+  if (!el) return;
+  if (txt == null) { el.textContent = textoNulo || 'n/d'; el.classList.add('val--na'); }
+  else { el.textContent = txt; el.classList.remove('val--na'); }
+}
+function classeSinal(el, valor) {
+  if (!el) return;
+  el.classList.remove('num--pos', 'num--neg');
+  if (ehNum(valor) && valor !== 0) el.classList.add(valor > 0 ? 'num--pos' : 'num--neg');
+}
+function faixaChip(cpf) {
+  if (!ehNum(cpf)) return 'chip--na';
+  if (cpf < FAIXA_BOA) return 'chip--good';
+  if (cpf <= FAIXA_ALTA) return 'chip--warn';
+  return 'chip--bad';
+}
+
+/* nomes: a API manda caixa alta, o design escreve em caixa mista */
+var NOMES = {
+  'GP DADOS': 'GP Dados', 'GREGORIO BIG': 'Gregório Big', 'TANOS': 'Tanos',
+  'DEKO': 'Deko', 'CHARLES': 'Charles', 'QZL': 'QZL', 'EDERSON': 'Ederson'
+};
+function nomeExpert(n) {
+  if (!n) return '';
+  if (NOMES[n]) return NOMES[n];
+  return String(n).split(' ').map(function (p) {
+    return p.length <= 3 ? p : p.charAt(0) + p.slice(1).toLowerCase();
+  }).join(' ');
+}
+
+/* ── 2. datas (sempre no fuso de Brasília, não no do navegador) ─────────── */
+function ymd(d) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(d);
+}
+function hojeSP() { return ymd(new Date()); }
+function somaDias(iso, n) {
+  var p = iso.split('-');
+  var d = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2]));
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+function dataBR(iso) { var p = String(iso).split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
+function dataCurta(iso) { var p = String(iso).split('-'); return p[2] + '/' + p[1]; }
+
+function rotuloPeriodo(p) {
+  if (!p || !p.de) return '';
+  var hoje = hojeSP(), ontem = somaDias(hoje, -1);
+  if (p.de === p.ate) {
+    if (p.de === hoje) return 'hoje, ' + dataBR(p.de);
+    if (p.de === ontem) return 'ontem, ' + dataBR(p.de);
+    return dataBR(p.de);
+  }
+  return dataCurta(p.de) + ' a ' + dataBR(p.ate);
+}
+
+/* ── 3. moldes clonados do HTML estático ────────────────────────────────── */
+var MOLDE = {};
+function guardarMoldes() {
+  var lista = $('#experts-list');
+  var base  = $('.expert', lista);
+  MOLDE.expert       = base.cloneNode(true);
+  MOLDE.crtv         = $('.crtv', base).cloneNode(true);
+  MOLDE.crtvsCheia   = $('details.crtvs', base).cloneNode(true);
+  MOLDE.crtvsVazia   = $('.crtvs--empty', lista).cloneNode(true);
+  MOLDE.metricasGrupo= $('[data-block="grupo"] .metrics', base).cloneNode(true);
+  /* QZL é o único card do exemplo com "direto" ativo: é de lá que sai o molde
+     de métricas do canal direto, que tem rótulos próprios (Resultados). */
+  var comDireto = $('[data-expert="QZL"] [data-block="direto"] .metrics', lista);
+  MOLDE.metricasDireto = (comDireto || MOLDE.metricasGrupo).cloneNode(true);
+  MOLDE.blocoOff     = $('[data-block="direto"] .block__off', base).cloneNode(true);
+  MOLDE.cmpLinha     = $('.cmp__body .cmp__row').cloneNode(true);
+  MOLDE.topCrtv      = $('.topcrtvs .crtv').cloneNode(true);
+  MOLDE.topCrtv.classList.remove('crtv--top');
+  MOLDE.crtv.classList.remove('crtv--top');
+}
+
+/* ── 4. ícones do veredito ──────────────────────────────────────────────── */
+var ICONE = {
+  alerta: '<path d="M12 9v5"/><circle cx="12" cy="17.5" r=".6" fill="currentColor"/><path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>',
+  ok:     '<circle cx="12" cy="12" r="9"/><path d="m8.2 12.4 2.6 2.6 5-5.4"/>',
+  espera: '<circle cx="12" cy="12" r="9"/><path d="M12 7.4V12l3 1.8"/>'
+};
+function escreveVeredito(el, icone, texto) {
+  el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONE[icone] + '</svg>';
+  el.appendChild(document.createTextNode(' ' + texto));
+}
+
+/* ── 5. estado ──────────────────────────────────────────────────────────── */
+var estado = {
+  dados: null,          /* última resposta boa */
+  isHoje: true,
+  ultimoOk: 0,
+  carregando: false,
+  jaCarregou: false,
+  timer: null,
+  reqId: 0,
+  crtvsAbertos: {}      /* prateleiras que a pessoa fechou continuam fechadas */
+};
+
+/* ── 6. renderização ────────────────────────────────────────────────────── */
+
+function pintarCriativo(molde, c, dono) {
+  var el = molde.cloneNode(true);
+  if (c.id) el.setAttribute('data-crtv-id', c.id);
+
+  var thumb = $('.crtv__thumb', el);
+  if (thumb) {
+    var antiga = $('img', thumb);
+    if (antiga) antiga.remove();
+    if (c.thumbnail_url) {
+      var img = document.createElement('img');
+      img.src = c.thumbnail_url;
+      img.alt = '';
+      img.loading = 'lazy';
+      img.referrerPolicy = 'no-referrer';
+      /* a URL do Facebook expira: some a imagem em vez de virar ícone quebrado */
+      img.onerror = function () { if (img.parentNode) img.parentNode.removeChild(img); };
+      thumb.insertBefore(img, thumb.firstChild);
+    }
+  }
+
+  var dn = $('.crtv__owner', el);
+  if (dn) dn.textContent = nomeExpert(dono);
+
+  escreve($('.crtv__name', el), c.nome || 'Sem nome');
+
+  var camp = $('.crtv__camp', el);
+  if (camp) {
+    camp.textContent = c.campanha || '';
+    if (c.campanha) camp.setAttribute('title', c.campanha); else camp.removeAttribute('title');
+  }
+
+  var b = $('.crtv__ctr b', el);
+  escreve(b, pct(c.ctr, 2));
+  var stats = $$('.crtv__stats .crtv__st b', el);
+  /* ordem do molde: CTR, cliques, gasto */
+  escreve(stats[1], inteiro(c.clicks));
+  escreve(stats[2], brl(c.spend));
+  return el;
+}
+
+function pintarPrateleira(art, expert, isHoje) {
+  var atual = $('.crtvs', art);
+  if (!atual) return;
+  var lista = (expert.criativos || []).slice().sort(function (a, b) {
+    return (b.spend || 0) - (a.spend || 0);
+  });
+  var rotulo = isHoje ? 'Criativos ativos' : 'Criativos com entrega no período';
+
+  if (!lista.length) {
+    var vazia = MOLDE.crtvsVazia.cloneNode(true);
+    vazia.querySelector('span').textContent = rotulo;
+    $('.crtvs__none', vazia).textContent = isHoje
+      ? 'Nenhum criativo ativo no momento'
+      : 'Nenhum criativo com entrega no período';
+    atual.parentNode.replaceChild(vazia, atual);
+    return;
+  }
+
+  var det = MOLDE.crtvsCheia.cloneNode(true);
+  $('.crtvs__sum span', det).textContent = rotulo;
+  $('.crtvs__count', det).textContent = String(lista.length);
+  if (lista.length < 3) { var hint = $('.crtvs__hint', det); if (hint) hint.remove(); }
+
+  var faixa = $('.crtvs__strip', det);
+  faixa.innerHTML = '';
+
+  var comCtr = lista.filter(function (c) { return ehNum(c.ctr); });
+  var maiorCtr = comCtr.length && lista.length > 1
+    ? Math.max.apply(null, comCtr.map(function (c) { return c.ctr; }))
+    : null;
+  var jaMarcou = false;
+
+  lista.forEach(function (c) {
+    var el = pintarCriativo(MOLDE.crtv, c, null);
+    if (!jaMarcou && maiorCtr != null && c.ctr === maiorCtr) { el.classList.add('crtv--top'); jaMarcou = true; }
+    faixa.appendChild(el);
+  });
+
+  /* respeita quem fechou a prateleira: o refresh não reabre */
+  var chave = expert.expert_name;
+  if (estado.crtvsAbertos[chave] === false) det.removeAttribute('open'); else det.setAttribute('open', '');
+  det.addEventListener('toggle', function () { estado.crtvsAbertos[chave] = det.open; });
+
+  atual.parentNode.replaceChild(det, atual);
+}
+
+function pintarBloco(art, expert, canal, isHoje) {
+  var sec = $('[data-block="' + canal + '"]', art);
+  if (!sec) return;
+  var d = expert[canal] || {};
+  var m = $('.metrics', sec); if (m) m.remove();
+  var off = $('.block__off', sec); if (off) off.remove();
+
+  if (!d.ativo) {
+    sec.classList.add('block--off');
+    var p = MOLDE.blocoOff.cloneNode(true);
+    p.textContent = isHoje ? 'Sem campanha ativa hoje' : 'Sem campanha ativa no período';
+    sec.appendChild(p);
+    return;
+  }
+
+  sec.classList.remove('block--off');
+  var mm = (canal === 'grupo' ? MOLDE.metricasGrupo : MOLDE.metricasDireto).cloneNode(true);
+  var vals = [brl(d.valor_investido), inteiro(d.resultado), brl(d.custo_por_resultado)];
+  var nomes = ['valor_investido', 'resultado', 'custo_por_resultado'];
+  $$('.m__val', mm).forEach(function (el, i) {
+    el.setAttribute('data-field', canal + '.' + nomes[i]);
+    escreve(el, vals[i]);
+  });
+  sec.appendChild(mm);
+}
+
+function pintarExpert(expert, ehPrimeiro, isHoje) {
+  var art = MOLDE.expert.cloneNode(true);
+  art.setAttribute('data-expert', expert.expert_name);
+  escreve($('.expert__name', art), nomeExpert(expert.expert_name));
+
+  var selo = $('.badge-top', art);
+  if (selo && !ehPrimeiro) selo.remove();
+
+  var g = $('.chan-tag--grupo', art), dt = $('.chan-tag--direto', art);
+  if (g)  g.classList.toggle('is-on',  !!(expert.grupo  && expert.grupo.ativo));
+  if (dt) dt.classList.toggle('is-on', !!(expert.direto && expert.direto.ativo));
+
+  var hms = $$('.expert__head-metrics .hm', art);
+  if (hms[0]) {
+    $('.hm__lbl', hms[0]).textContent = isHoje ? 'Investido hoje' : 'Investido no período';
+    escreve($('.hm__val', hms[0]), brl(expert.investimento_total));
+  }
+  var tap = expert.tap || {};
+  var chip = $('.expert__head-metrics .chip', art);
+  if (chip) {
+    chip.className = 'chip ' + faixaChip(tap.custo_por_ftd);
+    chip.textContent = ehNum(tap.custo_por_ftd) ? brl(tap.custo_por_ftd) : 'Aguardando';
+  }
+
+  pintarBloco(art, expert, 'grupo', isHoje);
+  pintarBloco(art, expert, 'direto', isHoje);
+
+  /* ATENÇÃO: o card tem DOIS [data-field="tap.custo_por_ftd"], o chip do
+     cabeçalho e o número dentro do funil. Escrever a partir do <article>
+     pegaria sempre o primeiro e o funil ficaria com o valor do molde.
+     Por isso os campos da TAP são escritos a partir do bloco, não do card. */
+  var boxTap = $('.block--tap', art) || art;
+  escreve(campo(boxTap, 'tap.cadastros'), inteiro(tap.cadastros));
+  escreve(campo(boxTap, 'tap.ftd'), inteiro(tap.ftd));
+  escreve(campo(boxTap, 'tap.conversao_cadastro_ftd'), pct(tap.conversao_cadastro_ftd));
+  escreve(campo(boxTap, 'tap.custo_por_ftd'), brl(tap.custo_por_ftd));
+  escreve(campo(boxTap, 'tap.valor_ftd'), brl(tap.valor_ftd));
+  escreve(campo(boxTap, 'tap.deposito'), brl(tap.deposito));
+  var nd = campo(boxTap, 'tap.net_dep'), np = campo(boxTap, 'tap.net_pl');
+  escreve(nd, brl(tap.net_dep)); classeSinal(nd, tap.net_dep);
+  escreve(np, brl(tap.net_pl));  classeSinal(np, tap.net_pl);
+  escreve(campo(boxTap, 'tap.volume'), brl(tap.volume));
+
+  pintarPrateleira(art, expert, isHoje);
+  return art;
+}
+
+function pintarExperts(d, isHoje) {
+  var lista = $('#experts-list');
+  var exps = d.experts || [];
+  var frag = document.createDocumentFragment();
+  exps.forEach(function (e, i) { frag.appendChild(pintarExpert(e, i === 0, isHoje)); });
+  lista.innerHTML = '';
+  lista.appendChild(frag);
+
+  var cab = lista.previousElementSibling;
+  if (cab) {
+    var h = $('.eyebrow', cab);
+    if (h) h.textContent = 'Por expert · ' + exps.length +
+      (exps.length === 1 ? ' ativo' : ' ativos') + ' · maior investimento primeiro';
+  }
+  var badge = $('.tab__badge');
+  if (badge) badge.textContent = String(exps.length);
+}
+
+function pintarVeredito(d, isHoje) {
+  var box = $('.verdict');
+  var t = d.totais || {};
+  var inv = ehNum(t.investimento_total) ? t.investimento_total : 0;
+  var ftd = ehNum(t.ftd) ? t.ftd : 0;
+  var quando = isHoje ? 'hoje' : 'no período';
+  var txt = $('.verdict__txt', box), why = $('.verdict__why', box);
+  box.className = 'verdict';
+
+  if (!ftd) {
+    box.classList.add('verdict--na');
+    escreveVeredito(txt, 'espera', 'Ainda sem FTD ' + quando);
+    why.textContent = brl(inv) + ' investidos até agora, nenhum FTD registrado.';
+    return;
+  }
+
+  var cpf = inv / ftd;
+  var acima = (d.experts || []).filter(function (e) {
+    return e.tap && ehNum(e.tap.custo_por_ftd) && e.tap.custo_por_ftd > FAIXA_ALTA;
+  });
+  var verbaAcima = acima.reduce(function (s, e) { return s + (e.investimento_total || 0); }, 0);
+  var share = inv > 0 ? verbaAcima / inv * 100 : 0;
+
+  if (cpf < FAIXA_BOA) { box.classList.add('verdict--good'); escreveVeredito(txt, 'ok', 'Custo por FTD dentro da faixa boa'); }
+  else if (cpf <= FAIXA_ALTA) { box.classList.add('verdict--warn'); escreveVeredito(txt, 'alerta', 'Custo por FTD acima do confortável'); }
+  else { box.classList.add('verdict--bad'); escreveVeredito(txt, 'alerta', 'Custo por FTD alto'); }
+
+  var frase = brl(cpf) + ' por FTD ' + quando + ', contra ' + brl(FAIXA_BOA) + ' da faixa boa. ';
+  if (!acima.length) frase += 'Nenhum expert acima de ' + brl(FAIXA_ALTA) + '.';
+  else if (acima.length === 1) frase += 'Um expert acima de ' + brl(FAIXA_ALTA) + ' está levando ' + pct(share) + ' da verba.';
+  else frase += acima.length + ' experts acima de ' + brl(FAIXA_ALTA) + ' estão levando ' + pct(share) + ' da verba.';
+  why.textContent = frase;
+}
+
+function pintarSinais(d) {
+  var exps = d.experts || [];
+  var comCpf = exps.filter(function (e) { return e.tap && ehNum(e.tap.custo_por_ftd); });
+
+  function preencher(sel, quem, valor) {
+    var box = $(sel);
+    escreve($('.sinal__who', box), quem);
+    escreve($('.sinal__val', box), valor);
+  }
+
+  if (comCpf.length) {
+    var melhor = comCpf.reduce(function (a, b) { return b.tap.custo_por_ftd < a.tap.custo_por_ftd ? b : a; });
+    var pior   = comCpf.reduce(function (a, b) { return b.tap.custo_por_ftd > a.tap.custo_por_ftd ? b : a; });
+    preencher('.sinal--good', nomeExpert(melhor.expert_name),
+      brl(melhor.tap.custo_por_ftd) + ' · ' + melhor.tap.ftd + ' FTD');
+    preencher('.sinal--bad', nomeExpert(pior.expert_name),
+      brl(pior.tap.custo_por_ftd) + ' · ' + pior.tap.ftd + ' FTD');
+  } else {
+    preencher('.sinal--good', null, 'Nenhum FTD ainda');
+    preencher('.sinal--bad', null, 'Nenhum FTD ainda');
+  }
+
+  var semFtd = exps.filter(function (e) { return !e.tap || !e.tap.ftd; });
+  var verba = semFtd.reduce(function (s, e) { return s + (e.investimento_total || 0); }, 0);
+  var boxNa = $('.sinal--na');
+  if (!semFtd.length) {
+    escreve($('.sinal__who', boxNa), 'Ninguém');
+    escreve($('.sinal__val', boxNa), 'Todos já converteram FTD');
+  } else {
+    escreve($('.sinal__who', boxNa), semFtd.length === 1 ? '1 expert' : semFtd.length + ' experts');
+    escreve($('.sinal__val', boxNa),
+      semFtd.map(function (e) { return nomeExpert(e.expert_name); }).join(', ') +
+      ' · ' + brl(verba) + ' investidos');
+  }
+}
+
+function pintarTotais(d, isHoje) {
+  var t = d.totais || {};
+  var exps = d.experts || [];
+  var inv = ehNum(t.investimento_total) ? t.investimento_total : 0;
+
+  var rot = campo(document, 'periodo_label');
+  if (rot) rot.textContent = rotuloPeriodo(d.periodo);
+
+  function sub(el) { return el ? el.parentElement.querySelector('.tcard__sub') : null; }
+
+  var elInv = campo(document, 'totais.investimento_total');
+  escreve(elInv, brl(inv));
+  escreve(sub(elInv), ehNum(t.ftd) && t.ftd > 0 ? brl(inv / t.ftd) + ' por FTD' : 'nenhum FTD ainda');
+
+  var somaGrupo = exps.reduce(function (s, e) { return s + ((e.grupo && e.grupo.ativo && e.grupo.resultado) || 0); }, 0);
+  var somaDireto = exps.reduce(function (s, e) { return s + ((e.direto && e.direto.ativo && e.direto.resultado) || 0); }, 0);
+  var pctGrupo = inv > 0 ? (t.investimento_grupo || 0) / inv * 100 : 0;
+  var pctDireto = inv > 0 ? (t.investimento_direto || 0) / inv * 100 : 0;
+
+  var elG = campo(document, 'totais.investimento_grupo');
+  escreve(elG, brl(t.investimento_grupo));
+  escreve(sub(elG), pct(pctGrupo) + ' do total · ' + inteiro(somaGrupo) + ' entradas');
+
+  var elD = campo(document, 'totais.investimento_direto');
+  escreve(elD, brl(t.investimento_direto));
+  escreve(sub(elD), pct(pctDireto) + ' do total · ' + inteiro(somaDireto) + ' resultados');
+
+  var elC = campo(document, 'totais.cadastros');
+  escreve(elC, inteiro(t.cadastros));
+  escreve(sub(elC), t.cadastros > 0 ? brl(inv / t.cadastros) + ' por cadastro' : 'sem cadastro ainda');
+
+  var elF = campo(document, 'totais.ftd');
+  escreve(elF, inteiro(t.ftd));
+  escreve(sub(elF), t.cadastros > 0 ? pct(t.ftd / t.cadastros * 100) + ' dos cadastros' : 'sem cadastro ainda');
+
+  var elDep = campo(document, 'totais.deposito');
+  escreve(elDep, brl(t.deposito));
+  escreve(sub(elDep), inv > 0 ? vezes((t.deposito || 0) / inv) + ' o investido' : 'sem investimento');
+
+  /* a média citada no rodapé é dado, não copy: acompanha o período na tela */
+  var media = $('#foot-media');
+  if (media) {
+    media.textContent = ehNum(t.ftd) && t.ftd > 0
+      ? 'Média da operação ' + (isHoje ? 'hoje' : 'no período') + ': ' + brl(inv / t.ftd) + '.'
+      : 'Ainda sem FTD ' + (isHoje ? 'hoje' : 'no período') + ' para calcular a média.';
+  }
+
+  /* barra de participação */
+  var track = $('.splitbar__track');
+  $('.splitbar__seg--grupo').style.width = pctGrupo.toFixed(1) + '%';
+  $('.splitbar__seg--direto').style.width = pctDireto.toFixed(1) + '%';
+  track.setAttribute('aria-label',
+    'Grupo ' + pct(pctGrupo) + ' do investimento, direto ' + pct(pctDireto));
+  var legendas = $$('.splitbar__legend b.num');
+  if (legendas[0]) legendas[0].textContent = pct(pctGrupo);
+  if (legendas[1]) legendas[1].textContent = pct(pctDireto);
+}
+
+function pintarComparativo(d, isHoje) {
+  var corpo = $('.cmp__body');
+  var exps = d.experts || [];
+  var total = (d.totais && d.totais.investimento_total) || 0;
+  var maxInv = exps.reduce(function (m, e) { return Math.max(m, e.investimento_total || 0); }, 0);
+
+  var mults = exps.map(function (e) {
+    var inv = e.investimento_total || 0;
+    var dep = (e.tap && e.tap.deposito) || 0;
+    return inv > 0 ? dep / inv : null;
+  });
+  var maxMult = mults.reduce(function (m, v) { return v != null && v > m ? v : m; }, -1);
+
+  var frag = document.createDocumentFragment();
+  exps.forEach(function (e, i) {
+    var linha = MOLDE.cmpLinha.cloneNode(true);
+    linha.setAttribute('data-expert', e.expert_name);
+    var tap = e.tap || {};
+    var inv = e.investimento_total || 0;
+
+    $('.cmp__name', linha).textContent = nomeExpert(e.expert_name);
+    escreve($('.cmp__num:not(.cmp__ftd):not(.cmp__dep)', linha), brl(inv));
+    $('.cmp__bar i', linha).style.width = (maxInv > 0 ? (inv / maxInv * 100) : 0).toFixed(1) + '%';
+    $('.cmp__share', linha).textContent =
+      pct(total > 0 ? inv / total * 100 : 0) + ' da verba' + (isHoje ? ' do dia' : ' do período');
+    escreve($('.cmp__ftd', linha), inteiro(tap.ftd));
+
+    var chip = $('.chip', linha);
+    chip.className = 'chip chip--sm ' + faixaChip(tap.custo_por_ftd);
+    chip.textContent = ehNum(tap.custo_por_ftd) ? brl(tap.custo_por_ftd) : 'Aguardando';
+
+    escreve($('.cmp__dep', linha), brl(tap.deposito));
+
+    var m = $('.cmp__mult', linha);
+    m.classList.remove('cmp__mult--gold');
+    escreve(m, vezes(mults[i]));
+    if (mults[i] != null && mults[i] === maxMult && maxMult > 0) m.classList.add('cmp__mult--gold');
+
+    frag.appendChild(linha);
+  });
+  corpo.innerHTML = '';
+  corpo.appendChild(frag);
+}
+
+function pintarTopCriativos(d, isHoje) {
+  var caixa = $('.topcrtvs');
+  var cab = caixa.previousElementSibling;
+  var todos = [];
+  (d.experts || []).forEach(function (e) {
+    (e.criativos || []).forEach(function (c) {
+      if (c && ehNum(c.ctr)) todos.push({ c: c, dono: e.expert_name });
+    });
+  });
+  todos.sort(function (a, b) { return b.c.ctr - a.c.ctr; });
+  var top = todos.slice(0, 5);
+
+  if (!top.length) { caixa.hidden = true; if (cab) cab.hidden = true; return; }
+  caixa.hidden = false; if (cab) cab.hidden = false;
+
+  var h = cab ? $('.eyebrow', cab) : null;
+  if (h) h.textContent = 'Criativos puxando' + (isHoje ? ' hoje' : ' no período') +
+    ' · ' + top.length + (top.length === 1 ? ' maior CTR da operação' : ' maiores CTR da operação');
+
+  var faixa = $('.crtvs__strip', caixa);
+  faixa.innerHTML = '';
+  top.forEach(function (item, i) {
+    var el = pintarCriativo(MOLDE.topCrtv, item.c, item.dono);
+    if (i === 0) el.classList.add('crtv--top');
+    faixa.appendChild(el);
+  });
+}
+
+/* ── 7. cabeçalho: frescor, erro e divergência de período ───────────────── */
+function horaBR(iso) {
+  var d = new Date(iso);
+  if (isNaN(d.getTime())) return '--:--';
+  return d.toLocaleTimeString('pt-BR', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
+}
+
+function pintarStatus(modo) {
+  var pill = $('#status-pill');
+  var meta = $('.freshness__meta');
+  var hora = estado.dados ? horaBR(estado.dados.atualizado_em) : '--:--';
+  $$('[data-field="atualizado_em"]').forEach(function (el) { el.textContent = hora; });
+
+  pill.classList.remove('status--live', 'status--stale', 'status--error');
+  if (modo === 'erro') {
+    pill.classList.add('status--error');
+    meta.textContent = 'falha na última tentativa · mostrando a leitura anterior';
+    return;
+  }
+  var velho = estado.ultimoOk && (Date.now() - estado.ultimoOk) > STALE_MS;
+  pill.classList.add(!estado.isHoje ? 'status--stale' : (velho ? 'status--stale' : 'status--live'));
+  meta.textContent = !estado.isHoje
+    ? 'período fechado · atualização automática pausada'
+    : 'horário de Brasília · atualiza a cada 5 min';
+}
+
+function pintarNotaPeriodo() {
+  var nota = $('#range-note');
+  nota.hidden = false;
+  nota.classList.toggle('rangebar__note--pausado', !estado.isHoje);
+  nota.textContent = estado.isHoje
+    ? 'Ao vivo · atualiza sozinho a cada 5 min'
+    : 'Período fechado · atualização automática pausada';
+}
+
+function conferirPeriodo(pedido, recebido) {
+  var banner = $('#periodo-banner');
+  if (!pedido.de || !recebido) { banner.hidden = true; return; }
+  var igual = pedido.de === recebido.de && pedido.ate === recebido.ate;
+  if (igual) { banner.hidden = true; return; }
+  campo(banner, 'periodo_pedido').textContent =
+    pedido.de === pedido.ate ? dataBR(pedido.de) : dataCurta(pedido.de) + ' a ' + dataCurta(pedido.ate);
+  campo(banner, 'periodo_api').textContent =
+    recebido.de === recebido.ate ? dataBR(recebido.de) : dataCurta(recebido.de) + ' a ' + dataCurta(recebido.ate);
+  banner.hidden = false;
+}
+
+/* ── 8. filtro de período ───────────────────────────────────────────────── */
+var elDe = $('#range-de'), elAte = $('#range-ate'), elForm = $('#range-filter'), elMsg = $('#range-msg');
+
+function presetAtual() {
+  var m = $('input[name="range"]:checked');
+  return m ? m.value : 'hoje';
+}
+function intervaloDe(preset) {
+  var hoje = hojeSP();
+  if (preset === 'ontem') { var o = somaDias(hoje, -1); return { de: o, ate: o }; }
+  if (preset === '7d')  return { de: somaDias(hoje, -6), ate: hoje };
+  if (preset === '30d') return { de: somaDias(hoje, -29), ate: hoje };
+  if (preset === 'custom') return { de: elDe.value, ate: elAte.value };
+  /* "hoje": não manda de/ate. Quem decide o dia é o servidor, no fuso certo. */
+  return { de: null, ate: null };
+}
+function mostrarMsg(txt) {
+  if (!txt) { elMsg.hidden = true; elMsg.textContent = ''; return; }
+  elMsg.hidden = false; elMsg.textContent = txt;
+}
+function validar(r) {
+  if (!r.de || !r.ate) return 'Escolha as duas datas do período.';
+  if (r.ate > hojeSP()) return 'A data final não pode estar no futuro.';
+  if (r.de > r.ate) return 'A data inicial não pode ser depois da final.';
+  return null;
+}
+function salvarEscolha(preset, r) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify({ preset: preset, de: r.de, ate: r.ate })); } catch (e) {}
+}
+function restaurarEscolha() {
+  var hoje = hojeSP();
+  elDe.max = hoje; elAte.max = hoje;
+  if (!elDe.value || elDe.value > hoje) elDe.value = hoje;
+  if (!elAte.value || elAte.value > hoje) elAte.value = hoje;
+  var salvo = null;
+  try { salvo = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch (e) {}
+  if (!salvo || !salvo.preset) return;
+  var alvo = $('input[name="range"][value="' + salvo.preset + '"]');
+  if (!alvo) return;
+  alvo.checked = true;
+  if (salvo.preset === 'custom' && salvo.de && salvo.ate && salvo.ate <= hoje) {
+    elDe.value = salvo.de; elAte.value = salvo.ate;
+  }
+  sincronizarCustom();
+}
+function sincronizarCustom() {
+  elForm.classList.toggle('is-custom', presetAtual() === 'custom');
+  if (presetAtual() !== 'custom') mostrarMsg(null);
+}
+
+/* ── 9. ciclo: fetch, refresh e retry ───────────────────────────────────── */
+function agendar(ms) {
+  clearTimeout(estado.timer);
+  estado.timer = null;
+  if (ms == null) return;
+  estado.timer = setTimeout(function () { carregar(); }, ms);
+}
+
+function carregar(opts) {
+  opts = opts || {};
+  var preset = presetAtual();
+  var r = intervaloDe(preset);
+
+  if (preset === 'custom') {
+    var erro = validar(r);
+    if (erro) { mostrarMsg(erro); return; }
+  }
+  mostrarMsg(null);
+  salvarEscolha(preset, r);
+
+  var url = ENDPOINT;
+  if (r.de && r.ate) url += '?de=' + encodeURIComponent(r.de) + '&ate=' + encodeURIComponent(r.ate);
+
+  var id = ++estado.reqId;
+  estado.carregando = true;
+  ROOT.setAttribute('data-state', estado.jaCarregou ? 'atualizando' : 'carregando');
+  $('#boot').hidden = estado.jaCarregou;
+
+  fetch(url, { cache: 'no-store', headers: { accept: 'application/json' } })
+    .then(function (resp) {
+      return resp.text().then(function (txt) {
+        var json = null;
+        try { json = JSON.parse(txt); } catch (e) {}
+        if (!resp.ok) {
+          var det = (json && (json.detail || json.error)) || ('HTTP ' + resp.status);
+          throw new Error(det);
+        }
+        if (!json || !json.totais) throw new Error('resposta sem dados');
+        return json;
+      });
+    })
+    .then(function (d) {
+      if (id !== estado.reqId) return;              /* chegou fora de ordem */
+      estado.dados = d;
+      estado.isHoje = !!(d.periodo && d.periodo.is_hoje);
+      estado.ultimoOk = Date.now();
+      estado.jaCarregou = true;
+      estado.carregando = false;
+
+      pintarVeredito(d, estado.isHoje);
+      pintarSinais(d);
+      pintarTotais(d, estado.isHoje);
+      pintarComparativo(d, estado.isHoje);
+      pintarTopCriativos(d, estado.isHoje);
+      pintarExperts(d, estado.isHoje);
+      conferirPeriodo(r, d.periodo);
+      pintarStatus('ok');
+      pintarNotaPeriodo();
+
+      $('#erro-banner').hidden = true;
+      $('#boot').hidden = true;
+      ROOT.setAttribute('data-state', 'pronto');
+
+      /* só o dia corrente se atualiza sozinho */
+      agendar(estado.isHoje ? REFRESH_MS : null);
+    })
+    .catch(function (e) {
+      if (id !== estado.reqId) return;
+      estado.carregando = false;
+      $('#boot').hidden = true;
+      ROOT.setAttribute('data-state', estado.jaCarregou ? 'pronto' : 'carregando');
+
+      var banner = $('#erro-banner');
+      if (estado.jaCarregou) {
+        banner.innerHTML = 'Falha ao atualizar. Os números abaixo são da última leitura bem-sucedida (' +
+          '<span data-field="atualizado_em">' + horaBR(estado.dados.atualizado_em) + '</span>). Tentando de novo…';
+      } else {
+        banner.textContent = 'Não foi possível carregar os dados agora (' +
+          String(e.message || e) + '). Nova tentativa em instantes.';
+      }
+      banner.hidden = false;
+      pintarStatus('erro');
+      agendar(RETRY_MS);
+    });
+}
+
+/* ── 10. abas em rota de hash ───────────────────────────────────────────── */
+var ABAS = { geral: 'v-geral', experts: 'v-experts' };
+function aplicarHash() {
+  var h = (location.hash || '').replace('#', '');
+  var id = ABAS[h];
+  if (id) document.getElementById(id).checked = true;
+}
+function ligarAbas() {
+  Object.keys(ABAS).forEach(function (nome) {
+    document.getElementById(ABAS[nome]).addEventListener('change', function () {
+      if (this.checked && location.hash !== '#' + nome) {
+        history.replaceState(null, '', '#' + nome);   /* replace: sem entulhar o histórico */
+      }
+    });
+  });
+  window.addEventListener('hashchange', aplicarHash);
+  aplicarHash();
+}
+
+/* ── 11. partida ────────────────────────────────────────────────────────── */
+guardarMoldes();
+ligarAbas();
+restaurarEscolha();
+pintarNotaPeriodo();
+
+$$('input[name="range"]').forEach(function (inp) {
+  inp.addEventListener('change', function () {
+    sincronizarCustom();
+    if (presetAtual() === 'custom') return;          /* espera o "Aplicar" */
+    carregar();
+  });
+});
+$('#range-apply').addEventListener('click', function () { carregar(); });
+elForm.addEventListener('submit', function (ev) { ev.preventDefault(); carregar(); });
+[elDe, elAte].forEach(function (el) {
+  el.addEventListener('change', function () { mostrarMsg(null); });
+});
+
+/* aba escondida não precisa gastar n8n; ao voltar, atualiza se estiver velho */
+document.addEventListener('visibilitychange', function () {
+  if (document.hidden) { agendar(null); return; }
+  if (!estado.isHoje) return;
+  var idade = Date.now() - estado.ultimoOk;
+  if (idade >= REFRESH_MS) carregar();
+  else agendar(REFRESH_MS - idade);
+});
+
+/* a pílula envelhece sozinha mesmo sem fetch novo */
+setInterval(function () { if (estado.dados) pintarStatus('ok'); }, 30000);
+
+carregar();
+})();
+</script>
+
+</body>
+</html>
