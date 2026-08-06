@@ -3075,8 +3075,10 @@ function carregar(opts) {
         banner.innerHTML = 'Falha ao atualizar. Os números abaixo são da última leitura bem-sucedida (' +
           '<span data-field="atualizado_em">' + horaBR(estado.dados.atualizado_em) + '</span>). Tentando de novo…';
       } else {
-        banner.textContent = 'Não foi possível carregar os dados agora (' +
-          String(e.message || e) + '). Nova tentativa em instantes.';
+        /* primeira carga falhou: não existe número bom pra manter na tela, então
+           o recado precisa dizer o que houve, não só que houve. */
+        banner.textContent = 'Não foi possível carregar os dados. ' +
+          String(e.message || e) + ' Nova tentativa automática em 1 minuto.';
       }
       banner.hidden = false;
       pintarStatus('erro');

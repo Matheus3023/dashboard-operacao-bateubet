@@ -112,12 +112,37 @@ module.exports = async function handler(req, res) {
       });
     }
 
+    /* O n8n às vezes devolve 200 com corpo VAZIO (workflow que falhou no meio,
+       limite da API do Meta, execução cancelada). Não é erro de rede e não é
+       JSON quebrado: é ausência de dado. Merece mensagem própria, senão vira
+       caça ao fantasma na próxima vez. */
+    if (!texto || !texto.trim()) {
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(502).json({
+        error: 'upstream_vazio',
+        detail: 'O n8n respondeu sem dados. Costuma ser execução do workflow que falhou ' +
+                'ou limite da API do Meta. Conferir as execuções do workflow no n8n.'
+      });
+    }
+
     let dados;
     try {
       dados = JSON.parse(texto);
     } catch (e) {
       res.setHeader('Cache-Control', 'no-store');
-      return res.status(502).json({ error: 'upstream_invalid_json' });
+      return res.status(502).json({
+        error: 'upstream_invalid_json',
+        detail: 'O n8n respondeu algo que não é JSON.',
+        trecho: texto.slice(0, 200)
+      });
+    }
+
+    if (!dados || !dados.totais || !Array.isArray(dados.experts)) {
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(502).json({
+        error: 'upstream_incompleto',
+        detail: 'A resposta do n8n veio sem os blocos totais/experts.'
+      });
     }
 
     // Dado do dia muda o tempo todo: cache curto na borda só pra não bater
