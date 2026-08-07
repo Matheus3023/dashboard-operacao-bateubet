@@ -20,6 +20,11 @@ const UPSTREAM_TIMEOUT_MS = 45000;
 const MAX_RANGE_DIAS = 366;
 const TZ = 'America/Sao_Paulo';
 
+// Escopos aceitos no modo tendência. Mesmo default do n8n, repetido aqui só
+// pra resposta ficar previsível caso o front esqueça de mandar o parâmetro.
+const ESCOPOS = ['costa_lobao', 'geral'];
+const ESCOPO_PADRAO = 'costa_lobao';
+
 function hojeSP() {
   // en-CA devolve YYYY-MM-DD, que é exatamente o formato do contrato
   return new Intl.DateTimeFormat('en-CA', {
@@ -76,15 +81,41 @@ module.exports = async function handler(req, res) {
   const de = typeof q.de === 'string' && q.de ? q.de : null;
   const ate = typeof q.ate === 'string' && q.ate ? q.ate : null;
 
-  const erro = validarPeriodo(de, ate);
-  if (erro) {
-    res.setHeader('Cache-Control', 'no-store');
-    return res.status(400).json({ error: 'periodo_invalido', detail: erro });
+  /* Modo tendência: mesmo webhook, contrato de resposta diferente
+     ({ expert_name, escopo, dias[] } em vez de totais/experts). São os últimos
+     dias FECHADOS de um expert, no máximo 7, nunca incluindo hoje.
+     Quando `tendencia` vem preenchido, `de`/`ate` são ignorados de propósito:
+     recorte de período e histórico fixo de dias fechados são dois modos
+     distintos e o n8n não combina os dois. */
+  const tendencia = typeof q.tendencia === 'string' && q.tendencia.trim()
+    ? q.tendencia.trim()
+    : null;
+
+  let escopo = ESCOPO_PADRAO;
+  if (tendencia) {
+    const escopoBruto = typeof q.escopo === 'string' ? q.escopo.trim().toLowerCase() : '';
+    escopo = escopoBruto || ESCOPO_PADRAO;
+    if (!ESCOPOS.includes(escopo)) {
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(400).json({
+        error: 'parametro_invalido',
+        detail: 'escopo deve ser ' + ESCOPOS.join(' ou ') + '.'
+      });
+    }
+  } else {
+    const erro = validarPeriodo(de, ate);
+    if (erro) {
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(400).json({ error: 'periodo_invalido', detail: erro });
+    }
   }
 
   const url = new URL(UPSTREAM);
   url.searchParams.set('token', token);
-  if (de && ate) {
+  if (tendencia) {
+    url.searchParams.set('tendencia', tendencia);
+    url.searchParams.set('escopo', escopo);
+  } else if (de && ate) {
     url.searchParams.set('de', de);
     url.searchParams.set('ate', ate);
   }
@@ -120,8 +151,16 @@ module.exports = async function handler(req, res) {
       res.setHeader('Cache-Control', 'no-store');
       return res.status(502).json({
         error: 'upstream_vazio',
-        detail: 'O n8n respondeu sem dados. Costuma ser execução do workflow que falhou ' +
-                'ou limite da API do Meta. Conferir as execuções do workflow no n8n.'
+        /* No modo tendência o corpo vazio tem uma causa muito mais provável:
+           nome de expert que o n8n não reconhece (expert existente responde
+           JSON com `dias`, mesmo que a lista venha vazia). Apontar isso aqui
+           poupa o próximo debug. */
+        detail: tendencia
+          ? 'O n8n respondeu sem dados para tendencia="' + tendencia + '". ' +
+            'Quase sempre é nome de expert que ele não reconhece: o nome tem que ' +
+            'ser igual ao expert_name do payload principal.'
+          : 'O n8n respondeu sem dados. Costuma ser execução do workflow que falhou ' +
+            'ou limite da API do Meta. Conferir as execuções do workflow no n8n.'
       });
     }
 
@@ -135,6 +174,31 @@ module.exports = async function handler(req, res) {
         detail: 'O n8n respondeu algo que não é JSON.',
         trecho: texto.slice(0, 200)
       });
+    }
+
+    /* Tendência tem contrato próprio: valida os campos dela e sai antes da
+       checagem de totais/experts, que aqui nunca vão existir.
+       `dias: []` é resposta legítima (expert novo, histórico ainda
+       acumulando), então array vazio passa: só a AUSÊNCIA do array é erro. */
+    if (tendencia) {
+      if (!dados || typeof dados.expert_name !== 'string' ||
+          typeof dados.escopo !== 'string' || !Array.isArray(dados.dias)) {
+        res.setHeader('Cache-Control', 'no-store');
+        return res.status(502).json({
+          error: 'upstream_incompleto',
+          detail: 'A resposta do n8n veio sem os campos expert_name/escopo/dias.'
+        });
+      }
+      /* Só entra dia fechado, e o dia fecha uma vez por dia: 30 min de cache na
+         borda não atrasa nada e derruba quase toda chamada ao n8n, já que o
+         painel pede a tendência de vários experts em sequência. O
+         stale-while-revalidate de 1h segura a página de pé mesmo com o n8n
+         fora do ar. */
+      res.setHeader(
+        'Cache-Control',
+        'public, max-age=0, s-maxage=1800, stale-while-revalidate=3600'
+      );
+      return res.status(200).json(dados);
     }
 
     if (!dados || !dados.totais || !Array.isArray(dados.experts)) {
