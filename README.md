@@ -38,8 +38,23 @@ vercel dev
 - **Filtro de período**: hoje, ontem, 7 dias, 30 dias e intervalo livre. A
   escolha fica no `localStorage`. As datas são calculadas no fuso de Brasília,
   não no fuso do aparelho de quem abre.
-- **Abas em rota de hash** (`#geral` e `#experts`), para o refresh não jogar a
-  pessoa de volta na primeira aba.
+- **Dois escopos** no topo, cada um com as mesmas duas sub-abas:
+  - **Costa e Lobão**, os 7 experts de sempre (`totais` + `experts[]`);
+  - **Geral**, as 24 entidades da BM inteira (`geral.totais` + `geral.experts[]`).
+    Entidade com mais de uma conta de anúncio abre o breakdown conta a conta
+    (`geral.experts[].contas[]`), com linha de total fechando a soma.
+- **Abas em rota de hash**, agora em dois níveis: `#cl/visao`, `#cl/detalhe`,
+  `#geral/visao` e `#geral/detalhe`. Os hashes antigos (`#geral` e `#experts`,
+  sem barra) continuam abrindo o escopo Costa e Lobão.
+- **Verba zerada é estado previsto, não erro.** Entidade sem investimento no
+  período aparece com o chip cinza "Sem verba" (nunca "R$ 0,00" verde), fica
+  fora das contas de melhor e pior custo por FTD e o escopo Geral avisa quantas
+  estão nessa situação. Hoje isso vale para a maioria das entidades, por causa
+  da liberação de permissão da Meta ainda em andamento.
+- **A palavra "hoje" na tela** só é escrita quando o período devolvido termina
+  no dia corrente em Brasília. O auto-refresh continua olhando `periodo.is_hoje`
+  da API: na virada da meia-noite o n8n ainda responde do cache de 2 minutos, e
+  o painel prefere pausar a palavra a carimbar dado de ontem como sendo de hoje.
 - **Faixas de custo por FTD** (`FAIXA_BOA` e `FAIXA_ALTA` no início do script):
   provisórias em R$ 120 e R$ 200 até o cliente passar a meta oficial. Trocar
   nesses dois lugares muda a cor dos chips, o veredito e o texto do rodapé.

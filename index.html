@@ -97,24 +97,133 @@ O QUE O `web-designer` FEZ (esta versão já é a de produção)
   5. Kit de ícones, card de OG 1200x630 e headers de privacidade.
   Detalhes e limites: ver o comentário no <script>, no fim do arquivo.
 
+O QUE O `web-designer` FEZ NA v3 (rodada de produção do escopo Geral)
+  1. `geral.totais`, `geral.experts[]` e `contas[]` ligados no dado real, pela
+     MESMA pintarEscopo() do Costa e Lobão. Nenhuma renderização paralela.
+  2. Rótulo do cartão "Geral": a contagem de contas só é impressa quando TODAS
+     as entidades trazem contas[]. Hoje as 7 do Costa e Lobão vêm sem o campo,
+     e completar com "1 conta cada" daria 36 no lugar de 33. Número ausente é
+     melhor que número inventado; volta sozinho quando a API completar.
+  3. Separou "o período ainda está correndo" (manda no refresh, vem da API) de
+     "posso escrever HOJE na tela" (só se o período termina hoje em Brasília).
+     Elas divergem por alguns minutos na virada do dia, por causa do cache de
+     2 min do n8n, e a tela ficava carimbando "hoje" em número de ontem.
+  4. Falha na PRIMEIRA carga não diz mais "mostrando a leitura anterior": não
+     existe leitura anterior nessa hora, o que está atrás do desfoque é o
+     conteúdo de exemplo deste arquivo.
+
+  DADO DE FORA DA PÁGINA, PRA QUEM CUIDA DO n8n: cinco entidades do escopo
+  Geral (Empire, Junior Santana, Cremosinho, JC Experts e BMidia) voltam com
+  FTD e depósito IDÊNTICOS entre si na TAP, o que empurra os totais do escopo
+  pra cima. Cheira a btag caindo num casamento genérico. O painel não esconde
+  nem corrige: mostra o que a API mandou.
+
+O QUE MUDOU NA v3 (esta entrega, `designer`)
+  A operação deixou de ser 7 experts e virou 33 contas / 24 entidades. A página
+  não ganhou visual novo: ganhou um NÍVEL A MAIS DE NAVEGAÇÃO.
+
+  1. DOIS ESCOPOS no topo, acima das abas que já existiam:
+       · Costa e Lobão -> exatamente a experiência de antes (7 experts),
+                          nada mudou dentro dela.
+       · Geral         -> as 24 entidades da BM inteira, mesmos componentes.
+     Cada escopo mantém as MESMAS duas sub-abas de sempre (Visão geral /
+     detalhe). O par escopo × sub-aba é radio + :checked, zero JS, como o resto.
+  2. Entidade com mais de uma conta de anúncio (Jota Pê 4, Felipe Borges 2,
+     Institucional 9) ganhou a prateleira <details class="contas">: o card
+     continua mostrando o AGREGADO no cabeçalho, e a prateleira abre o
+     breakdown conta a conta, com linha de total fechando a soma.
+     Entidade de 1 conta não mostra prateleira nenhuma (o card já é a conta).
+  3. INSTITUCIONAL não é pessoa: é bloco de marca. Recebe .expert--marca e a
+     etiqueta "Institucional · marca", pra ninguém ler como expert.
+  4. Verba zerada virou ESTADO PREVISTO, não erro. Hoje 17 das 24 entidades
+     vêm com investimento 0 (permissão da Meta em liberação). O card aguenta:
+     grupo/direto caem no .block--off de sempre, o chip de custo por FTD vira
+     "Sem verba" (nunca "R$ 0,00" verde, que mentiria dizendo que está barato)
+     e o escopo Geral mostra o #geral-aviso contando quantas estão nessa.
+  5. Hash routing virou dois níveis: #cl/visao · #cl/detalhe · #geral/visao ·
+     #geral/detalhe. Os hashes antigos (#geral e #experts, sem barra) seguem
+     funcionando e caem no escopo Costa e Lobão.
+  6. CAMADA DE MOVIMENTO (ver bloco próprio no fim do CSS). Movimento aqui é
+     informação, não enfeite: ciclo do refresh visível na pílula, pisca só no
+     número que mudou de valor, cascata de entrada na primeira pintura, barras
+     que crescem em vez de saltar, e o fio da marca desenhando uma vez na
+     abertura. Tudo com prefers-reduced-motion desligando o conjunto.
+
+ONDE MOTION *NÃO* ENTRA NESTA PÁGINA (decisão, não esquecimento)
+  Vídeo de fundo, loop gerado por IA, parallax, partícula, gradiente
+  respirando e number-counting (número correndo de 0 até o valor) ficaram
+  de fora. Os três primeiros competem com número; o counting é pior: mente
+  por 800ms mostrando um valor que não existe, num painel em que gente decide
+  verba olhando de relance. Se a operação quiser peça de marca com movimento
+  (abertura de reunião, story, capa de deck), o lugar é FORA do painel:
+    · og-image 1200x630 (a que está no <head>) pode ganhar arte gerada;
+    · uma abertura em vídeo pra apresentação mensal;
+    · um loop curto pra tela de espera da sala, com o painel entrando depois.
+  Nada disso é este arquivo. Aqui, tela parada com número certo ganha de tela
+  animada com número duvidoso.
+
 CONTRATO DE DADOS
   Raiz da injeção:  <div id="dashboard-root">
   Todo valor que vem da API tem  data-field="<caminho.no.json>".
-    Header ...... data-field="atualizado_em" | "data"
+    Header ...... data-field="atualizado_em"
     Totais ...... data-field="totais.investimento_total" etc.
     Experts ..... data-field="grupo.valor_investido", "tap.ftd", ... (relativo ao expert)
     Criativos ... data-field="criativos" no bloco, e criativo.nome / .campanha /
                   .thumbnail_url / .ctr / .clicks / .spend dentro de cada .crtv
+    Contas ...... data-field="contas" no <details class="contas">, e
+                  conta_id / grupo.valor_investido / direto.valor_investido
+                  dentro de cada .contas__row
   Campos DERIVADOS (não vêm da API, o JS calcula) têm  data-derived="<fórmula>".
-  Lista de experts: <div id="experts-list">. Use o PRIMEIRO <article class="expert">
-  como modelo: clone, troque os [data-field], aplique as classes de estado abaixo.
-  Não existe segundo <template> de propósito, pra não divergir do card real.
+
+  ONDE CADA PEDAÇO DO JSON PENDURA (v3):
+    ┌ escopo COSTA E LOBÃO ── raiz #escopo-cl ───────────────────────────────┐
+    │  totais            -> .tcard dentro de #escopo-cl                      │
+    │  experts[]         -> [data-list="experts"] dentro de #escopo-cl       │
+    │                       (esse é o antigo #experts-list, id preservado)   │
+    └────────────────────────────────────────────────────────────────────────┘
+    ┌ escopo GERAL ── raiz #escopo-geral ────────────────────────────────────┐
+    │  geral.totais      -> .tcard dentro de #escopo-geral                   │
+    │  geral.experts[]   -> [data-list="experts"] dentro de #escopo-geral    │
+    │  geral.experts[].contas[] -> <details class="contas"> do card daquela  │
+    │                       entidade, SÓ quando contas.length > 1            │
+    └────────────────────────────────────────────────────────────────────────┘
+    periodo / atualizado_em -> globais, valem pros dois escopos.
+
+  Cada item de geral.experts tem o MESMO shape de um item de experts
+  (grupo / direto / tap / investimento_total / criativos opcional) mais o
+  campo novo `contas: [{ conta_id, grupo, direto }]`. Todos têm contas[],
+  inclusive os de 1 conta só (array de 1). Não existe TAP por conta: o funil
+  é sempre da entidade inteira, porque o btag é da entidade, não da conta.
+
+  Nunca somar no front o que a API já soma: use geral.totais, não a soma de
+  geral.experts. O agregado da entidade também já vem pronto no nível dela,
+  o contas[] é só o detalhe.
+
+  Lista de cards: [data-list="experts"] em cada escopo. Use o PRIMEIRO
+  <article class="expert"> do escopo Costa e Lobão como modelo ÚNICO: clone,
+  troque os [data-field], aplique as classes de estado abaixo. Os dois escopos
+  compartilham o mesmo molde de card de propósito, pra não divergirem.
 
 ORDENAÇÃO (regra de dados, não de layout)
   experts.sort((a,b) => b.investimento_total - a.investimento_total)
-  Quem consome mais verba aparece primeiro. O HTML estático já está nessa ordem.
+  Vale igual pros dois escopos. Quem consome mais verba aparece primeiro, e as
+  entidades zeradas caem naturalmente pro fim da lista, que é onde devem ficar.
   O selo dourado "maior investimento" vai SEMPRE no primeiro card depois do sort
   (e só nele). Se houver empate no topo, aplique no primeiro e não repita.
+  Se o primeiro colocado tiver investimento 0 (escopo inteiro sem verba),
+  NÃO aplicar o selo: não existe "maior investimento" quando ninguém investiu.
+
+FUSO HORÁRIO (regra dura, não é preferência)
+  Todo horário exibido é America/Sao_Paulo, SEMPRE, independente de onde
+  estiver o navegador de quem olha. `atualizado_em` chega em UTC (sufixo Z) e
+  a conversão é responsabilidade do front:
+    new Date(iso).toLocaleTimeString('pt-BR',
+      { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })
+  Todo elemento que imprime hora carrega data-tz="America/Sao_Paulo" no HTML,
+  como contrato visível. Se algum dia entrar relógio ao vivo, data de corte ou
+  "há X minutos", passa pelo mesmo carimbo. O cálculo de "hoje"/"ontem" do
+  filtro de período também é feito em Brasília (Intl com timeZone), nunca com
+  getDate() local, senão às 21h de um fuso a menos o painel pede o dia errado.
 
 CLASSES DE ESTADO (já estilizadas, o JS só aplica)
   .block--off        -> em [data-block="grupo"|"direto"] quando ativo === false.
@@ -130,6 +239,16 @@ CLASSES DE ESTADO (já estilizadas, o JS só aplica)
        Continuam provisórios: o cliente ainda não passou a meta oficial.
        Trocar em 1 lugar só, no JS.)
   .num--neg / .num--pos -> net dep e net PL, pelo sinal
+  .expert--marca     -> entidade que não é pessoa (INSTITUCIONAL). Troca o
+                        rótulo do cabeçalho e some com o selo dourado.
+  .expert--zerado    -> investimento_total === 0. Cabeçalho achatado + etiqueta
+                        "Sem verba no período". NÃO usar opacidade baixa: o card
+                        continua legível porque a TAP dele pode estar cheia.
+  .ent-tag--contas   -> etiqueta "N contas" no cabeçalho, só com contas.length>1
+  .contas            -> <details> do breakdown por conta (mesma mecânica da
+                        prateleira de criativos). Renderizar SÓ com 2+ contas.
+  .contas__row--tot  -> última linha da tabela, fecha a soma das contas. Tem que
+                        bater exatamente com investimento_total da entidade.
   .status--live / .status--stale / .status--error -> pílula de frescor no header
       live  = fetch OK há menos de 6 min (2 ciclos de refresh)
       stale = último fetch OK há mais de 6 min (dado envelhecendo)
@@ -728,18 +847,70 @@ h1,h2,h3,h4,p{margin:0}
   color:var(--txt-3);
 }
 
-/* ── ABAS (Visão geral | Por expert) ──────────────────────────────────────
-   Radio + :checked + irmão. Troca de aba sem uma linha de JS, e o arquivo
-   continua abrindo offline no Chrome.
-   PRO `web-designer`: quando plugar o JS, promova pra rota de hash
-   (#geral / #experts) pra dar link direto e não perder a aba no refresh de
-   5 min. A estrutura já está pronta pra isso, é só ouvir o hashchange e
-   marcar o radio correspondente.
+/* ── NAVEGAÇÃO EM DOIS NÍVEIS ─────────────────────────────────────────────
+   NÍVEL 1 · ESCOPO   Costa e Lobão | Geral      (radio name="escopo")
+   NÍVEL 2 · SUB-ABA  Visão geral   | Detalhe    (radio name="view")
+
+   Os 4 <input> ficam juntos no topo de .views e PRECISAM continuar sendo
+   IRMÃOS ANTERIORES de .scopebar e de .scope, senão os seletores ~ quebram
+   e a tela some inteira. Nada de JS pra trocar de aba: radio + :checked.
+
+   O nível 2 é COMPARTILHADO entre os escopos de propósito: quem está lendo
+   "Visão geral" do Costa e Lobão e pula pro Geral continua na visão geral,
+   não é jogado pro detalhe. Uma decisão, um estado.
+
+   Hash routing (o JS só marca o radio, a estrutura não muda):
+     #cl/visao · #cl/detalhe · #geral/visao · #geral/detalhe
+     legado sem barra: #geral -> #cl/visao · #experts -> #cl/detalhe
    ────────────────────────────────────────────────────────────────────────── */
 .views{position:relative}
 .views > input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+
+/* nível 1: cartões largos, não abas. Precisa ler como "troca de universo",
+   não como "troca de seção". Ecoa o .tcard--hero (mesmo gradiente de ação)
+   pra pertencer ao sistema sem inventar componente novo. */
+.scopebar{display:flex;gap:8px;margin:20px 0 0;flex-wrap:wrap}
+.scopebar label{
+  position:relative;overflow:hidden;
+  display:flex;flex-direction:column;justify-content:center;gap:3px;
+  min-height:56px;padding:9px 18px 9px 17px;cursor:pointer;
+  border:1px solid var(--line);border-radius:var(--r);
+  background:var(--surface);
+  transition:background .16s ease,border-color .16s ease,color .16s ease;
+}
+.scopebar label:hover{border-color:var(--line-strong);background:var(--surface-2)}
+.scopebar__nome{
+  display:flex;align-items:center;gap:8px;
+  font-size:.9375rem;font-weight:680;letter-spacing:-.01em;color:var(--txt-2);
+}
+.scopebar__nome::before{
+  content:"";width:7px;height:7px;border-radius:50%;flex:none;
+  background:var(--neutro);
+}
+.scopebar__sub{
+  font-family:var(--mono);font-size:.5625rem;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--txt-3);
+}
+#e-cl:checked ~ .scopebar label[for="e-cl"],
+#e-geral:checked ~ .scopebar label[for="e-geral"]{
+  background:linear-gradient(150deg,var(--acao-soft),transparent 68%),var(--surface-2);
+  border-color:var(--acao-line);
+}
+#e-cl:checked ~ .scopebar label[for="e-cl"] .scopebar__nome,
+#e-geral:checked ~ .scopebar label[for="e-geral"] .scopebar__nome{color:var(--txt)}
+#e-cl:checked ~ .scopebar label[for="e-cl"] .scopebar__nome::before,
+#e-geral:checked ~ .scopebar label[for="e-geral"] .scopebar__nome::before{
+  background:var(--acao);box-shadow:0 0 0 3px var(--acao-soft);
+}
+#e-cl:focus-visible ~ .scopebar label[for="e-cl"],
+#e-geral:focus-visible ~ .scopebar label[for="e-geral"]{outline:2px solid var(--gold);outline-offset:2px}
+
+.scope{display:none}
+#e-cl:checked ~ .scope--cl,
+#e-geral:checked ~ .scope--geral{display:block}
+
 .tabs{
-  display:flex;gap:2px;margin:22px 0 0;
+  display:flex;gap:2px;margin:16px 0 0;
   border-bottom:1px solid var(--line);
 }
 .tabs label{
@@ -755,19 +926,21 @@ h1,h2,h3,h4,p{margin:0}
   padding:2px 6px;border-radius:4px;
   background:rgba(255,255,255,.08);color:var(--txt-2);
 }
+/* as .tabs agora vivem DENTRO de cada .scope (pra cada escopo ter a própria
+   contagem no badge), então o seletor é irmão + descendente. */
 .view{display:none}
-#v-geral:checked ~ .view--geral,
-#v-experts:checked ~ .view--experts{display:block}
-#v-geral:checked ~ .tabs label[for="v-geral"],
-#v-experts:checked ~ .tabs label[for="v-experts"]{
+#v-geral:checked ~ .scope .view--geral,
+#v-experts:checked ~ .scope .view--experts{display:block}
+#v-geral:checked ~ .scope .tabs label[for="v-geral"],
+#v-experts:checked ~ .scope .tabs label[for="v-experts"]{
   color:var(--txt);border-bottom-color:var(--acao);
 }
-#v-geral:checked ~ .tabs label[for="v-geral"] .tab__badge,
-#v-experts:checked ~ .tabs label[for="v-experts"] .tab__badge{
+#v-geral:checked ~ .scope .tabs label[for="v-geral"] .tab__badge,
+#v-experts:checked ~ .scope .tabs label[for="v-experts"] .tab__badge{
   background:var(--acao-soft);color:#FF9AC4;
 }
-#v-geral:focus-visible ~ .tabs label[for="v-geral"],
-#v-experts:focus-visible ~ .tabs label[for="v-experts"]{outline:2px solid var(--gold);outline-offset:-3px}
+#v-geral:focus-visible ~ .scope .tabs label[for="v-geral"],
+#v-experts:focus-visible ~ .scope .tabs label[for="v-experts"]{outline:2px solid var(--gold);outline-offset:-3px}
 .tablink{
   display:inline-flex;align-items:center;gap:6px;cursor:pointer;
   border:0;background:none;padding:0;
@@ -1024,6 +1197,324 @@ h1,h2,h3,h4,p{margin:0}
   .rangebar__note{margin-left:0}
   .boot{width:calc(100% - 28px);justify-content:center}
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   v3 · ESCOPO GERAL · 24 entidades, 33 contas
+   Nenhuma cor nova, nenhuma tipografia nova. Só três coisas que o sistema
+   ainda não tinha nome pra dizer:
+     1. "esta entidade é várias contas"        -> .contas
+     2. "esta entidade não é uma pessoa"       -> .expert--marca
+     3. "esta entidade ainda não tem verba"    -> .expert--zerado
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── ETIQUETAS DE ENTIDADE (cabeçalho do card) ────────────────────────────
+   Vizinhas das .chan-tag, mesma escala, mesmo mono. Ficam em cinza de
+   propósito: são classificação, não performance. Cor aqui é reservada pra
+   número que exige ação. */
+.ent-tag{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:3px 9px;border-radius:999px;white-space:nowrap;
+  font-family:var(--mono);font-size:.5625rem;letter-spacing:.1em;
+  text-transform:uppercase;
+  border:1px solid var(--line);color:var(--txt-3);background:transparent;
+}
+.ent-tag svg{width:11px;height:11px;flex:none}
+.ent-tag--marca{border-color:var(--line-strong);color:var(--txt-2);background:rgba(255,255,255,.055)}
+.ent-tag--contas{border-style:dashed}
+.ent-tag--zerado{border-style:dashed;color:var(--txt-3)}
+
+/* entidade de marca: bloco agregado, não pessoa. Cabeçalho perde o degradê
+   quente do card de expert pra não ler como "mais um expert". */
+.expert--marca .expert__head{background:var(--surface-3)}
+.expert--marca .expert__name{letter-spacing:.06em}
+
+/* sem verba no período: o card CONTINUA inteiro e legível. Nada de opacidade
+   baixa nem hachura no card todo: a TAP dessa entidade pode estar cheia (Jota
+   Pê hoje tem 60 FTD com R$ 0 de Meta) e escondê-la seria esconder receita.
+   O que muda é só o peso do cabeçalho. */
+.expert--zerado .expert__head{background:var(--surface)}
+.expert--zerado .expert__name{color:var(--txt-2)}
+
+/* ── BREAKDOWN POR CONTA ──────────────────────────────────────────────────
+   Mesma mecânica da prateleira de criativos (<details>, fundo rebaixado,
+   apoio e não protagonista), mas AQUI ENTRA FECHADO por padrão: o cabeçalho
+   do card já responde "quanto essa entidade investiu", a tabela responde
+   "como ela dividiu", que é a segunda pergunta.
+   Regra dura: só renderizar com contas.length > 1. Com 1 conta o card
+   inteiro já É a conta, e abrir uma tabela de 1 linha é ruído.
+   ────────────────────────────────────────────────────────────────────────── */
+.contas{
+  background:var(--surface-sunk);
+  border-top:1px solid var(--line-soft);
+}
+.contas__sum{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 16px;cursor:pointer;list-style:none;
+  font-family:var(--mono);font-size:.625rem;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--txt-3);
+  transition:color .15s ease;
+}
+.contas__sum::-webkit-details-marker{display:none}
+.contas__sum:hover{color:var(--txt-2)}
+.contas__sum:focus-visible{outline:2px solid var(--acao);outline-offset:-2px}
+.contas__count{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:18px;height:16px;padding:0 5px;border-radius:4px;
+  background:var(--acao-soft);border:1px solid var(--acao-line);
+  color:#FF7FB0;font-size:.5625rem;font-variant-numeric:tabular-nums;letter-spacing:.04em;
+}
+.contas__hint{margin-left:auto;color:var(--txt-3);opacity:.75;letter-spacing:.08em}
+.contas__chev{width:11px;height:11px;flex:none;transition:transform .18s ease}
+.contas[open] .contas__chev{transform:rotate(180deg)}
+@media (prefers-reduced-motion:reduce){.contas__chev{transition:none}}
+
+.contas__tbl{padding:2px 16px 14px}
+.contas__row{
+  display:grid;align-items:center;gap:12px;
+  grid-template-columns:minmax(0,1.7fr) 100px 100px 108px 56px;
+  padding:9px 0;
+  border-top:1px solid var(--line-soft);
+}
+.contas__row > *:not(:first-child){text-align:right}
+.contas__row--head{
+  border-top:0;padding:0 0 7px;
+  font-family:var(--mono);font-size:.5625rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--txt-3);
+}
+.contas__nome{
+  display:flex;flex-direction:column;gap:2px;min-width:0;
+}
+.contas__nome b{
+  font-size:.8125rem;font-weight:620;letter-spacing:.01em;color:var(--txt);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.contas__id{
+  font-family:var(--mono);font-size:.5625rem;color:var(--txt-3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.contas__num{
+  font-size:.8125rem;font-weight:600;font-variant-numeric:tabular-nums;
+  letter-spacing:-.01em;white-space:nowrap;
+}
+.contas__num--soft{font-weight:520;color:var(--txt-2)}
+.contas__share{font-size:.75rem;color:var(--txt-3);font-variant-numeric:tabular-nums;white-space:nowrap}
+/* linha de fechamento: é ela que prova que o agregado do cabeçalho é a soma
+   das contas. Se não bater, é bug de dados, não de layout. */
+.contas__row--tot{
+  border-top:1px solid var(--line-strong);
+  margin-top:2px;padding-top:11px;
+}
+.contas__row--tot .contas__nome b{
+  font-family:var(--mono);font-size:.625rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--txt-2);font-weight:600;
+}
+.contas__row--tot .contas__num{font-size:.875rem;font-weight:660}
+.contas__row--tot .contas__share{color:var(--txt-2)}
+
+/* conta sem entrega no período: some o zero, entra o "n/d" leve. Zero em
+   tabela financeira lê como "gastou nada de propósito"; n/d lê como
+   "não teve entrega", que é o que aconteceu. */
+.contas__num.val--na{font-weight:400;color:var(--txt-3)}
+
+/* marcador de multi-conta / marca na linha do comparativo. Segunda linha
+   dentro da célula de nome: some no celular junto com a coluna estreita?
+   Não: aqui ele fica, porque "4 contas" é justamente o que explica um
+   investimento alto numa linha só. */
+.cmp__tag{
+  display:block;margin-top:2px;font-style:normal;
+  font-family:var(--mono);font-size:.5rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--txt-3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.cmp__mult.val--na{color:var(--txt-3);font-weight:400}
+
+/* ── AVISO DO ESCOPO GERAL ────────────────────────────────────────────────
+   Enquanto a permissão da Meta não liberar nas contas novas, o investimento
+   delas vem 0 de verdade. Sem este recado, o custo por FTD e o retorno do
+   escopo Geral parecem ótimos por um motivo errado. É honestidade de painel:
+   a tela não pode ficar bonita mentindo. Some sozinho quando os números
+   entrarem (o JS esconde quando ninguém mais está zerado). */
+.scope-aviso{margin:14px 0 0}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   CAMADA DE MOVIMENTO
+   ══════════════════════════════════════════════════════════════════════════
+   Regra que vale pra tudo daqui pra baixo: MOVIMENTO É INFORMAÇÃO, não
+   enfeite. Este painel fica aberto o dia inteiro numa aba e numa TV da sala.
+   Animação que só existe pra ser bonita vira poluição em 20 minutos, e
+   animação atrás de número é a pior de todas: compete com a leitura.
+
+   Então nada de vídeo de fundo, partícula, parallax ou gradiente respirando
+   atrás dos dados. O movimento aqui responde a 4 perguntas que o painel
+   estático não conseguia responder:
+
+     1. "isto está vivo?"       -> ciclo do refresh na pílula de status
+     2. "o que mudou agora?"    -> pisca no número que trocou de valor
+     3. "de onde veio isso?"    -> entrada em cascata na primeira pintura
+     4. "quanto é isso?"        -> barras crescendo em vez de saltar
+
+   Duração curta (280 a 700ms), curva de saída (cubic-bezier(.22,1,.36,1)),
+   nada em loop infinito perto de número. O único loop permanente é o pulso
+   verde do status, que já existia e significa "conectado".
+
+   E TUDO desliga em prefers-reduced-motion, no fim do bloco. Não é gentileza:
+   é gente com enxaqueca e vestibular olhando dado financeiro.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. CICLO DO REFRESH ──────────────────────────────────────────────────
+   A pílula diz "atualiza a cada 5 min" e agora MOSTRA os 5 minutos correndo.
+   A barra enche uma vez por ciclo e o dado troca quando ela fecha. É a peça
+   de movimento mais útil da tela: transforma uma promessa em evidência.
+   Só roda em "ao vivo" (hoje). Período fechado não cicla: não tem o que
+   esperar. --ciclo vem do JS, do mesmo data-refresh-ms do HTML. */
+.status{position:relative;overflow:hidden}
+.status::after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:2px;
+  transform:scaleX(0);transform-origin:0 50%;
+  background:linear-gradient(90deg,var(--acao),var(--gold-2));
+  opacity:.8;
+}
+.status--live.is-ciclando::after{animation:ciclo var(--ciclo,300000ms) linear forwards}
+@keyframes ciclo{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+
+/* ── 2. O NÚMERO QUE MUDOU ────────────────────────────────────────────────
+   Num painel de 24 entidades × 20 campos, o refresh de 5 min troca 3 números
+   e ninguém percebe. O pisca resolve isso: depois de cada atualização, só o
+   que REALMENTE mudou de valor acende por um segundo e apaga sozinho.
+   Cor de marca, não de saúde: é "isto acabou de chegar", não "isto está bom".
+   O JS compara o texto renderizado antes e depois, então funciona pra
+   qualquer campo, inclusive os que ainda nem existem. */
+.num--tick{animation:tick 1.5s ease-out 1}
+@keyframes tick{
+  0%   {background:var(--acao-soft);box-shadow:0 0 0 4px var(--acao-soft);color:#FF9AC4}
+  22%  {background:var(--acao-soft);box-shadow:0 0 0 4px var(--acao-soft);color:#FF9AC4}
+  100% {background:transparent;box-shadow:0 0 0 4px transparent}
+}
+
+/* ── 3. ENTRADA EM CASCATA ────────────────────────────────────────────────
+   Só na PRIMEIRA pintura de cada escopo e a cada troca de escopo, nunca no
+   refresh de 5 min (senão a tela pisca inteira de 5 em 5 minutos e a pessoa
+   perde o lugar onde estava lendo). O atraso é escalonado por posição, com
+   teto: 24 cards a 26ms dariam 600ms de espera pro último, o que já é lento.
+   O teto está no JS, que para de incrementar o --i depois do 12º. */
+@keyframes surge{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.entra > .expert,
+.entra > .cmp__row{
+  animation:surge .42s cubic-bezier(.22,1,.36,1) both;
+  animation-delay:calc(var(--i,0) * 26ms);
+}
+
+/* troca de aba e de escopo: o conteúdo entra, não aparece. 240ms é o limite
+   de "instantâneo" percebido, então não custa tempo de leitura. */
+@keyframes entraView{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+#v-geral:checked ~ .scope .view--geral,
+#v-experts:checked ~ .scope .view--experts{animation:entraView .24s ease-out both}
+
+/* ── 4. NÚMERO QUE VIRA TAMANHO ───────────────────────────────────────────
+   Barra que salta de 12% pra 47% não comunica variação, comunica troca de
+   tela. Crescendo, comunica movimento de verba. Vale pra participação
+   grupo × direto e pras barras do comparativo. */
+.splitbar__seg,
+.cmp__bar i{transition:width .7s cubic-bezier(.22,1,.36,1)}
+
+/* ── 5. SUPERFÍCIES QUE RESPONDEM AO TOQUE ────────────────────────────────
+   Feedback de ponteiro, não decoração: o card sobe 1px e a borda clareia.
+   É o suficiente pra dizer "isto é uma unidade" sem sombra dramática. */
+.expert,.tcard,.crtv{transition:border-color .18s ease,transform .18s ease,box-shadow .18s ease}
+@media (hover:hover){
+  .expert:hover{border-color:var(--line-strong)}
+  .tcard:hover{transform:translateY(-1px);border-color:var(--line-strong)}
+  /* o criativo NÃO sobe no hover: ele vive dentro de uma faixa com
+     overflow-x, e qualquer deslocamento vertical é cortado pela régua. */
+  .crtv:hover{border-color:var(--line-strong)}
+  .scopebar label:hover{transform:translateY(-1px)}
+}
+.scopebar label{transition:background .16s ease,border-color .16s ease,transform .18s ease}
+
+/* ── 6. O ÚNICO BRILHO DA TELA ────────────────────────────────────────────
+   Uma passada de luz, lenta, só no selo dourado de maior investimento e só
+   nele. É o mesmo raciocínio do dourado no CSS lá de cima: se brilhar em
+   tudo, para de significar. 7 segundos de intervalo, 1,6s de passada, no
+   elemento de 90px de largura: percebe-se de canto de olho e não puxa a
+   atenção de quem está lendo número. */
+.badge-top{position:relative;overflow:hidden}
+.badge-top::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.55) 50%,transparent 62%);
+  transform:translateX(-120%);
+  animation:brilho 7s ease-in-out 1.4s infinite;
+}
+@keyframes brilho{
+  0%,78%{transform:translateX(-120%)}
+  92%,100%{transform:translateX(120%)}
+}
+
+/* ── 6b. A ASSINATURA CHEGANDO ────────────────────────────────────────────
+   O fio magenta que fecha em dourado é a assinatura da marca no topo. Na
+   abertura ele DESENHA da esquerda pra direita, uma vez só, em 900ms, e
+   nunca mais se mexe. Movimento de entrada não é loop: acontece, informa
+   "a página carregou", e sai de cena. Um fio piscando o dia inteiro em cima
+   de dado financeiro seria exatamente o tipo de motion que este painel não
+   pode ter. */
+.topbar::before{
+  transform-origin:0 50%;
+  animation:tracaFio .9s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes tracaFio{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+
+/* ── 7. PRIMEIRA CARGA ────────────────────────────────────────────────────
+   O desfoque de carregamento ganhou transição pra não estalar quando o dado
+   entra, e a pílula de boot ganhou um varrido de luz: enquanto ela varre, a
+   pessoa entende que está trabalhando, não travado. */
+#dashboard-root .views{transition:filter .32s ease,opacity .32s ease}
+.boot{position:fixed;overflow:hidden}
+.boot::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(100deg,transparent 30%,rgba(226,2,102,.22) 50%,transparent 70%);
+  transform:translateX(-100%);
+  animation:varre 1.5s ease-in-out infinite;
+}
+@keyframes varre{to{transform:translateX(100%)}}
+
+/* ── 8. DESLIGA TUDO ──────────────────────────────────────────────────────
+   Uma regra, sem exceção. Quem pediu menos movimento no sistema operacional
+   recebe o painel inteiro parado, e ele continua funcionando igual: nenhuma
+   informação desta tela existe SÓ dentro de uma animação. */
+@media (prefers-reduced-motion:reduce){
+  .status--live.is-ciclando::after,
+  .badge-top::after,
+  .topbar::before,
+  .boot::after,
+  .entra > .expert,
+  .entra > .cmp__row,
+  #v-geral:checked ~ .scope .view--geral,
+  #v-experts:checked ~ .scope .view--experts,
+  .num--tick{animation:none}
+  .splitbar__seg,.cmp__bar i,.expert,.tcard,.crtv,.scopebar label{transition:none}
+  @media (hover:hover){
+    .tcard:hover,.crtv:hover,.scopebar label:hover{transform:none}
+  }
+  /* o pisca do refresh vira estado fixo curto, aplicado e removido pelo JS:
+     sem animação, mas a informação "isto mudou" não se perde. */
+  .num--tick{background:var(--acao-soft);box-shadow:0 0 0 4px var(--acao-soft)}
+}
+
+@media (max-width:1179px){
+  .contas__row{grid-template-columns:minmax(0,1.5fr) 92px 92px 100px 52px;gap:10px}
+}
+@media (max-width:759px){
+  .scopebar{gap:6px}
+  .scopebar label{flex:1 1 46%;min-height:52px;padding:8px 12px}
+  .scopebar__nome{font-size:.875rem}
+  .scopebar__sub{font-size:.5rem;letter-spacing:.08em}
+  /* no celular sobram conta, total e participação: o recorte que responde
+     "como ele está dividindo a verba". Grupo e direto voltam no desktop. */
+  .contas__row{grid-template-columns:minmax(0,1fr) 96px 52px;gap:9px}
+  .contas__c--g,.contas__c--d{display:none}
+  .contas__tbl{padding:2px 14px 12px}
+  .contas__sum{padding:9px 14px}
+  .contas__hint{display:none}
+}
 </style>
 </head>
 
@@ -1047,10 +1538,24 @@ h1,h2,h3,h4,p{margin:0}
         <span class="brand__sep">/</span>
         <h1 class="brand__name">Operação ao vivo · Meta Ads + TAP</h1>
       </div>
+      <!-- ═══ HORA · REGRA DURA DE FUSO ═══════════════════════════════════
+           TODO horário desta página é America/Sao_Paulo, sempre, não importa
+           onde esteja o navegador de quem olha (o time acessa de lugares
+           diferentes, e um painel financeiro que diz "atualizado às 09:03"
+           pra um e "14:03" pra outro é um painel que ninguém confia).
+           `atualizado_em` chega em UTC (sufixo Z) e a conversão é do front:
+             new Date(iso).toLocaleTimeString('pt-BR', {
+               timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit'
+             })
+           O data-tz abaixo é contrato visível: todo elemento que imprime hora
+           carrega o dele, e o JS lê o atributo em vez de assumir o fuso local.
+           Vale pra qualquer coisa que venha depois (relógio ao vivo, "há X
+           min", carimbo de exportação): passa pelo mesmo carimbo.
+           ═══════════════════════════════════════════════════════════════════ -->
       <div class="freshness">
         <span class="status status--live" id="status-pill">
           <span class="status__dot" aria-hidden="true"></span>
-          Atualizado às <span class="status__time" data-field="atualizado_em">12:03</span>
+          Atualizado às <span class="status__time" data-field="atualizado_em" data-tz="America/Sao_Paulo">12:03</span>
         </span>
         <span class="freshness__meta">horário de Brasília · atualiza a cada 5 min</span>
       </div>
@@ -1132,7 +1637,7 @@ h1,h2,h3,h4,p{margin:0}
          último dado bom na tela, só avisa que parou de atualizar. -->
     <div class="errbar" id="erro-banner" hidden role="status">
       Falha ao atualizar. Os números abaixo são da última leitura bem-sucedida
-      (<span data-field="atualizado_em">12:03</span>). Tentando de novo…
+      (<span data-field="atualizado_em" data-tz="America/Sao_Paulo">12:03</span>). Tentando de novo…
     </div>
 
     <!-- PERÍODO DIVERGENTE. Não é erro de rede: é a API devolvendo um período
@@ -1147,14 +1652,44 @@ h1,h2,h3,h4,p{margin:0}
     </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════════
-       ABAS. Os dois <input> precisam continuar sendo IRMÃOS ANTERIORES das
-       .view e da .tabs, senão o seletor ~ do CSS quebra e some tudo.
-       Aba 1 (Visão geral): veredito, sinais, totais, comparativo, criativos.
-       Aba 2 (Por expert): os cards detalhados, um por expert.
+       NAVEGAÇÃO EM DOIS NÍVEIS. Os QUATRO <input> precisam continuar sendo
+       IRMÃOS ANTERIORES de .scopebar e de .scope, senão o seletor ~ do CSS
+       quebra e some tudo.
+
+       Nível 1 · escopo   -> Costa e Lobão (7 experts) | Geral (24 entidades)
+       Nível 2 · sub-aba  -> Visão geral | detalhe   (compartilhado pelos dois)
+
+       Por que dois níveis e não quatro abas soltas: "Costa e Lobão" e "Geral"
+       são duas OPERAÇÕES diferentes, não duas seções da mesma. Quatro abas
+       lado a lado fariam parecer que Geral é um complemento do recorte, e é o
+       contrário. E manter a sub-aba compartilhada evita que a pessoa perca a
+       leitura em que estava ao trocar de escopo.
        ═══════════════════════════════════════════════════════════════════════ -->
   <div class="views">
+    <input type="radio" name="escopo" id="e-cl" checked>
+    <input type="radio" name="escopo" id="e-geral">
     <input type="radio" name="view" id="v-geral" checked>
     <input type="radio" name="view" id="v-experts">
+
+    <nav class="scopebar" aria-label="Escopo da operação">
+      <label for="e-cl">
+        <span class="scopebar__nome">Costa e Lobão</span>
+        <!-- JS: experts.length -->
+        <span class="scopebar__sub" data-derived="experts.length">7 experts</span>
+      </label>
+      <label for="e-geral">
+        <span class="scopebar__nome">Geral</span>
+        <!-- JS: geral.experts.length + soma de geral.experts[].contas.length -->
+        <span class="scopebar__sub" data-derived="geral.experts.length + contas">24 entidades · 33 contas</span>
+      </label>
+    </nav>
+
+    <!-- ╔═════════════════════════════════════════════════════════════════╗
+         ║ ESCOPO 1 · COSTA E LOBÃO · consome  totais  e  experts[]        ║
+         ║ Conteúdo idêntico ao da versão anterior. Nada aqui mudou:       ║
+         ║ só passou a viver dentro de um escopo nomeado.                  ║
+         ╚═════════════════════════════════════════════════════════════════╝ -->
+    <div class="scope scope--cl" id="escopo-cl" data-escopo="cl">
 
     <nav class="tabs" aria-label="Seções do painel">
       <label for="v-geral">Visão geral</label>
@@ -1500,7 +2035,7 @@ h1,h2,h3,h4,p{margin:0}
          O selo dourado "maior investimento" acompanha o primeiro do sort. -->
     <div class="section-head"><h2 class="eyebrow">Por expert · 7 ativos · maior investimento primeiro</h2></div>
 
-    <section class="experts" id="experts-list" aria-label="Desempenho por expert">
+    <section class="experts" id="experts-list" data-list="experts" aria-label="Desempenho por expert">
 
       <!-- ▼▼▼ CARD MODELO: clonar este <article> para renderizar os demais ▼▼▼ -->
       <article class="expert" data-expert="GP DADOS">
@@ -2340,9 +2875,789 @@ h1,h2,h3,h4,p{margin:0}
     </section>
 
     </div><!-- ══════════ /ABA 2 · POR EXPERT ══════════ -->
+
+    </div><!-- ╚══ /ESCOPO 1 · COSTA E LOBÃO ══╝ -->
+
+    <!-- ╔═════════════════════════════════════════════════════════════════╗
+         ║ ESCOPO 2 · GERAL · consome  geral.totais  e  geral.experts[]    ║
+         ║                                                                 ║
+         ║ MESMOS COMPONENTES do escopo anterior, em escala maior. Não é   ║
+         ║ um segundo design: é o mesmo, com 24 entidades no lugar de 7 e  ║
+         ║ com um bloco a mais dentro do card (o breakdown por conta).     ║
+         ║                                                                 ║
+         ║ O HTML abaixo é AMOSTRA: 4 dos 24 cards e 5 das 24 linhas do    ║
+         ║ comparativo, escolhidos pra cobrir todos os estados novos       ║
+         ║ (entidade com verba · multi-conta zerada · multi-conta com      ║
+         ║ verba · bloco de marca). O JS renderiza a lista inteira a       ║
+         ║ partir de geral.experts, então esta amostra NÃO fecha com o     ║
+         ║ bloco de totais, de propósito: totais são dos 24, a amostra é   ║
+         ║ de 4. Nos números do escopo Costa e Lobão a integridade         ║
+         ║ continua valendo, lá a lista é completa.                        ║
+         ╚═════════════════════════════════════════════════════════════════╝ -->
+    <div class="scope scope--geral" id="escopo-geral" data-escopo="geral">
+
+    <nav class="tabs" aria-label="Seções do painel, escopo geral">
+      <label for="v-geral">Visão geral</label>
+      <label for="v-experts">Por entidade <span class="tab__badge" data-derived="geral.experts.length">24</span></label>
+    </nav>
+
+    <!-- ══════════════════ GERAL · ABA 1 · VISÃO GERAL ══════════════════ -->
+    <div class="view view--geral">
+
+    <!-- ═══ AVISO DE VERBA BLOQUEADA ═══
+         Aparece enquanto houver entidade com investimento_total === 0.
+         data-derived: geral.experts.filter(e => !e.investimento_total).length
+         O JS esconde sozinho quando ninguém mais estiver zerado. Sem este
+         recado, custo por FTD e retorno do escopo Geral parecem ótimos por um
+         motivo errado (denominador faltando), e a tela mentiria com cara de
+         certa. Mesmo princípio do #periodo-banner. -->
+    <div class="errbar errbar--warn scope-aviso" id="geral-aviso" role="status">
+      <b data-derived="entidades com investimento_total === 0">17 das 24 entidades</b>
+      ainda estão com investimento zerado (liberação de permissão da Meta em
+      andamento). O funil da TAP delas já é real, o investimento não, então
+      <b>custo por FTD e retorno deste escopo ficam otimistas</b> até a verba entrar.
+    </div>
+
+    <!-- ═══ PLACAR DO DIA · GERAL ═══
+         Mesmas regras do escopo anterior. A única diferença é a frase de
+         reforço, que ganha a ressalva das entidades sem verba quando existirem.
+         REGRA NOVA E IMPORTANTE (vale nos dois escopos):
+         entidade com investimento_total === 0 fica FORA das contas de melhor e
+         pior custo por FTD. custo_por_ftd = 0 sem verba não é "barato", é
+         ausência de dado, e deixar entrar faz o painel eleger o melhor da
+         operação como quem não gastou nada. -->
+    <section class="placar" aria-label="Placar do dia, operação geral">
+
+      <div class="verdict verdict--good">
+        <span class="verdict__lbl">Como está o dia</span>
+        <p class="verdict__txt">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.2 12.4 2.6 2.6 5-5.4"/></svg>
+          Custo por FTD dentro da faixa boa
+        </p>
+        <p class="verdict__why">
+          R$ 15,45 por FTD hoje, contra R$ 120 da faixa boa. Número ainda
+          distorcido: 17 das 24 entidades entram com investimento zerado.
+        </p>
+      </div>
+
+      <div class="sinal sinal--good">
+        <span class="sinal__lbl">Melhor custo por FTD</span>
+        <span class="sinal__who" data-derived="menor custo_por_ftd entre quem tem verba">QZL</span>
+        <span class="sinal__val">R$ 84,41 · 3 FTD</span>
+      </div>
+
+      <div class="sinal sinal--bad">
+        <span class="sinal__lbl">Pior custo por FTD</span>
+        <span class="sinal__who" data-derived="maior custo_por_ftd entre quem tem verba">Charles</span>
+        <span class="sinal__val">R$ 498,31 · 1 FTD</span>
+      </div>
+
+      <div class="sinal sinal--na">
+        <span class="sinal__lbl">Ainda sem FTD</span>
+        <span class="sinal__who" data-derived="entidades com tap.ftd === 0">6 entidades</span>
+        <span class="sinal__val">Empire, Cremosinho, BMidia e mais 3 · R$ 0,00 investidos</span>
+      </div>
+
+    </section>
+
+    <!-- ═══ TOTAIS DA OPERAÇÃO INTEIRA ═══
+         Fonte: geral.totais. NÃO somar geral.experts no front. -->
+    <div class="section-head">
+      <h2 class="eyebrow">Totais da operação · <span data-field="periodo_label">hoje, 06/08/2026</span></h2>
+    </div>
+
+    <section class="totals" aria-label="Totais da operação geral">
+
+      <div class="tcard tcard--hero">
+        <span class="tcard__lbl">Investimento total</span>
+        <span class="tcard__val" data-field="totais.investimento_total">R$ 2.749,25</span>
+        <span class="tcard__sub" data-derived="totais.investimento_total / totais.ftd">R$ 15,45 por FTD</span>
+      </div>
+
+      <div class="tcard tcard--grupo">
+        <span class="tcard__lbl"><i class="dot dot--grupo"></i> Investimento grupo</span>
+        <span class="tcard__val" data-field="totais.investimento_grupo">R$ 2.496,03</span>
+        <span class="tcard__sub" data-derived="grupo / total; soma dos resultados de grupo">90,8% do total · 295 entradas</span>
+      </div>
+
+      <div class="tcard tcard--direto">
+        <span class="tcard__lbl"><i class="dot dot--direto"></i> Investimento direto</span>
+        <span class="tcard__val" data-field="totais.investimento_direto">R$ 253,22</span>
+        <span class="tcard__sub" data-derived="direto / total; soma dos resultados de direto">9,2% do total · 850 resultados</span>
+      </div>
+
+      <div class="tcard">
+        <span class="tcard__lbl">Cadastros</span>
+        <span class="tcard__val" data-field="totais.cadastros">612</span>
+        <span class="tcard__sub" data-derived="investimento_total / cadastros">R$ 4,49 por cadastro</span>
+      </div>
+
+      <div class="tcard">
+        <span class="tcard__lbl">FTD</span>
+        <span class="tcard__val" data-field="totais.ftd">178</span>
+        <span class="tcard__sub" data-derived="ftd / cadastros * 100">29,1% dos cadastros</span>
+      </div>
+
+      <div class="tcard">
+        <span class="tcard__lbl">Depósito</span>
+        <span class="tcard__val" data-field="totais.deposito">R$ 842.510,96</span>
+        <span class="tcard__sub tcard__sub--gold" data-derived="deposito / investimento_total">306,5× o investido</span>
+      </div>
+
+    </section>
+
+    <div class="splitbar">
+      <div class="splitbar__track" role="img" aria-label="Grupo 90,8% do investimento, direto 9,2%">
+        <div class="splitbar__seg splitbar__seg--grupo" style="width:90.8%"></div>
+        <div class="splitbar__seg splitbar__seg--direto" style="width:9.2%"></div>
+      </div>
+      <div class="splitbar__legend">
+        <span><i class="dot dot--grupo"></i> Grupo · WhatsApp / Telegram · <b class="num">90,8%</b></span>
+        <span><i class="dot dot--direto"></i> Direto · Perfil · <b class="num">9,2%</b></span>
+      </div>
+    </div>
+
+    <!-- ═══ COMPARATIVO POR ENTIDADE ═══
+         Mesmo componente do outro escopo, com duas marcações a mais na coluna
+         de nome: "N contas" (multi-conta) e "marca" (Institucional).
+         Com 24 linhas o ranking é a tela mais útil do escopo Geral: é onde se
+         vê a verba da BM inteira numa olhada só. -->
+    <div class="section-head"><h2 class="eyebrow">Comparativo · onde a verba da operação está indo</h2></div>
+
+    <section class="cmp" aria-label="Comparativo por entidade">
+      <div class="cmp__row cmp__row--head" aria-hidden="true">
+        <span>Entidade</span>
+        <span>Investido</span>
+        <span class="cmp__bar-cell">Participação na verba</span>
+        <span class="cmp__ftd">FTD</span>
+        <span>Custo por FTD</span>
+        <span class="cmp__dep">Depósito</span>
+        <span style="text-align:right">Retorno</span>
+      </div>
+
+      <div class="cmp__body">
+
+        <div class="cmp__row" data-expert="TANOS">
+          <span class="cmp__name">Tanos</span>
+          <span class="cmp__num">R$ 402,15</span>
+          <span class="cmp__bar-cell">
+            <span class="cmp__bar"><i style="width:100%"></i></span>
+            <span class="cmp__share">14,6% da verba do dia</span>
+          </span>
+          <span class="cmp__num cmp__ftd">3</span>
+          <span><span class="chip chip--sm chip--warn">R$ 134,05</span></span>
+          <span class="cmp__num cmp__num--soft cmp__dep">R$ 9.740,10</span>
+          <span class="cmp__mult">24,2×</span>
+        </div>
+
+        <div class="cmp__row" data-expert="JOTA PE">
+          <span class="cmp__name">Jota Pê<i class="cmp__tag">4 contas</i></span>
+          <span class="cmp__num">R$ 0,00</span>
+          <span class="cmp__bar-cell">
+            <span class="cmp__bar"><i style="width:0%"></i></span>
+            <span class="cmp__share">0,0% da verba do dia</span>
+          </span>
+          <span class="cmp__num cmp__ftd">60</span>
+          <span><span class="chip chip--sm chip--na">Sem verba</span></span>
+          <span class="cmp__num cmp__num--soft cmp__dep">R$ 11.961,48</span>
+          <span class="cmp__mult val--na">n/d</span>
+        </div>
+
+        <div class="cmp__row" data-expert="INSTITUCIONAL">
+          <span class="cmp__name">Institucional<i class="cmp__tag">marca · 9 contas</i></span>
+          <span class="cmp__num">R$ 0,00</span>
+          <span class="cmp__bar-cell">
+            <span class="cmp__bar"><i style="width:0%"></i></span>
+            <span class="cmp__share">0,0% da verba do dia</span>
+          </span>
+          <span class="cmp__num cmp__ftd">41</span>
+          <span><span class="chip chip--sm chip--na">Sem verba</span></span>
+          <span class="cmp__num cmp__num--soft cmp__dep">R$ 96.204,80</span>
+          <span class="cmp__mult val--na">n/d</span>
+        </div>
+
+        <div class="cmp__row" data-expert="FELIPE BORGES">
+          <span class="cmp__name">Felipe Borges<i class="cmp__tag">2 contas</i></span>
+          <span class="cmp__num">R$ 0,00</span>
+          <span class="cmp__bar-cell">
+            <span class="cmp__bar"><i style="width:0%"></i></span>
+            <span class="cmp__share">0,0% da verba do dia</span>
+          </span>
+          <span class="cmp__num cmp__ftd">9</span>
+          <span><span class="chip chip--sm chip--na">Sem verba</span></span>
+          <span class="cmp__num cmp__num--soft cmp__dep">R$ 22.480,15</span>
+          <span class="cmp__mult val--na">n/d</span>
+        </div>
+
+        <div class="cmp__row" data-expert="EMPIRE">
+          <span class="cmp__name">Empire</span>
+          <span class="cmp__num">R$ 0,00</span>
+          <span class="cmp__bar-cell">
+            <span class="cmp__bar"><i style="width:0%"></i></span>
+            <span class="cmp__share">0,0% da verba do dia</span>
+          </span>
+          <span class="cmp__num cmp__ftd">0</span>
+          <span><span class="chip chip--sm chip--na">Sem verba</span></span>
+          <span class="cmp__num cmp__num--soft cmp__dep">R$ 0,00</span>
+          <span class="cmp__mult val--na">n/d</span>
+        </div>
+
+      </div>
+
+      <p class="cmp__foot">
+        Barra proporcional ao maior investimento do dia. Entidade sem verba no
+        período aparece com barra vazia e retorno n/d: sem denominador não existe
+        múltiplo, e imprimir um número ali seria invenção.
+        <br>
+        <label class="tablink" for="v-experts">
+          Abrir o detalhe por entidade
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
+        </label>
+      </p>
+    </section>
+
+    <!-- ═══ CRIATIVOS DA OPERAÇÃO INTEIRA ═══
+         Mesma regra do outro escopo: 5 maiores CTR somando todas as entidades.
+         Enquanto a permissão da Meta não liberar, só as contas do Costa e Lobão
+         devolvem criativo, então a faixa vem curta. Se ninguém tiver criativo,
+         o JS esconde a seção inteira em vez de mostrar prateleira vazia. -->
+    <div class="section-head"><h2 class="eyebrow">Criativos puxando hoje · 5 maiores CTR da operação</h2></div>
+
+    <div class="topcrtvs">
+      <div class="crtvs__strip">
+
+        <article class="crtv crtv--top">
+          <div class="crtv__top">
+            <span class="crtv__thumb"><svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg></span>
+            <div class="crtv__meta">
+              <span class="crtv__owner">GP Dados</span>
+              <span class="crtv__name">GP 05 print de saque</span>
+            </div>
+          </div>
+          <div class="crtv__stats">
+            <span class="crtv__st crtv__ctr"><b>4,12%</b> CTR</span>
+            <span class="crtv__st"><b>88</b> cliq</span>
+            <span class="crtv__st"><b>R$ 121,05</b></span>
+          </div>
+        </article>
+
+        <article class="crtv">
+          <div class="crtv__top">
+            <span class="crtv__thumb"><svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg></span>
+            <div class="crtv__meta">
+              <span class="crtv__owner">Tanos</span>
+              <span class="crtv__name">Tanos 02 chamada de grupo</span>
+            </div>
+          </div>
+          <div class="crtv__stats">
+            <span class="crtv__st crtv__ctr"><b>3,91%</b> CTR</span>
+            <span class="crtv__st"><b>37</b> cliq</span>
+            <span class="crtv__st"><b>R$ 71,25</b></span>
+          </div>
+        </article>
+
+        <article class="crtv">
+          <div class="crtv__top">
+            <span class="crtv__thumb"><svg class="crtv__ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-2 4 4"/></svg></span>
+            <div class="crtv__meta">
+              <span class="crtv__owner">Deko</span>
+              <span class="crtv__name">Deko 03 convite direto</span>
+            </div>
+          </div>
+          <div class="crtv__stats">
+            <span class="crtv__st crtv__ctr"><b>3,04%</b> CTR</span>
+            <span class="crtv__st"><b>55</b> cliq</span>
+            <span class="crtv__st"><b>R$ 98,20</b></span>
+          </div>
+        </article>
+
+      </div>
+    </div>
+
+    </div><!-- ══════════ /GERAL · ABA 1 ══════════ -->
+
+    <!-- ══════════════════ GERAL · ABA 2 · POR ENTIDADE ══════════════════ -->
+    <div class="view view--experts">
+
+    <div class="section-head"><h2 class="eyebrow">Por entidade · 24 na operação · maior investimento primeiro</h2></div>
+
+    <section class="experts" id="geral-list" data-list="experts" aria-label="Desempenho por entidade">
+
+      <!-- ── ESTADO A · entidade de 1 conta, com verba. Igual a um card do
+           Costa e Lobão: sem prateleira de contas, porque o card já É a conta. -->
+      <article class="expert" data-expert="TANOS">
+        <header class="expert__head">
+          <div class="expert__id">
+            <h3 class="expert__name" data-field="expert_name">Tanos</h3>
+            <span class="badge-top" data-derived="maior investimento_total do escopo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16"/><path d="M4 19V9l5 4 3-7 3 7 5-4v10"/></svg>
+              Maior investimento
+            </span>
+            <div class="chans">
+              <span class="chan-tag chan-tag--grupo is-on">Grupo</span>
+              <span class="chan-tag chan-tag--direto">Direto</span>
+            </div>
+          </div>
+          <div class="expert__head-metrics">
+            <div class="hm">
+              <span class="hm__lbl">Investido hoje</span>
+              <span class="hm__val" data-field="investimento_total">R$ 402,15</span>
+            </div>
+            <div class="hm">
+              <span class="hm__lbl">Custo por FTD</span>
+              <span class="chip chip--warn" data-field="tap.custo_por_ftd">R$ 134,05</span>
+            </div>
+          </div>
+        </header>
+        <div class="expert__body">
+          <section class="block block--grupo" data-block="grupo">
+            <h4 class="block__title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13h6M8 9h8"/><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M3.5 20.5 5 16"/></svg>
+              Grupo <small>WhatsApp / Telegram</small>
+            </h4>
+            <div class="metrics">
+              <div class="m"><span class="m__lbl">Investido</span><span class="m__val" data-field="grupo.valor_investido">R$ 402,15</span></div>
+              <div class="m"><span class="m__lbl">Entradas</span><span class="m__val" data-field="grupo.resultado">48</span></div>
+              <div class="m"><span class="m__lbl">Custo / entrada</span><span class="m__val" data-field="grupo.custo_por_resultado">R$ 8,38</span></div>
+            </div>
+          </section>
+          <section class="block block--direto block--off" data-block="direto">
+            <h4 class="block__title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0-9-9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 19a6 6 0 0 1 11 0"/></svg>
+              Direto <small>Perfil</small>
+            </h4>
+            <p class="block__off">Sem campanha ativa hoje</p>
+          </section>
+          <section class="block block--tap">
+            <h4 class="block__title">Funil TAP <small>blend da entidade, não separa grupo e direto</small></h4>
+            <div class="tap-funnel">
+              <div class="m"><span class="m__lbl">Cadastros</span><span class="m__val" data-field="tap.cadastros">8</span></div>
+              <div class="m"><span class="m__lbl">FTD</span><span class="m__val" data-field="tap.ftd">3</span></div>
+              <div class="m"><span class="m__lbl">Conv. cad → FTD</span><span class="m__val" data-field="tap.conversao_cadastro_ftd">37,5%</span></div>
+              <div class="m"><span class="m__lbl">Custo por FTD</span><span class="m__val" data-field="tap.custo_por_ftd">R$ 134,05</span></div>
+            </div>
+            <div class="tap-fin">
+              <div class="m"><span class="m__lbl">Valor FTD</span><span class="m__val" data-field="tap.valor_ftd">R$ 450,00</span></div>
+              <div class="m"><span class="m__lbl">Depósito</span><span class="m__val" data-field="tap.deposito">R$ 9.740,10</span></div>
+              <div class="m"><span class="m__lbl">Net dep</span><span class="m__val num--pos" data-field="tap.net_dep">R$ 2.980,44</span></div>
+              <div class="m"><span class="m__lbl">Net PL</span><span class="m__val num--pos" data-field="tap.net_pl">R$ 1.204,10</span></div>
+              <div class="m"><span class="m__lbl">Volume</span><span class="m__val" data-field="tap.volume">R$ 14.220,30</span></div>
+            </div>
+          </section>
+        </div>
+        <div class="crtvs crtvs--empty" data-field="criativos">
+          <span>Criativos ativos</span>
+          <span class="crtvs__none">Nenhum criativo ativo no momento</span>
+        </div>
+      </article>
+
+      <!-- ── ESTADO B · MULTI-CONTA + SEM VERBA (Jota Pê, 4 contas)
+           É o card que o cliente pediu: total agregado no cabeçalho, detalhe
+           conta a conta na prateleira. Hoje as 4 contas voltam zeradas pelo
+           bloqueio de permissão da Meta, e o card aguenta isso sem parecer
+           quebrado: a TAP dele está cheia (60 FTD), que é justamente o motivo
+           de não esconder entidade sem verba.
+           ▼▼▼ MOLDE DO BREAKDOWN POR CONTA: clonar este <details> ▼▼▼ -->
+      <article class="expert expert--zerado" data-expert="JOTA PE">
+        <header class="expert__head">
+          <div class="expert__id">
+            <h3 class="expert__name" data-field="expert_name">Jota Pê</h3>
+            <span class="ent-tag ent-tag--contas" data-derived="contas.length">4 contas</span>
+            <span class="ent-tag ent-tag--zerado">Sem verba no período</span>
+            <div class="chans">
+              <span class="chan-tag chan-tag--grupo">Grupo</span>
+              <span class="chan-tag chan-tag--direto">Direto</span>
+            </div>
+          </div>
+          <div class="expert__head-metrics">
+            <div class="hm">
+              <span class="hm__lbl">Investido hoje</span>
+              <span class="hm__val" data-field="investimento_total">R$ 0,00</span>
+            </div>
+            <div class="hm">
+              <span class="hm__lbl">Custo por FTD</span>
+              <!-- NUNCA "R$ 0,00" em verde aqui: sem verba não é barato, é sem dado -->
+              <span class="chip chip--na" data-field="tap.custo_por_ftd">Sem verba</span>
+            </div>
+          </div>
+        </header>
+        <div class="expert__body">
+          <section class="block block--grupo block--off" data-block="grupo">
+            <h4 class="block__title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13h6M8 9h8"/><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M3.5 20.5 5 16"/></svg>
+              Grupo <small>WhatsApp / Telegram</small>
+            </h4>
+            <p class="block__off">Sem campanha ativa hoje</p>
+          </section>
+          <section class="block block--direto block--off" data-block="direto">
+            <h4 class="block__title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0-9-9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 19a6 6 0 0 1 11 0"/></svg>
+              Direto <small>Perfil</small>
+            </h4>
+            <p class="block__off">Sem campanha ativa hoje</p>
+          </section>
+          <section class="block block--tap">
+            <h4 class="block__title">Funil TAP <small>1 btag pras 4 contas, não separa por conta</small></h4>
+            <div class="tap-funnel">
+              <div class="m"><span class="m__lbl">Cadastros</span><span class="m__val" data-field="tap.cadastros">94</span></div>
+              <div class="m"><span class="m__lbl">FTD</span><span class="m__val" data-field="tap.ftd">60</span></div>
+              <div class="m"><span class="m__lbl">Conv. cad → FTD</span><span class="m__val" data-field="tap.conversao_cadastro_ftd">63,8%</span></div>
+              <div class="m"><span class="m__lbl">Custo por FTD</span><span class="m__val val--na" data-field="tap.custo_por_ftd">sem verba</span></div>
+            </div>
+            <div class="tap-fin">
+              <div class="m"><span class="m__lbl">Valor FTD</span><span class="m__val" data-field="tap.valor_ftd">R$ 1.143,55</span></div>
+              <div class="m"><span class="m__lbl">Depósito</span><span class="m__val" data-field="tap.deposito">R$ 11.961,48</span></div>
+              <div class="m"><span class="m__lbl">Net dep</span><span class="m__val num--pos" data-field="tap.net_dep">R$ 6.010,34</span></div>
+              <div class="m"><span class="m__lbl">Net PL</span><span class="m__val num--pos" data-field="tap.net_pl">R$ 1.660,45</span></div>
+              <div class="m"><span class="m__lbl">Volume</span><span class="m__val" data-field="tap.volume">R$ 17.130,98</span></div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ═══ BREAKDOWN POR CONTA ═══
+             Renderizar SÓ quando contas.length > 1. Entra fechado: o cabeçalho
+             do card já respondeu "quanto", isto responde "como dividiu".
+             Colunas: conta · grupo · direto · total · participação na entidade.
+             A última linha fecha a soma e TEM que bater com investimento_total.
+             Canal inativo imprime n/d, não R$ 0,00, mesma regra do .block--off.
+             Exemplo de linha com verba (é assim que fica depois da liberação):
+               <span class="contas__num contas__c--g">R$ 186,40</span>
+               <span class="contas__num contas__num--soft contas__c--d">R$ 41,30</span>
+               <span class="contas__num">R$ 227,70</span>
+               <span class="contas__share">53,2%</span>
+             O apelido de cada conta sai do mapa CONTAS do JS (o JSON só manda
+             conta_id). Conta nova sem apelido cai no fallback "Conta ····1234",
+             não quebra. Ideal: a API passar a mandar conta_nome. -->
+        <details class="contas" data-field="contas">
+          <summary class="contas__sum">
+            <span>Investimento conta a conta</span>
+            <span class="contas__count num" data-derived="contas.length">4</span>
+            <span class="contas__hint">o total do cabeçalho é a soma destas →</span>
+            <svg class="contas__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </summary>
+          <div class="contas__tbl">
+            <div class="contas__row contas__row--head" aria-hidden="true">
+              <span>Conta de anúncio</span>
+              <span class="contas__c--g">Grupo</span>
+              <span class="contas__c--d">Direto</span>
+              <span>Total</span>
+              <span>Part.</span>
+            </div>
+
+            <!-- ▼▼ LINHA MODELO DE CONTA ▼▼ -->
+            <div class="contas__row" data-conta="1318099683822304">
+              <span class="contas__nome">
+                <b>CA 05 · JC Experts Jotap</b>
+                <span class="contas__id" data-field="conta_id">1318099683822304</span>
+              </span>
+              <span class="contas__num val--na contas__c--g" data-field="grupo.valor_investido">n/d</span>
+              <span class="contas__num val--na contas__c--d" data-field="direto.valor_investido">n/d</span>
+              <span class="contas__num val--na">n/d</span>
+              <span class="contas__share">n/d</span>
+            </div>
+            <!-- ▲▲ FIM DA LINHA MODELO ▲▲ -->
+
+            <div class="contas__row" data-conta="1677889643448352">
+              <span class="contas__nome">
+                <b>CA 02 · JC Experts Jotap</b>
+                <span class="contas__id" data-field="conta_id">1677889643448352</span>
+              </span>
+              <span class="contas__num val--na contas__c--g" data-field="grupo.valor_investido">n/d</span>
+              <span class="contas__num val--na contas__c--d" data-field="direto.valor_investido">n/d</span>
+              <span class="contas__num val--na">n/d</span>
+              <span class="contas__share">n/d</span>
+            </div>
+
+            <div class="contas__row" data-conta="3432194193613959">
+              <span class="contas__nome">
+                <b>CA 03 · JC Experts Jotap</b>
+                <span class="contas__id" data-field="conta_id">3432194193613959</span>
+              </span>
+              <span class="contas__num val--na contas__c--g" data-field="grupo.valor_investido">n/d</span>
+              <span class="contas__num val--na contas__c--d" data-field="direto.valor_investido">n/d</span>
+              <span class="contas__num val--na">n/d</span>
+              <span class="contas__share">n/d</span>
+            </div>
+
+            <div class="contas__row" data-conta="27620008490951770">
+              <span class="contas__nome">
+                <b>CA 04 · JC Experts Jotap</b>
+                <span class="contas__id" data-field="conta_id">27620008490951770</span>
+              </span>
+              <span class="contas__num val--na contas__c--g" data-field="grupo.valor_investido">n/d</span>
+              <span class="contas__num val--na contas__c--d" data-field="direto.valor_investido">n/d</span>
+              <span class="contas__num val--na">n/d</span>
+              <span class="contas__share">n/d</span>
+            </div>
+
+            <!-- ▼ LINHA DE FECHAMENTO: prova que o cabeçalho é a soma das contas ▼ -->
+            <div class="contas__row contas__row--tot">
+              <span class="contas__nome"><b>Total da entidade</b></span>
+              <span class="contas__num contas__c--g" data-field="grupo.valor_investido">R$ 0,00</span>
+              <span class="contas__num contas__c--d" data-field="direto.valor_investido">R$ 0,00</span>
+              <span class="contas__num" data-field="investimento_total">R$ 0,00</span>
+              <span class="contas__share">100%</span>
+            </div>
+          </div>
+        </details>
+        <!-- ▲▲▲ FIM DO MOLDE DO BREAKDOWN ▲▲▲ -->
+
+        <div class="crtvs crtvs--empty" data-field="criativos">
+          <span>Criativos ativos</span>
+          <span class="crtvs__none">Nenhum criativo ativo no momento</span>
+        </div>
+      </article>
+
+      <!-- ── ESTADO C · BLOCO DE MARCA (Institucional, 9 contas)
+           Não é pessoa, não é expert: é a marca anunciando. Ganha .expert--marca
+           e a etiqueta explícita pra ninguém cobrar performance de "expert"
+           dessa linha. Nunca recebe o selo dourado de maior investimento. -->
+      <article class="expert expert--marca expert--zerado" data-expert="INSTITUCIONAL">
+        <header class="expert__head">
+          <div class="expert__id">
+            <h3 class="expert__name" data-field="expert_name">Institucional</h3>
+            <span class="ent-tag ent-tag--marca">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M10 21v-5h4v5"/></svg>
+              Marca
+            </span>
+            <span class="ent-tag ent-tag--contas" data-derived="contas.length">9 contas</span>
+            <div class="chans">
+              <span class="chan-tag chan-tag--grupo">Grupo</span>
+              <span class="chan-tag chan-tag--direto">Direto</span>
+            </div>
+          </div>
+          <div class="expert__head-metrics">
+            <div class="hm">
+              <span class="hm__lbl">Investido hoje</span>
+              <span class="hm__val" data-field="investimento_total">R$ 0,00</span>
+            </div>
+            <div class="hm">
+              <span class="hm__lbl">Custo por FTD</span>
+              <span class="chip chip--na" data-field="tap.custo_por_ftd">Sem verba</span>
+            </div>
+          </div>
+        </header>
+        <div class="expert__body">
+          <section class="block block--grupo block--off" data-block="grupo">
+            <h4 class="block__title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13h6M8 9h8"/><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M3.5 20.5 5 16"/></svg>
+              Grupo <small>WhatsApp / Telegram</small>
+            </h4>
+            <p class="block__off">Sem campanha ativa hoje</p>
+          </section>
+          <section class="block block--direto block--off" data-block="direto">
+            <h4 class="block__title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0-9-9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 19a6 6 0 0 1 11 0"/></svg>
+              Direto <small>Perfil</small>
+            </h4>
+            <p class="block__off">Sem campanha ativa hoje</p>
+          </section>
+          <section class="block block--tap">
+            <h4 class="block__title">Funil TAP <small>btag único compartilhado pelas 9 contas</small></h4>
+            <div class="tap-funnel">
+              <div class="m"><span class="m__lbl">Cadastros</span><span class="m__val" data-field="tap.cadastros">148</span></div>
+              <div class="m"><span class="m__lbl">FTD</span><span class="m__val" data-field="tap.ftd">41</span></div>
+              <div class="m"><span class="m__lbl">Conv. cad → FTD</span><span class="m__val" data-field="tap.conversao_cadastro_ftd">27,7%</span></div>
+              <div class="m"><span class="m__lbl">Custo por FTD</span><span class="m__val val--na" data-field="tap.custo_por_ftd">sem verba</span></div>
+            </div>
+            <div class="tap-fin">
+              <div class="m"><span class="m__lbl">Valor FTD</span><span class="m__val" data-field="tap.valor_ftd">R$ 3.280,00</span></div>
+              <div class="m"><span class="m__lbl">Depósito</span><span class="m__val" data-field="tap.deposito">R$ 96.204,80</span></div>
+              <div class="m"><span class="m__lbl">Net dep</span><span class="m__val num--pos" data-field="tap.net_dep">R$ 41.880,22</span></div>
+              <div class="m"><span class="m__lbl">Net PL</span><span class="m__val num--neg" data-field="tap.net_pl">-R$ 2.104,66</span></div>
+              <div class="m"><span class="m__lbl">Volume</span><span class="m__val" data-field="tap.volume">R$ 148.930,41</span></div>
+            </div>
+          </section>
+        </div>
+
+        <details class="contas" data-field="contas">
+          <summary class="contas__sum">
+            <span>Investimento conta a conta</span>
+            <span class="contas__count num" data-derived="contas.length">9</span>
+            <span class="contas__hint">o total do cabeçalho é a soma destas →</span>
+            <svg class="contas__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </summary>
+          <div class="contas__tbl">
+            <div class="contas__row contas__row--head" aria-hidden="true">
+              <span>Conta de anúncio</span>
+              <span class="contas__c--g">Grupo</span>
+              <span class="contas__c--d">Direto</span>
+              <span>Total</span>
+              <span>Part.</span>
+            </div>
+            <div class="contas__row" data-conta="566433646393570">
+              <span class="contas__nome"><b>CA 01 · Institucional</b><span class="contas__id" data-field="conta_id">566433646393570</span></span>
+              <span class="contas__num val--na contas__c--g">n/d</span><span class="contas__num val--na contas__c--d">n/d</span><span class="contas__num val--na">n/d</span><span class="contas__share">n/d</span>
+            </div>
+            <div class="contas__row" data-conta="4369472913294852">
+              <span class="contas__nome"><b>CA 02 · Institucional</b><span class="contas__id" data-field="conta_id">4369472913294852</span></span>
+              <span class="contas__num val--na contas__c--g">n/d</span><span class="contas__num val--na contas__c--d">n/d</span><span class="contas__num val--na">n/d</span><span class="contas__share">n/d</span>
+            </div>
+            <div class="contas__row" data-conta="1662336521647121">
+              <span class="contas__nome"><b>CA 03 · Institucional</b><span class="contas__id" data-field="conta_id">1662336521647121</span></span>
+              <span class="contas__num val--na contas__c--g">n/d</span><span class="contas__num val--na contas__c--d">n/d</span><span class="contas__num val--na">n/d</span><span class="contas__share">n/d</span>
+            </div>
+            <div class="contas__row" data-conta="4491460707782665">
+              <span class="contas__nome"><b>CA 04 · Institucional</b><span class="contas__id" data-field="conta_id">4491460707782665</span></span>
+              <span class="contas__num val--na contas__c--g">n/d</span><span class="contas__num val--na contas__c--d">n/d</span><span class="contas__num val--na">n/d</span><span class="contas__share">n/d</span>
+            </div>
+            <div class="contas__row" data-conta="1375513147862272">
+              <span class="contas__nome"><b>CA 05 · Institucional</b><span class="contas__id" data-field="conta_id">1375513147862272</span></span>
+              <span class="contas__num val--na contas__c--g">n/d</span><span class="contas__num val--na contas__c--d">n/d</span><span class="contas__num val--na">n/d</span><span class="contas__share">n/d</span>
+            </div>
+            <div class="contas__row" data-conta="1689900502296830">
+              <span class="contas__nome"><b>CA 06 · Institucional</b><span class="contas__id" data-field="conta_id">1689900502296830</span></span>
+              <span class="contas__num val--na contas__c--g">n/d</span><span class="contas__num val--na contas__c--d">n/d</span><span class="contas__num val--na">n/d</span><span class="contas__share">n/d</span>
+            </div>
+            <div class="contas__row" data-conta="1364418892488854">
+              <span class="contas__nome"><b>CA 07 · Institucional</b><span class="contas__id" data-field="conta_id">1364418892488854</span></span>
+              <span class="contas__num val--na contas__c--g">n/d</span><span class="contas__num val--na contas__c--d">n/d</span><span class="contas__num val--na">n/d</span><span class="contas__share">n/d</span>
+            </div>
+            <div class="contas__row" data-conta="3841440682664482">
+              <span class="contas__nome"><b>CA 09 · Institucional</b><span class="contas__id" data-field="conta_id">3841440682664482</span></span>
+              <span class="contas__num val--na contas__c--g">n/d</span><span class="contas__num val--na contas__c--d">n/d</span><span class="contas__num val--na">n/d</span><span class="contas__share">n/d</span>
+            </div>
+            <div class="contas__row" data-conta="1007454048772455">
+              <span class="contas__nome"><b>CA 10 · Institucional</b><span class="contas__id" data-field="conta_id">1007454048772455</span></span>
+              <span class="contas__num val--na contas__c--g">n/d</span><span class="contas__num val--na contas__c--d">n/d</span><span class="contas__num val--na">n/d</span><span class="contas__share">n/d</span>
+            </div>
+            <div class="contas__row contas__row--tot">
+              <span class="contas__nome"><b>Total da marca</b></span>
+              <span class="contas__num contas__c--g">R$ 0,00</span>
+              <span class="contas__num contas__c--d">R$ 0,00</span>
+              <span class="contas__num" data-field="investimento_total">R$ 0,00</span>
+              <span class="contas__share">100%</span>
+            </div>
+          </div>
+        </details>
+
+        <div class="crtvs crtvs--empty" data-field="criativos">
+          <span>Criativos ativos</span>
+          <span class="crtvs__none">Nenhum criativo ativo no momento</span>
+        </div>
+      </article>
+
+      <!-- ── ESTADO D · multi-conta menor (Felipe Borges, 2 contas, mesmo btag).
+           Duas contas é o caso mais comum de multi-conta: a prateleira segue
+           valendo, porque "somou 2" ainda é uma pergunta de como dividiu. -->
+      <article class="expert expert--zerado" data-expert="FELIPE BORGES">
+        <header class="expert__head">
+          <div class="expert__id">
+            <h3 class="expert__name" data-field="expert_name">Felipe Borges</h3>
+            <span class="ent-tag ent-tag--contas" data-derived="contas.length">2 contas</span>
+            <span class="ent-tag ent-tag--zerado">Sem verba no período</span>
+            <div class="chans">
+              <span class="chan-tag chan-tag--grupo">Grupo</span>
+              <span class="chan-tag chan-tag--direto">Direto</span>
+            </div>
+          </div>
+          <div class="expert__head-metrics">
+            <div class="hm">
+              <span class="hm__lbl">Investido hoje</span>
+              <span class="hm__val" data-field="investimento_total">R$ 0,00</span>
+            </div>
+            <div class="hm">
+              <span class="hm__lbl">Custo por FTD</span>
+              <span class="chip chip--na" data-field="tap.custo_por_ftd">Sem verba</span>
+            </div>
+          </div>
+        </header>
+        <div class="expert__body">
+          <section class="block block--grupo block--off" data-block="grupo">
+            <h4 class="block__title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13h6M8 9h8"/><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M3.5 20.5 5 16"/></svg>
+              Grupo <small>WhatsApp / Telegram</small>
+            </h4>
+            <p class="block__off">Sem campanha ativa hoje</p>
+          </section>
+          <section class="block block--direto block--off" data-block="direto">
+            <h4 class="block__title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0-9-9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 19a6 6 0 0 1 11 0"/></svg>
+              Direto <small>Perfil</small>
+            </h4>
+            <p class="block__off">Sem campanha ativa hoje</p>
+          </section>
+          <section class="block block--tap">
+            <h4 class="block__title">Funil TAP <small>1 btag pras 2 contas, não separa por conta</small></h4>
+            <div class="tap-funnel">
+              <div class="m"><span class="m__lbl">Cadastros</span><span class="m__val" data-field="tap.cadastros">31</span></div>
+              <div class="m"><span class="m__lbl">FTD</span><span class="m__val" data-field="tap.ftd">9</span></div>
+              <div class="m"><span class="m__lbl">Conv. cad → FTD</span><span class="m__val" data-field="tap.conversao_cadastro_ftd">29,0%</span></div>
+              <div class="m"><span class="m__lbl">Custo por FTD</span><span class="m__val val--na" data-field="tap.custo_por_ftd">sem verba</span></div>
+            </div>
+            <div class="tap-fin">
+              <div class="m"><span class="m__lbl">Valor FTD</span><span class="m__val" data-field="tap.valor_ftd">R$ 405,00</span></div>
+              <div class="m"><span class="m__lbl">Depósito</span><span class="m__val" data-field="tap.deposito">R$ 22.480,15</span></div>
+              <div class="m"><span class="m__lbl">Net dep</span><span class="m__val num--pos" data-field="tap.net_dep">R$ 8.120,44</span></div>
+              <div class="m"><span class="m__lbl">Net PL</span><span class="m__val num--pos" data-field="tap.net_pl">R$ 2.410,88</span></div>
+              <div class="m"><span class="m__lbl">Volume</span><span class="m__val" data-field="tap.volume">R$ 31.204,60</span></div>
+            </div>
+          </section>
+        </div>
+
+        <details class="contas" data-field="contas">
+          <summary class="contas__sum">
+            <span>Investimento conta a conta</span>
+            <span class="contas__count num" data-derived="contas.length">2</span>
+            <span class="contas__hint">o total do cabeçalho é a soma destas →</span>
+            <svg class="contas__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </summary>
+          <div class="contas__tbl">
+            <div class="contas__row contas__row--head" aria-hidden="true">
+              <span>Conta de anúncio</span>
+              <span class="contas__c--g">Grupo</span>
+              <span class="contas__c--d">Direto</span>
+              <span>Total</span>
+              <span>Part.</span>
+            </div>
+            <div class="contas__row" data-conta="1517002369929477">
+              <span class="contas__nome"><b>CA 02 · Felipe Borges</b><span class="contas__id" data-field="conta_id">1517002369929477</span></span>
+              <span class="contas__num val--na contas__c--g">n/d</span><span class="contas__num val--na contas__c--d">n/d</span><span class="contas__num val--na">n/d</span><span class="contas__share">n/d</span>
+            </div>
+            <div class="contas__row" data-conta="965568832979022">
+              <span class="contas__nome"><b>CA · Felipe Borges</b><span class="contas__id" data-field="conta_id">965568832979022</span></span>
+              <span class="contas__num val--na contas__c--g">n/d</span><span class="contas__num val--na contas__c--d">n/d</span><span class="contas__num val--na">n/d</span><span class="contas__share">n/d</span>
+            </div>
+            <div class="contas__row contas__row--tot">
+              <span class="contas__nome"><b>Total da entidade</b></span>
+              <span class="contas__num contas__c--g">R$ 0,00</span>
+              <span class="contas__num contas__c--d">R$ 0,00</span>
+              <span class="contas__num" data-field="investimento_total">R$ 0,00</span>
+              <span class="contas__share">100%</span>
+            </div>
+          </div>
+        </details>
+
+        <div class="crtvs crtvs--empty" data-field="criativos">
+          <span>Criativos ativos</span>
+          <span class="crtvs__none">Nenhum criativo ativo no momento</span>
+        </div>
+      </article>
+
+      <!-- As outras 20 entidades saem daqui pelo JS, no mesmo molde. -->
+
+    </section>
+
+    </div><!-- ══════════ /GERAL · ABA 2 ══════════ -->
+
+    </div><!-- ╚══ /ESCOPO 2 · GERAL ══╝ -->
   </div><!-- /.views -->
 
     <footer class="foot">
+      <p>
+        <b>Costa e Lobão</b> é o recorte dos 7 experts da casa. <b>Geral</b> é a
+        operação inteira da BM, 24 entidades em 33 contas de anúncio, incluindo
+        os 7 do recorte. Os dois escopos leem a mesma API, em blocos separados:
+        um não é a soma nem o filtro do outro na tela.
+      </p>
+      <p>
+        <b>Entidade</b> nem sempre é pessoa: Institucional é a marca anunciando,
+        e algumas pessoas anunciam por mais de uma conta. Nesses casos o
+        cabeçalho do card mostra o <b>total somado</b> e a prateleira
+        <b>"Investimento conta a conta"</b> abre o detalhe, com a última linha
+        fechando a soma. O funil da TAP nunca se separa por conta: o btag é da
+        entidade, não da conta de anúncio.
+      </p>
       <p>
         <b>Grupo</b> são as campanhas de WhatsApp e Telegram (a pessoa entra num grupo antes).
         <b>Direto</b> são as campanhas de Perfil (a pessoa vai direto pro link, sem grupo).
@@ -2390,6 +3705,21 @@ h1,h2,h3,h4,p{margin:0}
      <input> continuam exatamente onde estavam, o JS só marca .checked.
    · Faixa de custo por FTD: FAIXA_BOA / FAIXA_ALTA logo abaixo. Um lugar só,
      como o design pediu. Continuam provisórias até o cliente passar a meta.
+
+   ── O QUE A v3 MUDOU AQUI (expansão pra 33 contas / 24 entidades) ─────────
+   · Toda função de pintura passou a receber a RAIZ do escopo. Nada mais de
+     querySelector solto: com dois escopos no mesmo documento, um seletor sem
+     raiz escreve o número de um escopo dentro do card do outro.
+   · pintarEscopo() é o ponto único: chamada 1x com { totais, experts } e 1x
+     com d.geral. Terceiro recorte no futuro = mais uma chamada, não mais uma
+     renderização.
+   · pintarContas() é o único componente novo: breakdown por conta, só em
+     entidade com contas.length > 1.
+   · temCusto() / chipCusto(): entidade sem verba sai das contas de melhor e
+     pior custo por FTD e nunca imprime "R$ 0,00" verde. Sem isso o painel
+     elegeria como melhor da operação exatamente quem não gastou nada.
+   · Hora: horaBR() lê data-tz do elemento. America/Sao_Paulo sempre, em
+     qualquer navegador, em qualquer fuso.
    ══════════════════════════════════════════════════════════════════════════ */
 
 var ROOT       = document.getElementById('dashboard-root');
@@ -2401,6 +3731,13 @@ var TZ         = 'America/Sao_Paulo';
 var FAIXA_BOA  = 120;                          /* custo por FTD bom  (< 120)  */
 var FAIXA_ALTA = 200;                          /* custo por FTD alto (> 200)  */
 var LS_KEY     = 'bb-dash-periodo';
+
+/* ── raízes dos dois escopos ──────────────────────────────────────────────
+   Toda função de pintura recebe uma delas. Sem raiz explícita, um
+   querySelector solto acha o elemento do PRIMEIRO escopo do DOM e o painel
+   escreve o número do Costa e Lobão dentro do card do Geral. */
+var RAIZ_CL    = document.getElementById('escopo-cl');
+var RAIZ_GERAL = document.getElementById('escopo-geral');
 
 /* ── 1. utilidades ──────────────────────────────────────────────────────── */
 function $(sel, ctx) { return (ctx || document).querySelector(sel); }
@@ -2437,10 +3774,18 @@ function faixaChip(cpf) {
   return 'chip--bad';
 }
 
-/* nomes: a API manda caixa alta, o design escreve em caixa mista */
+/* nomes: a API manda caixa alta, o design escreve em caixa mista.
+   O mapa só existe pra acento e caixa que a regra automática erra
+   (Jota Pê, Gregório, BMidia). Entidade nova sem entrada aqui não quebra:
+   cai na regra genérica logo abaixo. */
 var NOMES = {
   'GP DADOS': 'GP Dados', 'GREGORIO BIG': 'Gregório Big', 'TANOS': 'Tanos',
-  'DEKO': 'Deko', 'CHARLES': 'Charles', 'QZL': 'QZL', 'EDERSON': 'Ederson'
+  'DEKO': 'Deko', 'CHARLES': 'Charles', 'QZL': 'QZL', 'EDERSON': 'Ederson',
+  'JOTA PE': 'Jota Pê', 'JOTAP': 'Jota Pê', 'COSTA E LOBAO': 'Costa e Lobão',
+  'GREGORIO': 'Gregório', 'BMIDIA': 'BMidia', 'JC EXPERTS': 'JC Experts',
+  'ZECA (JC PRIME)': 'Zeca (JC Prime)', 'ZECA': 'Zeca',
+  'PR TIPSTER': 'PR Tipster', 'CAIO TIPS': 'Caio Tips',
+  'INSTITUCIONAL': 'Institucional'
 };
 function nomeExpert(n) {
   if (!n) return '';
@@ -2448,6 +3793,78 @@ function nomeExpert(n) {
   return String(n).split(' ').map(function (p) {
     return p.length <= 3 ? p : p.charAt(0) + p.slice(1).toLowerCase();
   }).join(' ');
+}
+
+/* entidades que NÃO são pessoa. Ganham .expert--marca, etiqueta própria e
+   nunca recebem o selo dourado de maior investimento. Lista, não heurística:
+   se amanhã entrar outro bloco agregado, é uma linha aqui. */
+var MARCAS = { 'INSTITUCIONAL': 1 };
+function ehMarca(nome) { return !!MARCAS[String(nome || '').toUpperCase()]; }
+
+/* ── APELIDO DE CONTA DE ANÚNCIO ──────────────────────────────────────────
+   O JSON manda só `conta_id`, e 17 dígitos numa tabela não dizem nada pra
+   quem está decidindo verba. Este mapa traduz pro nome que o time usa no
+   Business Manager. É gambiarra consciente de front: o certo é a API passar
+   a devolver `conta_nome` junto de `conta_id`, e aí este bloco morre.
+   Conta nova sem entrada não quebra nada: cai no fallback "Conta ····1234".
+   ────────────────────────────────────────────────────────────────────────── */
+var CONTAS = {
+  '989562184047728':   'CA · Experts Bateu (Gabriel)',
+  '4294067074216166':  'CA · Empire Experts',
+  '897476669429623':   'CA · Costa e Lobão',
+  '27580201658295762': 'CA · Junior Santana',
+  '1997624391048176':  'CA · Pedro Football',
+  '1318099683822304':  'CA 05 · JC Experts Jotap',
+  '1677889643448352':  'CA 02 · JC Experts Jotap',
+  '3432194193613959':  'CA 03 · JC Experts Jotap',
+  '27620008490951770': 'CA 04 · JC Experts Jotap',
+  '892653283877016':   'CA 06 · JC Experts (empresa)',
+  '1517002369929477':  'CA 02 · Felipe Borges',
+  '965568832979022':   'CA · Felipe Borges',
+  '1350047622999139':  'CA · PR Tipster',
+  '1970560716829162':  'CA · Deko Roleta',
+  '1608680367486969':  'CA · Leo Freitas',
+  '1690283185195699':  'CA · Tanos Roleta',
+  '1504234301191468':  'CA · Caio Tips',
+  '809590885250558':   'CA 01 · Zeca (JC Prime)',
+  '901025039721340':   'CA · Cremosinho',
+  '1538558644947601':  'CA · Nathan Roseno',
+  '2020228565251138':  'CA 02 · Shelguima',
+  '4573127072932910':  'CA · BMidia',
+  '898597209986158':   'CA · Gregório Big',
+  '3602839156558626':  'CA · Diego Lugo',
+  '566433646393570':   'CA 01 · Institucional',
+  '4369472913294852':  'CA 02 · Institucional',
+  '1662336521647121':  'CA 03 · Institucional',
+  '4491460707782665':  'CA 04 · Institucional',
+  '1375513147862272':  'CA 05 · Institucional',
+  '1689900502296830':  'CA 06 · Institucional',
+  '1364418892488854':  'CA 07 · Institucional',
+  '3841440682664482':  'CA 09 · Institucional',
+  '1007454048772455':  'CA 10 · Institucional'
+};
+function apelidoConta(id) {
+  var k = String(id == null ? '' : id);
+  if (CONTAS[k]) return CONTAS[k];
+  return 'Conta ····' + k.slice(-4);
+}
+
+/* ── QUEM ENTRA NA CONTA DE CUSTO POR FTD ─────────────────────────────────
+   Entidade sem verba fica FORA de "melhor" e "pior" custo por FTD. A API
+   devolve custo_por_ftd = 0 quando não houve investimento, e 0 lido como
+   número faria o painel eleger como melhor da operação exatamente quem não
+   gastou nada. Zero sem verba não é barato, é ausência de dado. */
+function temCusto(e) {
+  return !!(e && e.tap && ehNum(e.tap.custo_por_ftd) && e.tap.custo_por_ftd > 0 &&
+            ehNum(e.investimento_total) && e.investimento_total > 0);
+}
+/* chip do cabeçalho e do comparativo, com os três estados possíveis */
+function chipCusto(e) {
+  var inv = e && e.investimento_total;
+  var cpf = e && e.tap ? e.tap.custo_por_ftd : null;
+  if (!ehNum(inv) || inv <= 0) return { classe: 'chip--na', txt: 'Sem verba' };
+  if (!ehNum(cpf) || cpf <= 0)  return { classe: 'chip--na', txt: 'Aguardando' };
+  return { classe: faixaChip(cpf), txt: brl(cpf) };
 }
 
 /* ── 2. datas (sempre no fuso de Brasília, não no do navegador) ─────────── */
@@ -2480,7 +3897,11 @@ function rotuloPeriodo(p) {
 /* ── 3. moldes clonados do HTML estático ────────────────────────────────── */
 var MOLDE = {};
 function guardarMoldes() {
-  var lista = $('#experts-list');
+  /* TODOS os moldes saem do escopo Costa e Lobão, inclusive os cards do
+     escopo Geral. É de propósito: um molde só, dois escopos, zero chance de
+     os dois divergirem com o tempo. O que o Geral tem a mais (breakdown por
+     conta) é um bloco adicional, não um card diferente. */
+  var lista = $('[data-list="experts"]', RAIZ_CL);
   var base  = $('.expert', lista);
   MOLDE.expert       = base.cloneNode(true);
   MOLDE.crtv         = $('.crtv', base).cloneNode(true);
@@ -2492,10 +3913,27 @@ function guardarMoldes() {
   var comDireto = $('[data-expert="QZL"] [data-block="direto"] .metrics', lista);
   MOLDE.metricasDireto = (comDireto || MOLDE.metricasGrupo).cloneNode(true);
   MOLDE.blocoOff     = $('[data-block="direto"] .block__off', base).cloneNode(true);
-  MOLDE.cmpLinha     = $('.cmp__body .cmp__row').cloneNode(true);
-  MOLDE.topCrtv      = $('.topcrtvs .crtv').cloneNode(true);
+  MOLDE.cmpLinha     = $('.cmp__body .cmp__row', RAIZ_CL).cloneNode(true);
+  MOLDE.topCrtv      = $('.topcrtvs .crtv', RAIZ_CL).cloneNode(true);
   MOLDE.topCrtv.classList.remove('crtv--top');
   MOLDE.crtv.classList.remove('crtv--top');
+
+  /* moldes exclusivos do escopo Geral: a prateleira de contas e uma linha
+     dela. Saem do card do Jota Pê, que é o exemplo multi-conta do HTML. */
+  var comContas = $('.contas', RAIZ_GERAL);
+  if (comContas) {
+    MOLDE.contas = comContas.cloneNode(true);
+    MOLDE.contaLinha = $('.contas__row:not(.contas__row--head):not(.contas__row--tot)',
+                          MOLDE.contas).cloneNode(true);
+    MOLDE.contaTotal = $('.contas__row--tot', MOLDE.contas).cloneNode(true);
+  }
+  /* etiquetas de entidade (marca / N contas / sem verba) */
+  MOLDE.tagMarca  = $('.ent-tag--marca', RAIZ_GERAL);
+  MOLDE.tagMarca  = MOLDE.tagMarca ? MOLDE.tagMarca.cloneNode(true) : null;
+  MOLDE.tagContas = $('.ent-tag--contas', RAIZ_GERAL);
+  MOLDE.tagContas = MOLDE.tagContas ? MOLDE.tagContas.cloneNode(true) : null;
+  MOLDE.tagZerado = $('.ent-tag--zerado', RAIZ_GERAL);
+  MOLDE.tagZerado = MOLDE.tagZerado ? MOLDE.tagZerado.cloneNode(true) : null;
 }
 
 /* ── 4. ícones do veredito ──────────────────────────────────────────────── */
@@ -2513,14 +3951,62 @@ function escreveVeredito(el, icone, texto) {
 /* ── 5. estado ──────────────────────────────────────────────────────────── */
 var estado = {
   dados: null,          /* última resposta boa */
-  isHoje: true,
+  isHoje: true,          /* API diz que o período ainda está correndo */
+  ehHoje: true,          /* o período devolvido termina hoje em Brasília */
   ultimoOk: 0,
   carregando: false,
   jaCarregou: false,
   timer: null,
   reqId: 0,
-  crtvsAbertos: {}      /* prateleiras que a pessoa fechou continuam fechadas */
+  crtvsAbertos: {},     /* prateleiras que a pessoa fechou continuam fechadas */
+  contasAbertas: {},    /* idem pro breakdown por conta (entra fechado) */
+  pintou: {}            /* escopos já pintados: a cascata só roda na 1ª vez */
 };
+
+/* ── 5b. MOVIMENTO ────────────────────────────────────────────────────────
+   Duas funções, uma ideia: mostrar o que mudou. O painel fica aberto o dia
+   todo, o refresh é de 5 em 5 minutos, e sem isto uma troca de R$ 700 pra
+   R$ 1.200 acontece em silêncio no meio de 500 números.
+   O diff é feito no TEXTO RENDERIZADO, não no JSON: assim vale pra qualquer
+   campo novo que entrar depois, sem ninguém precisar lembrar de plugar aqui.
+   ────────────────────────────────────────────────────────────────────────── */
+function chaveCampo(el, cont) {
+  var caixa = el.closest ? el.closest('[data-expert],[data-conta]') : null;
+  var pai = caixa
+    ? (caixa.getAttribute('data-expert') || caixa.getAttribute('data-conta'))
+    : 'raiz';
+  var k = pai + '|' + el.getAttribute('data-field');
+  cont[k] = (cont[k] || 0) + 1;         /* campo repetido no mesmo card (custo
+                                           por FTD aparece 2x) não colide */
+  return k + '#' + cont[k];
+}
+function mapaCampos(raiz) {
+  if (!raiz) return {};
+  var m = {}, cont = {};
+  $$('[data-field]', raiz).forEach(function (el) { m[chaveCampo(el, cont)] = el.textContent; });
+  return m;
+}
+function marcarMudancas(raiz, antes) {
+  if (!raiz || !antes) return;
+  var cont = {};
+  $$('[data-field]', raiz).forEach(function (el) {
+    var k = chaveCampo(el, cont);
+    if (antes[k] == null || antes[k] === el.textContent) return;
+    el.classList.remove('num--tick');
+    void el.offsetWidth;                 /* reinicia a animação */
+    el.classList.add('num--tick');
+    setTimeout(function () { el.classList.remove('num--tick'); }, 1600);
+  });
+}
+/* cascata de entrada: só na primeira pintura de cada escopo. No refresh de
+   5 min a lista NÃO reanima, senão a tela pisca inteira e a pessoa perde a
+   linha que estava lendo. */
+function cascata(caixa, chave) {
+  if (!caixa) return;
+  if (estado.pintou[chave]) { caixa.classList.remove('entra'); return; }
+  estado.pintou[chave] = 1;
+  caixa.classList.add('entra');
+}
 
 /* ── 6. renderização ────────────────────────────────────────────────────── */
 
@@ -2610,6 +4096,84 @@ function pintarPrateleira(art, expert, isHoje) {
   atual.parentNode.replaceChild(det, atual);
 }
 
+/* ── BREAKDOWN POR CONTA ──────────────────────────────────────────────────
+   "Precisamos ver conta por conta pra saber como ele está investindo, mas
+   também vamos somar todas pra apresentação final." As duas coisas no mesmo
+   card: o agregado no cabeçalho, o detalhe aqui, e a linha de fechamento
+   provando que um é a soma do outro.
+   REGRA: só renderiza com 2+ contas. Com 1 conta o card já É a conta.
+   ────────────────────────────────────────────────────────────────────────── */
+function pintarContas(art, ent, isHoje) {
+  var contas = (ent && ent.contas) || [];
+  if (contas.length < 2 || !MOLDE.contas) return;
+
+  var det = MOLDE.contas.cloneNode(true);
+  var totalEnt = ehNum(ent.investimento_total) ? ent.investimento_total : 0;
+
+  $('.contas__sum span', det).textContent = isHoje
+    ? 'Investimento conta a conta'
+    : 'Investimento conta a conta no período';
+  $('.contas__count', det).textContent = String(contas.length);
+
+  var tbl = $('.contas__tbl', det);
+  var cabeca = $('.contas__row--head', tbl);
+  tbl.innerHTML = '';                    /* a referência ao cabeçalho continua
+                                            válida: o nó fica só destacado */
+  if (cabeca) tbl.appendChild(cabeca);
+
+  var somaG = 0, somaD = 0;
+
+  /* maior primeiro: a conta que está puxando a verba aparece no topo */
+  contas.slice().sort(function (a, b) {
+    return valorConta(b) - valorConta(a);
+  }).forEach(function (c) {
+    var g = c.grupo || {}, dr = c.direto || {};
+    var vg = (g.ativo && ehNum(g.valor_investido)) ? g.valor_investido : null;
+    var vd = (dr.ativo && ehNum(dr.valor_investido)) ? dr.valor_investido : null;
+    var tot = (vg == null && vd == null) ? null : (vg || 0) + (vd || 0);
+    somaG += vg || 0;
+    somaD += vd || 0;
+
+    var linha = MOLDE.contaLinha.cloneNode(true);
+    linha.setAttribute('data-conta', c.conta_id);
+    $('.contas__nome b', linha).textContent = apelidoConta(c.conta_id);
+    var idEl = $('.contas__id', linha);
+    if (idEl) idEl.textContent = c.conta_id;
+
+    var nums = $$('.contas__num', linha);
+    escreve(nums[0], brl(vg));            /* grupo  */
+    escreve(nums[1], brl(vd));            /* direto */
+    escreve(nums[2], brl(tot));           /* total da conta */
+    escreve($('.contas__share', linha),
+      (totalEnt > 0 && tot != null) ? pct(tot / totalEnt * 100) : null);
+    tbl.appendChild(linha);
+  });
+
+  var fim = MOLDE.contaTotal.cloneNode(true);
+  $('.contas__nome b', fim).textContent = ehMarca(ent.expert_name) ? 'Total da marca' : 'Total da entidade';
+  var nf = $$('.contas__num', fim);
+  escreve(nf[0], brl(somaG));
+  escreve(nf[1], brl(somaD));
+  escreve(nf[2], brl(totalEnt));
+  escreve($('.contas__share', fim), totalEnt > 0 ? '100%' : null);
+  tbl.appendChild(fim);
+
+  /* entra FECHADO: o cabeçalho já respondeu "quanto". Mas se a pessoa abriu,
+     o refresh de 5 min não fecha na cara dela. */
+  var chave = 'c:' + ent.expert_name;
+  if (estado.contasAbertas[chave]) det.setAttribute('open', ''); else det.removeAttribute('open');
+  det.addEventListener('toggle', function () { estado.contasAbertas[chave] = det.open; });
+
+  var corpo = $('.expert__body', art);
+  corpo.parentNode.insertBefore(det, corpo.nextSibling);
+}
+
+function valorConta(c) {
+  var g = (c && c.grupo && c.grupo.valor_investido) || 0;
+  var d = (c && c.direto && c.direto.valor_investido) || 0;
+  return g + d;
+}
+
 function pintarBloco(art, expert, canal, isHoje) {
   var sec = $('[data-block="' + canal + '"]', art);
   if (!sec) return;
@@ -2636,13 +4200,39 @@ function pintarBloco(art, expert, canal, isHoje) {
   sec.appendChild(mm);
 }
 
-function pintarExpert(expert, ehPrimeiro, isHoje) {
-  var art = MOLDE.expert.cloneNode(true);
+function pintarExpert(expert, ehPrimeiro, isHoje, geral) {
+  var art    = MOLDE.expert.cloneNode(true);
+  var inv    = ehNum(expert.investimento_total) ? expert.investimento_total : 0;
+  var marca  = ehMarca(expert.expert_name);
+  var contas = expert.contas || [];
+
   art.setAttribute('data-expert', expert.expert_name);
+  if (marca)    art.classList.add('expert--marca');
+  if (inv <= 0) art.classList.add('expert--zerado');
   escreve($('.expert__name', art), nomeExpert(expert.expert_name));
 
+  /* selo dourado: só no primeiro do sort, só se ele REALMENTE investiu, e
+     nunca num bloco de marca. "Maior investimento" com R$ 0,00 seria piada,
+     e Institucional não disputa pódio de expert. */
   var selo = $('.badge-top', art);
-  if (selo && !ehPrimeiro) selo.remove();
+  if (selo && (!ehPrimeiro || inv <= 0 || marca)) selo.remove();
+
+  /* etiquetas de entidade: só no escopo Geral, onde existe mais de um tipo
+     de linha. No Costa e Lobão são 7 pessoas e a etiqueta seria ruído. */
+  var idBox = $('.expert__id', art), chans = $('.chans', art);
+  if (geral && idBox && chans) {
+    if (marca && MOLDE.tagMarca) idBox.insertBefore(MOLDE.tagMarca.cloneNode(true), chans);
+    if (contas.length > 1 && MOLDE.tagContas) {
+      var tc = MOLDE.tagContas.cloneNode(true);
+      tc.textContent = contas.length + ' contas';
+      idBox.insertBefore(tc, chans);
+    }
+    if (inv <= 0 && MOLDE.tagZerado) {
+      var tz = MOLDE.tagZerado.cloneNode(true);
+      tz.textContent = isHoje ? 'Sem verba hoje' : 'Sem verba no período';
+      idBox.insertBefore(tz, chans);
+    }
+  }
 
   var g = $('.chan-tag--grupo', art), dt = $('.chan-tag--direto', art);
   if (g)  g.classList.toggle('is-on',  !!(expert.grupo  && expert.grupo.ativo));
@@ -2656,8 +4246,17 @@ function pintarExpert(expert, ehPrimeiro, isHoje) {
   var tap = expert.tap || {};
   var chip = $('.expert__head-metrics .chip', art);
   if (chip) {
-    chip.className = 'chip ' + faixaChip(tap.custo_por_ftd);
-    chip.textContent = ehNum(tap.custo_por_ftd) ? brl(tap.custo_por_ftd) : 'Aguardando';
+    var cc = chipCusto(expert);
+    chip.className = 'chip ' + cc.classe;
+    chip.textContent = cc.txt;
+  }
+
+  /* o subtítulo do funil muda com o formato da entidade: com N contas, o que
+     importa avisar é que o btag é um só e o funil não se separa por conta. */
+  var subTap = $('.block--tap .block__title small', art);
+  if (subTap) {
+    if (contas.length > 1) subTap.textContent = 'btag único da entidade, não separa por conta';
+    else if (geral)        subTap.textContent = 'blend da entidade, não separa grupo e direto';
   }
 
   pintarBloco(art, expert, 'grupo', isHoje);
@@ -2671,7 +4270,8 @@ function pintarExpert(expert, ehPrimeiro, isHoje) {
   escreve(campo(boxTap, 'tap.cadastros'), inteiro(tap.cadastros));
   escreve(campo(boxTap, 'tap.ftd'), inteiro(tap.ftd));
   escreve(campo(boxTap, 'tap.conversao_cadastro_ftd'), pct(tap.conversao_cadastro_ftd));
-  escreve(campo(boxTap, 'tap.custo_por_ftd'), brl(tap.custo_por_ftd));
+  /* sem verba não imprime R$ 0,00: imprime "sem verba". Ver chipCusto(). */
+  escreve(campo(boxTap, 'tap.custo_por_ftd'), inv > 0 ? brl(tap.custo_por_ftd) : null, 'sem verba');
   escreve(campo(boxTap, 'tap.valor_ftd'), brl(tap.valor_ftd));
   escreve(campo(boxTap, 'tap.deposito'), brl(tap.deposito));
   var nd = campo(boxTap, 'tap.net_dep'), np = campo(boxTap, 'tap.net_pl');
@@ -2680,29 +4280,41 @@ function pintarExpert(expert, ehPrimeiro, isHoje) {
   escreve(campo(boxTap, 'tap.volume'), brl(tap.volume));
 
   pintarPrateleira(art, expert, isHoje);
+  if (geral) pintarContas(art, expert, isHoje);
   return art;
 }
 
-function pintarExperts(d, isHoje) {
-  var lista = $('#experts-list');
-  var exps = d.experts || [];
+function pintarExperts(exps, isHoje, raiz, geral) {
+  var lista = $('[data-list="experts"]', raiz);
+  if (!lista) return;
+  exps = exps || [];
   var frag = document.createDocumentFragment();
-  exps.forEach(function (e, i) { frag.appendChild(pintarExpert(e, i === 0, isHoje)); });
+  exps.forEach(function (e, i) {
+    var art = pintarExpert(e, i === 0, isHoje, geral);
+    /* teto de 12: com 24 entidades, escalonar todas daria 600ms de espera pro
+       último card. Depois do 12º todos entram juntos. */
+    art.style.setProperty('--i', String(Math.min(i, 12)));
+    frag.appendChild(art);
+  });
   lista.innerHTML = '';
   lista.appendChild(frag);
+  cascata(lista, (geral ? 'g' : 'c') + ':cards');
 
   var cab = lista.previousElementSibling;
   if (cab) {
     var h = $('.eyebrow', cab);
-    if (h) h.textContent = 'Por expert · ' + exps.length +
-      (exps.length === 1 ? ' ativo' : ' ativos') + ' · maior investimento primeiro';
+    if (h) h.textContent = geral
+      ? 'Por entidade · ' + exps.length + ' na operação · maior investimento primeiro'
+      : 'Por expert · ' + exps.length + (exps.length === 1 ? ' ativo' : ' ativos') +
+        ' · maior investimento primeiro';
   }
-  var badge = $('.tab__badge');
+  var badge = $('.tab__badge', raiz);
   if (badge) badge.textContent = String(exps.length);
 }
 
-function pintarVeredito(d, isHoje) {
-  var box = $('.verdict');
+function pintarVeredito(d, isHoje, raiz) {
+  var box = $('.verdict', raiz);
+  if (!box) return;
   var t = d.totais || {};
   var inv = ehNum(t.investimento_total) ? t.investimento_total : 0;
   var ftd = ehNum(t.ftd) ? t.ftd : 0;
@@ -2719,7 +4331,7 @@ function pintarVeredito(d, isHoje) {
 
   var cpf = inv / ftd;
   var acima = (d.experts || []).filter(function (e) {
-    return e.tap && ehNum(e.tap.custo_por_ftd) && e.tap.custo_por_ftd > FAIXA_ALTA;
+    return temCusto(e) && e.tap.custo_por_ftd > FAIXA_ALTA;
   });
   var verbaAcima = acima.reduce(function (s, e) { return s + (e.investimento_total || 0); }, 0);
   var share = inv > 0 ? verbaAcima / inv * 100 : 0;
@@ -2728,19 +4340,31 @@ function pintarVeredito(d, isHoje) {
   else if (cpf <= FAIXA_ALTA) { box.classList.add('verdict--warn'); escreveVeredito(txt, 'alerta', 'Custo por FTD acima do confortável'); }
   else { box.classList.add('verdict--bad'); escreveVeredito(txt, 'alerta', 'Custo por FTD alto'); }
 
+  var quem = (d.experts || []).length > 10 ? 'entidades' : 'experts';
   var frase = brl(cpf) + ' por FTD ' + quando + ', contra ' + brl(FAIXA_BOA) + ' da faixa boa. ';
-  if (!acima.length) frase += 'Nenhum expert acima de ' + brl(FAIXA_ALTA) + '.';
-  else if (acima.length === 1) frase += 'Um expert acima de ' + brl(FAIXA_ALTA) + ' está levando ' + pct(share) + ' da verba.';
-  else frase += acima.length + ' experts acima de ' + brl(FAIXA_ALTA) + ' estão levando ' + pct(share) + ' da verba.';
+  if (!acima.length) frase += 'Nenhuma linha acima de ' + brl(FAIXA_ALTA) + '.';
+  else if (acima.length === 1) frase += 'Uma linha acima de ' + brl(FAIXA_ALTA) + ' está levando ' + pct(share) + ' da verba.';
+  else frase += acima.length + ' ' + quem + ' acima de ' + brl(FAIXA_ALTA) + ' estão levando ' + pct(share) + ' da verba.';
+
+  /* ressalva obrigatória: se tem entidade sem verba no escopo, o custo por FTD
+     está calculado com denominador faltando e parece melhor do que é. A tela
+     não pode ficar bonita mentindo. */
+  var zeradas = (d.experts || []).filter(function (e) { return !(e.investimento_total > 0); });
+  if (zeradas.length) {
+    frase += ' Número ainda distorcido: ' + zeradas.length + ' de ' +
+             (d.experts || []).length + ' entram com investimento zerado.';
+  }
   why.textContent = frase;
 }
 
-function pintarSinais(d) {
+function pintarSinais(d, raiz) {
   var exps = d.experts || [];
-  var comCpf = exps.filter(function (e) { return e.tap && ehNum(e.tap.custo_por_ftd); });
+  var comCpf = exps.filter(temCusto);
+  var rotulo = exps.length > 10 ? 'entidade' : 'expert';
 
   function preencher(sel, quem, valor) {
-    var box = $(sel);
+    var box = $(sel, raiz);
+    if (!box) return;
     escreve($('.sinal__who', box), quem);
     escreve($('.sinal__val', box), valor);
   }
@@ -2753,35 +4377,39 @@ function pintarSinais(d) {
     preencher('.sinal--bad', nomeExpert(pior.expert_name),
       brl(pior.tap.custo_por_ftd) + ' · ' + pior.tap.ftd + ' FTD');
   } else {
-    preencher('.sinal--good', null, 'Nenhum FTD ainda');
-    preencher('.sinal--bad', null, 'Nenhum FTD ainda');
+    preencher('.sinal--good', null, 'Nenhum FTD com verba ainda');
+    preencher('.sinal--bad', null, 'Nenhum FTD com verba ainda');
   }
 
   var semFtd = exps.filter(function (e) { return !e.tap || !e.tap.ftd; });
   var verba = semFtd.reduce(function (s, e) { return s + (e.investimento_total || 0); }, 0);
-  var boxNa = $('.sinal--na');
+  var boxNa = $('.sinal--na', raiz);
+  if (!boxNa) return;
   if (!semFtd.length) {
     escreve($('.sinal__who', boxNa), 'Ninguém');
     escreve($('.sinal__val', boxNa), 'Todos já converteram FTD');
   } else {
-    escreve($('.sinal__who', boxNa), semFtd.length === 1 ? '1 expert' : semFtd.length + ' experts');
-    escreve($('.sinal__val', boxNa),
-      semFtd.map(function (e) { return nomeExpert(e.expert_name); }).join(', ') +
-      ' · ' + brl(verba) + ' investidos');
+    escreve($('.sinal__who', boxNa),
+      semFtd.length === 1 ? '1 ' + rotulo : semFtd.length + ' ' + rotulo + 's');
+    /* com 24 linhas a lista de nomes estourava o card: corta em 3 e resume.
+       Quem precisa do nome dos outros abre a aba de detalhe. */
+    var nomes = semFtd.slice(0, 3).map(function (e) { return nomeExpert(e.expert_name); }).join(', ');
+    if (semFtd.length > 3) nomes += ' e mais ' + (semFtd.length - 3);
+    escreve($('.sinal__val', boxNa), nomes + ' · ' + brl(verba) + ' investidos');
   }
 }
 
-function pintarTotais(d, isHoje) {
+function pintarTotais(d, isHoje, raiz, rodape) {
   var t = d.totais || {};
   var exps = d.experts || [];
   var inv = ehNum(t.investimento_total) ? t.investimento_total : 0;
 
-  var rot = campo(document, 'periodo_label');
+  var rot = campo(raiz, 'periodo_label');
   if (rot) rot.textContent = rotuloPeriodo(d.periodo);
 
   function sub(el) { return el ? el.parentElement.querySelector('.tcard__sub') : null; }
 
-  var elInv = campo(document, 'totais.investimento_total');
+  var elInv = campo(raiz, 'totais.investimento_total');
   escreve(elInv, brl(inv));
   escreve(sub(elInv), ehNum(t.ftd) && t.ftd > 0 ? brl(inv / t.ftd) + ' por FTD' : 'nenhum FTD ainda');
 
@@ -2790,47 +4418,51 @@ function pintarTotais(d, isHoje) {
   var pctGrupo = inv > 0 ? (t.investimento_grupo || 0) / inv * 100 : 0;
   var pctDireto = inv > 0 ? (t.investimento_direto || 0) / inv * 100 : 0;
 
-  var elG = campo(document, 'totais.investimento_grupo');
+  var elG = campo(raiz, 'totais.investimento_grupo');
   escreve(elG, brl(t.investimento_grupo));
   escreve(sub(elG), pct(pctGrupo) + ' do total · ' + inteiro(somaGrupo) + ' entradas');
 
-  var elD = campo(document, 'totais.investimento_direto');
+  var elD = campo(raiz, 'totais.investimento_direto');
   escreve(elD, brl(t.investimento_direto));
   escreve(sub(elD), pct(pctDireto) + ' do total · ' + inteiro(somaDireto) + ' resultados');
 
-  var elC = campo(document, 'totais.cadastros');
+  var elC = campo(raiz, 'totais.cadastros');
   escreve(elC, inteiro(t.cadastros));
   escreve(sub(elC), t.cadastros > 0 ? brl(inv / t.cadastros) + ' por cadastro' : 'sem cadastro ainda');
 
-  var elF = campo(document, 'totais.ftd');
+  var elF = campo(raiz, 'totais.ftd');
   escreve(elF, inteiro(t.ftd));
   escreve(sub(elF), t.cadastros > 0 ? pct(t.ftd / t.cadastros * 100) + ' dos cadastros' : 'sem cadastro ainda');
 
-  var elDep = campo(document, 'totais.deposito');
+  var elDep = campo(raiz, 'totais.deposito');
   escreve(elDep, brl(t.deposito));
   escreve(sub(elDep), inv > 0 ? vezes((t.deposito || 0) / inv) + ' o investido' : 'sem investimento');
 
-  /* a média citada no rodapé é dado, não copy: acompanha o período na tela */
-  var media = $('#foot-media');
+  /* a média citada no rodapé é dado, não copy: acompanha o período na tela.
+     Sai do escopo Costa e Lobão (rodape === true), que é o recorte que o
+     rodapé descreve. O escopo Geral não reescreve o rodapé. */
+  var media = rodape ? $('#foot-media') : null;
   if (media) {
     media.textContent = ehNum(t.ftd) && t.ftd > 0
-      ? 'Média da operação ' + (isHoje ? 'hoje' : 'no período') + ': ' + brl(inv / t.ftd) + '.'
+      ? 'Média Costa e Lobão ' + (isHoje ? 'hoje' : 'no período') + ': ' + brl(inv / t.ftd) + '.'
       : 'Ainda sem FTD ' + (isHoje ? 'hoje' : 'no período') + ' para calcular a média.';
   }
 
   /* barra de participação */
-  var track = $('.splitbar__track');
-  $('.splitbar__seg--grupo').style.width = pctGrupo.toFixed(1) + '%';
-  $('.splitbar__seg--direto').style.width = pctDireto.toFixed(1) + '%';
-  track.setAttribute('aria-label',
+  var track = $('.splitbar__track', raiz);
+  var segG = $('.splitbar__seg--grupo', raiz), segD = $('.splitbar__seg--direto', raiz);
+  if (segG) segG.style.width = pctGrupo.toFixed(1) + '%';
+  if (segD) segD.style.width = pctDireto.toFixed(1) + '%';
+  if (track) track.setAttribute('aria-label',
     'Grupo ' + pct(pctGrupo) + ' do investimento, direto ' + pct(pctDireto));
-  var legendas = $$('.splitbar__legend b.num');
+  var legendas = $$('.splitbar__legend b.num', raiz);
   if (legendas[0]) legendas[0].textContent = pct(pctGrupo);
   if (legendas[1]) legendas[1].textContent = pct(pctDireto);
 }
 
-function pintarComparativo(d, isHoje) {
-  var corpo = $('.cmp__body');
+function pintarComparativo(d, isHoje, raiz, geral) {
+  var corpo = $('.cmp__body', raiz);
+  if (!corpo) return;
   var exps = d.experts || [];
   var total = (d.totais && d.totais.investimento_total) || 0;
   var maxInv = exps.reduce(function (m, e) { return Math.max(m, e.investimento_total || 0); }, 0);
@@ -2849,7 +4481,21 @@ function pintarComparativo(d, isHoje) {
     var tap = e.tap || {};
     var inv = e.investimento_total || 0;
 
-    $('.cmp__name', linha).textContent = nomeExpert(e.expert_name);
+    var cel = $('.cmp__name', linha);
+    cel.textContent = nomeExpert(e.expert_name);
+    /* marcador de segunda linha: "marca" e/ou "N contas". É o que explica um
+       investimento alto numa linha só, então vale o ruído extra. */
+    if (geral) {
+      var marcas = [];
+      if (ehMarca(e.expert_name)) marcas.push('marca');
+      if ((e.contas || []).length > 1) marcas.push(e.contas.length + ' contas');
+      if (marcas.length) {
+        var tag = document.createElement('i');
+        tag.className = 'cmp__tag';
+        tag.textContent = marcas.join(' · ');
+        cel.appendChild(tag);
+      }
+    }
     escreve($('.cmp__num:not(.cmp__ftd):not(.cmp__dep)', linha), brl(inv));
     $('.cmp__bar i', linha).style.width = (maxInv > 0 ? (inv / maxInv * 100) : 0).toFixed(1) + '%';
     $('.cmp__share', linha).textContent =
@@ -2857,8 +4503,9 @@ function pintarComparativo(d, isHoje) {
     escreve($('.cmp__ftd', linha), inteiro(tap.ftd));
 
     var chip = $('.chip', linha);
-    chip.className = 'chip chip--sm ' + faixaChip(tap.custo_por_ftd);
-    chip.textContent = ehNum(tap.custo_por_ftd) ? brl(tap.custo_por_ftd) : 'Aguardando';
+    var cc = chipCusto(e);
+    chip.className = 'chip chip--sm ' + cc.classe;
+    chip.textContent = cc.txt;
 
     escreve($('.cmp__dep', linha), brl(tap.deposito));
 
@@ -2867,14 +4514,17 @@ function pintarComparativo(d, isHoje) {
     escreve(m, vezes(mults[i]));
     if (mults[i] != null && mults[i] === maxMult && maxMult > 0) m.classList.add('cmp__mult--gold');
 
+    linha.style.setProperty('--i', String(Math.min(i, 12)));
     frag.appendChild(linha);
   });
   corpo.innerHTML = '';
   corpo.appendChild(frag);
+  cascata(corpo, (geral ? 'g' : 'c') + ':cmp');
 }
 
-function pintarTopCriativos(d, isHoje) {
-  var caixa = $('.topcrtvs');
+function pintarTopCriativos(d, isHoje, raiz) {
+  var caixa = $('.topcrtvs', raiz);
+  if (!caixa) return;
   var cab = caixa.previousElementSibling;
   var todos = [];
   (d.experts || []).forEach(function (e) {
@@ -2901,23 +4551,104 @@ function pintarTopCriativos(d, isHoje) {
   });
 }
 
-/* ── 7. cabeçalho: frescor, erro e divergência de período ───────────────── */
-function horaBR(iso) {
+/* ── 6b. ORQUESTRAÇÃO POR ESCOPO ──────────────────────────────────────────
+   Uma função, dois escopos. O que muda entre eles é só o pedaço do JSON e a
+   raiz do DOM:
+     Costa e Lobão -> { totais, experts }        em #escopo-cl
+     Geral         -> { geral.totais, geral.experts } em #escopo-geral
+   Se um dia a API ganhar um terceiro recorte, é mais uma chamada aqui e mais
+   um .scope no HTML. Nada de terceira renderização.
+   ────────────────────────────────────────────────────────────────────────── */
+function pintarEscopo(bloco, periodo, isHoje, raiz, geral) {
+  if (!raiz || !bloco) return;
+  var d = { totais: bloco.totais || {}, experts: bloco.experts || [], periodo: periodo };
+  pintarVeredito(d, isHoje, raiz);
+  pintarSinais(d, raiz);
+  pintarTotais(d, isHoje, raiz, !geral);
+  pintarComparativo(d, isHoje, raiz, geral);
+  pintarTopCriativos(d, isHoje, raiz);
+  pintarExperts(d.experts, isHoje, raiz, geral);
+}
+
+/* rótulo dos dois cartões de escopo: contagem real, não número escrito à mão */
+function pintarScopebar(d) {
+  var subs = $$('.scopebar__sub');
+  var n7 = (d.experts || []).length;
+  if (subs[0]) subs[0].textContent = n7 + (n7 === 1 ? ' expert' : ' experts');
+
+  var ents = (d.geral && d.geral.experts) || [];
+  if (subs[1]) {
+    if (!ents.length) { subs[1].textContent = 'sem dados'; return; }
+    /* a contagem de contas só vai pro rótulo se TODAS as entidades trouxerem
+       contas[]. Hoje as 7 do Costa e Lobão vêm sem o campo, e chutar "1 conta"
+       pra cada uma inflaria o número (36 em vez de 33). Número inventado num
+       painel de verba vale menos que número ausente: some com a metade errada
+       e volta sozinho quando a API mandar contas[] em todas. */
+    var completo = ents.every(function (e) { return Array.isArray(e.contas); });
+    if (!completo) { subs[1].textContent = ents.length + ' entidades'; return; }
+    var contas = ents.reduce(function (s, e) { return s + e.contas.length; }, 0);
+    subs[1].textContent = ents.length + ' entidades · ' + contas + ' contas';
+  }
+}
+
+/* aviso de verba bloqueada no escopo Geral. Some sozinho no dia em que a
+   permissão da Meta liberar e ninguém mais estiver zerado. */
+function pintarAvisoGeral(ents) {
+  var aviso = $('#geral-aviso');
+  if (!aviso) return;
+  var zeradas = (ents || []).filter(function (e) { return !(e.investimento_total > 0); });
+  if (!ents.length || !zeradas.length) { aviso.hidden = true; return; }
+  aviso.hidden = false;
+  /* innerHTML inteiro, não só o <b>: o aviso de indisponibilidade pode ter
+     apagado a estrutura antes, e um refresh não pode deixar frase pela metade */
+  aviso.innerHTML =
+    '<b>' + zeradas.length + ' das ' + ents.length + ' entidades</b> ainda estão com ' +
+    'investimento zerado (liberação de permissão da Meta em andamento). O funil da ' +
+    'TAP delas já é real, o investimento não, então <b>custo por FTD e retorno ' +
+    'deste escopo ficam otimistas</b> até a verba entrar.';
+}
+
+/* escopo Geral ausente na resposta (API antiga ou queda parcial): em vez de
+   deixar o exemplo estático na tela fingindo ser real, o escopo avisa. */
+function marcarGeralIndisponivel() {
+  var aviso = $('#geral-aviso');
+  if (!aviso) return;
+  aviso.hidden = false;
+  aviso.textContent = 'A API não devolveu o bloco "geral" nesta leitura. ' +
+    'O escopo Costa e Lobão continua atualizado; este aqui está esperando o dado.';
+  var lista = $('[data-list="experts"]', RAIZ_GERAL);
+  if (lista) lista.innerHTML = '';
+}
+
+/* ── 7. cabeçalho: frescor, erro e divergência de período ─────────────────
+   FUSO: nunca usar o do navegador. `atualizado_em` vem em UTC e a hora na
+   tela é sempre America/Sao_Paulo, venha de onde vier o acesso. O fuso sai
+   do data-tz do próprio elemento (contrato visível no HTML), com TZ como
+   rede de segurança se alguém esquecer o atributo num elemento novo. */
+function horaBR(iso, el) {
   var d = new Date(iso);
   if (isNaN(d.getTime())) return '--:--';
-  return d.toLocaleTimeString('pt-BR', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
+  var tz = (el && el.getAttribute && el.getAttribute('data-tz')) || TZ;
+  return d.toLocaleTimeString('pt-BR', { timeZone: tz, hour: '2-digit', minute: '2-digit' });
 }
 
 function pintarStatus(modo) {
   var pill = $('#status-pill');
   var meta = $('.freshness__meta');
-  var hora = estado.dados ? horaBR(estado.dados.atualizado_em) : '--:--';
-  $$('[data-field="atualizado_em"]').forEach(function (el) { el.textContent = hora; });
+  $$('[data-field="atualizado_em"]').forEach(function (el) {
+    el.textContent = estado.dados ? horaBR(estado.dados.atualizado_em, el) : '--:--';
+  });
 
   pill.classList.remove('status--live', 'status--stale', 'status--error');
   if (modo === 'erro') {
     pill.classList.add('status--error');
-    meta.textContent = 'falha na última tentativa · mostrando a leitura anterior';
+    pill.classList.remove('is-ciclando');
+    /* na PRIMEIRA carga não existe leitura anterior pra mostrar: o que está
+       atrás do desfoque é o conteúdo de exemplo do HTML. Prometer "leitura
+       anterior" aí seria a tela mentindo justamente na hora do erro. */
+    meta.textContent = estado.jaCarregou
+      ? 'falha na última tentativa · mostrando a leitura anterior'
+      : 'falha ao carregar · nenhum dado real na tela ainda';
     return;
   }
   var velho = estado.ultimoOk && (Date.now() - estado.ultimoOk) > STALE_MS;
@@ -2925,6 +4656,19 @@ function pintarStatus(modo) {
   meta.textContent = !estado.isHoje
     ? 'período fechado · atualização automática pausada'
     : 'horário de Brasília · atualiza a cada 5 min';
+}
+
+/* barra de ciclo da pílula: enche uma vez por intervalo de refresh e fecha
+   junto com a chegada do dado novo. Reiniciada a cada leitura boa. Fora do
+   "hoje" não roda: período fechado não tem próximo dado pra esperar. */
+function reiniciarCiclo() {
+  var pill = $('#status-pill');
+  if (!pill) return;
+  pill.classList.remove('is-ciclando');
+  if (!estado.isHoje) return;
+  pill.style.setProperty('--ciclo', REFRESH_MS + 'ms');
+  void pill.offsetWidth;                 /* reinicia a animação */
+  pill.classList.add('is-ciclando');
 }
 
 function pintarNotaPeriodo() {
@@ -3041,21 +4785,52 @@ function carregar(opts) {
     })
     .then(function (d) {
       if (id !== estado.reqId) return;              /* chegou fora de ordem */
+
+      /* foto do que está na tela ANTES de repintar: é a comparação que diz
+         qual número mudou nesta leitura. Só faz sentido a partir da 2ª. */
+      var eraRefresh = estado.jaCarregou;
+      var antes = eraRefresh
+        ? { cl: mapaCampos(RAIZ_CL), geral: mapaCampos(RAIZ_GERAL) }
+        : null;
+
       estado.dados = d;
       estado.isHoje = !!(d.periodo && d.periodo.is_hoje);
+      /* DUAS PERGUNTAS DIFERENTES, de propósito:
+         · estado.isHoje  -> "continua entrando dado?"  manda no auto-refresh
+           e na pílula. Quem responde é a API (is_hoje).
+         · estado.ehHoje  -> "posso escrever a palavra HOJE na tela?" Só se o
+           período devolvido termina no dia de hoje em Brasília.
+         Elas divergem por uns minutos na virada da meia-noite: o n8n lê de um
+         cache de 2 min e ainda devolve ontem marcado como is_hoje. O timer
+         precisa continuar rodando (o dia novo vai entrar), mas a tela não pode
+         carimbar "Investido hoje" em número de ontem. */
+      estado.ehHoje = estado.isHoje && !!(d.periodo && d.periodo.ate === hojeSP());
       estado.ultimoOk = Date.now();
       estado.jaCarregou = true;
       estado.carregando = false;
 
-      pintarVeredito(d, estado.isHoje);
-      pintarSinais(d);
-      pintarTotais(d, estado.isHoje);
-      pintarComparativo(d, estado.isHoje);
-      pintarTopCriativos(d, estado.isHoje);
-      pintarExperts(d, estado.isHoje);
+      /* escopo 1: o recorte de sempre */
+      pintarEscopo({ totais: d.totais, experts: d.experts },
+                   d.periodo, estado.ehHoje, RAIZ_CL, false);
+
+      /* escopo 2: a operação inteira. Só entra se a API mandou o bloco. */
+      if (d.geral && d.geral.experts) {
+        pintarEscopo(d.geral, d.periodo, estado.ehHoje, RAIZ_GERAL, true);
+        pintarAvisoGeral(d.geral.experts);
+      } else {
+        marcarGeralIndisponivel();
+      }
+      pintarScopebar(d);
       conferirPeriodo(r, d.periodo);
       pintarStatus('ok');
       pintarNotaPeriodo();
+      reiniciarCiclo();
+
+      /* acende só o que trocou de valor nesta leitura */
+      if (antes) {
+        marcarMudancas(RAIZ_CL, antes.cl);
+        marcarMudancas(RAIZ_GERAL, antes.geral);
+      }
 
       $('#erro-banner').hidden = true;
       $('#boot').hidden = true;
@@ -3073,7 +4848,8 @@ function carregar(opts) {
       var banner = $('#erro-banner');
       if (estado.jaCarregou) {
         banner.innerHTML = 'Falha ao atualizar. Os números abaixo são da última leitura bem-sucedida (' +
-          '<span data-field="atualizado_em">' + horaBR(estado.dados.atualizado_em) + '</span>). Tentando de novo…';
+          '<span data-field="atualizado_em" data-tz="America/Sao_Paulo">' +
+          horaBR(estado.dados.atualizado_em) + '</span>). Tentando de novo…';
       } else {
         /* primeira carga falhou: não existe número bom pra manter na tela, então
            o recado precisa dizer o que houve, não só que houve. */
@@ -3086,19 +4862,38 @@ function carregar(opts) {
     });
 }
 
-/* ── 10. abas em rota de hash ───────────────────────────────────────────── */
-var ABAS = { geral: 'v-geral', experts: 'v-experts' };
+/* ── 10. navegação em rota de hash, dois níveis ───────────────────────────
+   #<escopo>/<aba>   ->  #cl/visao · #cl/detalhe · #geral/visao · #geral/detalhe
+   Legado sem barra  ->  #geral  vira #cl/visao   (era a "Visão geral" antiga)
+                         #experts vira #cl/detalhe
+   Link antigo que circulou no grupo do time continua abrindo onde abria.
+   ────────────────────────────────────────────────────────────────────────── */
+var ESCOPOS = { cl: 'e-cl', geral: 'e-geral' };
+var ABAS    = { visao: 'v-geral', detalhe: 'v-experts' };
+var LEGADO  = { geral: 'cl/visao', experts: 'cl/detalhe' };
+
+function hashAtual() {
+  var esc = $('input[name="escopo"]:checked'), ab = $('input[name="view"]:checked');
+  var e = (esc && esc.id === 'e-geral') ? 'geral' : 'cl';
+  var a = (ab && ab.id === 'v-experts') ? 'detalhe' : 'visao';
+  return e + '/' + a;
+}
 function aplicarHash() {
   var h = (location.hash || '').replace('#', '');
-  var id = ABAS[h];
-  if (id) document.getElementById(id).checked = true;
+  if (!h) return;
+  if (LEGADO[h]) h = LEGADO[h];
+  var p = h.split('/');
+  var idEsc = ESCOPOS[p[0]], idAba = ABAS[p[1]];
+  if (idEsc) document.getElementById(idEsc).checked = true;
+  if (idAba) document.getElementById(idAba).checked = true;
 }
 function ligarAbas() {
-  Object.keys(ABAS).forEach(function (nome) {
-    document.getElementById(ABAS[nome]).addEventListener('change', function () {
-      if (this.checked && location.hash !== '#' + nome) {
-        history.replaceState(null, '', '#' + nome);   /* replace: sem entulhar o histórico */
-      }
+  $$('.views > input').forEach(function (inp) {
+    inp.addEventListener('change', function () {
+      var novo = '#' + hashAtual();
+      /* replace, não push: trocar de aba não é navegação, e entulhar o
+         histórico faria o "voltar" do celular percorrer abas em vez de sair */
+      if (location.hash !== novo) history.replaceState(null, '', novo);
     });
   });
   window.addEventListener('hashchange', aplicarHash);
