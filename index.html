@@ -2917,8 +2917,9 @@ h1,h2,h3,h4,p{margin:0}
          certa. Mesmo princípio do #periodo-banner. -->
     <div class="errbar errbar--warn scope-aviso" id="geral-aviso" role="status">
       <b data-derived="entidades com investimento_total === 0">17 das 24 entidades</b>
-      ainda estão com investimento zerado (liberação de permissão da Meta em
-      andamento). O funil da TAP delas já é real, o investimento não, então
+      ainda estão com investimento zerado nesta leitura (sem campanha ativa no
+      período, ou verba ainda não postada hoje). O funil da TAP delas já é
+      real, o investimento não, então
       <b>custo por FTD e retorno deste escopo ficam otimistas</b> até a verba entrar.
     </div>
 
@@ -4607,9 +4608,9 @@ function pintarAvisoGeral(ents) {
      apagado a estrutura antes, e um refresh não pode deixar frase pela metade */
   aviso.innerHTML =
     '<b>' + zeradas.length + ' das ' + ents.length + ' entidades</b> ainda estão com ' +
-    'investimento zerado (liberação de permissão da Meta em andamento). O funil da ' +
-    'TAP delas já é real, o investimento não, então <b>custo por FTD e retorno ' +
-    'deste escopo ficam otimistas</b> até a verba entrar.';
+    'investimento zerado nesta leitura (sem campanha ativa no período, ou verba ainda ' +
+    'não postada hoje). O funil da TAP delas já é real, o investimento não, então ' +
+    '<b>custo por FTD e retorno deste escopo ficam otimistas</b> até a verba entrar.';
 }
 
 /* escopo Geral ausente na resposta (API antiga ou queda parcial): em vez de
