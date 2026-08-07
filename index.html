@@ -692,10 +692,14 @@ h1,h2,h3,h4,p{margin:0}
   display:flex;align-items:center;gap:8px;
   font-family:var(--mono);font-size:.625rem;letter-spacing:.13em;text-transform:uppercase;
   font-weight:600;
+  /* o rótulo do bloco (GRUPO / TRÁFEGO / FUNIL TAP) nunca quebra: quem cede
+     espaço e quebra em duas linhas é o <small> de apoio, não o rótulo. */
+  white-space:nowrap;
 }
 .block__title small{
   font-family:var(--sans);font-size:.6875rem;letter-spacing:0;text-transform:none;
   font-weight:400;color:var(--txt-3);
+  white-space:normal;min-width:0;
 }
 .block__title svg{width:13px;height:13px;flex:none}
 .block--grupo{box-shadow:inset 3px 0 0 var(--acao)}
@@ -1765,7 +1769,7 @@ h1,h2,h3,h4,p{margin:0}
       </div>
 
       <div class="tcard tcard--direto">
-        <span class="tcard__lbl"><i class="dot dot--direto"></i> Investimento direto</span>
+        <span class="tcard__lbl"><i class="dot dot--direto"></i> Tráfego pro perfil</span>
         <span class="tcard__val" data-field="totais.investimento_direto">R$ 253,22</span>
         <span class="tcard__sub" data-derived="direto / total; soma dos resultados de direto">9,2% do total · 850 resultados</span>
       </div>
@@ -1794,13 +1798,13 @@ h1,h2,h3,h4,p{margin:0}
     <!-- Participação de cada tipo de tráfego no investimento do dia.
          width dos segmentos = % de grupo e de direto sobre o total. -->
     <div class="splitbar">
-      <div class="splitbar__track" role="img" aria-label="Grupo 90,8% do investimento, direto 9,2%">
+      <div class="splitbar__track" role="img" aria-label="Grupo 90,8% do investimento, tráfego pro perfil 9,2%">
         <div class="splitbar__seg splitbar__seg--grupo" style="width:90.8%"></div>
         <div class="splitbar__seg splitbar__seg--direto" style="width:9.2%"></div>
       </div>
       <div class="splitbar__legend">
         <span><i class="dot dot--grupo"></i> Grupo · WhatsApp / Telegram · <b class="num">90,8%</b></span>
-        <span><i class="dot dot--direto"></i> Direto · Perfil · <b class="num">9,2%</b></span>
+        <span><i class="dot dot--direto"></i> Tráfego pro perfil · <b class="num">9,2%</b></span>
       </div>
     </div>
 
@@ -2050,7 +2054,7 @@ h1,h2,h3,h4,p{margin:0}
             <div class="chans">
               <!-- .is-on quando grupo.ativo / direto.ativo === true -->
               <span class="chan-tag chan-tag--grupo is-on">Grupo</span>
-              <span class="chan-tag chan-tag--direto">Direto</span>
+              <span class="chan-tag chan-tag--direto">Tráfego perfil</span>
             </div>
           </div>
           <div class="expert__head-metrics">
@@ -2083,13 +2087,13 @@ h1,h2,h3,h4,p{margin:0}
           <section class="block block--direto block--off" data-block="direto">
             <h4 class="block__title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0-9-9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 19a6 6 0 0 1 11 0"/></svg>
-              Direto <small>Perfil</small>
+              Tráfego <small>pro perfil</small>
             </h4>
             <p class="block__off">Sem campanha ativa hoje</p>
           </section>
 
           <section class="block block--tap">
-            <h4 class="block__title">Funil TAP <small>blend do expert, não separa grupo e direto</small></h4>
+            <h4 class="block__title">Funil TAP <small>blend do expert, não separa grupo e tráf. perfil</small></h4>
             <div class="tap-funnel">
               <div class="m"><span class="m__lbl">Cadastros</span><span class="m__val" data-field="tap.cadastros">13</span></div>
               <div class="m"><span class="m__lbl">FTD</span><span class="m__val" data-field="tap.ftd">6</span></div>
@@ -2240,7 +2244,7 @@ h1,h2,h3,h4,p{margin:0}
             <h3 class="expert__name" data-field="expert_name">Deko</h3>
             <div class="chans">
               <span class="chan-tag chan-tag--grupo is-on">Grupo</span>
-              <span class="chan-tag chan-tag--direto">Direto</span>
+              <span class="chan-tag chan-tag--direto">Tráfego perfil</span>
             </div>
           </div>
           <div class="expert__head-metrics">
@@ -2269,12 +2273,12 @@ h1,h2,h3,h4,p{margin:0}
           <section class="block block--direto block--off" data-block="direto">
             <h4 class="block__title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0-9-9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 19a6 6 0 0 1 11 0"/></svg>
-              Direto <small>Perfil</small>
+              Tráfego <small>pro perfil</small>
             </h4>
             <p class="block__off">Sem campanha ativa hoje</p>
           </section>
           <section class="block block--tap">
-            <h4 class="block__title">Funil TAP <small>blend do expert, não separa grupo e direto</small></h4>
+            <h4 class="block__title">Funil TAP <small>blend do expert, não separa grupo e tráf. perfil</small></h4>
             <div class="tap-funnel">
               <div class="m"><span class="m__lbl">Cadastros</span><span class="m__val" data-field="tap.cadastros">9</span></div>
               <div class="m"><span class="m__lbl">FTD</span><span class="m__val" data-field="tap.ftd">2</span></div>
@@ -2407,7 +2411,7 @@ h1,h2,h3,h4,p{margin:0}
             <h3 class="expert__name" data-field="expert_name">Charles</h3>
             <div class="chans">
               <span class="chan-tag chan-tag--grupo is-on">Grupo</span>
-              <span class="chan-tag chan-tag--direto">Direto</span>
+              <span class="chan-tag chan-tag--direto">Tráfego perfil</span>
             </div>
           </div>
           <div class="expert__head-metrics">
@@ -2436,12 +2440,12 @@ h1,h2,h3,h4,p{margin:0}
           <section class="block block--direto block--off" data-block="direto">
             <h4 class="block__title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0-9-9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 19a6 6 0 0 1 11 0"/></svg>
-              Direto <small>Perfil</small>
+              Tráfego <small>pro perfil</small>
             </h4>
             <p class="block__off">Sem campanha ativa hoje</p>
           </section>
           <section class="block block--tap">
-            <h4 class="block__title">Funil TAP <small>blend do expert, não separa grupo e direto</small></h4>
+            <h4 class="block__title">Funil TAP <small>blend do expert, não separa grupo e tráf. perfil</small></h4>
             <div class="tap-funnel">
               <div class="m"><span class="m__lbl">Cadastros</span><span class="m__val" data-field="tap.cadastros">7</span></div>
               <div class="m"><span class="m__lbl">FTD</span><span class="m__val" data-field="tap.ftd">1</span></div>
@@ -2490,7 +2494,7 @@ h1,h2,h3,h4,p{margin:0}
             <h3 class="expert__name" data-field="expert_name">Tanos</h3>
             <div class="chans">
               <span class="chan-tag chan-tag--grupo is-on">Grupo</span>
-              <span class="chan-tag chan-tag--direto">Direto</span>
+              <span class="chan-tag chan-tag--direto">Tráfego perfil</span>
             </div>
           </div>
           <div class="expert__head-metrics">
@@ -2519,12 +2523,12 @@ h1,h2,h3,h4,p{margin:0}
           <section class="block block--direto block--off" data-block="direto">
             <h4 class="block__title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0-9-9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 19a6 6 0 0 1 11 0"/></svg>
-              Direto <small>Perfil</small>
+              Tráfego <small>pro perfil</small>
             </h4>
             <p class="block__off">Sem campanha ativa hoje</p>
           </section>
           <section class="block block--tap">
-            <h4 class="block__title">Funil TAP <small>blend do expert, não separa grupo e direto</small></h4>
+            <h4 class="block__title">Funil TAP <small>blend do expert, não separa grupo e tráf. perfil</small></h4>
             <div class="tap-funnel">
               <div class="m"><span class="m__lbl">Cadastros</span><span class="m__val" data-field="tap.cadastros">8</span></div>
               <div class="m"><span class="m__lbl">FTD</span><span class="m__val" data-field="tap.ftd">3</span></div>
@@ -2687,7 +2691,7 @@ h1,h2,h3,h4,p{margin:0}
             <h3 class="expert__name" data-field="expert_name">QZL</h3>
             <div class="chans">
               <span class="chan-tag chan-tag--grupo">Grupo</span>
-              <span class="chan-tag chan-tag--direto is-on">Direto</span>
+              <span class="chan-tag chan-tag--direto is-on">Tráfego perfil</span>
             </div>
           </div>
           <div class="expert__head-metrics">
@@ -2712,7 +2716,7 @@ h1,h2,h3,h4,p{margin:0}
           <section class="block block--direto" data-block="direto">
             <h4 class="block__title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0-9-9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 19a6 6 0 0 1 11 0"/></svg>
-              Direto <small>Perfil</small>
+              Tráfego <small>pro perfil</small>
             </h4>
             <div class="metrics">
               <div class="m"><span class="m__lbl">Investido</span><span class="m__val" data-field="direto.valor_investido">R$ 253,22</span></div>
@@ -2721,7 +2725,7 @@ h1,h2,h3,h4,p{margin:0}
             </div>
           </section>
           <section class="block block--tap">
-            <h4 class="block__title">Funil TAP <small>blend do expert, não separa grupo e direto</small></h4>
+            <h4 class="block__title">Funil TAP <small>blend do expert, não separa grupo e tráf. perfil</small></h4>
             <div class="tap-funnel">
               <div class="m"><span class="m__lbl">Cadastros</span><span class="m__val" data-field="tap.cadastros">20</span></div>
               <div class="m"><span class="m__lbl">FTD</span><span class="m__val" data-field="tap.ftd">3</span></div>
@@ -2752,7 +2756,7 @@ h1,h2,h3,h4,p{margin:0}
             <h3 class="expert__name" data-field="expert_name">Gregório Big</h3>
             <div class="chans">
               <span class="chan-tag chan-tag--grupo is-on">Grupo</span>
-              <span class="chan-tag chan-tag--direto">Direto</span>
+              <span class="chan-tag chan-tag--direto">Tráfego perfil</span>
             </div>
           </div>
           <div class="expert__head-metrics">
@@ -2781,12 +2785,12 @@ h1,h2,h3,h4,p{margin:0}
           <section class="block block--direto block--off" data-block="direto">
             <h4 class="block__title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0-9-9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 19a6 6 0 0 1 11 0"/></svg>
-              Direto <small>Perfil</small>
+              Tráfego <small>pro perfil</small>
             </h4>
             <p class="block__off">Sem campanha ativa hoje</p>
           </section>
           <section class="block block--tap">
-            <h4 class="block__title">Funil TAP <small>blend do expert, não separa grupo e direto</small></h4>
+            <h4 class="block__title">Funil TAP <small>blend do expert, não separa grupo e tráf. perfil</small></h4>
             <div class="tap-funnel">
               <div class="m"><span class="m__lbl">Cadastros</span><span class="m__val" data-field="tap.cadastros">4</span></div>
               <div class="m"><span class="m__lbl">FTD</span><span class="m__val" data-field="tap.ftd">0</span></div>
@@ -2815,7 +2819,7 @@ h1,h2,h3,h4,p{margin:0}
             <h3 class="expert__name" data-field="expert_name">Ederson</h3>
             <div class="chans">
               <span class="chan-tag chan-tag--grupo is-on">Grupo</span>
-              <span class="chan-tag chan-tag--direto">Direto</span>
+              <span class="chan-tag chan-tag--direto">Tráfego perfil</span>
             </div>
           </div>
           <div class="expert__head-metrics">
@@ -2844,12 +2848,12 @@ h1,h2,h3,h4,p{margin:0}
           <section class="block block--direto block--off" data-block="direto">
             <h4 class="block__title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0-9-9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 19a6 6 0 0 1 11 0"/></svg>
-              Direto <small>Perfil</small>
+              Tráfego <small>pro perfil</small>
             </h4>
             <p class="block__off">Sem campanha ativa hoje</p>
           </section>
           <section class="block block--tap">
-            <h4 class="block__title">Funil TAP <small>blend do expert, não separa grupo e direto</small></h4>
+            <h4 class="block__title">Funil TAP <small>blend do expert, não separa grupo e tráf. perfil</small></h4>
             <div class="tap-funnel">
               <div class="m"><span class="m__lbl">Cadastros</span><span class="m__val" data-field="tap.cadastros">0</span></div>
               <div class="m"><span class="m__lbl">FTD</span><span class="m__val" data-field="tap.ftd">0</span></div>
@@ -2981,7 +2985,7 @@ h1,h2,h3,h4,p{margin:0}
       </div>
 
       <div class="tcard tcard--direto">
-        <span class="tcard__lbl"><i class="dot dot--direto"></i> Investimento direto</span>
+        <span class="tcard__lbl"><i class="dot dot--direto"></i> Tráfego pro perfil</span>
         <span class="tcard__val" data-field="totais.investimento_direto">R$ 253,22</span>
         <span class="tcard__sub" data-derived="direto / total; soma dos resultados de direto">9,2% do total · 850 resultados</span>
       </div>
@@ -3007,13 +3011,13 @@ h1,h2,h3,h4,p{margin:0}
     </section>
 
     <div class="splitbar">
-      <div class="splitbar__track" role="img" aria-label="Grupo 90,8% do investimento, direto 9,2%">
+      <div class="splitbar__track" role="img" aria-label="Grupo 90,8% do investimento, tráfego pro perfil 9,2%">
         <div class="splitbar__seg splitbar__seg--grupo" style="width:90.8%"></div>
         <div class="splitbar__seg splitbar__seg--direto" style="width:9.2%"></div>
       </div>
       <div class="splitbar__legend">
         <span><i class="dot dot--grupo"></i> Grupo · WhatsApp / Telegram · <b class="num">90,8%</b></span>
-        <span><i class="dot dot--direto"></i> Direto · Perfil · <b class="num">9,2%</b></span>
+        <span><i class="dot dot--direto"></i> Tráfego pro perfil · <b class="num">9,2%</b></span>
       </div>
     </div>
 
@@ -3195,7 +3199,7 @@ h1,h2,h3,h4,p{margin:0}
             </span>
             <div class="chans">
               <span class="chan-tag chan-tag--grupo is-on">Grupo</span>
-              <span class="chan-tag chan-tag--direto">Direto</span>
+              <span class="chan-tag chan-tag--direto">Tráfego perfil</span>
             </div>
           </div>
           <div class="expert__head-metrics">
@@ -3224,12 +3228,12 @@ h1,h2,h3,h4,p{margin:0}
           <section class="block block--direto block--off" data-block="direto">
             <h4 class="block__title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0-9-9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 19a6 6 0 0 1 11 0"/></svg>
-              Direto <small>Perfil</small>
+              Tráfego <small>pro perfil</small>
             </h4>
             <p class="block__off">Sem campanha ativa hoje</p>
           </section>
           <section class="block block--tap">
-            <h4 class="block__title">Funil TAP <small>blend da entidade, não separa grupo e direto</small></h4>
+            <h4 class="block__title">Funil TAP <small>blend da entidade, não separa grupo e tráf. perfil</small></h4>
             <div class="tap-funnel">
               <div class="m"><span class="m__lbl">Cadastros</span><span class="m__val" data-field="tap.cadastros">8</span></div>
               <div class="m"><span class="m__lbl">FTD</span><span class="m__val" data-field="tap.ftd">3</span></div>
@@ -3266,7 +3270,7 @@ h1,h2,h3,h4,p{margin:0}
             <span class="ent-tag ent-tag--zerado">Sem verba no período</span>
             <div class="chans">
               <span class="chan-tag chan-tag--grupo">Grupo</span>
-              <span class="chan-tag chan-tag--direto">Direto</span>
+              <span class="chan-tag chan-tag--direto">Tráfego perfil</span>
             </div>
           </div>
           <div class="expert__head-metrics">
@@ -3292,7 +3296,7 @@ h1,h2,h3,h4,p{margin:0}
           <section class="block block--direto block--off" data-block="direto">
             <h4 class="block__title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0-9-9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 19a6 6 0 0 1 11 0"/></svg>
-              Direto <small>Perfil</small>
+              Tráfego <small>pro perfil</small>
             </h4>
             <p class="block__off">Sem campanha ativa hoje</p>
           </section>
@@ -3339,7 +3343,7 @@ h1,h2,h3,h4,p{margin:0}
             <div class="contas__row contas__row--head" aria-hidden="true">
               <span>Conta de anúncio</span>
               <span class="contas__c--g">Grupo</span>
-              <span class="contas__c--d">Direto</span>
+              <span class="contas__c--d">Tráf. perfil</span>
               <span>Total</span>
               <span>Part.</span>
             </div>
@@ -3423,7 +3427,7 @@ h1,h2,h3,h4,p{margin:0}
             <span class="ent-tag ent-tag--contas" data-derived="contas.length">9 contas</span>
             <div class="chans">
               <span class="chan-tag chan-tag--grupo">Grupo</span>
-              <span class="chan-tag chan-tag--direto">Direto</span>
+              <span class="chan-tag chan-tag--direto">Tráfego perfil</span>
             </div>
           </div>
           <div class="expert__head-metrics">
@@ -3448,7 +3452,7 @@ h1,h2,h3,h4,p{margin:0}
           <section class="block block--direto block--off" data-block="direto">
             <h4 class="block__title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0-9-9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 19a6 6 0 0 1 11 0"/></svg>
-              Direto <small>Perfil</small>
+              Tráfego <small>pro perfil</small>
             </h4>
             <p class="block__off">Sem campanha ativa hoje</p>
           </section>
@@ -3481,7 +3485,7 @@ h1,h2,h3,h4,p{margin:0}
             <div class="contas__row contas__row--head" aria-hidden="true">
               <span>Conta de anúncio</span>
               <span class="contas__c--g">Grupo</span>
-              <span class="contas__c--d">Direto</span>
+              <span class="contas__c--d">Tráf. perfil</span>
               <span>Total</span>
               <span>Part.</span>
             </div>
@@ -3548,7 +3552,7 @@ h1,h2,h3,h4,p{margin:0}
             <span class="ent-tag ent-tag--zerado">Sem verba no período</span>
             <div class="chans">
               <span class="chan-tag chan-tag--grupo">Grupo</span>
-              <span class="chan-tag chan-tag--direto">Direto</span>
+              <span class="chan-tag chan-tag--direto">Tráfego perfil</span>
             </div>
           </div>
           <div class="expert__head-metrics">
@@ -3573,7 +3577,7 @@ h1,h2,h3,h4,p{margin:0}
           <section class="block block--direto block--off" data-block="direto">
             <h4 class="block__title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 1 0-9-9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 19a6 6 0 0 1 11 0"/></svg>
-              Direto <small>Perfil</small>
+              Tráfego <small>pro perfil</small>
             </h4>
             <p class="block__off">Sem campanha ativa hoje</p>
           </section>
@@ -3606,7 +3610,7 @@ h1,h2,h3,h4,p{margin:0}
             <div class="contas__row contas__row--head" aria-hidden="true">
               <span>Conta de anúncio</span>
               <span class="contas__c--g">Grupo</span>
-              <span class="contas__c--d">Direto</span>
+              <span class="contas__c--d">Tráf. perfil</span>
               <span>Total</span>
               <span>Part.</span>
             </div>
@@ -3660,12 +3664,12 @@ h1,h2,h3,h4,p{margin:0}
       </p>
       <p>
         <b>Grupo</b> são as campanhas de WhatsApp e Telegram (a pessoa entra num grupo antes).
-        <b>Direto</b> são as campanhas de Perfil (a pessoa vai direto pro link, sem grupo).
+        <b>Tráfego pro perfil</b> são as campanhas que levam pro perfil (a pessoa vai reto pro link, sem grupo).
       </p>
       <p>
         O <b>funil TAP</b> é blend do expert: a plataforma de afiliados não identifica de qual
         campanha do Meta veio cada cadastro, então cadastros, FTD e depósito não se separam
-        entre grupo e direto.
+        entre grupo e tráfego pro perfil.
       </p>
       <p>
         <b>Custo por FTD</b> colorido por faixa: verde abaixo de R$ 120, âmbar entre
@@ -4256,7 +4260,7 @@ function pintarExpert(expert, ehPrimeiro, isHoje, geral) {
   var subTap = $('.block--tap .block__title small', art);
   if (subTap) {
     if (contas.length > 1) subTap.textContent = 'btag único da entidade, não separa por conta';
-    else if (geral)        subTap.textContent = 'blend da entidade, não separa grupo e direto';
+    else if (geral)        subTap.textContent = 'blend da entidade, não separa grupo e tráf. perfil';
   }
 
   pintarBloco(art, expert, 'grupo', isHoje);
@@ -4454,7 +4458,7 @@ function pintarTotais(d, isHoje, raiz, rodape) {
   if (segG) segG.style.width = pctGrupo.toFixed(1) + '%';
   if (segD) segD.style.width = pctDireto.toFixed(1) + '%';
   if (track) track.setAttribute('aria-label',
-    'Grupo ' + pct(pctGrupo) + ' do investimento, direto ' + pct(pctDireto));
+    'Grupo ' + pct(pctGrupo) + ' do investimento, tráfego pro perfil ' + pct(pctDireto));
   var legendas = $$('.splitbar__legend b.num', raiz);
   if (legendas[0]) legendas[0].textContent = pct(pctGrupo);
   if (legendas[1]) legendas[1].textContent = pct(pctDireto);
