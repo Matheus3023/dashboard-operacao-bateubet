@@ -78,7 +78,8 @@ O QUE MUDOU DA v1
 O QUE AINDA FALTA (não é design, é insumo)
   · arquivo da logo oficial (SVG de preferência). O site é SPA e não entrega o
     asset no HTML, então não dá pra puxar por scraping simples.
-  · meta oficial de custo por FTD do cliente (as faixas seguem provisórias).
+  · (RESOLVIDO na v4) meta oficial de custo por FTD: o cliente fechou em
+    bom até R$ 300 · atenção entre R$ 300 e R$ 350 · alto de R$ 350 pra cima.
   · n8n aceitando `de` e `ate` NAS TRÊS BUSCAS (Meta Insights, Buscar Criativos
     Ativos e relatório da TAP). Hoje nenhuma delas olha pra data pedida, todas
     estão presas em "hoje". Detalhe de cada uma no comentário do filtro, mais
@@ -162,6 +163,36 @@ ONDE MOTION *NÃO* ENTRA NESTA PÁGINA (decisão, não esquecimento)
   Nada disso é este arquivo. Aqui, tela parada com número certo ganha de tela
   animada com número duvidoso.
 
+O QUE MUDOU NA v4 (esta entrega, `designer`)
+  1. FAIXA DE CUSTO POR FTD OFICIAL: bom <= R$ 300 · atenção entre R$ 300 e
+     R$ 350 · alto >= R$ 350. Vale no arquivo inteiro (chip do card, chip do
+     comparativo, veredito da visão geral, rodapé). Os operadores de
+     faixaChip() foram reescritos junto: R$ 300 exato cai em BOM e R$ 350
+     exato cai em ALTO, não é só troca de número na constante.
+  2. CARD DO EXPERT VIROU BOTÃO. Clique (ou Enter/Espaço com o card focado)
+     abre o PAINEL DE ANÁLISE: gaveta pela direita no desktop, folha de baixo
+     no celular. Tudo o que já era clicável DENTRO do card (as prateleiras
+     <details> de criativos e de contas) continua sendo do card: o handler
+     ignora clique que nasceu dentro de summary/details/link/botão.
+  3. O painel é DIAGNÓSTICO, não mais um lugar pra repetir número:
+       · resumo executivo, 1-2 frases lendo o CPA contra a faixa;
+       · 3 KPIs de qualidade de receita, cada um com meta e com ✅/⚠️
+         (retenção de depósito >= 8× · giro >= 4× · margem operacional >= 4%);
+       · tendência dos últimos dias FECHADOS (endpoint novo, item 4);
+       · uma recomendação objetiva, com régua fixa, não com adjetivo.
+  4. ENDPOINT NOVO, SÓ SOB DEMANDA (não entra na carga da página):
+       GET /api/dashboard?tendencia=<expert_name>&escopo=<costa_lobao|geral>
+     Resposta: { expert_name, escopo, dias:[{ data, investimento_total,
+     custo_por_ftd, ftd, cadastros, deposito, valor_ftd, volume, net_pl }] },
+     do mais antigo pro mais recente, nunca inclui hoje, teto de 7.
+     Ainda NÃO existe no proxy da Vercel: o fetch já está escrito no contrato
+     combinado e o painel tem estado próprio pra cada resposta possível
+     (carregando / vazio / sem o campo dias / erro). Ver a seção 9b do <script>.
+  5. Campos `criativos[]` e `campanhas[]` NÃO entram no painel de análise.
+     Decisão do cliente: a TAP não amarra FTD a criativo, então cruzar os dois
+     ali dentro seria inventar causalidade. A prateleira de criativos do card
+     continua como está, é outra leitura.
+
 CONTRATO DE DADOS
   Raiz da injeção:  <div id="dashboard-root">
   Todo valor que vem da API tem  data-field="<caminho.no.json>".
@@ -231,13 +262,13 @@ CLASSES DE ESTADO (já estilizadas, o JS só aplica)
                         <p class="block__off">Sem campanha ativa hoje</p>
                         NUNCA renderizar "R$ 0,00" num bloco inativo.
   .val--na           -> valor null ("n/d" nos secundários, "Aguardando" no chip de custo/FTD)
-  .chip--good        -> custo por FTD  <  R$ 120,00
-  .chip--warn        -> custo por FTD  entre R$ 120,00 e R$ 200,00
-  .chip--bad         -> custo por FTD  >  R$ 200,00
+  .chip--good        -> custo por FTD  <=  R$ 300,00
+  .chip--warn        -> custo por FTD  entre R$ 300,00 e R$ 350,00 (exclusivo dos dois)
+  .chip--bad         -> custo por FTD  >=  R$ 350,00
   .chip--na          -> custo por FTD null (sem FTD ainda)
-      (thresholds calibrados no custo/FTD médio da operação, R$ 183,28.
-       Continuam provisórios: o cliente ainda não passou a meta oficial.
-       Trocar em 1 lugar só, no JS.)
+      (faixa oficial do cliente, fechada na v4. R$ 300 exato é BOM e R$ 350
+       exato é ALTO: os operadores de faixaChip() estão escritos pra isso.
+       Trocar em 1 lugar só, no JS: FAIXA_BOA / FAIXA_ALTA.)
   .num--neg / .num--pos -> net dep e net PL, pelo sinal
   .expert--marca     -> entidade que não é pessoa (INSTITUCIONAL). Troca o
                         rótulo do cabeçalho e some com o selo dourado.
@@ -324,7 +355,8 @@ NOTA SOBRE OS DADOS DE EXEMPLO
    SAÚDE (verde/âmbar/vermelho) fica FORA da identidade de propósito: é função.
    O âmbar foi puxado pro laranja (#FF9E2C) pra não colidir com o dourado da
    marca, e o vermelho pro puro (#FF4D4D) pra não se confundir com o magenta.
-   Limiares de custo por FTD: bom < 120 · atenção 120-200 · alto > 200.
+   Limiares de custo por FTD (faixa oficial do cliente, v4):
+   bom <= 300 · atenção entre 300 e 350 · alto >= 350.
    ────────────────────────────────────────────────────────────────────────── */
 :root{
   /* escada de profundidade: canvas mais fundo que a base da marca, card na base
@@ -1519,6 +1551,272 @@ h1,h2,h3,h4,p{margin:0}
   .contas__sum{padding:9px 14px}
   .contas__hint{display:none}
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PAINEL DE ANÁLISE DO EXPERT (v4)
+   ══════════════════════════════════════════════════════════════════════════
+   POR QUE GAVETA E NÃO MODAL CENTRAL: a pergunta que abre o painel é "e esse
+   aqui, o que eu faço?", feita com a lista na frente. Gaveta pela direita
+   mantém a lista visível no desktop, então dá pra pular de um card pro outro
+   sem perder o lugar. No celular vira folha de baixo, que é o gesto que o
+   sistema já ensinou (sobe, rola, arrasta pra fechar não, mas o X está no
+   alcance do polegar).
+
+   O painel NÃO repete o card. O card responde "quanto"; o painel responde
+   "o que isso quer dizer e o que fazer". Ele reimprime exatamente TRÊS
+   números do card (investido, FTD e custo por FTD), e só porque servem de
+   âncora pra quem já cobriu o card com a gaveta. Tudo o mais ali é leitura:
+   frase, meta batida ou não, direção e recomendação.
+
+   Cor aqui segue a mesma disciplina do resto: ameixa nas superfícies, magenta
+   só em ação e foco, dourado em nada (não existe pódio dentro do painel), e
+   verde/âmbar/vermelho reservados a SAÚDE, que é exatamente o que os KPIs de
+   qualidade e a recomendação estão medindo.
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* ── o card virou superfície clicável ─────────────────────────────────────
+   role="button" no <article> inteiro é o alvo grande que o briefing pediu, e
+   o handler de clique devolve pro card qualquer interação que nasça dentro
+   das prateleiras <details>. O aviso "Análise" existe pra não depender de
+   hover: em telefone ninguém descobre alvo clicável sem affordance. */
+.expert[role="button"]{cursor:pointer}
+.expert[role="button"]:focus-visible{
+  outline:2px solid var(--acao);outline-offset:2px;border-color:var(--acao-line);
+}
+/* dentro das prateleiras o cursor volta ao normal: ali o clique é do
+   <details>, não do painel. O summary continua sendo o único ponteiro. */
+.expert[role="button"] details{cursor:default}
+.expert[role="button"] summary{cursor:pointer}
+@media (hover:hover){
+  .expert[role="button"]:hover{border-color:var(--acao-line)}
+  .expert[role="button"]:hover .expert__abrir{color:var(--acao);border-color:var(--acao-line);background:var(--acao-soft)}
+}
+.expert__abrir{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 9px;border-radius:999px;
+  border:1px solid var(--line);background:transparent;color:var(--txt-3);
+  font-family:var(--mono);font-size:.5625rem;letter-spacing:.12em;text-transform:uppercase;
+  white-space:nowrap;transition:color .16s ease,border-color .16s ease,background .16s ease;
+}
+.expert__abrir svg{width:11px;height:11px;flex:none}
+
+/* ── casca ────────────────────────────────────────────────────────────── */
+.pnl{position:fixed;inset:0;z-index:80;display:flex;justify-content:flex-end}
+.pnl[hidden]{display:none}
+body.pnl-aberto{overflow:hidden}
+.pnl__fundo{
+  position:absolute;inset:0;
+  background:rgba(18,0,16,.68);
+  -webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);
+}
+.pnl__box{
+  position:relative;z-index:1;
+  display:flex;flex-direction:column;
+  width:min(520px,100%);height:100%;
+  background:var(--surface);
+  border-left:1px solid var(--line);
+  box-shadow:-26px 0 64px rgba(0,0,0,.5);
+}
+.pnl__box:focus{outline:none}
+
+.pnl__head{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:14px;
+  padding:14px 16px;
+  background:var(--surface-2);
+  border-bottom:1px solid var(--line);
+  flex:none;
+}
+.pnl__id{min-width:0}
+.pnl__escopo{
+  display:block;
+  font-family:var(--mono);font-size:.5625rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--txt-3);
+}
+.pnl__nome{
+  margin:4px 0 0;
+  font-size:1.125rem;font-weight:680;letter-spacing:.02em;text-transform:uppercase;
+}
+.pnl__per{display:block;margin-top:3px;font-size:.75rem;color:var(--txt-3)}
+.pnl__x{
+  flex:none;width:34px;height:34px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:8px;border:1px solid var(--line);
+  background:transparent;color:var(--txt-2);cursor:pointer;
+  transition:background .16s ease,color .16s ease,border-color .16s ease;
+}
+.pnl__x svg{width:16px;height:16px}
+.pnl__x:hover{background:var(--acao-soft);color:#FF9AC4;border-color:var(--acao-line)}
+.pnl__x:focus-visible{outline:2px solid var(--acao);outline-offset:2px}
+
+.pnl__body{
+  flex:1 1 auto;min-height:0;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:14px 16px 26px;
+  display:grid;gap:12px;align-content:start;
+}
+
+/* ── números de contexto (os mesmos do card, só pra ancorar a leitura) ─── */
+.pnl-topo{
+  display:flex;align-items:center;gap:22px;flex-wrap:wrap;
+  padding:12px 14px;
+  background:var(--surface-sunk);
+  border:1px solid var(--line-soft);border-radius:var(--r);
+}
+
+/* ── cartão genérico do painel ────────────────────────────────────────── */
+.pnl-card{
+  padding:13px 14px 14px;
+  background:var(--surface-sunk);
+  border:1px solid var(--line-soft);border-radius:var(--r);
+}
+.pnl-card__tit{
+  display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:0 0 10px;
+  font-family:var(--mono);font-size:.625rem;letter-spacing:.13em;text-transform:uppercase;
+  font-weight:600;color:var(--txt-2);
+}
+.pnl-card__tit small{
+  font-family:var(--sans);font-size:.6875rem;letter-spacing:0;text-transform:none;
+  font-weight:400;color:var(--txt-3);
+}
+
+/* ── resumo executivo: a frase que o painel existe pra dizer ──────────── */
+.pnl-resumo{border-left:3px solid var(--line-strong)}
+.pnl-resumo--good{border-left-color:var(--good);background:linear-gradient(90deg,var(--good-soft),transparent 62%),var(--surface-sunk)}
+.pnl-resumo--warn{border-left-color:var(--warn);background:linear-gradient(90deg,var(--warn-soft),transparent 62%),var(--surface-sunk)}
+.pnl-resumo--bad{border-left-color:var(--bad);background:linear-gradient(90deg,var(--bad-soft),transparent 62%),var(--surface-sunk)}
+.pnl-resumo__txt{margin:0;font-size:.9375rem;line-height:1.5}
+.pnl-resumo__txt b{font-weight:660}
+.pnl-resumo__sub{margin:8px 0 0;font-size:.8125rem;color:var(--txt-2);line-height:1.5}
+
+/* ── KPIs de qualidade ────────────────────────────────────────────────── */
+.pnl-kpis{list-style:none;margin:0;padding:0;display:grid;gap:1px;background:var(--line-soft)}
+.pnl-kpi{
+  display:grid;grid-template-columns:22px minmax(0,1fr) auto;align-items:center;gap:10px;
+  padding:10px 2px;background:var(--surface-sunk);
+}
+.pnl-kpi__ic{font-size:.9375rem;line-height:1;text-align:center}
+.pnl-kpi__lbl{min-width:0;font-size:.875rem}
+.pnl-kpi__lbl small{display:block;margin-top:2px;font-size:.6875rem;color:var(--txt-3)}
+.pnl-kpi__val{
+  font-size:1.0625rem;font-weight:640;font-variant-numeric:tabular-nums;letter-spacing:-.01em;
+  white-space:nowrap;
+}
+.pnl-kpi--ok  .pnl-kpi__val{color:var(--good)}
+.pnl-kpi--off .pnl-kpi__val{color:var(--warn)}
+.pnl-kpi--na  .pnl-kpi__val{color:var(--txt-3);font-weight:400;font-size:.875rem}
+
+/* ── tendência ────────────────────────────────────────────────────────── */
+.pnl-tend__estado{
+  font-size:.8125rem;color:var(--txt-3);line-height:1.5;
+  padding:10px 12px;border:1px dashed var(--line);border-radius:8px;text-align:center;
+}
+.pnl-tend__linha{
+  display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  padding:9px 0;border-top:1px solid var(--line-soft);
+}
+.pnl-tend__linha:first-child{border-top:0;padding-top:0}
+.pnl-tend__lbl{font-size:.8125rem;color:var(--txt-2);min-width:0}
+.pnl-tend__lbl small{display:block;margin-top:2px;font-size:.6875rem;color:var(--txt-3)}
+.pnl-tend__val{font-size:.9375rem;font-weight:620;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pnl-tend__val--up{color:var(--bad)}      /* CPA subindo é ruim: vermelho    */
+.pnl-tend__val--down{color:var(--good)}   /* CPA caindo é bom: verde         */
+.pnl-tend__val--flat{color:var(--txt-2)}
+
+/* série de CPA por dia. Barra, não linha: são no máximo 8 pontos, e barra
+   com rótulo de data embaixo se lê de relance melhor que polyline. A cor de
+   cada barra é a FAIXA daquele dia, então a série conta duas coisas ao mesmo
+   tempo: pra onde foi e onde estava. */
+.pnl-spark{
+  display:flex;align-items:flex-end;gap:6px;
+  height:96px;margin:12px 0 0;padding-top:4px;
+}
+.pnl-spark__col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:5px}
+.pnl-spark__bar{
+  width:100%;border-radius:3px 3px 0 0;background:var(--neutro);min-height:3px;
+}
+.pnl-spark__col--good .pnl-spark__bar{background:linear-gradient(180deg,var(--good),rgba(46,212,122,.45))}
+.pnl-spark__col--warn .pnl-spark__bar{background:linear-gradient(180deg,var(--warn),rgba(255,158,44,.45))}
+.pnl-spark__col--bad  .pnl-spark__bar{background:linear-gradient(180deg,var(--bad),rgba(255,77,77,.45))}
+.pnl-spark__col--na   .pnl-spark__bar{background:repeating-linear-gradient(-45deg,transparent,transparent 4px,rgba(255,255,255,.14) 4px,rgba(255,255,255,.14) 8px)}
+.pnl-spark__col--hoje .pnl-spark__bar{outline:1px dashed rgba(255,255,255,.55);outline-offset:1px}
+.pnl-spark__dia{
+  font-family:var(--mono);font-size:.5rem;letter-spacing:.06em;color:var(--txt-3);
+  text-align:center;white-space:nowrap;
+}
+.pnl-spark__col--hoje .pnl-spark__dia{color:var(--txt)}
+
+/* ── recomendação ─────────────────────────────────────────────────────── */
+.pnl-rec{border:1px solid var(--line)}
+.pnl-rec__acao{
+  display:flex;align-items:center;gap:8px;margin:0 0 6px;
+  font-size:1rem;font-weight:660;letter-spacing:-.01em;
+}
+.pnl-rec__acao svg{width:16px;height:16px;flex:none}
+.pnl-rec--good{border-color:rgba(46,212,122,.32)}
+.pnl-rec--good .pnl-rec__acao{color:var(--good)}
+.pnl-rec--warn{border-color:rgba(255,158,44,.32)}
+.pnl-rec--warn .pnl-rec__acao{color:var(--warn)}
+.pnl-rec--bad{border-color:rgba(255,77,77,.32)}
+.pnl-rec--bad .pnl-rec__acao{color:var(--bad)}
+.pnl-rec--na .pnl-rec__acao{color:var(--txt-2)}
+.pnl-rec__txt{margin:0;font-size:.8125rem;line-height:1.55;color:var(--txt-2)}
+
+/* exceção de escala: só aparece quando a tendência prova as três condições.
+   É a única caixa do painel que contraria a leitura do CPA, então ela se
+   identifica como exceção em vez de se disfarçar de mais um parágrafo. */
+.pnl-exc{
+  margin-top:10px;padding:10px 12px;
+  border:1px solid var(--acao-line);border-radius:8px;background:var(--acao-soft);
+  font-size:.8125rem;line-height:1.5;color:var(--txt);
+}
+.pnl-exc b{color:#FF9AC4}
+
+.pnl-nota{margin:0;font-size:.6875rem;line-height:1.5;color:var(--txt-3)}
+.pnl-aviso{
+  padding:10px 12px;border:1px dashed var(--warn);border-radius:8px;
+  background:var(--warn-soft);font-size:.8125rem;line-height:1.5;color:var(--txt);
+}
+.pnl-link{
+  margin-top:8px;padding:5px 10px;border-radius:6px;
+  border:1px solid var(--line);background:transparent;color:var(--txt-2);
+  font:inherit;font-size:.75rem;cursor:pointer;
+}
+.pnl-link:hover{border-color:var(--acao-line);color:#FF9AC4}
+.pnl-link:focus-visible{outline:2px solid var(--acao);outline-offset:2px}
+
+/* ── movimento: a gaveta entra, não pisca ─────────────────────────────── */
+@keyframes pnlEntra{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
+@keyframes pnlFundo{from{opacity:0}to{opacity:1}}
+.pnl__box{animation:pnlEntra .26s cubic-bezier(.22,1,.36,1) both}
+.pnl__fundo{animation:pnlFundo .2s ease-out both}
+@keyframes pnlSobe{from{transform:translateY(28px);opacity:0}to{transform:none;opacity:1}}
+
+@media (max-width:759px){
+  .pnl{align-items:flex-end}
+  .pnl__box{
+    width:100%;height:auto;max-height:92vh;
+    border-left:0;border-top:1px solid var(--line);
+    border-radius:14px 14px 0 0;
+    box-shadow:0 -26px 64px rgba(0,0,0,.5);
+    animation-name:pnlSobe;
+  }
+  .pnl__head{padding:12px 14px;border-radius:14px 14px 0 0}
+  .pnl__body{padding:12px 14px calc(26px + env(safe-area-inset-bottom,0px))}
+  .pnl-topo{gap:16px;padding:11px 12px}
+  .pnl__nome{font-size:1rem}
+  .pnl-spark{height:78px}
+  /* alça: só sinaliza "isto é uma folha", não é arrastável */
+  .pnl__head::before{
+    content:"";position:absolute;top:6px;left:50%;transform:translateX(-50%);
+    width:38px;height:4px;border-radius:2px;background:var(--line-strong);
+  }
+  .pnl__head{position:relative;padding-top:16px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .pnl__box,.pnl__fundo{animation:none}
+  .expert__abrir,.pnl__x{transition:none}
+}
 </style>
 </head>
 
@@ -1715,15 +2013,15 @@ h1,h2,h3,h4,p{margin:0}
          o reforço vira "R$ X investidos até agora". NUNCA dividir por zero. -->
     <section class="placar" aria-label="Placar do dia">
 
-      <div class="verdict verdict--warn">
+      <div class="verdict verdict--good">
         <span class="verdict__lbl">Como está o dia</span>
         <p class="verdict__txt">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v5"/><circle cx="12" cy="17.5" r=".6" fill="currentColor"/><path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
-          Custo por FTD acima do confortável
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.2 12.4 2.6 2.6 5-5.4"/></svg>
+          Custo por FTD dentro da faixa boa
         </p>
         <p class="verdict__why">
-          R$ 183,28 por FTD hoje, contra R$ 120 da faixa boa. Dois experts acima
-          de R$ 200 estão levando 40,4% da verba do dia.
+          R$ 183,28 por FTD hoje, contra o teto de R$ 300,00 da faixa boa. Uma
+          linha em R$ 350,00 ou acima está levando 16,1% da verba do dia.
         </p>
       </div>
 
@@ -1851,7 +2149,7 @@ h1,h2,h3,h4,p{margin:0}
             <span class="cmp__share">22,3% da verba do dia</span>
           </span>
           <span class="cmp__num cmp__ftd">2</span>
-          <span><span class="chip chip--sm chip--bad">R$ 306,40</span></span>
+          <span><span class="chip chip--sm chip--warn">R$ 306,40</span></span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 12.480,30</span>
           <span class="cmp__mult">20,4×</span>
         </div>
@@ -1877,7 +2175,7 @@ h1,h2,h3,h4,p{margin:0}
             <span class="cmp__share">14,6% da verba do dia</span>
           </span>
           <span class="cmp__num cmp__ftd">3</span>
-          <span><span class="chip chip--sm chip--warn">R$ 134,05</span></span>
+          <span><span class="chip chip--sm chip--good">R$ 134,05</span></span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 9.740,10</span>
           <span class="cmp__mult">24,2×</span>
         </div>
@@ -2254,7 +2552,7 @@ h1,h2,h3,h4,p{margin:0}
             </div>
             <div class="hm">
               <span class="hm__lbl">Custo por FTD</span>
-              <span class="chip chip--bad" data-field="tap.custo_por_ftd">R$ 306,40</span>
+              <span class="chip chip--warn" data-field="tap.custo_por_ftd">R$ 306,40</span>
             </div>
           </div>
         </header>
@@ -2504,7 +2802,7 @@ h1,h2,h3,h4,p{margin:0}
             </div>
             <div class="hm">
               <span class="hm__lbl">Custo por FTD</span>
-              <span class="chip chip--warn" data-field="tap.custo_por_ftd">R$ 134,05</span>
+              <span class="chip chip--good" data-field="tap.custo_por_ftd">R$ 134,05</span>
             </div>
           </div>
         </header>
@@ -2940,8 +3238,8 @@ h1,h2,h3,h4,p{margin:0}
           Custo por FTD dentro da faixa boa
         </p>
         <p class="verdict__why">
-          R$ 15,45 por FTD hoje, contra R$ 120 da faixa boa. Número ainda
-          distorcido: 17 das 24 entidades entram com investimento zerado.
+          R$ 15,45 por FTD hoje, contra o teto de R$ 300,00 da faixa boa. Número
+          ainda distorcido: 17 das 24 entidades entram com investimento zerado.
         </p>
       </div>
 
@@ -3050,7 +3348,7 @@ h1,h2,h3,h4,p{margin:0}
             <span class="cmp__share">14,6% da verba do dia</span>
           </span>
           <span class="cmp__num cmp__ftd">3</span>
-          <span><span class="chip chip--sm chip--warn">R$ 134,05</span></span>
+          <span><span class="chip chip--sm chip--good">R$ 134,05</span></span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 9.740,10</span>
           <span class="cmp__mult">24,2×</span>
         </div>
@@ -3210,7 +3508,7 @@ h1,h2,h3,h4,p{margin:0}
             </div>
             <div class="hm">
               <span class="hm__lbl">Custo por FTD</span>
-              <span class="chip chip--warn" data-field="tap.custo_por_ftd">R$ 134,05</span>
+              <span class="chip chip--good" data-field="tap.custo_por_ftd">R$ 134,05</span>
             </div>
           </div>
         </header>
@@ -3673,10 +3971,16 @@ h1,h2,h3,h4,p{margin:0}
         entre grupo e tráfego pro perfil.
       </p>
       <p>
-        <b>Custo por FTD</b> colorido por faixa: verde abaixo de R$ 120, âmbar entre
-        R$ 120 e R$ 200, vermelho acima de R$ 200.
+        <b>Custo por FTD</b> colorido pela faixa oficial: verde até R$ 300, âmbar entre
+        R$ 300 e R$ 350, vermelho de R$ 350 pra cima.
         <span data-derived="totais.investimento_total / totais.ftd" id="foot-media">Média da operação hoje: R$ 183,28.</span>
-        Faixas provisórias, ajustar quando o cliente definir a meta oficial.
+      </p>
+      <p>
+        <b>Clique em qualquer card</b> (ou dê Enter com ele focado) pra abrir a
+        <b>análise do expert</b>: leitura do CPA contra a faixa, os três KPIs de
+        qualidade de receita (retenção de depósito, giro e margem), a tendência
+        dos últimos dias fechados e uma recomendação. As prateleiras de dentro do
+        card continuam abrindo normalmente, sem disparar o painel.
       </p>
       <p>
         <b>Criativos ativos</b> são os anúncios com status ACTIVE no Meta neste momento,
@@ -3691,6 +3995,130 @@ h1,h2,h3,h4,p{margin:0}
 
   </div><!-- /wrap -->
 </div><!-- /#dashboard-root -->
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     PAINEL DE ANÁLISE DO EXPERT (v4)
+     ═══════════════════════════════════════════════════════════════════════
+     Instância ÚNICA, fora de #dashboard-root de propósito: a raiz recebe
+     filtro de desfoque durante a carga, e o painel não pode desfocar junto.
+
+     Casca estática, miolo escrito pelo JS (seção 9b do <script>). Todo texto
+     que aparece aqui embaixo é placeholder de renderização offline: nenhum
+     número desta marcação sobrevive ao primeiro clique de verdade.
+
+     ESTADOS QUE O BLOCO DE TENDÊNCIA PRECISA COBRIR, e cobre:
+       carregando     -> o fetch saiu, ninguém respondeu ainda
+       ok             -> dias[] com conteúdo
+       vazio          -> dias[] veio [] (esperado nos primeiros dias, não é erro)
+       sem-endpoint   -> a resposta não tem o campo `dias` (é o que acontece
+                         HOJE: o proxy da Vercel ainda não conhece ?tendencia)
+       erro           -> HTTP ruim, rede caída, JSON quebrado
+     ═══════════════════════════════════════════════════════════════════════ -->
+<div class="pnl" id="pnl" hidden>
+  <div class="pnl__fundo" data-pnl-fechar></div>
+
+  <aside class="pnl__box" role="dialog" aria-modal="true" aria-labelledby="pnl-nome" tabindex="-1">
+
+    <header class="pnl__head">
+      <div class="pnl__id">
+        <span class="pnl__escopo" id="pnl-escopo">Costa e Lobão</span>
+        <h2 class="pnl__nome" id="pnl-nome">Expert</h2>
+        <span class="pnl__per" id="pnl-periodo">hoje</span>
+      </div>
+      <button class="pnl__x" type="button" data-pnl-fechar id="pnl-x" aria-label="Fechar análise">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+      </button>
+    </header>
+
+    <div class="pnl__body">
+
+      <!-- âncora: os mesmos três números do cabeçalho do card. Estão aqui pra
+           quem abriu o painel não precisar voltar a olhar o card. -->
+      <section class="pnl-topo">
+        <div class="hm">
+          <span class="hm__lbl">Investido</span>
+          <span class="hm__val" id="pnl-inv">R$ 0,00</span>
+        </div>
+        <div class="hm">
+          <span class="hm__lbl">FTD</span>
+          <span class="hm__val" id="pnl-ftd">0</span>
+        </div>
+        <div class="hm">
+          <span class="hm__lbl">Custo por FTD</span>
+          <span class="chip chip--na" id="pnl-chip">Aguardando</span>
+        </div>
+      </section>
+
+      <!-- a entidade saiu da última leitura da API (refresh com payload novo) -->
+      <div class="pnl-aviso" id="pnl-sumiu" hidden>
+        Esta entidade não veio na última leitura da API. Os números abaixo são
+        da leitura anterior.
+      </div>
+
+      <!-- 1. RESUMO EXECUTIVO -->
+      <section class="pnl-card pnl-resumo" id="pnl-resumo">
+        <p class="pnl-resumo__txt" id="pnl-resumo-txt">Abrindo a análise…</p>
+        <p class="pnl-resumo__sub" id="pnl-resumo-sub" hidden></p>
+      </section>
+
+      <!-- 2. KPIs DE QUALIDADE DE RECEITA -->
+      <section class="pnl-card">
+        <h3 class="pnl-card__tit">
+          Qualidade da receita
+          <small>o CPA diz o preço do FTD, isto diz o que o FTD trouxe</small>
+        </h3>
+        <ul class="pnl-kpis">
+          <li class="pnl-kpi pnl-kpi--na" data-kpi="retencao">
+            <span class="pnl-kpi__ic" aria-hidden="true">⚠️</span>
+            <span class="pnl-kpi__lbl">Retenção de depósito
+              <small>depósito ÷ valor dos FTD · meta ≥ 8×</small>
+            </span>
+            <span class="pnl-kpi__val">n/d</span>
+          </li>
+          <li class="pnl-kpi pnl-kpi--na" data-kpi="giro">
+            <span class="pnl-kpi__ic" aria-hidden="true">⚠️</span>
+            <span class="pnl-kpi__lbl">Giro
+              <small>volume apostado ÷ depósito · meta ≥ 4×</small>
+            </span>
+            <span class="pnl-kpi__val">n/d</span>
+          </li>
+          <li class="pnl-kpi pnl-kpi--na" data-kpi="margem">
+            <span class="pnl-kpi__ic" aria-hidden="true">⚠️</span>
+            <span class="pnl-kpi__lbl">Margem operacional
+              <small>net PL ÷ volume · meta ≥ 4%</small>
+            </span>
+            <span class="pnl-kpi__val">n/d</span>
+          </li>
+        </ul>
+      </section>
+
+      <!-- 3. TENDÊNCIA (endpoint sob demanda) -->
+      <section class="pnl-card" id="pnl-tend">
+        <h3 class="pnl-card__tit">
+          Tendência
+          <small>últimos dias fechados, hoje nunca entra na série</small>
+        </h3>
+        <div class="pnl-tend__estado" id="pnl-tend-estado">Buscando o histórico…</div>
+        <button class="pnl-link" type="button" id="pnl-tend-retry" hidden>Tentar de novo</button>
+        <div id="pnl-tend-corpo" hidden></div>
+      </section>
+
+      <!-- 4. RECOMENDAÇÃO -->
+      <section class="pnl-card pnl-rec pnl-rec--na" id="pnl-rec">
+        <p class="pnl-rec__acao" id="pnl-rec-acao">Recomendação</p>
+        <p class="pnl-rec__txt" id="pnl-rec-txt"></p>
+      </section>
+
+      <p class="pnl-nota">
+        Leitura derivada dos mesmos números do card, sem arredondamento
+        intermediário. Proporção com denominador zerado não vira 0 nem infinito:
+        vira “sem dado”. Criativo e campanha ficam fora desta análise de
+        propósito, a TAP não amarra FTD a criativo.
+      </p>
+
+    </div>
+  </aside>
+</div>
 
 <script>
 (function () {
@@ -3709,7 +4137,8 @@ h1,h2,h3,h4,p{margin:0}
      jogaria a pessoa de volta pra "Visão geral" no meio da leitura. Os dois
      <input> continuam exatamente onde estavam, o JS só marca .checked.
    · Faixa de custo por FTD: FAIXA_BOA / FAIXA_ALTA logo abaixo. Um lugar só,
-     como o design pediu. Continuam provisórias até o cliente passar a meta.
+     como o design pediu. Desde a v4 são a faixa OFICIAL do cliente
+     (300 / 350) e não mais um chute calibrado na média.
 
    ── O QUE A v3 MUDOU AQUI (expansão pra 33 contas / 24 entidades) ─────────
    · Toda função de pintura passou a receber a RAIZ do escopo. Nada mais de
@@ -3733,8 +4162,11 @@ var REFRESH_MS = parseInt(ROOT.getAttribute('data-refresh-ms'), 10) || 300000;
 var STALE_MS   = REFRESH_MS + 60000;          /* 6 min: dado envelhecendo */
 var RETRY_MS   = 60000;                        /* nova tentativa depois de falha */
 var TZ         = 'America/Sao_Paulo';
-var FAIXA_BOA  = 120;                          /* custo por FTD bom  (< 120)  */
-var FAIXA_ALTA = 200;                          /* custo por FTD alto (> 200)  */
+/* FAIXA OFICIAL DO CLIENTE (v4). Cuidado com os extremos: R$ 300 exato é BOM
+   e R$ 350 exato é ALTO. Quem carrega essa regra é faixaChip(), e o veredito
+   da visão geral usa os MESMOS operadores. Mudar os dois juntos, sempre. */
+var FAIXA_BOA  = 300;                          /* custo por FTD bom  (<= 300) */
+var FAIXA_ALTA = 350;                          /* custo por FTD alto (>= 350) */
 var LS_KEY     = 'bb-dash-periodo';
 
 /* ── raízes dos dois escopos ──────────────────────────────────────────────
@@ -3774,9 +4206,9 @@ function classeSinal(el, valor) {
 }
 function faixaChip(cpf) {
   if (!ehNum(cpf)) return 'chip--na';
-  if (cpf < FAIXA_BOA) return 'chip--good';
-  if (cpf <= FAIXA_ALTA) return 'chip--warn';
-  return 'chip--bad';
+  if (cpf <= FAIXA_BOA)  return 'chip--good';   /* até R$ 300, inclusive     */
+  if (cpf <  FAIXA_ALTA) return 'chip--warn';   /* entre R$ 300 e R$ 350     */
+  return 'chip--bad';                            /* R$ 350 pra cima, inclusive */
 }
 
 /* nomes: a API manda caixa alta, o design escreve em caixa mista.
@@ -3945,7 +4377,10 @@ function guardarMoldes() {
 var ICONE = {
   alerta: '<path d="M12 9v5"/><circle cx="12" cy="17.5" r=".6" fill="currentColor"/><path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>',
   ok:     '<circle cx="12" cy="12" r="9"/><path d="m8.2 12.4 2.6 2.6 5-5.4"/>',
-  espera: '<circle cx="12" cy="12" r="9"/><path d="M12 7.4V12l3 1.8"/>'
+  espera: '<circle cx="12" cy="12" r="9"/><path d="M12 7.4V12l3 1.8"/>',
+  /* v4: só o painel de análise usa estes dois, na linha de recomendação */
+  sobe:   '<path d="M12 19.5V5"/><path d="m5 11.5 7-7 7 7"/>',
+  desce:  '<path d="M12 4.5V19"/><path d="m5 12.5 7 7 7-7"/>'
 };
 function escreveVeredito(el, icone, texto) {
   el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" ' +
@@ -3965,7 +4400,16 @@ var estado = {
   reqId: 0,
   crtvsAbertos: {},     /* prateleiras que a pessoa fechou continuam fechadas */
   contasAbertas: {},    /* idem pro breakdown por conta (entra fechado) */
-  pintou: {}            /* escopos já pintados: a cascata só roda na 1ª vez */
+  pintou: {},           /* escopos já pintados: a cascata só roda na 1ª vez */
+
+  /* painel de análise (v4). `origem` guarda o card que abriu, pra devolver o
+     foco no fechamento. */
+  painel: { aberto: false, nome: null, escopo: 'cl', origem: null },
+  /* cache da tendência por expert × escopo. A série só tem dias FECHADOS, ou
+     seja, não muda enquanto a página está aberta: uma busca por sessão basta,
+     e o refresh de 5 min recalcula em cima do cache em vez de bater na API
+     de novo a cada ciclo. */
+  tendencia: {}
 };
 
 /* ── 5b. MOVIMENTO ────────────────────────────────────────────────────────
@@ -4216,6 +4660,36 @@ function pintarExpert(expert, ehPrimeiro, isHoje, geral) {
   if (inv <= 0) art.classList.add('expert--zerado');
   escreve($('.expert__name', art), nomeExpert(expert.expert_name));
 
+  /* ── CARD CLICÁVEL (v4) ────────────────────────────────────────────────
+     O card inteiro abre o painel de análise. role="button" + tabindex="0"
+     dão o alvo grande e o acesso por teclado.
+     RESSALVA CONSCIENTE DE A11Y: existe conteúdo interativo (as prateleiras
+     <details>) dentro de um elemento com role="button", o que não é padrão
+     limpo. Foi a escolha do briefing (alvo grande, tudo clicável) e o custo
+     está mitigado em dois pontos: o handler de clique devolve pro <details>
+     qualquer clique nascido dentro dele, e o Enter/Espaço só abre o painel
+     quando o foco está no PRÓPRIO card, nunca num summary interno. */
+  art.setAttribute('role', 'button');
+  art.setAttribute('tabindex', '0');
+  art.setAttribute('aria-haspopup', 'dialog');
+  art.setAttribute('data-escopo', geral ? 'geral' : 'cl');
+  art.setAttribute('aria-label', 'Abrir análise de ' + nomeExpert(expert.expert_name));
+
+  /* affordance visível: em telefone não existe hover pra descobrir alvo.
+     Vai DENTRO do bloco de métricas do cabeçalho (ao lado do chip de custo
+     por FTD), não solto no <header>: solto ele viraria um terceiro item de
+     space-between e empurraria os números pro meio do card. */
+  var cabeca = $('.expert__head-metrics', art) || $('.expert__head', art);
+  if (cabeca && !$('.expert__abrir', cabeca)) {
+    var dica = document.createElement('span');
+    dica.className = 'expert__abrir';
+    dica.setAttribute('aria-hidden', 'true');
+    dica.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M4 12h10"/><path d="m11 8 4 4-4 4"/><path d="M18 4v16"/></svg>Análise';
+    cabeca.appendChild(dica);
+  }
+
   /* selo dourado: só no primeiro do sort, só se ele REALMENTE investiu, e
      nunca num bloco de marca. "Maior investimento" com R$ 0,00 seria piada,
      e Institucional não disputa pódio de expert. */
@@ -4335,21 +4809,22 @@ function pintarVeredito(d, isHoje, raiz) {
   }
 
   var cpf = inv / ftd;
+  /* mesma régua do chip: R$ 350 exato JÁ é faixa alta, por isso >= e não > */
   var acima = (d.experts || []).filter(function (e) {
-    return temCusto(e) && e.tap.custo_por_ftd > FAIXA_ALTA;
+    return temCusto(e) && e.tap.custo_por_ftd >= FAIXA_ALTA;
   });
   var verbaAcima = acima.reduce(function (s, e) { return s + (e.investimento_total || 0); }, 0);
   var share = inv > 0 ? verbaAcima / inv * 100 : 0;
 
-  if (cpf < FAIXA_BOA) { box.classList.add('verdict--good'); escreveVeredito(txt, 'ok', 'Custo por FTD dentro da faixa boa'); }
-  else if (cpf <= FAIXA_ALTA) { box.classList.add('verdict--warn'); escreveVeredito(txt, 'alerta', 'Custo por FTD acima do confortável'); }
+  if (cpf <= FAIXA_BOA) { box.classList.add('verdict--good'); escreveVeredito(txt, 'ok', 'Custo por FTD dentro da faixa boa'); }
+  else if (cpf < FAIXA_ALTA) { box.classList.add('verdict--warn'); escreveVeredito(txt, 'alerta', 'Custo por FTD acima do confortável'); }
   else { box.classList.add('verdict--bad'); escreveVeredito(txt, 'alerta', 'Custo por FTD alto'); }
 
   var quem = (d.experts || []).length > 10 ? 'entidades' : 'experts';
-  var frase = brl(cpf) + ' por FTD ' + quando + ', contra ' + brl(FAIXA_BOA) + ' da faixa boa. ';
-  if (!acima.length) frase += 'Nenhuma linha acima de ' + brl(FAIXA_ALTA) + '.';
-  else if (acima.length === 1) frase += 'Uma linha acima de ' + brl(FAIXA_ALTA) + ' está levando ' + pct(share) + ' da verba.';
-  else frase += acima.length + ' ' + quem + ' acima de ' + brl(FAIXA_ALTA) + ' estão levando ' + pct(share) + ' da verba.';
+  var frase = brl(cpf) + ' por FTD ' + quando + ', contra o teto de ' + brl(FAIXA_BOA) + ' da faixa boa. ';
+  if (!acima.length) frase += 'Nenhuma linha em ' + brl(FAIXA_ALTA) + ' ou acima.';
+  else if (acima.length === 1) frase += 'Uma linha em ' + brl(FAIXA_ALTA) + ' ou acima está levando ' + pct(share) + ' da verba.';
+  else frase += acima.length + ' ' + quem + ' em ' + brl(FAIXA_ALTA) + ' ou acima estão levando ' + pct(share) + ' da verba.';
 
   /* ressalva obrigatória: se tem entidade sem verba no escopo, o custo por FTD
      está calculado com denominador faltando e parece melhor do que é. A tela
@@ -4837,6 +5312,12 @@ function carregar(opts) {
         marcarMudancas(RAIZ_GERAL, antes.geral);
       }
 
+      /* PAINEL ABERTO NO REFRESH: repinta, não fecha. Quem está lendo o
+         diagnóstico de um expert não pode perder a tela porque o timer de 5
+         min venceu. A tendência não é buscada de novo: são dias fechados,
+         a série é a mesma o dia inteiro (ver seção 9b). */
+      if (estado.painel.aberto) pintarPainel();
+
       $('#erro-banner').hidden = true;
       $('#boot').hidden = true;
       ROOT.setAttribute('data-state', 'pronto');
@@ -4865,6 +5346,617 @@ function carregar(opts) {
       pintarStatus('erro');
       agendar(RETRY_MS);
     });
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   9b. PAINEL DE ANÁLISE DO EXPERT (v4)
+   ══════════════════════════════════════════════════════════════════════════
+   O card responde "quanto". Este painel responde "o que isso quer dizer e o
+   que eu faço". Ele não busca dado novo pra montar o diagnóstico: tudo o que
+   está no resumo e nos KPIs já veio no mesmo JSON que pintou o card. A ÚNICA
+   chamada extra é a da tendência, e ela só sai quando o painel abre.
+
+   RÉGUA DE DECISÃO (fixa, não é adjetivo):
+     CPA <= 300 ................ aumentar orçamento
+     300 < CPA < 350 ........... avaliar qualidade antes de decidir
+     CPA >= 350, sem tendência . manter 2-3 dias e observar
+     CPA >= 350, CPA caindo .... aumentar
+     CPA >= 350, CPA estável ... manter
+     CPA >= 350, CPA subindo ... reduzir
+     EXCEÇÃO DE ESCALA: CPA >= 350 mas retenção subindo + giro subindo +
+     margem > 4% -> não corta por CPA isolado, prioriza qualidade de receita.
+     A exceção EXIGE tendência: sem série não dá pra afirmar "subindo", e o
+     bloco simplesmente não aparece. Sem dado, silêncio, nunca palpite.
+
+   DENOMINADOR ZERO: toda proporção passa por razao(), que devolve null quando
+   o de baixo é 0 ou null. Nenhum "0,0×", nenhum "Infinity", nenhum "NaN%".
+   Onde não dá pra calcular, a tela escreve que não dá.
+
+   ENDPOINT DA TENDÊNCIA (contrato combinado, AINDA NÃO LIGADO NO PROXY):
+     GET /api/dashboard?tendencia=<expert_name>&escopo=<costa_lobao|geral>
+   Enquanto o proxy não conhecer o parâmetro, ele responde o payload normal do
+   dashboard, que não tem `dias`. Por isso o estado 'sem-endpoint' existe e é
+   diferente de 'vazio': dias:[] é "ainda estou coletando", resposta sem o
+   campo dias é "esse endpoint ainda não existe". Confundir os dois faria a
+   tela dizer pro time esperar por um histórico que ninguém está gravando.
+
+   REFRESH DE 5 MIN COM O PAINEL ABERTO: o painel NÃO fecha e NÃO se
+   reconstrói. Ele é repintado com o número novo do mesmo expert, e a série de
+   tendência sai do cache (são dias fechados: não mudam durante o dia). Fechar
+   na cara de quem está lendo seria o pior comportamento possível num painel
+   que atualiza sozinho.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+var ESCOPO_API   = { cl: 'costa_lobao', geral: 'geral' };
+var ESCOPO_NOME  = { cl: 'Costa e Lobão', geral: 'Geral · operação inteira' };
+var META_RETENCAO = 8;    /* depósito ÷ valor dos FTD, em vezes   */
+var META_GIRO     = 4;    /* volume ÷ depósito, em vezes          */
+var META_MARGEM   = 4;    /* net PL ÷ volume, em %                */
+var RUIDO_PCT     = 5;    /* variação abaixo disso é ruído, não tendência */
+
+var PNL = {
+  raiz:   $('#pnl'),
+  caixa:  $('.pnl__box'),
+  nome:   $('#pnl-nome'),
+  escopo: $('#pnl-escopo'),
+  per:    $('#pnl-periodo'),
+  x:      $('#pnl-x'),
+  inv:    $('#pnl-inv'),
+  ftd:    $('#pnl-ftd'),
+  chip:   $('#pnl-chip'),
+  sumiu:  $('#pnl-sumiu'),
+  resumo: $('#pnl-resumo'),
+  resumoTxt: $('#pnl-resumo-txt'),
+  resumoSub: $('#pnl-resumo-sub'),
+  tendEstado: $('#pnl-tend-estado'),
+  tendCorpo:  $('#pnl-tend-corpo'),
+  tendRetry:  $('#pnl-tend-retry'),
+  rec:    $('#pnl-rec'),
+  recAcao:$('#pnl-rec-acao'),
+  recTxt: $('#pnl-rec-txt')
+};
+
+/* ── matemática do diagnóstico ──────────────────────────────────────────── */
+
+/* proporção só existe com denominador positivo. Fora disso é "sem dado". */
+function razao(cima, baixo) {
+  if (!ehNum(cima) || !ehNum(baixo) || baixo <= 0) return null;
+  return cima / baixo;
+}
+/* data curta tolerante: o painel imprime data vinda de um endpoint que ainda
+   não existe, então ela pode chegar torta. Data torta vira rótulo neutro, e
+   nunca "undefined/undefined" no meio de um diagnóstico. */
+function diaCurto(iso) {
+  var p = String(iso == null ? '' : iso).split('-');
+  return p.length === 3 && p[2] ? dataCurta(iso) : 'último dia';
+}
+function kpisQualidade(tap) {
+  tap = tap || {};
+  var margem = razao(tap.net_pl, tap.volume);
+  return {
+    retencao: razao(tap.deposito, tap.valor_ftd),   /* meta >= 8×  */
+    giro:     razao(tap.volume, tap.deposito),      /* meta >= 4×  */
+    margem:   margem == null ? null : margem * 100  /* meta >= 4%  */
+  };
+}
+/* CPA que vale pra análise: sem verba ou sem FTD não é "R$ 0,00 barato",
+   é ausência de número. Mesma regra do chip do card (temCusto). */
+function cpaDe(e) {
+  return temCusto(e) ? e.tap.custo_por_ftd : null;
+}
+function mediaDe(arr) {
+  if (!arr.length) return null;
+  return arr.reduce(function (s, v) { return s + v; }, 0) / arr.length;
+}
+function variacao(antes, depois) {
+  if (!ehNum(antes) || !ehNum(depois) || antes <= 0) return null;
+  var v = (depois - antes) / antes * 100;
+  return { pct: v, dir: Math.abs(v) < RUIDO_PCT ? 'estavel' : (v > 0 ? 'subiu' : 'desceu') };
+}
+/* primeira metade × segunda metade da série. Com número ímpar de pontos o do
+   meio fica de fora: ele não pertence a nenhum dos dois lados e incluí-lo dos
+   dois faria a comparação puxar pro empate. */
+function tendenciaSerie(vals) {
+  if (vals.length < 2) return null;
+  var meio = Math.floor(vals.length / 2);
+  return variacao(mediaDe(vals.slice(0, meio)), mediaDe(vals.slice(vals.length - meio)));
+}
+function serieDe(dias, fn) {
+  var out = [];
+  (dias || []).forEach(function (d) { var v = fn(d); if (ehNum(v)) out.push(v); });
+  return out;
+}
+
+function analisarTendencia(dias, cpaHoje) {
+  var ult = dias[dias.length - 1] || null;
+  var cpaOntem = (ult && ehNum(ult.custo_por_ftd) && ult.custo_por_ftd > 0) ? ult.custo_por_ftd : null;
+  var giros = serieDe(dias, function (d) { return razao(d.volume, d.deposito); });
+  var rets  = serieDe(dias, function (d) { return razao(d.deposito, d.valor_ftd); });
+  return {
+    n: dias.length,
+    dataOntem: ult ? ult.data : null,
+    cpaOntem: cpaOntem,
+    cpaVar: variacao(cpaOntem, cpaHoje),
+    giroMedio: mediaDe(giros),
+    giroDir: tendenciaSerie(giros),
+    /* "depósito ÷ FTD subindo" do briefing lido como a MESMA retenção do KPI
+       (depósito ÷ valor dos FTD). É a leitura coerente com o bloco de cima:
+       se fosse depósito por FTD contado em cabeças, seria outro indicador e o
+       painel estaria comparando duas coisas com o mesmo nome. */
+    retDir: tendenciaSerie(rets),
+    serieCpa: dias.map(function (d) {
+      return { data: d.data, v: (ehNum(d.custo_por_ftd) && d.custo_por_ftd > 0) ? d.custo_por_ftd : null };
+    })
+  };
+}
+
+/* as três condições juntas, nunca uma sozinha */
+function excecaoEscala(cpa, kpis, tend) {
+  if (!tend || !ehNum(cpa) || cpa < FAIXA_ALTA) return false;
+  if (!tend.retDir  || tend.retDir.dir  !== 'subiu') return false;
+  if (!tend.giroDir || tend.giroDir.dir !== 'subiu') return false;
+  return ehNum(kpis.margem) && kpis.margem > META_MARGEM;
+}
+
+/* ── textos ─────────────────────────────────────────────────────────────── */
+
+function textoResumo(e, cpa) {
+  var tap = e.tap || {};
+  var inv = ehNum(e.investimento_total) ? e.investimento_total : 0;
+  var ftd = ehNum(tap.ftd) ? tap.ftd : 0;
+  var quando = estado.ehHoje ? 'hoje' : 'no período';
+
+  if (cpa == null) {
+    if (inv <= 0) {
+      return { tom: 'na', txt: ftd > 0
+        ? 'Sem verba ' + quando + ', com ' + inteiro(ftd) + ' FTD na TAP. O funil é real, o preço dele não existe: sem investimento não há custo por aquisição pra julgar.'
+        : 'Sem verba e sem FTD ' + quando + '. Não há o que diagnosticar nesta linha ainda.' };
+    }
+    return { tom: 'na', txt: brl(inv) + ' investidos ' + quando +
+      ' e nenhum FTD registrado. O custo por aquisição está indefinido, o que é diferente de estar zerado.' };
+  }
+
+  if (cpa <= FAIXA_BOA) {
+    return { tom: 'good', txt: '<b>' + brl(cpa) + ' por FTD</b> ' + quando +
+      ', dentro da faixa boa (teto de ' + brl(FAIXA_BOA) + '). Aquisição não é o gargalo desta linha: o preço do FTD está pago.' };
+  }
+  if (cpa < FAIXA_ALTA) {
+    return { tom: 'warn', txt: '<b>' + brl(cpa) + ' por FTD</b> ' + quando +
+      ', na faixa de atenção (entre ' + brl(FAIXA_BOA) + ' e ' + brl(FAIXA_ALTA) +
+      '). Está caro, mas pode se pagar: quem decide isso é a qualidade da receita, não o CPA sozinho.' };
+  }
+  var excedente = (cpa - FAIXA_ALTA) * ftd;
+  return { tom: 'bad', txt: '<b>' + brl(cpa) + ' por FTD</b> ' + quando +
+    ', na faixa alta (de ' + brl(FAIXA_ALTA) + ' pra cima). São ' + brl(cpa - FAIXA_ALTA) +
+    ' a mais por FTD, ' + brl(excedente) + ' acima do teto no total ' + quando + '.' };
+}
+
+function textoSubResumo(e) {
+  var tap = e.tap || {};
+  var partes = [];
+  partes.push(brl(e.investimento_total) + ' investidos');
+  partes.push(inteiro(tap.ftd) + ' FTD de ' + inteiro(tap.cadastros) + ' cadastros');
+  var conv = pct(tap.conversao_cadastro_ftd);
+  if (conv) partes.push(conv + ' de conversão');
+  return partes.join(' · ') + '.';
+}
+
+function recomendar(cpa, kpis, tend) {
+  var excecao = excecaoEscala(cpa, kpis, tend);
+
+  if (cpa == null) {
+    return { tom: 'na', icone: 'espera', acao: 'Sem base pra recomendar',
+      txt: 'Sem custo por FTD calculável não existe decisão de verba honesta a tomar aqui. ' +
+           'Volte quando entrar investimento e o primeiro FTD.' };
+  }
+
+  if (cpa <= FAIXA_BOA) {
+    return { tom: 'good', icone: 'sobe', acao: 'Aumentar orçamento',
+      txt: 'O CPA está dentro da faixa boa, então cada real a mais tende a comprar FTD no mesmo preço. ' +
+           'Suba em degrau (20% a 30%) e confira no dia seguinte se o CPA aguentou o volume novo.' };
+  }
+
+  if (cpa < FAIXA_ALTA) {
+    return { tom: 'warn', icone: 'espera', acao: 'Avaliar qualidade antes de decidir',
+      txt: 'Faixa de atenção: o CPA sozinho não decide. Olhe os três KPIs acima. ' + resumoKpis(kpis) +
+           ' Com os três batendo a meta, o FTD caro se paga e vale segurar. Com dois ou mais fora, ' +
+           'o problema não é preço de aquisição, é o que essa audiência faz depois de depositar.' };
+  }
+
+  /* CPA >= 350 */
+  if (excecao) {
+    return { tom: 'warn', icone: 'espera', acao: 'Manter e priorizar qualidade de receita', excecao: true,
+      txt: 'O CPA está acima do teto, mas a retenção e o giro estão subindo e a margem passa de ' +
+           META_MARGEM + '%. Cortar por CPA isolado aqui seria desligar a fonte que está trazendo ' +
+           'a melhor receita da operação. Segure a verba e acompanhe retenção, giro e margem por mais alguns dias.' };
+  }
+  if (!tend || !tend.cpaVar) {
+    return { tom: 'warn', icone: 'espera', acao: 'Manter por 2-3 dias e observar',
+      txt: 'CPA na faixa alta, mas sem histórico pra dizer se está subindo ou caindo. ' +
+           'Dois ou três dias fechados resolvem essa dúvida, e decidir agora é decidir no escuro.' };
+  }
+  if (tend.cpaVar.dir === 'desceu') {
+    return { tom: 'good', icone: 'sobe', acao: 'Aumentar orçamento',
+      txt: 'CPA ainda alto, mas em queda de ' + pct(Math.abs(tend.cpaVar.pct)) +
+           ' contra o último dia fechado. A curva está indo pro lugar certo: aumente em degrau e confirme amanhã.' };
+  }
+  if (tend.cpaVar.dir === 'estavel') {
+    return { tom: 'warn', icone: 'espera', acao: 'Manter e observar',
+      txt: 'CPA alto e estável contra o último dia fechado (' + pct(tend.cpaVar.pct) +
+           '). Sem movimento não há o que perseguir: mantenha a verba, mexa no criativo e na oferta, não no orçamento.' };
+  }
+  return { tom: 'bad', icone: 'desce', acao: 'Reduzir tráfego',
+    txt: 'CPA alto e subindo ' + pct(tend.cpaVar.pct) + ' contra o último dia fechado, ' +
+         'sem qualidade de receita que justifique o preço. Reduza a verba dessa linha e realoque ' +
+         'pra quem está comprando FTD abaixo de ' + brl(FAIXA_BOA) + '.' };
+}
+
+/* frase curta dos 3 KPIs, usada dentro da recomendação da faixa de atenção */
+function resumoKpis(k) {
+  var ok = [], fora = [], sem = [];
+  function classificar(nome, val, meta, txt) {
+    if (val == null) { sem.push(nome); return; }
+    (val >= meta ? ok : fora).push(nome + ' ' + txt);
+  }
+  classificar('retenção', k.retencao, META_RETENCAO, vezes(k.retencao) || '');
+  classificar('giro', k.giro, META_GIRO, vezes(k.giro) || '');
+  classificar('margem', k.margem, META_MARGEM, pct(k.margem) || '');
+  var f = [];
+  if (ok.length)   f.push('Batendo a meta: ' + ok.join(', ') + '.');
+  if (fora.length) f.push('Abaixo da meta: ' + fora.join(', ') + '.');
+  if (sem.length)  f.push('Sem dado: ' + sem.join(', ') + '.');
+  return f.join(' ');
+}
+
+/* ── pintura do painel ──────────────────────────────────────────────────── */
+
+function acharExpert(nome, esc) {
+  var d = estado.dados;
+  if (!d) return null;
+  var lista = esc === 'geral' ? ((d.geral && d.geral.experts) || []) : (d.experts || []);
+  for (var i = 0; i < lista.length; i++) {
+    if (lista[i].expert_name === nome) return lista[i];
+  }
+  return null;
+}
+
+function pintarKpi(chave, valor, texto, atingiu) {
+  var li = $('.pnl-kpi[data-kpi="' + chave + '"]', PNL.raiz);
+  if (!li) return;
+  var estadoCls = valor == null ? 'pnl-kpi--na' : (atingiu ? 'pnl-kpi--ok' : 'pnl-kpi--off');
+  li.className = 'pnl-kpi ' + estadoCls;
+  $('.pnl-kpi__ic', li).textContent = valor == null ? '⏳' : (atingiu ? '✅' : '⚠️');
+  $('.pnl-kpi__val', li).textContent = valor == null ? 'Aguardando dado' : texto;
+}
+
+function pintarPainel() {
+  if (!estado.painel.aberto) return;
+  var esc = estado.painel.escopo;
+  var e = acharExpert(estado.painel.nome, esc);
+
+  PNL.escopo.textContent = ESCOPO_NOME[esc] || '';
+  PNL.per.textContent = estado.dados ? rotuloPeriodo(estado.dados.periodo) : '';
+
+  /* a entidade saiu da resposta (aconteceu num refresh): mantém o que estava
+     na tela e avisa, em vez de zerar tudo ou fechar o painel */
+  if (!e) { PNL.sumiu.hidden = false; return; }
+  PNL.sumiu.hidden = true;
+
+  var tap  = e.tap || {};
+  var cpa  = cpaDe(e);
+  var kpis = kpisQualidade(tap);
+  var tend = analiseAtual();
+
+  PNL.nome.textContent = nomeExpert(e.expert_name) + (ehMarca(e.expert_name) ? ' · marca' : '');
+  escreve(PNL.inv, brl(e.investimento_total));
+  escreve(PNL.ftd, inteiro(tap.ftd));
+  var cc = chipCusto(e);
+  PNL.chip.className = 'chip ' + cc.classe;
+  PNL.chip.textContent = cc.txt;
+
+  var r = textoResumo(e, cpa);
+  PNL.resumo.className = 'pnl-card pnl-resumo pnl-resumo--' + r.tom;
+  PNL.resumoTxt.innerHTML = r.txt;
+  PNL.resumoSub.hidden = false;
+  PNL.resumoSub.textContent = textoSubResumo(e);
+
+  pintarKpi('retencao', kpis.retencao, vezes(kpis.retencao), kpis.retencao >= META_RETENCAO);
+  pintarKpi('giro',     kpis.giro,     vezes(kpis.giro),     kpis.giro >= META_GIRO);
+  pintarKpi('margem',   kpis.margem,   pct(kpis.margem),     kpis.margem >= META_MARGEM);
+
+  pintarTendencia();
+
+  var rec = recomendar(cpa, kpis, tend);
+  PNL.rec.className = 'pnl-card pnl-rec pnl-rec--' + rec.tom;
+  escreveVeredito(PNL.recAcao, rec.icone, rec.acao);
+  PNL.recTxt.textContent = rec.txt;
+
+  var exc = $('.pnl-exc', PNL.rec);
+  if (exc) exc.remove();
+  if (rec.excecao) {
+    var cx = document.createElement('div');
+    cx.className = 'pnl-exc';
+    cx.innerHTML = '<b>Exceção de escala.</b> As três condições estão dadas ao mesmo tempo: ' +
+      'retenção subindo, giro subindo e margem acima de ' + META_MARGEM + '%. ' +
+      'Quando isso acontece, o CPA deixa de ser o número que manda na decisão.';
+    PNL.rec.appendChild(cx);
+  }
+}
+
+/* ── tendência: busca sob demanda e pintura dos 5 estados ───────────────── */
+
+function chaveTend(nome, esc) { return esc + '|' + nome; }
+
+function analiseAtual() {
+  var c = estado.tendencia[chaveTend(estado.painel.nome, estado.painel.escopo)];
+  if (!c || c.estado !== 'ok') return null;
+  var e = acharExpert(estado.painel.nome, estado.painel.escopo);
+  return analisarTendencia(c.dias, e ? cpaDe(e) : null);
+}
+
+function buscarTendencia(nome, esc, forcar) {
+  var chave = chaveTend(nome, esc);
+  var c = estado.tendencia[chave];
+  /* série de dias fechados não muda durante o dia: uma busca por sessão.
+     Só 'erro' se refaz sozinho, e mesmo assim só quando alguém pede. */
+  if (c && !forcar && c.estado !== 'erro') { pintarTendencia(); return; }
+
+  estado.tendencia[chave] = { estado: 'carregando' };
+  pintarTendencia();
+
+  var url = ENDPOINT + '?tendencia=' + encodeURIComponent(nome) +
+            '&escopo=' + encodeURIComponent(ESCOPO_API[esc] || 'geral');
+
+  fetch(url, { cache: 'no-store', headers: { accept: 'application/json' } })
+    .then(function (resp) {
+      return resp.text().then(function (txt) {
+        var json = null;
+        try { json = JSON.parse(txt); } catch (err) {}
+        if (!resp.ok) throw new Error((json && (json.detail || json.error)) || ('HTTP ' + resp.status));
+        return json;
+      });
+    })
+    .then(function (json) {
+      if (!json || !Array.isArray(json.dias)) {
+        /* resposta válida mas SEM o campo dias = o proxy ainda não conhece
+           ?tendencia e devolveu o payload do dashboard. Não é "sem histórico". */
+        estado.tendencia[chave] = { estado: 'sem-endpoint' };
+      } else if (!json.dias.length) {
+        estado.tendencia[chave] = { estado: 'vazio' };
+      } else {
+        estado.tendencia[chave] = { estado: 'ok', dias: json.dias.slice(-7) };
+      }
+    })
+    .catch(function (err) {
+      estado.tendencia[chave] = { estado: 'erro', msg: String((err && err.message) || err) };
+    })
+    .then(function () {
+      if (estado.painel.aberto && estado.painel.nome === nome && estado.painel.escopo === esc) {
+        pintarPainel();
+      }
+    });
+}
+
+function linhaTend(rotulo, apoio, valor, classe) {
+  var l = document.createElement('div');
+  l.className = 'pnl-tend__linha';
+  var a = document.createElement('span');
+  a.className = 'pnl-tend__lbl';
+  a.textContent = rotulo;
+  if (apoio) {
+    var s = document.createElement('small');
+    s.textContent = apoio;
+    a.appendChild(s);
+  }
+  var b = document.createElement('span');
+  b.className = 'pnl-tend__val' + (classe ? ' ' + classe : '');
+  b.textContent = valor;
+  l.appendChild(a); l.appendChild(b);
+  return l;
+}
+
+var SETA = { subiu: '📈', desceu: '📉', estavel: '➖' };
+/* classe de cor por DIREÇÃO E SIGNIFICADO, não pelo sinal: CPA subindo é
+   ruim, giro subindo é bom. A mesma seta pinta de cor diferente conforme a
+   métrica, porque a leitura é essa. */
+function classeDir(dir, subirEhBom) {
+  if (!dir || dir === 'estavel') return 'pnl-tend__val--flat';
+  var bom = (dir === 'subiu') === !!subirEhBom;
+  return bom ? 'pnl-tend__val--down' : 'pnl-tend__val--up';
+}
+
+function sparkCpa(serie, cpaHoje) {
+  var caixa = document.createElement('div');
+  caixa.className = 'pnl-spark';
+  var pontos = serie.slice();
+  if (ehNum(cpaHoje)) pontos.push({ data: null, v: cpaHoje, hoje: true });
+
+  var vals = pontos.map(function (p) { return p.v; }).filter(ehNum);
+  var teto = vals.length ? Math.max.apply(null, vals) : 0;
+
+  pontos.forEach(function (p) {
+    var col = document.createElement('div');
+    var faixa = p.v == null ? 'na' : faixaChip(p.v).replace('chip--', '');
+    col.className = 'pnl-spark__col pnl-spark__col--' + faixa + (p.hoje ? ' pnl-spark__col--hoje' : '');
+    var bar = document.createElement('div');
+    bar.className = 'pnl-spark__bar';
+    bar.style.height = (p.v == null || teto <= 0 ? 8 : Math.max(8, p.v / teto * 100)) + '%';
+    var dia = document.createElement('span');
+    dia.className = 'pnl-spark__dia';
+    dia.textContent = p.hoje ? (estado.ehHoje ? 'hoje' : 'tela') : diaCurto(p.data);
+    col.setAttribute('title', (p.hoje ? 'valor na tela' : diaCurto(p.data)) + ': ' + (brl(p.v) || 'sem FTD'));
+    col.appendChild(bar); col.appendChild(dia);
+    caixa.appendChild(col);
+  });
+  return caixa;
+}
+
+function pintarTendencia() {
+  if (!estado.painel.aberto) return;
+  var c = estado.tendencia[chaveTend(estado.painel.nome, estado.painel.escopo)] || { estado: 'carregando' };
+  var corpo = PNL.tendCorpo;
+  corpo.innerHTML = '';
+  PNL.tendRetry.hidden = true;
+
+  var textos = {
+    carregando:   'Buscando o histórico…',
+    vazio:        'Ainda coletando histórico, volte em alguns dias.',
+    'sem-endpoint': 'O histórico por dia ainda não está ligado nesta API. ' +
+                    'Assim que o endpoint entrar, a série aparece aqui sozinha.',
+    erro:         'Não foi possível carregar o histórico.'
+  };
+
+  if (c.estado !== 'ok') {
+    corpo.hidden = true;
+    PNL.tendEstado.hidden = false;
+    PNL.tendEstado.textContent = textos[c.estado] || textos.carregando;
+    if (c.estado === 'erro') {
+      PNL.tendEstado.textContent += c.msg ? ' (' + c.msg + ')' : '';
+      PNL.tendRetry.hidden = false;
+    }
+    return;
+  }
+
+  PNL.tendEstado.hidden = true;
+  corpo.hidden = false;
+
+  var e = acharExpert(estado.painel.nome, estado.painel.escopo);
+  var cpaHoje = e ? cpaDe(e) : null;
+  var t = analisarTendencia(c.dias, cpaHoje);
+  var rotuloHoje = estado.ehHoje ? 'hoje' : 'no período na tela';
+
+  /* 1. CPA do último dia fechado × CPA na tela */
+  if (t.cpaOntem == null) {
+    corpo.appendChild(linhaTend('CPA do último dia fechado',
+      t.dataOntem ? diaCurto(t.dataOntem) + ' · sem FTD nesse dia' : 'sem FTD nesse dia',
+      'sem dado', 'pnl-tend__val--flat'));
+  } else if (!t.cpaVar) {
+    corpo.appendChild(linhaTend('CPA em ' + diaCurto(t.dataOntem),
+      'sem CPA ' + rotuloHoje + ' pra comparar', brl(t.cpaOntem), 'pnl-tend__val--flat'));
+  } else {
+    var sinal = t.cpaVar.pct > 0 ? '+' : '';
+    corpo.appendChild(linhaTend(
+      'CPA ' + diaCurto(t.dataOntem) + ' → ' + rotuloHoje,
+      brl(t.cpaOntem) + ' → ' + brl(cpaHoje) + ' · ' +
+        (t.cpaVar.dir === 'estavel' ? 'estável' : t.cpaVar.dir),
+      SETA[t.cpaVar.dir] + ' ' + sinal + pct(t.cpaVar.pct),
+      classeDir(t.cpaVar.dir, false)));
+  }
+
+  /* 2. giro médio da série + direção entre as duas metades */
+  if (t.giroMedio == null) {
+    corpo.appendChild(linhaTend('Giro médio', 'nenhum dia com depósito na série',
+      'sem dado', 'pnl-tend__val--flat'));
+  } else {
+    corpo.appendChild(linhaTend('Giro médio',
+      t.n + (t.n === 1 ? ' dia fechado' : ' dias fechados') +
+        (t.giroDir ? ' · 1ª metade × 2ª metade' : ' · série curta demais pra direção'),
+      (t.giroDir ? SETA[t.giroDir.dir] + ' ' : '') + vezes(t.giroMedio),
+      classeDir(t.giroDir && t.giroDir.dir, true)));
+  }
+
+  /* 3. retenção: entra porque é uma das três condições da exceção de escala */
+  if (t.retDir) {
+    corpo.appendChild(linhaTend('Retenção de depósito',
+      'direção na série, 1ª metade × 2ª metade',
+      SETA[t.retDir.dir] + ' ' + (t.retDir.pct > 0 ? '+' : '') + pct(t.retDir.pct),
+      classeDir(t.retDir.dir, true)));
+  }
+
+  corpo.appendChild(sparkCpa(t.serieCpa, cpaHoje));
+
+  var nota = document.createElement('p');
+  nota.className = 'pnl-nota';
+  nota.style.marginTop = '8px';
+  nota.textContent = estado.ehHoje
+    ? 'Barras coloridas pela faixa do próprio dia. A última, tracejada, é o valor de hoje, que ainda está correndo.'
+    : 'O período escolhido no filtro não é hoje: a última barra é o valor do período na tela, comparado com dias fechados.';
+  corpo.appendChild(nota);
+}
+
+/* ── abrir, fechar, foco ────────────────────────────────────────────────── */
+
+function abrirPainel(nome, esc, origem) {
+  estado.painel = { aberto: true, nome: nome, escopo: esc, origem: origem || null };
+  PNL.raiz.hidden = false;
+  document.body.classList.add('pnl-aberto');
+  var corpo = $('.pnl__body', PNL.raiz);
+  if (corpo) corpo.scrollTop = 0;
+  pintarPainel();
+  buscarTendencia(nome, esc);
+  PNL.x.focus();
+}
+
+function fecharPainel() {
+  if (!estado.painel.aberto) return;
+  var volta = estado.painel.origem;
+  estado.painel = { aberto: false, nome: null, escopo: 'cl', origem: null };
+  PNL.raiz.hidden = true;
+  document.body.classList.remove('pnl-aberto');
+  /* devolve o foco pro card que abriu, se ele ainda existir (o refresh de 5
+     min recria os cards, então nem sempre existe) */
+  if (volta && document.body.contains(volta) && volta.focus) volta.focus();
+}
+
+function prenderFoco(ev) {
+  if (ev.key !== 'Tab') return;
+  var focaveis = $$('button, [href], input, select, textarea, summary, [tabindex]:not([tabindex="-1"])', PNL.caixa)
+    .filter(function (el) { return !el.disabled && !el.hidden && el.offsetParent !== null; });
+  if (!focaveis.length) return;
+  var pri = focaveis[0], ult = focaveis[focaveis.length - 1];
+  if (ev.shiftKey && document.activeElement === pri) { ev.preventDefault(); ult.focus(); }
+  else if (!ev.shiftKey && document.activeElement === ult) { ev.preventDefault(); pri.focus(); }
+}
+
+function ligarPainel() {
+  if (!PNL.raiz) return;
+
+  /* delegação no documento: os cards são recriados a cada leitura, e ligar
+     listener card a card significaria religar 24 vezes a cada 5 minutos. */
+  document.addEventListener('click', function (ev) {
+    var alvo = ev.target;
+    if (!alvo || !alvo.closest) return;
+
+    if (alvo.closest('[data-pnl-fechar]')) { fecharPainel(); return; }
+    if (alvo.closest('#pnl-tend-retry')) {
+      buscarTendencia(estado.painel.nome, estado.painel.escopo, true);
+      return;
+    }
+    if (alvo.closest('.pnl__box')) return;        /* clique dentro do painel */
+
+    var art = alvo.closest('.expert[role="button"]');
+    if (!art) return;
+    /* o que já era interativo dentro do card continua sendo dele: prateleira
+       de criativos, breakdown por conta, link, botão. */
+    if (alvo.closest('summary, details, a, button, input, label')) return;
+    /* quem está selecionando texto não está clicando no card */
+    var sel = window.getSelection && window.getSelection().toString();
+    if (sel && sel.length > 2) return;
+
+    var esc = art.getAttribute('data-escopo');
+    if (!esc) {
+      var raiz = art.closest('.scope');
+      esc = (raiz && raiz.getAttribute('data-escopo')) || 'cl';
+    }
+    abrirPainel(art.getAttribute('data-expert'), esc, art);
+  });
+
+  document.addEventListener('keydown', function (ev) {
+    if (estado.painel.aberto) {
+      if (ev.key === 'Escape' || ev.key === 'Esc') { ev.preventDefault(); fecharPainel(); return; }
+      prenderFoco(ev);
+      return;
+    }
+    if (ev.key !== 'Enter' && ev.key !== ' ' && ev.key !== 'Spacebar') return;
+    var ativo = document.activeElement;
+    /* SÓ com o foco no próprio card: dentro de um summary, Enter e Espaço
+       pertencem ao <details>, não ao painel. */
+    if (!ativo || !ativo.classList || !ativo.classList.contains('expert')) return;
+    if (ativo.getAttribute('role') !== 'button') return;
+    ev.preventDefault();
+    abrirPainel(ativo.getAttribute('data-expert'),
+                ativo.getAttribute('data-escopo') || 'cl', ativo);
+  });
 }
 
 /* ── 10. navegação em rota de hash, dois níveis ───────────────────────────
@@ -4908,6 +6000,7 @@ function ligarAbas() {
 /* ── 11. partida ────────────────────────────────────────────────────────── */
 guardarMoldes();
 ligarAbas();
+ligarPainel();
 restaurarEscolha();
 pintarNotaPeriodo();
 
