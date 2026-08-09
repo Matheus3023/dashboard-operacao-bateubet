@@ -4222,7 +4222,7 @@ var NOMES = {
   'GREGORIO': 'Gregório', 'BMIDIA': 'BMidia', 'JC EXPERTS': 'JC Experts',
   'ZECA (JC PRIME)': 'Zeca (JC Prime)', 'ZECA': 'Zeca',
   'PR TIPSTER': 'PR Tipster', 'CAIO TIPS': 'Caio Tips',
-  'INSTITUCIONAL': 'Institucional'
+  'INSTITUCIONAL': 'Institucional', 'CA04 INSTITUCIONAL': 'CA04 Institucional'
 };
 function nomeExpert(n) {
   if (!n) return '';
@@ -4235,7 +4235,7 @@ function nomeExpert(n) {
 /* entidades que NÃO são pessoa. Ganham .expert--marca, etiqueta própria e
    nunca recebem o selo dourado de maior investimento. Lista, não heurística:
    se amanhã entrar outro bloco agregado, é uma linha aqui. */
-var MARCAS = { 'INSTITUCIONAL': 1 };
+var MARCAS = { 'INSTITUCIONAL': 1, 'CA04 INSTITUCIONAL': 1 };
 function ehMarca(nome) { return !!MARCAS[String(nome || '').toUpperCase()]; }
 
 /* ── APELIDO DE CONTA DE ANÚNCIO ──────────────────────────────────────────
@@ -4462,6 +4462,7 @@ function cascata(caixa, chave) {
 function pintarCriativo(molde, c, dono) {
   var el = molde.cloneNode(true);
   if (c.id) el.setAttribute('data-crtv-id', c.id);
+  if (c.conta_id) el.setAttribute('data-conta-id', c.conta_id);
 
   var thumb = $('.crtv__thumb', el);
   if (thumb) {
@@ -4536,6 +4537,40 @@ function pintarPrateleira(art, expert, isHoje) {
     if (!jaMarcou && maiorCtr != null && c.ctr === maiorCtr) { el.classList.add('crtv--top'); jaMarcou = true; }
     faixa.appendChild(el);
   });
+
+  /* filtro por conta: só quando a entidade tem criativo de 2+ contas
+     diferentes misturado na mesma prateleira (bloco Institucional, Jota Pê,
+     Felipe Borges). Puramente client-side, esconde/mostra os <article> já
+     pintados — não repinta nada. */
+  var contasNaLista = [];
+  lista.forEach(function (c) {
+    if (c.conta_id && contasNaLista.indexOf(c.conta_id) === -1) contasNaLista.push(c.conta_id);
+  });
+  if (contasNaLista.length > 1) {
+    var sel = document.createElement('select');
+    sel.className = 'crtvs__filtro';
+    sel.style.cssText = 'margin:0 16px 10px;padding:5px 8px;border-radius:6px;' +
+      'background:var(--surface-sunk);border:1px solid var(--line-soft);' +
+      'color:var(--txt-2);font-family:var(--mono);font-size:.6875rem;';
+    var optTodas = document.createElement('option');
+    optTodas.value = '';
+    optTodas.textContent = 'Todas as contas (' + lista.length + ')';
+    sel.appendChild(optTodas);
+    contasNaLista.slice().sort().forEach(function (cid) {
+      var qtd = lista.filter(function (c) { return c.conta_id === cid; }).length;
+      var opt = document.createElement('option');
+      opt.value = cid;
+      opt.textContent = apelidoConta(cid) + ' (' + qtd + ')';
+      sel.appendChild(opt);
+    });
+    sel.addEventListener('change', function () {
+      var v = sel.value;
+      $$('.crtv', faixa).forEach(function (crtvEl) {
+        crtvEl.hidden = !!v && crtvEl.getAttribute('data-conta-id') !== v;
+      });
+    });
+    faixa.parentNode.insertBefore(sel, faixa);
+  }
 
   /* respeita quem fechou a prateleira: o refresh não reabre */
   var chave = expert.expert_name;
