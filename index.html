@@ -523,6 +523,12 @@ h1,h2,h3,h4,p{margin:0}
   font-family:var(--mono);font-size:.75rem;
 }
 .range-custom input[type=date]:focus-visible{outline:2px solid var(--acao);outline-offset:1px}
+.sort-select{
+  min-height:32px;padding:0 9px;border-radius:7px;
+  background:var(--surface-sunk);border:1px solid var(--line);color:var(--txt);
+  font-family:var(--sans);font-size:.75rem;font-weight:560;cursor:pointer;
+}
+.sort-select:focus-visible{outline:2px solid var(--acao);outline-offset:1px}
 .range-apply{
   min-height:32px;padding:0 15px;border-radius:7px;cursor:pointer;
   border:1px solid var(--acao-line);background:var(--acao-soft);color:#FF9AC4;
@@ -1930,6 +1936,33 @@ body.pnl-aberto{overflow:hidden}
       <span class="rangebar__note rangebar__applied" id="range-applied" hidden></span>
       <span class="range-msg" id="range-msg" hidden role="alert"></span>
     </form>
+
+    <!-- ═══ ORDENAÇÃO DOS CARDS ═══════════════════════════════════════════
+         Reordena os cards de expert/entidade por qualquer métrica da TAP
+         (cadastros, FTD, conversão, depósito, net dep, net PL, volume) ou
+         custo por FTD, além do investimento (padrão, igual à API). 100%
+         client-side: troca de métrica/direção não busca dado novo, só
+         reordena o que já está na tela. Guardado em localStorage. -->
+    <div class="rangebar sortbar" id="sort-filter">
+      <span class="rangebar__lbl">Ordenar por</span>
+      <select class="sort-select" id="sort-metrica" aria-label="Métrica de ordenação">
+        <option value="investimento">Investimento</option>
+        <option value="custo_ftd">Custo por FTD</option>
+        <option value="ftd">FTD</option>
+        <option value="cadastros">Cadastros</option>
+        <option value="conversao">Conversão cadastro→FTD</option>
+        <option value="deposito">Depósito</option>
+        <option value="net_dep">Net depósito</option>
+        <option value="net_pl">Net P&amp;L</option>
+        <option value="volume">Volume</option>
+      </select>
+      <div class="seg" role="group" aria-label="Direção da ordenação">
+        <input type="radio" name="sortdir" id="sd-desc" value="desc" checked>
+        <label for="sd-desc">Decrescente ↓</label>
+        <input type="radio" name="sortdir" id="sd-asc" value="asc">
+        <label for="sd-asc">Crescente ↑</label>
+      </div>
+    </div>
   </header>
 
   <div class="wrap">
@@ -4171,6 +4204,7 @@ var TZ         = 'America/Sao_Paulo';
 var FAIXA_BOA  = 300;                          /* custo por FTD bom  (<= 300) */
 var FAIXA_ALTA = 350;                          /* custo por FTD alto (>= 350) */
 var LS_KEY     = 'bb-dash-periodo';
+var LS_KEY_ORD = 'bb-dash-ordenar';
 
 /* ── raízes dos dois escopos ──────────────────────────────────────────────
    Toda função de pintura recebe uma delas. Sem raiz explícita, um
@@ -4427,8 +4461,41 @@ var estado = {
      seja, não muda enquanto a página está aberta: uma busca por sessão basta,
      e o refresh de 5 min recalcula em cima do cache em vez de bater na API
      de novo a cada ciclo. */
-  tendencia: {}
+  tendencia: {},
+  /* ordenação dos cards: métrica + direção. Padrão é o que a API já manda
+     (investimento decrescente) — só reordena de verdade quando a pessoa
+     escolhe outra métrica no seletor. */
+  ordenar: { metrica: 'investimento', dir: 'desc' }
 };
+
+/* ── 5c. ordenação dos cards por métrica da TAP / custo por FTD ───────────
+   Reordena só no front (mesmo dado já buscado) — trocar de métrica não
+   dispara fetch novo. 'na' (sem tap/sem dado) sempre vai pro fim, nas duas
+   direções, pra não bagunçar o ranking com "menor" que na verdade é ausência. */
+var METRICAS_ORDEM = {
+  investimento:  { rotulo: 'Investimento',          get: function (e) { return e.investimento_total; } },
+  custo_ftd:     { rotulo: 'Custo por FTD',         get: function (e) { return e.tap && e.tap.custo_por_ftd; } },
+  ftd:           { rotulo: 'FTD',                   get: function (e) { return e.tap && e.tap.ftd; } },
+  cadastros:     { rotulo: 'Cadastros',             get: function (e) { return e.tap && e.tap.cadastros; } },
+  conversao:     { rotulo: 'Conversão cadastro→FTD',get: function (e) { return e.tap && e.tap.conversao_cadastro_ftd; } },
+  deposito:      { rotulo: 'Depósito',              get: function (e) { return e.tap && e.tap.deposito; } },
+  net_dep:       { rotulo: 'Net depósito',          get: function (e) { return e.tap && e.tap.net_dep; } },
+  net_pl:        { rotulo: 'Net P&L',               get: function (e) { return e.tap && e.tap.net_pl; } },
+  volume:        { rotulo: 'Volume',                get: function (e) { return e.tap && e.tap.volume; } }
+};
+function ordenarExperts(exps, metrica, dir) {
+  var def = METRICAS_ORDEM[metrica] || METRICAS_ORDEM.investimento;
+  var arr = (exps || []).slice();
+  arr.sort(function (a, b) {
+    var va = def.get(a), vb = def.get(b);
+    var na = !ehNum(va), nb = !ehNum(vb);
+    if (na && nb) return 0;
+    if (na) return 1;
+    if (nb) return -1;
+    return dir === 'asc' ? va - vb : vb - va;
+  });
+  return arr;
+}
 
 /* ── 5b. MOVIMENTO ────────────────────────────────────────────────────────
    Duas funções, uma ideia: mostrar o que mudou. O painel fica aberto o dia
@@ -4819,7 +4886,7 @@ function pintarExpert(expert, ehPrimeiro, isHoje, geral) {
 function pintarExperts(exps, isHoje, raiz, geral) {
   var lista = $('[data-list="experts"]', raiz);
   if (!lista) return;
-  exps = exps || [];
+  exps = ordenarExperts(exps || [], estado.ordenar.metrica, estado.ordenar.dir);
   var frag = document.createDocumentFragment();
   exps.forEach(function (e, i) {
     var art = pintarExpert(e, i === 0, isHoje, geral);
@@ -4832,13 +4899,15 @@ function pintarExperts(exps, isHoje, raiz, geral) {
   lista.appendChild(frag);
   cascata(lista, (geral ? 'g' : 'c') + ':cards');
 
+  var def = METRICAS_ORDEM[estado.ordenar.metrica] || METRICAS_ORDEM.investimento;
+  var ordemTxt = def.rotulo + ' ' + (estado.ordenar.dir === 'asc' ? 'crescente' : 'decrescente') + ' primeiro';
   var cab = lista.previousElementSibling;
   if (cab) {
     var h = $('.eyebrow', cab);
     if (h) h.textContent = geral
-      ? 'Por entidade · ' + exps.length + ' na operação · maior investimento primeiro'
+      ? 'Por entidade · ' + exps.length + ' na operação · ' + ordemTxt
       : 'Por expert · ' + exps.length + (exps.length === 1 ? ' ativo' : ' ativos') +
-        ' · maior investimento primeiro';
+        ' · ' + ordemTxt;
   }
   var badge = $('.tab__badge', raiz);
   if (badge) badge.textContent = String(exps.length);
@@ -5274,6 +5343,38 @@ function sincronizarCustom() {
   elForm.classList.toggle('is-custom', presetAtual() === 'custom');
   if (presetAtual() !== 'custom') mostrarMsg(null);
 }
+
+/* ── 8b. ordenação dos cards (client-side, sem refetch) ───────────────── */
+var elSortMetrica = $('#sort-metrica');
+function dirAtual() {
+  var m = $('input[name="sortdir"]:checked');
+  return m ? m.value : 'desc';
+}
+function restaurarOrdenacao() {
+  var salvo = null;
+  try { salvo = JSON.parse(localStorage.getItem(LS_KEY_ORD) || 'null'); } catch (e) {}
+  if (salvo && METRICAS_ORDEM[salvo.metrica]) estado.ordenar.metrica = salvo.metrica;
+  if (salvo && (salvo.dir === 'asc' || salvo.dir === 'desc')) estado.ordenar.dir = salvo.dir;
+  elSortMetrica.value = estado.ordenar.metrica;
+  var alvoDir = $('input[name="sortdir"][value="' + estado.ordenar.dir + '"]');
+  if (alvoDir) alvoDir.checked = true;
+}
+function aplicarOrdenacao() {
+  estado.ordenar.metrica = elSortMetrica.value;
+  estado.ordenar.dir = dirAtual();
+  try { localStorage.setItem(LS_KEY_ORD, JSON.stringify(estado.ordenar)); } catch (e) {}
+  /* reordena com o dado já em tela — trocar a métrica não busca de novo */
+  if (!estado.dados) return;
+  pintarExperts(estado.dados.experts, estado.ehHoje, RAIZ_CL, false);
+  if (estado.dados.geral && estado.dados.geral.experts) {
+    pintarExperts(estado.dados.geral.experts, estado.ehHoje, RAIZ_GERAL, true);
+  }
+  if (estado.painel.aberto) pintarPainel();
+}
+elSortMetrica.addEventListener('change', aplicarOrdenacao);
+$$('input[name="sortdir"]').forEach(function (inp) {
+  inp.addEventListener('change', aplicarOrdenacao);
+});
 
 /* ── 9. ciclo: fetch, refresh e retry ───────────────────────────────────── */
 function agendar(ms) {
@@ -6066,6 +6167,7 @@ guardarMoldes();
 ligarAbas();
 ligarPainel();
 restaurarEscolha();
+restaurarOrdenacao();
 pintarNotaPeriodo();
 
 $$('input[name="range"]').forEach(function (inp) {
