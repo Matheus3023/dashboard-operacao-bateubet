@@ -606,10 +606,7 @@ h1,h2,h3,h4,p{margin:0}
 
 .totals{
   display:grid;gap:var(--gap);
-  /* auto-fit em vez de repeat(6,...) fixo: 9 tiles agora (eram 6), essa
-     largura mínima deixa a grade quebrar linha sozinha sem tile espremido
-     nem buraco vazio na segunda linha. */
-  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  grid-template-columns:repeat(6,minmax(0,1fr));
 }
 .tcard{
   position:relative;
@@ -1117,7 +1114,7 @@ h1,h2,h3,h4,p{margin:0}
 }
 .cmp__row{
   display:grid;align-items:center;gap:14px;
-  grid-template-columns:132px 96px minmax(120px,1fr) 46px 104px 112px 66px;
+  grid-template-columns:132px 96px minmax(120px,1fr) 46px 104px 112px 104px 104px 104px 66px;
   padding:11px 16px;
   border-top:1px solid var(--line-soft);
 }
@@ -1160,7 +1157,9 @@ h1,h2,h3,h4,p{margin:0}
 }
 @media (max-width:1179px){
   .cmp__row{grid-template-columns:120px 92px minmax(90px,1fr) 40px 100px 62px;gap:11px}
-  .cmp__dep{display:none}
+  /* tela média: só cabe o essencial pra decidir ação. Depósito, valor FTD,
+     volume e net PL somem primeiro -- quem quer o detalhe abre o card. */
+  .cmp__dep,.cmp__valorftd,.cmp__volume,.cmp__netpl{display:none}
 }
 @media (max-width:759px){
   /* sobram nome, investido, custo por FTD e retorno: o que decide ação */
@@ -2180,24 +2179,6 @@ body.pnl-aberto{overflow:hidden}
         <span class="tcard__sub tcard__sub--gold" data-derived="deposito / investimento_total">21,8× o investido</span>
       </div>
 
-      <div class="tcard">
-        <span class="tcard__lbl">Valor FTD</span>
-        <span class="tcard__val" data-field="totais.valor_ftd">R$ 4.765,00</span>
-        <span class="tcard__sub" data-derived="deposito / valor_ftd">retenção 12,6×</span>
-      </div>
-
-      <div class="tcard">
-        <span class="tcard__lbl">Volume</span>
-        <span class="tcard__val" data-field="totais.volume">R$ 25.871,37</span>
-        <span class="tcard__sub" data-derived="volume / deposito">giro 4,3×</span>
-      </div>
-
-      <div class="tcard">
-        <span class="tcard__lbl">Net PL</span>
-        <span class="tcard__val" data-field="totais.net_pl">R$ -1.520,22</span>
-        <span class="tcard__sub" data-derived="net_pl / volume * 100">margem -5,9%</span>
-      </div>
-
     </section>
 
     <!-- Participação de cada tipo de tráfego no investimento do dia.
@@ -2230,6 +2211,9 @@ body.pnl-aberto{overflow:hidden}
         <span class="cmp__ftd">FTD</span>
         <span>Custo por FTD (CPA)</span>
         <span class="cmp__dep">Depósito</span>
+        <span class="cmp__valorftd">Valor FTD</span>
+        <span class="cmp__volume">Volume</span>
+        <span class="cmp__netpl">Net PL</span>
         <span style="text-align:right">Retorno</span>
       </div>
 
@@ -2245,6 +2229,9 @@ body.pnl-aberto{overflow:hidden}
           <span class="cmp__num cmp__ftd">6</span>
           <span><span class="chip chip--sm chip--good">R$ 117,68</span></span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 10.585,51</span>
+          <span class="cmp__num cmp__num--soft cmp__valorftd">R$ 909,00</span>
+          <span class="cmp__num cmp__num--soft cmp__volume">R$ 19.647,35</span>
+          <span class="cmp__num cmp__num--soft cmp__netpl">R$ 1.570,62</span>
           <span class="cmp__mult">15,0×</span>
         </div>
 
@@ -3442,6 +3429,9 @@ body.pnl-aberto{overflow:hidden}
         <span class="cmp__ftd">FTD</span>
         <span>Custo por FTD (CPA)</span>
         <span class="cmp__dep">Depósito</span>
+        <span class="cmp__valorftd">Valor FTD</span>
+        <span class="cmp__volume">Volume</span>
+        <span class="cmp__netpl">Net PL</span>
         <span style="text-align:right">Retorno</span>
       </div>
 
@@ -5192,25 +5182,6 @@ function pintarTotais(d, isHoje, raiz, rodape) {
   escreve(elDep, brl(t.deposito));
   escreve(sub(elDep), inv > 0 ? vezes((t.deposito || 0) / inv) + ' o investido' : 'sem investimento');
 
-  /* três tiles novos, mesmo trio de qualidade de receita do painel de
-     análise (retenção/giro/margem), só que somado pra operação inteira em
-     vez de por expert. razao() já devolve null com denominador zero -- sem
-     "Infinity" nem divisão por zero aparecendo na tela. */
-  var elVFtd = campo(raiz, 'totais.valor_ftd');
-  escreve(elVFtd, brl(t.valor_ftd));
-  var retencaoTot = razao(t.deposito, t.valor_ftd);
-  escreve(sub(elVFtd), retencaoTot != null ? 'retenção ' + vezes(retencaoTot) : 'sem FTD ainda');
-
-  var elVol = campo(raiz, 'totais.volume');
-  escreve(elVol, brl(t.volume));
-  var giroTot = razao(t.volume, t.deposito);
-  escreve(sub(elVol), giroTot != null ? 'giro ' + vezes(giroTot) : 'sem depósito ainda');
-
-  var elNetPl = campo(raiz, 'totais.net_pl');
-  escreve(elNetPl, brl(t.net_pl));
-  var margemTot = razao(t.net_pl, t.volume);
-  escreve(sub(elNetPl), margemTot != null ? 'margem ' + pct(margemTot * 100) : 'sem volume ainda');
-
   /* a média citada no rodapé é dado, não copy: acompanha o período na tela.
      Sai do escopo Costa e Lobão (rodape === true), que é o recorte que o
      rodapé descreve. O escopo Geral não reescreve o rodapé. */
@@ -5281,6 +5252,9 @@ function pintarComparativo(d, isHoje, raiz, geral) {
     chip.textContent = cc.txt;
 
     escreve($('.cmp__dep', linha), brl(tap.deposito));
+    escreve($('.cmp__valorftd', linha), brl(tap.valor_ftd));
+    escreve($('.cmp__volume', linha), brl(tap.volume));
+    escreve($('.cmp__netpl', linha), brl(tap.net_pl));
 
     var m = $('.cmp__mult', linha);
     m.classList.remove('cmp__mult--gold');
