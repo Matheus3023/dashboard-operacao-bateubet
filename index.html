@@ -1190,6 +1190,7 @@ h1,h2,h3,h4,p{margin:0}
 .rangebar__note--pausado{
   border-color:var(--gold-line);background:var(--gold-soft);color:var(--gold);
 }
+.rangebar__applied{color:var(--txt-2);font-family:var(--mono)}
 
 /* veredito sem FTD: o design pediu .verdict--na e não tinha regra */
 .verdict--na::before{background:var(--neutro)}
@@ -1926,6 +1927,7 @@ body.pnl-aberto{overflow:hidden}
            em Hoje, "período fechado, atualização pausada" no histórico.
            A checagem de período divergente segue de pé no #periodo-banner. -->
       <span class="rangebar__note" id="range-note" hidden></span>
+      <span class="rangebar__note rangebar__applied" id="range-applied" hidden></span>
       <span class="range-msg" id="range-msg" hidden role="alert"></span>
     </form>
   </header>
@@ -4332,6 +4334,21 @@ function rotuloPeriodo(p) {
   return dataCurta(p.de) + ' a ' + dataBR(p.ate);
 }
 
+/* rótulo explícito de "o que está sendo mostrado agora", fixado no filtro
+   (não só lá embaixo no eyebrow dos totais) — diz o intervalo completo em
+   datas e se hoje (parcial) entra na conta ou não, pra não ter dúvida se o
+   corte é "de ontem pra trás" ou inclui o dia corrente. */
+function rotuloAplicado(preset, p) {
+  if (!p || !p.de) return '';
+  var hoje = hojeSP();
+  if (p.de === p.ate) {
+    return 'Mostrando ' + dataBR(p.de) + (p.de === hoje ? ' (hoje, em andamento)' : '');
+  }
+  var incluiHoje = p.ate === hoje;
+  return 'Mostrando ' + dataBR(p.de) + ' a ' + dataBR(p.ate) +
+    (incluiHoje ? ' (inclui hoje, ainda em andamento)' : ' (período fechado)');
+}
+
 /* ── 3. moldes clonados do HTML estático ────────────────────────────────── */
 var MOLDE = {};
 function guardarMoldes() {
@@ -5346,6 +5363,9 @@ function carregar(opts) {
       conferirPeriodo(r, d.periodo);
       pintarStatus('ok');
       pintarNotaPeriodo();
+      var elAplicado = $('#range-applied');
+      elAplicado.textContent = rotuloAplicado(preset, d.periodo);
+      elAplicado.hidden = false;
       reiniciarCiclo();
 
       /* acende só o que trocou de valor nesta leitura */
@@ -6051,14 +6071,19 @@ pintarNotaPeriodo();
 $$('input[name="range"]').forEach(function (inp) {
   inp.addEventListener('change', function () {
     sincronizarCustom();
-    if (presetAtual() === 'custom') return;          /* espera o "Aplicar" */
+    if (presetAtual() === 'custom') return;          /* espera escolher as datas */
     carregar();
   });
 });
 $('#range-apply').addEventListener('click', function () { carregar(); });
 elForm.addEventListener('submit', function (ev) { ev.preventDefault(); carregar(); });
 [elDe, elAte].forEach(function (el) {
-  el.addEventListener('change', function () { mostrarMsg(null); });
+  el.addEventListener('change', function () {
+    mostrarMsg(null);
+    /* escolher a data já dispara a busca — não espera clique em "Aplicar".
+       O botão continua existindo como reforço visual/acessível. */
+    if (presetAtual() === 'custom') carregar();
+  });
 });
 
 /* aba escondida não precisa gastar n8n; ao voltar, atualiza se estiver velho */
