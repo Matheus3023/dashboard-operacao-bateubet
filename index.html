@@ -5209,7 +5209,7 @@ function conferirPeriodo(pedido, recebido) {
 }
 
 /* ── 8. filtro de período ───────────────────────────────────────────────── */
-var elDe = $('#range-de'), elAte = $('#range-ate'), elForm = $('#range-filter'), elMsg = $('#range-msg');
+var elDe = $('#range-de'), elAte = $('#range-ate'), elForm = $('#range-filter'), elMsg = $('#range-msg'), elApply = $('#range-apply');
 
 function presetAtual() {
   var m = $('input[name="range"]:checked');
@@ -5285,6 +5285,12 @@ function carregar(opts) {
   estado.carregando = true;
   ROOT.setAttribute('data-state', estado.jaCarregou ? 'atualizando' : 'carregando');
   $('#boot').hidden = estado.jaCarregou;
+  /* período custom pode levar 30-40s no n8n: sem isto o botão parece travado
+     e a pessoa clica de novo ou desiste achando que quebrou. */
+  if (preset === 'custom') {
+    elApply.disabled = true;
+    elApply.textContent = 'Carregando…';
+  }
 
   fetch(url, { cache: 'no-store', headers: { accept: 'application/json' } })
     .then(function (resp) {
@@ -5357,6 +5363,7 @@ function carregar(opts) {
       $('#erro-banner').hidden = true;
       $('#boot').hidden = true;
       ROOT.setAttribute('data-state', 'pronto');
+      elApply.disabled = false; elApply.textContent = 'Aplicar';
 
       /* só o dia corrente se atualiza sozinho */
       agendar(estado.isHoje ? REFRESH_MS : null);
@@ -5366,6 +5373,7 @@ function carregar(opts) {
       estado.carregando = false;
       $('#boot').hidden = true;
       ROOT.setAttribute('data-state', estado.jaCarregou ? 'pronto' : 'carregando');
+      elApply.disabled = false; elApply.textContent = 'Aplicar';
 
       var banner = $('#erro-banner');
       if (estado.jaCarregou) {
