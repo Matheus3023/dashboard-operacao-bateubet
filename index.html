@@ -1649,7 +1649,12 @@ h1,h2,h3,h4,p{margin:0}
 .pnl[hidden]{display:none}
 body.pnl-aberto{overflow:hidden}
 .pnl__fundo{
-  position:absolute;inset:0;
+  /* NÃO cobre o topbar (--topbar-h, medido em JS) -- filtro de período, ordenação
+     e busca continuam clicáveis com o painel aberto. Antes o fundo cobria a tela
+     inteira (inset:0) e engolia o clique nesses controles: a pessoa clicava em
+     "7 dias" achando que ia trocar o período, e só fechava o painel sem avisar
+     nada, porque data-pnl-fechar tá aqui. */
+  position:absolute;left:0;right:0;bottom:0;top:var(--topbar-h,0px);
   background:rgba(18,0,16,.68);
   -webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);
 }
@@ -6192,8 +6197,19 @@ function pintarTendencia() {
 
 /* ── abrir, fechar, foco ────────────────────────────────────────────────── */
 
+/* altura real do topbar -> vira --topbar-h, o fundo do painel para de cobrir
+   essa faixa (ver comentário no CSS de .pnl__fundo). Recalcula toda vez que o
+   painel abre porque o topbar muda de altura (mobile quebra linha, banner de
+   período divergente aparece/some) -- medir de novo é mais barato e mais
+   correto do que tentar prever cada caso. */
+function medirTopbar() {
+  var top = $('.topbar');
+  if (top) document.documentElement.style.setProperty('--topbar-h', top.offsetHeight + 'px');
+}
+
 function abrirPainel(nome, esc, origem) {
   estado.painel = { aberto: true, nome: nome, escopo: esc, origem: origem || null };
+  medirTopbar();
   PNL.raiz.hidden = false;
   document.body.classList.add('pnl-aberto');
   var corpo = $('.pnl__body', PNL.raiz);
@@ -6337,6 +6353,12 @@ elForm.addEventListener('submit', function (ev) { ev.preventDefault(); carregar(
        O botão continua existindo como reforço visual/acessível. */
     if (presetAtual() === 'custom') carregar();
   });
+});
+
+/* topbar pode mudar de altura ao girar o celular / redimensionar com o painel
+   aberto -- remedir evita reabrir o buraco que deixava o filtro clicável. */
+window.addEventListener('resize', function () {
+  if (estado.painel.aberto) medirTopbar();
 });
 
 /* aba escondida não precisa gastar n8n; ao voltar, atualiza se estiver velho */
