@@ -529,6 +529,16 @@ h1,h2,h3,h4,p{margin:0}
   font-family:var(--sans);font-size:.75rem;font-weight:560;cursor:pointer;
 }
 .sort-select:focus-visible{outline:2px solid var(--acao);outline-offset:1px}
+.busca__lbl{margin-left:6px}
+.busca-input{
+  min-height:32px;padding:0 11px;border-radius:7px;min-width:160px;
+  background:var(--surface-sunk);border:1px solid var(--line);color:var(--txt);
+  font-family:var(--sans);font-size:.75rem;
+}
+.busca-input::placeholder{color:var(--txt-3)}
+.busca-input:focus-visible{outline:2px solid var(--acao);outline-offset:1px}
+/* card fora da busca: sai do fluxo, não só opacidade -- senão o grid deixa buraco */
+.expert[data-busca-oculto]{display:none}
 .range-apply{
   min-height:32px;padding:0 15px;border-radius:7px;cursor:pointer;
   border:1px solid var(--acao-line);background:var(--acao-soft);color:#FF9AC4;
@@ -876,6 +886,32 @@ h1,h2,h3,h4,p{margin:0}
 .crtv__st .val--na{font-size:.75rem}
 /* maior CTR do expert: o terceiro e último uso do dourado no painel */
 .crtv--top{border-color:var(--gold-line);background:linear-gradient(180deg,var(--gold-soft),transparent 60%),var(--surface)}
+
+/* reproduzir o criativo: thumb vira link pro Ads Manager, com play visível
+   só quando sabemos que é vídeo (video_plays veio na resposta). */
+.crtv__play{
+  position:absolute;inset:0;display:grid;place-items:center;
+  background:rgba(0,0,0,0);transition:background .14s ease;
+}
+.crtv__play:hover,.crtv__play:focus-visible{background:rgba(0,0,0,.35)}
+.crtv__play svg{
+  width:18px;height:18px;color:#fff;opacity:0;transition:opacity .14s ease;
+  filter:drop-shadow(0 1px 3px rgba(0,0,0,.6));
+}
+.crtv__play:hover svg,.crtv__play:focus-visible svg{opacity:1}
+.crtv__play:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+
+/* hook + retenção de vídeo: barra de 5 segmentos (25/50/75/95/100% do vídeo),
+   altura de cada um = % de quem começou a assistir que chegou até ali. Queda
+   visual = queda de retenção, sem precisar ler número. */
+.crtv__video{margin-top:7px;padding-top:7px;border-top:1px solid var(--line-soft)}
+.crtv__hook{font-size:.625rem;color:var(--txt-2);margin-bottom:5px}
+.crtv__retencao{display:flex;align-items:flex-end;gap:2px;height:20px}
+.crtv__ret-seg{
+  flex:1;height:calc(var(--v) * 1%);min-height:2px;border-radius:2px 2px 0 0;
+  background:linear-gradient(180deg,var(--acao),var(--acao-2));
+  align-self:flex-end;
+}
 .crtv--top .crtv__ctr b{color:var(--gold)}
 
 /* estado vazio: linha única, sem interação, sem cara de erro */
@@ -1962,6 +1998,9 @@ body.pnl-aberto{overflow:hidden}
         <input type="radio" name="sortdir" id="sd-asc" value="asc">
         <label for="sd-asc">Crescente ↑</label>
       </div>
+      <span class="rangebar__lbl busca__lbl">Buscar</span>
+      <input type="search" id="busca-expert" class="busca-input"
+             placeholder="Nome do expert…" aria-label="Buscar expert por nome" autocomplete="off">
     </div>
   </header>
 
@@ -4544,6 +4583,17 @@ function cascata(caixa, chave) {
 
 /* ── 6. renderização ────────────────────────────────────────────────────── */
 
+/* link pra reproduzir o criativo de verdade (imagem/vídeo) direto no
+   Gerenciador de Anúncios da Meta -- não temos a URL do vídeo em si (exigiria
+   uma chamada extra por criativo), mas o Ads Manager já reproduz o anúncio
+   exatamente como roda, com o mesmo login que a equipe já usa. */
+function linkAdsManager(c) {
+  var conta = c.ad_account_id || c.conta_id;
+  if (!conta || !c.id) return null;
+  return 'https://business.facebook.com/adsmanager/manage/ads?act=' + encodeURIComponent(conta) +
+    '&selected_ad_ids=' + encodeURIComponent(c.id);
+}
+
 function pintarCriativo(molde, c, dono) {
   var el = molde.cloneNode(true);
   if (c.id) el.setAttribute('data-crtv-id', c.id);
@@ -4562,6 +4612,24 @@ function pintarCriativo(molde, c, dono) {
       /* a URL do Facebook expira: some a imagem em vez de virar ícone quebrado */
       img.onerror = function () { if (img.parentNode) img.parentNode.removeChild(img); };
       thumb.insertBefore(img, thumb.firstChild);
+    }
+    var ehVideo = ehNum(c.video_plays);
+    var link = linkAdsManager(c);
+    if (link) {
+      /* thumb vira link pro anúncio de verdade -- reproduz no Ads Manager,
+         com o play visível só quando sabemos que é vídeo (video_plays veio). */
+      var a = document.createElement('a');
+      a.className = 'crtv__play';
+      a.href = link;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.title = ehVideo ? 'Ver anúncio (vídeo) no Gerenciador de Anúncios' : 'Ver anúncio no Gerenciador de Anúncios';
+      a.setAttribute('aria-label', a.title);
+      if (ehVideo) {
+        a.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+      }
+      while (thumb.firstChild) a.appendChild(thumb.firstChild);
+      thumb.appendChild(a);
     }
   }
 
@@ -4582,6 +4650,33 @@ function pintarCriativo(molde, c, dono) {
   /* ordem do molde: CTR, cliques, gasto */
   escreve(stats[1], inteiro(c.clicks));
   escreve(stats[2], brl(c.spend));
+
+  /* hook + retenção: só existe em vídeo (video_plays != null). Hook = % de
+     quem viu o anúncio que parou pra assistir. Retenção = de quem assistiu,
+     % que chegou em cada marco do vídeo -- a curva clássica de queda. */
+  if (ehNum(c.hook_rate) || (c.retencao && ehNum(c.retencao.p100))) {
+    var wrap = document.createElement('div');
+    wrap.className = 'crtv__video';
+    var hookTxt = ehNum(c.hook_rate) ? 'Hook ' + Math.round(c.hook_rate) + '%' : 'Hook n/d';
+    var linha1 = document.createElement('div');
+    linha1.className = 'crtv__hook';
+    linha1.textContent = hookTxt + ' · pararam pra assistir';
+    wrap.appendChild(linha1);
+    if (c.retencao) {
+      var barra = document.createElement('div');
+      barra.className = 'crtv__retencao';
+      ['p25', 'p50', 'p75', 'p95', 'p100'].forEach(function (k) {
+        var v = c.retencao[k];
+        var seg = document.createElement('span');
+        seg.className = 'crtv__ret-seg';
+        seg.style.setProperty('--v', ehNum(v) ? v : 0);
+        seg.title = k.replace('p', '') + '% do vídeo: ' + (ehNum(v) ? v + '% chegou lá' : 'sem dado');
+        barra.appendChild(seg);
+      });
+      wrap.appendChild(barra);
+    }
+    el.appendChild(wrap);
+  }
   return el;
 }
 
@@ -4911,6 +5006,7 @@ function pintarExperts(exps, isHoje, raiz, geral) {
   }
   var badge = $('.tab__badge', raiz);
   if (badge) badge.textContent = String(exps.length);
+  if (typeof aplicarBusca === 'function') aplicarBusca();
 }
 
 function pintarVeredito(d, isHoje, raiz) {
@@ -5376,6 +5472,24 @@ $$('input[name="sortdir"]').forEach(function (inp) {
   inp.addEventListener('change', aplicarOrdenacao);
 });
 
+/* ── 8c. busca por nome de expert (client-side, sem refetch) ─────────────
+   Esconde os cards que não batem -- display:none, não opacidade, senão o
+   grid deixa buraco no lugar de quem sumiu. Roda de novo em todo refresh
+   (a lista é reconstruída do zero a cada pintarExperts). */
+var elBusca = $('#busca-expert');
+function aplicarBusca() {
+  var termo = elBusca.value.trim().toUpperCase();
+  [RAIZ_CL, RAIZ_GERAL].forEach(function (raiz) {
+    $$('.expert', raiz).forEach(function (art) {
+      var nome = (art.getAttribute('data-expert') || '').toUpperCase();
+      var bate = !termo || nome.indexOf(termo) !== -1;
+      if (bate) art.removeAttribute('data-busca-oculto');
+      else art.setAttribute('data-busca-oculto', '');
+    });
+  });
+}
+elBusca.addEventListener('input', aplicarBusca);
+
 /* ── 9. ciclo: fetch, refresh e retry ───────────────────────────────────── */
 function agendar(ms) {
   clearTimeout(estado.timer);
@@ -5706,7 +5820,15 @@ function textoSubResumo(e) {
   return partes.join(' · ') + '.';
 }
 
-function recomendar(cpa, kpis, tend) {
+/* valor explícito do degrau de orçamento -- "suba 20-30%" sozinho não diz
+   quanto dinheiro é isso. De R$X pra R$Y é a mesma decisão, só que legível. */
+function sugestaoOrcamento(inv, pMin, pMax) {
+  if (!ehNum(inv) || inv <= 0) return '';
+  return ' De ' + brl(inv) + ' pra algo entre ' + brl(inv * (1 + pMin / 100)) +
+    ' e ' + brl(inv * (1 + pMax / 100)) + '.';
+}
+
+function recomendar(cpa, kpis, tend, inv) {
   var excecao = excecaoEscala(cpa, kpis, tend);
 
   if (cpa == null) {
@@ -5716,9 +5838,12 @@ function recomendar(cpa, kpis, tend) {
   }
 
   if (cpa <= FAIXA_BOA) {
+    var kpisTxt = resumoKpis(kpis);
     return { tom: 'good', icone: 'sobe', acao: 'Aumentar orçamento',
-      txt: 'O CPA está dentro da faixa boa, então cada real a mais tende a comprar FTD no mesmo preço. ' +
-           'Suba em degrau (20% a 30%) e confira no dia seguinte se o CPA aguentou o volume novo.' };
+      txt: 'O CPA está dentro da faixa boa (teto ' + brl(FAIXA_BOA) + '), então cada real a mais tende a comprar FTD no mesmo preço. ' +
+           'Suba em degrau (20% a 30%) e confira no dia seguinte se o CPA aguentou o volume novo.' +
+           sugestaoOrcamento(inv, 20, 30) +
+           (kpisTxt ? ' ' + kpisTxt : '') };
   }
 
   if (cpa < FAIXA_ALTA) {
@@ -5743,7 +5868,8 @@ function recomendar(cpa, kpis, tend) {
   if (tend.cpaVar.dir === 'desceu') {
     return { tom: 'good', icone: 'sobe', acao: 'Aumentar orçamento',
       txt: 'CPA ainda alto, mas em queda de ' + pct(Math.abs(tend.cpaVar.pct)) +
-           ' contra o último dia fechado. A curva está indo pro lugar certo: aumente em degrau e confirme amanhã.' };
+           ' contra o último dia fechado. A curva está indo pro lugar certo: aumente em degrau e confirme amanhã.' +
+           sugestaoOrcamento(inv, 15, 25) };
   }
   if (tend.cpaVar.dir === 'estavel') {
     return { tom: 'warn', icone: 'espera', acao: 'Manter e observar',
@@ -5753,7 +5879,8 @@ function recomendar(cpa, kpis, tend) {
   return { tom: 'bad', icone: 'desce', acao: 'Reduzir tráfego',
     txt: 'CPA alto e subindo ' + pct(tend.cpaVar.pct) + ' contra o último dia fechado, ' +
          'sem qualidade de receita que justifique o preço. Reduza a verba dessa linha e realoque ' +
-         'pra quem está comprando FTD abaixo de ' + brl(FAIXA_BOA) + '.' };
+         'pra quem está comprando FTD abaixo de ' + brl(FAIXA_BOA) + '.' +
+         sugestaoOrcamento(inv, -30, -15) };
 }
 
 /* frase curta dos 3 KPIs, usada dentro da recomendação da faixa de atenção */
@@ -5831,7 +5958,7 @@ function pintarPainel() {
 
   pintarTendencia();
 
-  var rec = recomendar(cpa, kpis, tend);
+  var rec = recomendar(cpa, kpis, tend, e.investimento_total);
   PNL.rec.className = 'pnl-card pnl-rec pnl-rec--' + rec.tom;
   escreveVeredito(PNL.recAcao, rec.icone, rec.acao);
   PNL.recTxt.textContent = rec.txt;
