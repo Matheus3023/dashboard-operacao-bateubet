@@ -4650,6 +4650,10 @@ function pintarCriativo(molde, c, dono) {
   /* ordem do molde: CTR, cliques, gasto */
   escreve(stats[1], inteiro(c.clicks));
   escreve(stats[2], brl(c.spend));
+  /* só o valor em R$ não dizia o quê -- CTR e cliques têm rótulo do lado,
+     gasto ficava mudo. "gasto" deixa explícito que não é CPM nem outra coisa. */
+  var spendSpan = stats[2] && stats[2].parentNode;
+  if (spendSpan) spendSpan.appendChild(document.createTextNode(' gasto'));
 
   /* hook + retenção: só existe em vídeo (video_plays != null). Hook = % de
      quem viu o anúncio que parou pra assistir. Retenção = de quem assistiu,
