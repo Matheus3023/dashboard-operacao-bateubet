@@ -1645,7 +1645,12 @@ h1,h2,h3,h4,p{margin:0}
 .expert__abrir svg{width:11px;height:11px;flex:none}
 
 /* ── casca ────────────────────────────────────────────────────────────── */
-.pnl{position:fixed;inset:0;z-index:80;display:flex;justify-content:flex-end}
+/* pointer-events:none no container: mesmo com .pnl__fundo recuado pro topbar
+   não cobrir mais, o PRÓPRIO .pnl (inset:0, a caixa toda) continuava capturando
+   o clique porque um <div> sem pointer-events:none intercepta o próprio
+   retângulo inteiro, esteja pintado ali ou não. .pnl__fundo e .pnl__box
+   reativam pointer-events, então continuam clicáveis normalmente. */
+.pnl{position:fixed;inset:0;z-index:80;display:flex;justify-content:flex-end;pointer-events:none}
 .pnl[hidden]{display:none}
 body.pnl-aberto{overflow:hidden}
 .pnl__fundo{
@@ -1657,9 +1662,10 @@ body.pnl-aberto{overflow:hidden}
   position:absolute;left:0;right:0;bottom:0;top:var(--topbar-h,0px);
   background:rgba(18,0,16,.68);
   -webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);
+  pointer-events:auto;
 }
 .pnl__box{
-  position:relative;z-index:1;
+  position:relative;z-index:1;pointer-events:auto;
   display:flex;flex-direction:column;
   width:min(520px,100%);height:100%;
   background:var(--surface);
