@@ -1994,7 +1994,7 @@ body.pnl-aberto{overflow:hidden}
       <span class="rangebar__lbl">Ordenar por</span>
       <select class="sort-select" id="sort-metrica" aria-label="Métrica de ordenação">
         <option value="investimento">Investimento</option>
-        <option value="custo_ftd">Custo por FTD</option>
+        <option value="custo_ftd">Custo por FTD (CPA)</option>
         <option value="ftd">FTD</option>
         <option value="cadastros">Cadastros</option>
         <option value="conversao">Conversão cadastro→FTD</option>
@@ -2112,13 +2112,13 @@ body.pnl-aberto{overflow:hidden}
       </div>
 
       <div class="sinal sinal--good">
-        <span class="sinal__lbl">Melhor custo por FTD</span>
+        <span class="sinal__lbl">Melhor custo por FTD (CPA)</span>
         <span class="sinal__who" data-derived="menor tap.custo_por_ftd não nulo">QZL</span>
         <span class="sinal__val">R$ 84,41 · 3 FTD</span>
       </div>
 
       <div class="sinal sinal--bad">
-        <span class="sinal__lbl">Pior custo por FTD</span>
+        <span class="sinal__lbl">Pior custo por FTD (CPA)</span>
         <span class="sinal__who" data-derived="maior tap.custo_por_ftd não nulo">Charles</span>
         <span class="sinal__val">R$ 498,31 · 1 FTD</span>
       </div>
@@ -2207,7 +2207,7 @@ body.pnl-aberto{overflow:hidden}
         <span>Investido</span>
         <span class="cmp__bar-cell">Participação na verba</span>
         <span class="cmp__ftd">FTD</span>
-        <span>Custo por FTD</span>
+        <span>Custo por FTD (CPA)</span>
         <span class="cmp__dep">Depósito</span>
         <span style="text-align:right">Retorno</span>
       </div>
@@ -2447,7 +2447,7 @@ body.pnl-aberto{overflow:hidden}
               <span class="hm__val" data-field="investimento_total">R$ 706,06</span>
             </div>
             <div class="hm">
-              <span class="hm__lbl">Custo por FTD</span>
+              <span class="hm__lbl">Custo por FTD (CPA)</span>
               <span class="chip chip--good" data-field="tap.custo_por_ftd">R$ 117,68</span>
             </div>
           </div>
@@ -2482,7 +2482,7 @@ body.pnl-aberto{overflow:hidden}
               <div class="m"><span class="m__lbl">Cadastros</span><span class="m__val" data-field="tap.cadastros">13</span></div>
               <div class="m"><span class="m__lbl">FTD</span><span class="m__val" data-field="tap.ftd">6</span></div>
               <div class="m"><span class="m__lbl">Conv. cad → FTD</span><span class="m__val" data-field="tap.conversao_cadastro_ftd">46,2%</span></div>
-              <div class="m"><span class="m__lbl">Custo por FTD</span><span class="m__val" data-field="tap.custo_por_ftd">R$ 117,68</span></div>
+              <div class="m"><span class="m__lbl">Custo por FTD (CPA)</span><span class="m__val" data-field="tap.custo_por_ftd">R$ 117,68</span></div>
             </div>
             <div class="tap-fin">
               <div class="m"><span class="m__lbl">Valor FTD</span><span class="m__val" data-field="tap.valor_ftd">R$ 909,00</span></div>
@@ -3286,7 +3286,7 @@ body.pnl-aberto{overflow:hidden}
 
     <nav class="tabs" aria-label="Seções do painel, escopo geral">
       <label for="v-geral">Visão geral</label>
-      <label for="v-experts">Por entidade <span class="tab__badge" data-derived="geral.experts.length">24</span></label>
+      <label for="v-experts">Por expert <span class="tab__badge" data-derived="geral.experts.length">24</span></label>
     </nav>
 
     <!-- ══════════════════ GERAL · ABA 1 · VISÃO GERAL ══════════════════ -->
@@ -3330,13 +3330,13 @@ body.pnl-aberto{overflow:hidden}
       </div>
 
       <div class="sinal sinal--good">
-        <span class="sinal__lbl">Melhor custo por FTD</span>
+        <span class="sinal__lbl">Melhor custo por FTD (CPA)</span>
         <span class="sinal__who" data-derived="menor custo_por_ftd entre quem tem verba">QZL</span>
         <span class="sinal__val">R$ 84,41 · 3 FTD</span>
       </div>
 
       <div class="sinal sinal--bad">
-        <span class="sinal__lbl">Pior custo por FTD</span>
+        <span class="sinal__lbl">Pior custo por FTD (CPA)</span>
         <span class="sinal__who" data-derived="maior custo_por_ftd entre quem tem verba">Charles</span>
         <span class="sinal__val">R$ 498,31 · 1 FTD</span>
       </div>
@@ -3419,7 +3419,7 @@ body.pnl-aberto{overflow:hidden}
         <span>Investido</span>
         <span class="cmp__bar-cell">Participação na verba</span>
         <span class="cmp__ftd">FTD</span>
-        <span>Custo por FTD</span>
+        <span>Custo por FTD (CPA)</span>
         <span class="cmp__dep">Depósito</span>
         <span style="text-align:right">Retorno</span>
       </div>
@@ -3568,7 +3568,7 @@ body.pnl-aberto{overflow:hidden}
     <!-- ══════════════════ GERAL · ABA 2 · POR ENTIDADE ══════════════════ -->
     <div class="view view--experts">
 
-    <div class="section-head"><h2 class="eyebrow">Por entidade · 24 na operação · maior investimento primeiro</h2></div>
+    <div class="section-head"><h2 class="eyebrow">Por expert · 24 na operação · maior investimento primeiro</h2></div>
 
     <section class="experts" id="geral-list" data-list="experts" aria-label="Desempenho por entidade">
 
@@ -4057,7 +4057,7 @@ body.pnl-aberto{overflow:hidden}
         entre grupo e tráfego pro perfil.
       </p>
       <p>
-        <b>Custo por FTD</b> colorido pela faixa oficial: verde até R$ 300, âmbar entre
+        <b>Custo por FTD (CPA)</b> colorido pela faixa oficial: verde até R$ 300, âmbar entre
         R$ 300 e R$ 350, vermelho de R$ 350 pra cima.
         <span data-derived="totais.investimento_total / totais.ftd" id="foot-media">Média da operação hoje: R$ 183,28.</span>
       </p>
@@ -4130,7 +4130,7 @@ body.pnl-aberto{overflow:hidden}
           <span class="hm__val" id="pnl-ftd">0</span>
         </div>
         <div class="hm">
-          <span class="hm__lbl">Custo por FTD</span>
+          <span class="hm__lbl">Custo por FTD (CPA)</span>
           <span class="chip chip--na" id="pnl-chip">Aguardando</span>
         </div>
       </section>
@@ -4524,7 +4524,7 @@ var estado = {
    direções, pra não bagunçar o ranking com "menor" que na verdade é ausência. */
 var METRICAS_ORDEM = {
   investimento:  { rotulo: 'Investimento',          get: function (e) { return e.investimento_total; } },
-  custo_ftd:     { rotulo: 'Custo por FTD',         get: function (e) { return e.tap && e.tap.custo_por_ftd; } },
+  custo_ftd:     { rotulo: 'Custo por FTD (CPA)',         get: function (e) { return e.tap && e.tap.custo_por_ftd; } },
   ftd:           { rotulo: 'FTD',                   get: function (e) { return e.tap && e.tap.ftd; } },
   cadastros:     { rotulo: 'Cadastros',             get: function (e) { return e.tap && e.tap.cadastros; } },
   conversao:     { rotulo: 'Conversão cadastro→FTD',get: function (e) { return e.tap && e.tap.conversao_cadastro_ftd; } },
@@ -5015,7 +5015,7 @@ function pintarExperts(exps, isHoje, raiz, geral) {
   if (cab) {
     var h = $('.eyebrow', cab);
     if (h) h.textContent = geral
-      ? 'Por entidade · ' + exps.length + ' na operação · ' + ordemTxt
+      ? 'Por expert · ' + exps.length + ' na operação · ' + ordemTxt
       : 'Por expert · ' + exps.length + (exps.length === 1 ? ' ativo' : ' ativos') +
         ' · ' + ordemTxt;
   }
@@ -5049,9 +5049,9 @@ function pintarVeredito(d, isHoje, raiz) {
   var verbaAcima = acima.reduce(function (s, e) { return s + (e.investimento_total || 0); }, 0);
   var share = inv > 0 ? verbaAcima / inv * 100 : 0;
 
-  if (cpf <= FAIXA_BOA) { box.classList.add('verdict--good'); escreveVeredito(txt, 'ok', 'Custo por FTD dentro da faixa boa'); }
-  else if (cpf < FAIXA_ALTA) { box.classList.add('verdict--warn'); escreveVeredito(txt, 'alerta', 'Custo por FTD acima do confortável'); }
-  else { box.classList.add('verdict--bad'); escreveVeredito(txt, 'alerta', 'Custo por FTD alto'); }
+  if (cpf <= FAIXA_BOA) { box.classList.add('verdict--good'); escreveVeredito(txt, 'ok', 'Custo por FTD (CPA) dentro da faixa boa'); }
+  else if (cpf < FAIXA_ALTA) { box.classList.add('verdict--warn'); escreveVeredito(txt, 'alerta', 'Custo por FTD (CPA) acima do confortável'); }
+  else { box.classList.add('verdict--bad'); escreveVeredito(txt, 'alerta', 'Custo por FTD (CPA) alto'); }
 
   var quem = (d.experts || []).length > 10 ? 'entidades' : 'experts';
   var frase = brl(cpf) + ' por FTD ' + quando + ', contra o teto de ' + brl(FAIXA_BOA) + ' da faixa boa. ';
