@@ -634,6 +634,9 @@ h1,h2,h3,h4,p{margin:0}
   display:block;margin-top:9px;
   font-size:1.5rem;font-weight:640;letter-spacing:-.02em;
   font-variant-numeric:tabular-nums;white-space:nowrap;
+  /* valor de 6+ dígitos (a operação cresceu) sem isso vazava pra fora do
+     tile -- mesma proteção que .m__val já tinha nos cards. */
+  overflow:hidden;text-overflow:clip;
 }
 .tcard--hero .tcard__val{font-size:1.875rem}
 .tcard__sub{
@@ -1130,9 +1133,15 @@ h1,h2,h3,h4,p{margin:0}
 .cmp__body .cmp__row:hover{background:rgba(255,255,255,.035)}
 .cmp__name{
   font-size:.8125rem;font-weight:640;letter-spacing:.02em;text-transform:uppercase;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
 }
-.cmp__num{font-size:.875rem;font-weight:620;font-variant-numeric:tabular-nums;letter-spacing:-.01em;white-space:nowrap}
+.cmp__num{
+  font-size:.875rem;font-weight:620;font-variant-numeric:tabular-nums;letter-spacing:-.01em;white-space:nowrap;
+  /* item de grid sem min-width:0 não deixa a coluna encolher abaixo do
+     conteúdo -- valor grande (R$ 100 mil+) vazava pra cima da coluna vizinha
+     em vez de cortar. Mesma proteção do .m__val nos cards. */
+  min-width:0;overflow:hidden;text-overflow:clip;
+}
 .cmp__num--soft{font-weight:520;color:var(--txt-2)}
 .cmp__bar{display:block;position:relative;height:7px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden}
 .cmp__bar i{
