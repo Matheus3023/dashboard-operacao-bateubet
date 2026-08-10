@@ -606,7 +606,10 @@ h1,h2,h3,h4,p{margin:0}
 
 .totals{
   display:grid;gap:var(--gap);
-  grid-template-columns:repeat(6,minmax(0,1fr));
+  /* auto-fit em vez de repeat(6,...) fixo: 9 tiles agora (eram 6), essa
+     largura mínima deixa a grade quebrar linha sozinha sem tile espremido
+     nem buraco vazio na segunda linha. */
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
 }
 .tcard{
   position:relative;
@@ -2175,6 +2178,24 @@ body.pnl-aberto{overflow:hidden}
         <span class="tcard__val" data-field="totais.deposito">R$ 60.007,01</span>
         <!-- uso 2 de 3 do dourado: retorno sobre o investido -->
         <span class="tcard__sub tcard__sub--gold" data-derived="deposito / investimento_total">21,8× o investido</span>
+      </div>
+
+      <div class="tcard">
+        <span class="tcard__lbl">Valor FTD</span>
+        <span class="tcard__val" data-field="totais.valor_ftd">R$ 4.765,00</span>
+        <span class="tcard__sub" data-derived="deposito / valor_ftd">retenção 12,6×</span>
+      </div>
+
+      <div class="tcard">
+        <span class="tcard__lbl">Volume</span>
+        <span class="tcard__val" data-field="totais.volume">R$ 25.871,37</span>
+        <span class="tcard__sub" data-derived="volume / deposito">giro 4,3×</span>
+      </div>
+
+      <div class="tcard">
+        <span class="tcard__lbl">Net PL</span>
+        <span class="tcard__val" data-field="totais.net_pl">R$ -1.520,22</span>
+        <span class="tcard__sub" data-derived="net_pl / volume * 100">margem -5,9%</span>
       </div>
 
     </section>
@@ -5170,6 +5191,25 @@ function pintarTotais(d, isHoje, raiz, rodape) {
   var elDep = campo(raiz, 'totais.deposito');
   escreve(elDep, brl(t.deposito));
   escreve(sub(elDep), inv > 0 ? vezes((t.deposito || 0) / inv) + ' o investido' : 'sem investimento');
+
+  /* três tiles novos, mesmo trio de qualidade de receita do painel de
+     análise (retenção/giro/margem), só que somado pra operação inteira em
+     vez de por expert. razao() já devolve null com denominador zero -- sem
+     "Infinity" nem divisão por zero aparecendo na tela. */
+  var elVFtd = campo(raiz, 'totais.valor_ftd');
+  escreve(elVFtd, brl(t.valor_ftd));
+  var retencaoTot = razao(t.deposito, t.valor_ftd);
+  escreve(sub(elVFtd), retencaoTot != null ? 'retenção ' + vezes(retencaoTot) : 'sem FTD ainda');
+
+  var elVol = campo(raiz, 'totais.volume');
+  escreve(elVol, brl(t.volume));
+  var giroTot = razao(t.volume, t.deposito);
+  escreve(sub(elVol), giroTot != null ? 'giro ' + vezes(giroTot) : 'sem depósito ainda');
+
+  var elNetPl = campo(raiz, 'totais.net_pl');
+  escreve(elNetPl, brl(t.net_pl));
+  var margemTot = razao(t.net_pl, t.volume);
+  escreve(sub(elNetPl), margemTot != null ? 'margem ' + pct(margemTot * 100) : 'sem volume ainda');
 
   /* a média citada no rodapé é dado, não copy: acompanha o período na tela.
      Sai do escopo Costa e Lobão (rodape === true), que é o recorte que o
