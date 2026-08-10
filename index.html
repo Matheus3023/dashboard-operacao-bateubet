@@ -2071,7 +2071,7 @@ body.pnl-aberto{overflow:hidden}
       <label for="e-geral">
         <span class="scopebar__nome">Geral</span>
         <!-- JS: geral.experts.length + soma de geral.experts[].contas.length -->
-        <span class="scopebar__sub" data-derived="geral.experts.length + contas">24 entidades · 33 contas</span>
+        <span class="scopebar__sub" data-derived="geral.experts.length + contas">24 experts · 33 contas</span>
       </label>
     </nav>
 
@@ -5358,9 +5358,9 @@ function pintarScopebar(d) {
        painel de verba vale menos que número ausente: some com a metade errada
        e volta sozinho quando a API mandar contas[] em todas. */
     var completo = ents.every(function (e) { return Array.isArray(e.contas); });
-    if (!completo) { subs[1].textContent = ents.length + ' entidades'; return; }
+    if (!completo) { subs[1].textContent = ents.length + ' experts'; return; }
     var contas = ents.reduce(function (s, e) { return s + e.contas.length; }, 0);
-    subs[1].textContent = ents.length + ' entidades · ' + contas + ' contas';
+    subs[1].textContent = ents.length + ' experts · ' + contas + ' contas';
   }
 }
 
