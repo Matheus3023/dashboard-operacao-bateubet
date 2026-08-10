@@ -4382,12 +4382,15 @@ function temCusto(e) {
   return !!(e && e.tap && ehNum(e.tap.custo_por_ftd) && e.tap.custo_por_ftd > 0 &&
             ehNum(e.investimento_total) && e.investimento_total > 0);
 }
-/* chip do cabeçalho e do comparativo, com os três estados possíveis */
+/* chip do cabeçalho e do comparativo, com os três estados possíveis.
+   "Aguardando" media pra "R$ 0,00" (cinza, não verde) -- o texto lia como
+   pílula de carregamento parada, e quem olha rápido não distingue de bug.
+   Continua tecnicamente "sem FTD ainda", só não fala mais como se travado. */
 function chipCusto(e) {
   var inv = e && e.investimento_total;
   var cpf = e && e.tap ? e.tap.custo_por_ftd : null;
   if (!ehNum(inv) || inv <= 0) return { classe: 'chip--na', txt: 'Sem verba' };
-  if (!ehNum(cpf) || cpf <= 0)  return { classe: 'chip--na', txt: 'Aguardando' };
+  if (!ehNum(cpf) || cpf <= 0)  return { classe: 'chip--na', txt: brl(0) };
   return { classe: faixaChip(cpf), txt: brl(cpf) };
 }
 
@@ -4870,8 +4873,25 @@ function pintarBloco(art, expert, canal, isHoje) {
 
   sec.classList.remove('block--off');
   var mm = (canal === 'grupo' ? MOLDE.metricasGrupo : MOLDE.metricasDireto).cloneNode(true);
-  var vals = [brl(d.valor_investido), inteiro(d.resultado), brl(d.custo_por_resultado)];
-  var nomes = ['valor_investido', 'resultado', 'custo_por_resultado'];
+
+  /* INSTITUCIONAL: o bloco Grupo aqui não é WhatsApp/Telegram de verdade --
+     é tráfego direto pra casa (site/produto). "Entradas" é o resultado bruto
+     do Meta (conversa iniciada) e não diz nada sobre o que interessa nesse
+     canal: mostra FTD/custo por FTD no lugar, puxado do funil TAP do próprio
+     expert. Só o Institucional troca -- os outros têm grupo de verdade. */
+  var ehInstitucionalGrupo = canal === 'grupo' && expert.expert_name === 'INSTITUCIONAL';
+  var vals, nomes;
+  if (ehInstitucionalGrupo) {
+    var tap = expert.tap || {};
+    vals = [brl(d.valor_investido), inteiro(tap.ftd), brl(tap.custo_por_ftd)];
+    nomes = ['valor_investido', 'ftd_no_lugar_de_entrada', 'custo_ftd_no_lugar_de_entrada'];
+    var lbls = $$('.m__lbl', mm);
+    if (lbls[1]) lbls[1].textContent = 'FTD';
+    if (lbls[2]) lbls[2].textContent = 'Custo / FTD';
+  } else {
+    vals = [brl(d.valor_investido), inteiro(d.resultado), brl(d.custo_por_resultado)];
+    nomes = ['valor_investido', 'resultado', 'custo_por_resultado'];
+  }
   $$('.m__val', mm).forEach(function (el, i) {
     el.setAttribute('data-field', canal + '.' + nomes[i]);
     escreve(el, vals[i]);
