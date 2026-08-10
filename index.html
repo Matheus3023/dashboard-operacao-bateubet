@@ -5843,6 +5843,14 @@ function recomendar(cpa, kpis, tend, inv) {
 
   if (cpa <= FAIXA_BOA) {
     var kpisTxt = resumoKpis(kpis);
+    var margemFracaBoa = ehNum(kpis.margem) && kpis.margem < META_MARGEM;
+    if (margemFracaBoa) {
+      return { tom: 'warn', icone: 'espera', acao: 'Manter e observar margem',
+        txt: 'O CPA está barato (' + brl(cpa) + ', teto da faixa boa é ' + brl(FAIXA_BOA) +
+             '), mas a margem operacional está em ' + pct(kpis.margem) + ', abaixo da meta de ' + META_MARGEM +
+             '%. FTD barato não compensa se sobra pouco depois: aumentar volume aqui multiplicaria o problema, não o lucro. ' +
+             'Segure a verba até a margem fechar acima de ' + META_MARGEM + '%, aí sim escale.' };
+    }
     return { tom: 'good', icone: 'sobe', acao: 'Aumentar orçamento',
       txt: 'O CPA está dentro da faixa boa (teto ' + brl(FAIXA_BOA) + '), então cada real a mais tende a comprar FTD no mesmo preço. ' +
            'Suba em degrau (20% a 30%) e confira no dia seguinte se o CPA aguentou o volume novo.' +
@@ -5870,9 +5878,21 @@ function recomendar(cpa, kpis, tend, inv) {
            'Dois ou três dias fechados resolvem essa dúvida, e decidir agora é decidir no escuro.' };
   }
   if (tend.cpaVar.dir === 'desceu') {
+    /* CPA caindo é bom sinal, mas não vale aumentar verba destruindo margem:
+       FTD mais barato não compensa se o real que entra não sobra depois. */
+    var margemFraca = ehNum(kpis.margem) && kpis.margem < META_MARGEM;
+    if (margemFraca) {
+      return { tom: 'warn', icone: 'espera', acao: 'Manter e observar margem',
+        txt: 'CPA em queda de ' + pct(Math.abs(tend.cpaVar.pct)) + ' contra o último dia fechado, isso é bom sinal. ' +
+             'Mas a margem operacional está em ' + pct(kpis.margem) + ', abaixo da meta de ' + META_MARGEM +
+             '%: aumentar a verba agora arrisca essa margem antes dela se firmar. ' +
+             'Segure o orçamento até a margem fechar um dia acima de ' + META_MARGEM + '%, aí sim suba em degrau.' };
+    }
     return { tom: 'good', icone: 'sobe', acao: 'Aumentar orçamento',
       txt: 'CPA ainda alto, mas em queda de ' + pct(Math.abs(tend.cpaVar.pct)) +
-           ' contra o último dia fechado. A curva está indo pro lugar certo: aumente em degrau e confirme amanhã.' +
+           ' contra o último dia fechado, com margem operacional ' +
+           (ehNum(kpis.margem) ? 'saudável (' + pct(kpis.margem) + ')' : 'ainda sem dado') +
+           '. A curva está indo pro lugar certo: aumente em degrau e confirme amanhã.' +
            sugestaoOrcamento(inv, 15, 25) };
   }
   if (tend.cpaVar.dir === 'estavel') {
