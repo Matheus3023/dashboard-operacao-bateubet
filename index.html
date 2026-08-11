@@ -720,6 +720,9 @@ h1,h2,h3,h4,p{margin:0}
 .hm{display:flex;flex-direction:column;gap:3px}
 .hm__lbl{font-family:var(--mono);font-size:.5625rem;letter-spacing:.12em;text-transform:uppercase;color:var(--txt-3)}
 .hm__val{font-size:1.0625rem;font-weight:620;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+/* entidade com dois canais: dois chips de custo no lugar de um. Enrola em
+   tela estreita em vez de espremer. */
+.hm__chips{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 
 .chip{
   display:inline-flex;align-items:center;gap:6px;
@@ -1136,8 +1139,12 @@ h1,h2,h3,h4,p{margin:0}
 .cmp{overflow-x:auto}
 .cmp__row{
   display:grid;align-items:center;gap:12px;
-  grid-template-columns:126px 92px minmax(104px,1fr) 44px 98px 62px 92px 40px 98px 100px 96px 100px 100px;
-  min-width:1316px;
+  /* Result. e Custo/result. largas de propósito: desde 11/08 elas mostram uma
+     LINHA POR CANAL (grupo e perfil contam coisas diferentes), então precisam
+     caber "1.692  CLIQUES · R$ 501,80" sem virar reticências. A tabela já
+     rolava na horizontal, o custo dos +112px é rolagem, não corte. */
+  grid-template-columns:122px 90px minmax(116px,1fr) 134px 100px 58px 84px 38px 90px 90px 86px 90px 90px;
+  min-width:1344px;
   padding:11px 16px;
   border-top:1px solid var(--line-soft);
 }
@@ -1177,6 +1184,28 @@ h1,h2,h3,h4,p{margin:0}
   display:block;margin-top:5px;
   font-size:.625rem;color:var(--txt-3);font-variant-numeric:tabular-nums;
 }
+/* ── RESULTADO POR CANAL (linha do comparativo) ───────────────────────────
+   As duas células viram pilha vertical: uma linha por canal ativo, alinhadas
+   entre si (o 1º resultado casa com o 1º chip de custo). Linha de canal único
+   -- a maioria -- fica com 1 item só e visualmente idêntica ao que era. */
+.cmp__res,.cmp__custores{
+  display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0;
+}
+/* wrap em vez de ellipsis: se "1.745 CLIQUES · R$ 517" não couber, a unidade
+   desce pra segunda linha inteira em vez de virar "CLIQUES · R$ 5…". Número
+   cortado é pior que linha alta. */
+.cmp__resline{
+  display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;
+  min-width:0;max-width:100%;
+}
+.cmp__resline b{
+  font-size:.875rem;font-weight:620;font-variant-numeric:tabular-nums;letter-spacing:-.01em;
+}
+.cmp__resu{
+  font-style:normal;font-family:var(--mono);font-size:.5rem;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--txt-3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
+}
 .chip--sm{font-size:.75rem;font-weight:600;padding:2px 8px;white-space:nowrap}
 .chip--sm.chip--na{font-size:.6875rem}
 .cmp__foot{
@@ -1190,7 +1219,7 @@ h1,h2,h3,h4,p{margin:0}
 @media (max-width:1179px){
   /* tela média: cabe o funil (resultado, cadastro, FTD e os dois custos), some
      o dinheiro da TAP -- quem quer depósito/volume/net PL abre o card. */
-  .cmp__row{grid-template-columns:118px 88px minmax(80px,1fr) 40px 94px 56px 40px 94px;gap:10px;min-width:0}
+  .cmp__row{grid-template-columns:114px 86px minmax(76px,1fr) 110px 96px 54px 38px 92px;gap:10px;min-width:0}
   .cmp__dep,.cmp__valorftd,.cmp__volume,.cmp__netpl,.cmp__custocad{display:none}
 }
 @media (max-width:759px){
@@ -2242,7 +2271,7 @@ body.pnl-aberto{overflow:hidden}
         <span>Expert</span>
         <span>Investido</span>
         <span class="cmp__bar-cell">Participação na verba</span>
-        <span class="cmp__res">Result.</span>
+        <span class="cmp__res">Result. por canal</span>
         <span>Custo/result.</span>
         <span class="cmp__cad">Cadastros</span>
         <span class="cmp__custocad">Custo/cad.</span>
@@ -2264,7 +2293,7 @@ body.pnl-aberto{overflow:hidden}
             <span class="cmp__share">25,7% da verba do dia</span>
           </span>
           <span class="cmp__num cmp__res">6</span>
-          <span><span class="chip chip--sm chip--good">R$ 117,68</span></span>
+          <span class="cmp__custores"><span class="chip chip--sm chip--good">R$ 117,68</span></span>
           <span class="cmp__num cmp__cad">0</span>
           <span class="cmp__num cmp__custocad">R$ 0,00</span>
           <span class="cmp__num cmp__ftd">0</span>
@@ -2283,7 +2312,7 @@ body.pnl-aberto{overflow:hidden}
             <span class="cmp__share">22,3% da verba do dia</span>
           </span>
           <span class="cmp__num cmp__res">2</span>
-          <span><span class="chip chip--sm chip--warn">R$ 306,40</span></span>
+          <span class="cmp__custores"><span class="chip chip--sm chip--warn">R$ 306,40</span></span>
           <span class="cmp__num cmp__cad">0</span>
           <span class="cmp__num cmp__custocad">R$ 0,00</span>
           <span class="cmp__num cmp__ftd">0</span>
@@ -2299,7 +2328,7 @@ body.pnl-aberto{overflow:hidden}
             <span class="cmp__share">18,1% da verba do dia</span>
           </span>
           <span class="cmp__num cmp__res">1</span>
-          <span><span class="chip chip--sm chip--bad">R$ 498,31</span></span>
+          <span class="cmp__custores"><span class="chip chip--sm chip--bad">R$ 498,31</span></span>
           <span class="cmp__num cmp__cad">0</span>
           <span class="cmp__num cmp__custocad">R$ 0,00</span>
           <span class="cmp__num cmp__ftd">0</span>
@@ -2315,7 +2344,7 @@ body.pnl-aberto{overflow:hidden}
             <span class="cmp__share">14,6% da verba do dia</span>
           </span>
           <span class="cmp__num cmp__res">3</span>
-          <span><span class="chip chip--sm chip--good">R$ 134,05</span></span>
+          <span class="cmp__custores"><span class="chip chip--sm chip--good">R$ 134,05</span></span>
           <span class="cmp__num cmp__cad">0</span>
           <span class="cmp__num cmp__custocad">R$ 0,00</span>
           <span class="cmp__num cmp__ftd">0</span>
@@ -2331,7 +2360,7 @@ body.pnl-aberto{overflow:hidden}
             <span class="cmp__share">9,2% da verba do dia</span>
           </span>
           <span class="cmp__num cmp__res">3</span>
-          <span><span class="chip chip--sm chip--good">R$ 84,41</span></span>
+          <span class="cmp__custores"><span class="chip chip--sm chip--good">R$ 84,41</span></span>
           <span class="cmp__num cmp__cad">0</span>
           <span class="cmp__num cmp__custocad">R$ 0,00</span>
           <span class="cmp__num cmp__ftd">0</span>
@@ -2347,7 +2376,7 @@ body.pnl-aberto{overflow:hidden}
             <span class="cmp__share">8,7% da verba do dia</span>
           </span>
           <span class="cmp__num cmp__res">0</span>
-          <span><span class="chip chip--sm chip--na">Aguardando</span></span>
+          <span class="cmp__custores"><span class="chip chip--sm chip--na">Aguardando</span></span>
           <span class="cmp__num cmp__cad">0</span>
           <span class="cmp__num cmp__custocad">R$ 0,00</span>
           <span class="cmp__num cmp__ftd">0</span>
@@ -2363,7 +2392,7 @@ body.pnl-aberto{overflow:hidden}
             <span class="cmp__share">1,3% da verba do dia</span>
           </span>
           <span class="cmp__num cmp__res">0</span>
-          <span><span class="chip chip--sm chip--na">Aguardando</span></span>
+          <span class="cmp__custores"><span class="chip chip--sm chip--na">Aguardando</span></span>
           <span class="cmp__num cmp__cad">0</span>
           <span class="cmp__num cmp__custocad">R$ 0,00</span>
           <span class="cmp__num cmp__ftd">0</span>
@@ -3479,7 +3508,7 @@ body.pnl-aberto{overflow:hidden}
         <span>Entidade</span>
         <span>Investido</span>
         <span class="cmp__bar-cell">Participação na verba</span>
-        <span class="cmp__res">Result.</span>
+        <span class="cmp__res">Result. por canal</span>
         <span>Custo/result.</span>
         <span class="cmp__cad">Cadastros</span>
         <span class="cmp__custocad">Custo/cad.</span>
@@ -3501,7 +3530,7 @@ body.pnl-aberto{overflow:hidden}
             <span class="cmp__share">14,6% da verba do dia</span>
           </span>
           <span class="cmp__num cmp__res">3</span>
-          <span><span class="chip chip--sm chip--good">R$ 134,05</span></span>
+          <span class="cmp__custores"><span class="chip chip--sm chip--good">R$ 134,05</span></span>
           <span class="cmp__num cmp__cad">0</span>
           <span class="cmp__num cmp__custocad">R$ 0,00</span>
           <span class="cmp__num cmp__ftd">0</span>
@@ -3517,7 +3546,7 @@ body.pnl-aberto{overflow:hidden}
             <span class="cmp__share">0,0% da verba do dia</span>
           </span>
           <span class="cmp__num cmp__res">60</span>
-          <span><span class="chip chip--sm chip--na">Sem verba</span></span>
+          <span class="cmp__custores"><span class="chip chip--sm chip--na">Sem verba</span></span>
           <span class="cmp__num cmp__cad">0</span>
           <span class="cmp__num cmp__custocad">R$ 0,00</span>
           <span class="cmp__num cmp__ftd">0</span>
@@ -3533,7 +3562,7 @@ body.pnl-aberto{overflow:hidden}
             <span class="cmp__share">0,0% da verba do dia</span>
           </span>
           <span class="cmp__num cmp__res">41</span>
-          <span><span class="chip chip--sm chip--na">Sem verba</span></span>
+          <span class="cmp__custores"><span class="chip chip--sm chip--na">Sem verba</span></span>
           <span class="cmp__num cmp__cad">0</span>
           <span class="cmp__num cmp__custocad">R$ 0,00</span>
           <span class="cmp__num cmp__ftd">0</span>
@@ -3549,7 +3578,7 @@ body.pnl-aberto{overflow:hidden}
             <span class="cmp__share">0,0% da verba do dia</span>
           </span>
           <span class="cmp__num cmp__res">9</span>
-          <span><span class="chip chip--sm chip--na">Sem verba</span></span>
+          <span class="cmp__custores"><span class="chip chip--sm chip--na">Sem verba</span></span>
           <span class="cmp__num cmp__cad">0</span>
           <span class="cmp__num cmp__custocad">R$ 0,00</span>
           <span class="cmp__num cmp__ftd">0</span>
@@ -3565,7 +3594,7 @@ body.pnl-aberto{overflow:hidden}
             <span class="cmp__share">0,0% da verba do dia</span>
           </span>
           <span class="cmp__num cmp__res">0</span>
-          <span><span class="chip chip--sm chip--na">Sem verba</span></span>
+          <span class="cmp__custores"><span class="chip chip--sm chip--na">Sem verba</span></span>
           <span class="cmp__num cmp__cad">0</span>
           <span class="cmp__num cmp__custocad">R$ 0,00</span>
           <span class="cmp__num cmp__ftd">0</span>
@@ -4463,6 +4492,41 @@ function unidadeResultado(e) {
   if (temG) return 'grupo';
   return 'nenhum';
 }
+/* ── QUEBRA POR CANAL PRA LINHA DO COMPARATIVO ────────────────────────────
+   Pedido do operador (11/08): "quanto foi investido de cada resultado de cada
+   canal". Uma linha misturada não responde isso -- R$ 958,09 ÷ 1.692 esconde
+   que R$ 451,57 daquilo não comprou NADA e o resto comprou clique a R$ 0,30.
+   Devolve uma entrada por canal COM GASTO OU RESULTADO, cada uma com seu
+   próprio custo e sua própria unidade. Quem tem um canal só devolve 1 item e
+   a linha continua igual ao que sempre foi. */
+function canaisResultado(e) {
+  var saida = [];
+  [['grupo', e && e.grupo, 'entradas'], ['perfil', e && e.direto, 'cliques']].forEach(function (par) {
+    var c = par[1] || {};
+    var inv = ehNum(c.valor_investido) ? c.valor_investido : 0;
+    var res = ehNum(c.resultado) ? c.resultado : 0;
+    if (inv <= 0 && res <= 0) return;
+    saida.push({
+      canal: par[0],
+      unidade: par[2],
+      inv: inv,
+      res: res,
+      /* custo do CANAL: gasto do canal ÷ resultado do canal. Nunca a verba
+         total -- era exatamente esse denominador errado que inventava o
+         "R$ 0,57 por resultado" do Gregório. */
+      custo: (inv > 0 && res > 0) ? inv / res : null
+    });
+  });
+  return saida;
+}
+/* cor do custo de UM canal. Só grupo é julgado: clique no perfil custa
+   centavos por definição e verde ali é recomendação de verba errada. */
+function chipCanal(c, nomeEntidade) {
+  if (c.canal !== 'grupo' || !ehNum(c.custo)) return 'chip--info';
+  var f = faixaResultado(nomeEntidade);
+  return c.custo <= f.teto ? 'chip--good'
+       : (c.custo <= f.teto * f.amarelo ? 'chip--warn' : 'chip--bad');
+}
 /* rótulo curto da unidade, pro cabeçalho do card e pra tag do comparativo.
    Sem rótulo o número fica ambíguo e 1.603 é lido como 1.603 conversões. */
 function rotuloResultado(u) {
@@ -5167,13 +5231,31 @@ function pintarExpert(expert, ehPrimeiro, isHoje, geral) {
   var uniH = unidadeResultado(expert);
   if (hms[1]) $('.hm__lbl', hms[1]).textContent =
     uniH === 'perfil' ? 'Custo por clique no perfil'
-    : uniH === 'misto' ? 'Custo por resultado · grupo + perfil'
+    : uniH === 'misto' ? 'Custo por resultado · grupo / perfil'
     : 'Custo por resultado';
   var chip = $('.expert__head-metrics .chip', art);
   if (chip) {
-    var cc = chipResultado(expert);
-    chip.className = 'chip ' + cc.classe;
-    chip.textContent = cc.txt;
+    /* mesmo critério da linha do comparativo: com dois canais o cabeçalho
+       mostra os DOIS custos lado a lado, cada um julgado pela sua régua.
+       Um número só ali seria a média de duas unidades diferentes. */
+    var canaisH = canaisResultado(expert);
+    if (canaisH.length > 1) {
+      var box = chip.parentNode;
+      var pilha = document.createElement('span');
+      pilha.className = 'hm__chips';
+      canaisH.forEach(function (c) {
+        var ch = document.createElement('span');
+        ch.className = 'chip chip--sm ' + chipCanal(c, expert.expert_name);
+        ch.textContent = (ehNum(c.custo) ? brl(c.custo) : '—') +
+          ' ' + (c.canal === 'grupo' ? 'grupo' : 'perfil');
+        pilha.appendChild(ch);
+      });
+      box.replaceChild(pilha, chip);
+    } else {
+      var cc = chipResultado(expert);
+      chip.className = 'chip ' + cc.classe;
+      chip.textContent = cc.txt;
+    }
   }
 
   /* o subtítulo do funil muda com o formato da entidade: com N contas, o que
@@ -5438,8 +5520,10 @@ function pintarComparativo(d, isHoje, raiz, geral) {
     /* texto curto de propósito: a tag é nowrap com ellipsis e cabem ~22
        caracteres na largura da célula de nome. Frase maior vira "CLIQUE NO
        P…" e não comunica nada. */
+    /* redundante no desktop (a coluna Result. já mostra canal por canal), mas
+       é o ÚNICO aviso que sobra abaixo de 760px, onde .cmp__res some. */
     if (uni === 'perfil')     marcas.push('result. = clique');
-    else if (uni === 'misto') marcas.push('grupo + perfil juntos');
+    else if (uni === 'misto') marcas.push('grupo + perfil');
     if (geral) {
       if (ehMarca(e.expert_name)) marcas.push('marca');
       if ((e.contas || []).length > 1) marcas.push(e.contas.length + ' contas');
@@ -5461,20 +5545,63 @@ function pintarComparativo(d, isHoje, raiz, geral) {
     if (inv >= FAIXA_ALTA && !(ehNum(tap.ftd) && tap.ftd > 0) && !e.sem_btag) {
       var alerta = document.createElement('i');
       alerta.className = 'cmp__tag cmp__tag--alerta';
-      alerta.textContent = 'zero FTD com ' + brl(inv);
+      /* sem centavos: a tag tem ~22 caracteres de largura útil e "R$ 970,30"
+         estourava pra "R$ 970,…". O que importa aqui é a ordem de grandeza. */
+      alerta.textContent = 'zero FTD · R$ ' + inteiro(Math.round(inv));
       cel.appendChild(alerta);
     }
     escreve($('.cmp__num:not(.cmp__res):not(.cmp__dep)', linha), brl(inv));
     $('.cmp__bar i', linha).style.width = (maxInv > 0 ? (inv / maxInv * 100) : 0).toFixed(1) + '%';
     $('.cmp__share', linha).textContent =
       pct(total > 0 ? inv / total * 100 : 0) + ' da verba' + (isHoje ? ' do dia' : ' do período');
-    /* conversão do Meta (da conta), não FTD da TAP (do btag). Ver metaResultado(). */
-    escreve($('.cmp__res', linha), inteiro(metaResultado(e)));
+    /* conversão do Meta (da conta), não FTD da TAP (do btag). Uma linha por
+       CANAL: grupo e perfil contam coisas diferentes e têm custos de ordem de
+       grandeza diferente, então cada um mostra o seu. Ver canaisResultado(). */
+    var canais = canaisResultado(e);
+    var celRes = $('.cmp__res', linha);
+    var celChip = $('.cmp__custores', linha);
+    celRes.innerHTML = '';
+    celChip.innerHTML = '';
+    if (!canais.length) {
+      /* sem verba e sem resultado: mantém o formato de número que o operador
+         usa pra varrer a coluna, em vez de texto. */
+      celRes.textContent = inteiro(0);
+      var chipVazio = document.createElement('span');
+      chipVazio.className = 'chip chip--sm chip--info';
+      chipVazio.textContent = brl(0);
+      celChip.appendChild(chipVazio);
+    }
+    canais.forEach(function (c) {
+      var ln = document.createElement('span');
+      ln.className = 'cmp__resline';
+      var n = document.createElement('b');
+      n.textContent = inteiro(c.res);
+      ln.appendChild(n);
+      /* a unidade só aparece quando a linha tem mais de um canal ou quando o
+         canal é perfil. Em linha de grupo puro -- a maioria -- "entradas" é o
+         padrão da operação e repetir isso em 7 linhas é ruído. */
+      if (canais.length > 1 || c.canal === 'perfil') {
+        var u = document.createElement('i');
+        u.className = 'cmp__resu';
+        /* com dois canais, cada linha precisa dizer QUANTO custou aquele
+           pedaço da verba -- é a pergunta que a linha somada não respondia. */
+        /* verba do canal SEM centavos: aqui ela é contexto ("quanto desta
+           linha foi pra cá"), não valor de fechamento. Os centavos só comem
+           largura e empurram a tabela pra rolagem horizontal. */
+        u.textContent = canais.length > 1
+          ? c.unidade + ' · R$ ' + inteiro(Math.round(c.inv))
+          : c.unidade;
+        ln.appendChild(u);
+      }
+      celRes.appendChild(ln);
 
-    var chip = $('.chip', linha);
-    var cc = chipResultado(e);
-    chip.className = 'chip chip--sm ' + cc.classe;
-    chip.textContent = cc.txt;
+      var ch = document.createElement('span');
+      ch.className = 'chip chip--sm ' + chipCanal(c, e.expert_name);
+      /* gastou e não trouxe resultado nenhum: o traço é mais honesto que
+         R$ 0,00, que na coluna de custo se lê como "saiu de graça". */
+      ch.textContent = ehNum(c.custo) ? brl(c.custo) : '—';
+      celChip.appendChild(ch);
+    });
 
     /* funil da TAP, na ordem em que acontece. Custo por cadastro não vem da
        API: é verba ÷ cadastros, a mesma conta do tile de totais. Zero em vez
@@ -5518,13 +5645,14 @@ function pintarComparativo(d, isHoje, raiz, geral) {
       .map(function (e) {
         return nomeExpert(e.expert_name) + ' até ' + brl(faixaResultado(e.expert_name).teto);
       });
-    leg.textContent = 'Custo por resultado: a régua vale só pra resultado de GRUPO ' +
-      '(entrada/conversa) — verde até ' + brl(TETO_RESULT_PADRAO) +
+    leg.textContent = 'Uma linha por canal: cada custo é o gasto DAQUELE canal ÷ o ' +
+      'resultado DAQUELE canal, nunca a verba total. A régua de cor vale só pra ' +
+      'GRUPO (entrada/conversa) — verde até ' + brl(TETO_RESULT_PADRAO) +
       ', amarelo até ' + brl(TETO_RESULT_PADRAO * FATOR_AMARELO) + ', vermelho acima' +
       (excecoes.length ? ' (' + excecoes.join('; ') + ')' : '') +
-      '. Linha com tráfego pro perfil (sozinho ou misturado com grupo) sai CINZA: ' +
-      'ali o resultado é clique no link, custa centavos e não se compara com entrada ' +
-      'em grupo. R$ 0,00 = sem resultado no período.';
+      '. Tráfego pro perfil sai sempre CINZA: ali o resultado é clique no link, ' +
+      'custa centavos e não se compara com entrada em grupo. ' +
+      'Traço (—) = gastou e não trouxe nenhum resultado.';
     leg.hidden = false;
   }
 
