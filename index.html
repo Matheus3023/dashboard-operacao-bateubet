@@ -813,8 +813,21 @@ h1,h2,h3,h4,p{margin:0}
 .num--neg{color:var(--bad)}
 .num--pos{color:var(--good)}
 
-/* TAP: funil em cima (4), financeiro embaixo (5) */
-.tap-funnel{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:14px}
+/* TAP: funil em cima (5), financeiro embaixo (5) */
+.tap-funnel{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:14px}
+/* com 5 colunas a coluna útil cai pra ~100px na menor tela que ainda usa este
+   grid (1180px). "R$ 1.234,56" a 17px não cabia e era CLIPADO (o .m__val corta
+   sem reticência): valor de dinheiro pela metade é pior que valor menor. */
+.tap-funnel .m__val{font-size:1rem}
+/* faixa 1180-1359px: é onde o corpo do card já tem 3 colunas (grupo|perfil|TAP)
+   mas a tela ainda é estreita -- a métrica ficaria com ~95px e um custo de 5
+   dígitos ("R$ 12.345,67", 100px) seria CLIPADO sem reticência. 3 colunas em
+   duas linhas é melhor que valor de dinheiro cortado pela metade.
+   Acima de 1360px cabem as 5; abaixo de 1180px o bloco da TAP ocupa a linha
+   inteira e volta a caber (e abaixo de 760px o responsivo põe 2). */
+@media (min-width:1180px) and (max-width:1359px){
+  .tap-funnel{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
 .tap-fin{
   display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;
   margin-top:13px;padding-top:12px;border-top:1px solid var(--line-soft);
@@ -2570,6 +2583,9 @@ body.pnl-aberto{overflow:hidden}
             <h4 class="block__title">Funil TAP <small>blend do expert, não separa grupo e tráf. perfil</small></h4>
             <div class="tap-funnel">
               <div class="m"><span class="m__lbl">Cadastros</span><span class="m__val" data-field="tap.cadastros">13</span></div>
+              <!-- derivado: verba do expert ÷ cadastros. Mesma conta do tile de
+                   totais e da coluna "Custo/cad." do comparativo. -->
+              <div class="m m--custocad"><span class="m__lbl">Custo por cadastro</span><span class="m__val" data-derived="investimento_total / tap.cadastros">R$ 54,31</span></div>
               <div class="m"><span class="m__lbl">FTD</span><span class="m__val" data-field="tap.ftd">6</span></div>
               <div class="m"><span class="m__lbl">Conv. cad → FTD</span><span class="m__val" data-field="tap.conversao_cadastro_ftd">46,2%</span></div>
               <div class="m"><span class="m__lbl">Custo por FTD (CPA)</span><span class="m__val" data-field="tap.custo_por_ftd">R$ 117,68</span></div>
@@ -5287,10 +5303,25 @@ function pintarExpert(expert, ehPrimeiro, isHoje, geral) {
      voltar a existir campo repetido entre cabeçalho e funil. */
   var boxTap = $('.block--tap', art) || art;
   escreve(campo(boxTap, 'tap.cadastros'), inteiro(tap.cadastros));
+  /* Custo por cadastro é DERIVADO (a API não manda): verba do expert ÷
+     cadastros, exatamente a conta do tile de totais e da coluna "Custo/cad."
+     do comparativo -- se um dia mudar, mudar nos três.
+     Dois estados vazios diferentes de propósito: sem verba não é "custo zero",
+     e com verba mas sem cadastro o custo não é R$ 0,00 (seria ler como "saiu
+     de graça" justo no caso em que a verba não comprou nada). Sem régua de
+     cor: a faixa oficial do cliente (R$ 300/350) é de FTD, não de cadastro. */
+  var cadEx = ehNum(tap.cadastros) ? tap.cadastros : 0;
+  escreve($('.m--custocad .m__val', boxTap),
+          inv > 0 && cadEx > 0 ? brl(inv / cadEx) : null,
+          inv > 0 ? 'sem cadastro' : 'sem verba');
   escreve(campo(boxTap, 'tap.ftd'), inteiro(tap.ftd));
   escreve(campo(boxTap, 'tap.conversao_cadastro_ftd'), pct(tap.conversao_cadastro_ftd));
-  /* sem verba não imprime R$ 0,00: imprime "sem verba". Ver chipCusto(). */
-  escreve(campo(boxTap, 'tap.custo_por_ftd'), inv > 0 ? brl(tap.custo_por_ftd) : null, 'sem verba');
+  /* sem verba não imprime R$ 0,00: imprime "sem verba". Ver chipCusto().
+     E com verba mas sem FTD o texto certo é "sem FTD": dizer "sem verba" ao
+     lado de um custo por cadastro de R$ 90,82 (que só existe porque HÁ verba)
+     era contradição na mesma linha -- caso real do Gregório em 11/08. */
+  escreve(campo(boxTap, 'tap.custo_por_ftd'), inv > 0 ? brl(tap.custo_por_ftd) : null,
+          inv > 0 ? 'sem FTD' : 'sem verba');
   escreve(campo(boxTap, 'tap.valor_ftd'), brl(tap.valor_ftd));
   escreve(campo(boxTap, 'tap.deposito'), brl(tap.deposito));
   var nd = campo(boxTap, 'tap.net_dep'), np = campo(boxTap, 'tap.net_pl');
