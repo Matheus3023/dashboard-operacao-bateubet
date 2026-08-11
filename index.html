@@ -906,12 +906,23 @@ h1,h2,h3,h4,p{margin:0}
   font-family:var(--mono);font-size:.5625rem;line-height:1.3;color:var(--txt-3);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
+/* CTR · cliques · gasto do criativo. Em "hoje" os três cabem numa linha de
+   ~200px; em período longo não cabem (clique vira 5 dígitos, gasto vira
+   milhares). Sem flex-wrap o flex encolhia as CAIXAS sem cortar o texto
+   (white-space:nowrap + overflow visível), e o número saía escrito por cima do
+   vizinho -- "10.830 cliq" colado no "CTR" do lado. Quebrar em duas linhas é a
+   saída certa: aqui não pode truncar nem elipsar valor de dinheiro, e o card
+   tem largura fixa porque a prateleira rola na horizontal.
+   O space-between fica: quando os três cabem, o visual é o de sempre. */
 .crtv__stats{
-  display:flex;align-items:center;justify-content:space-between;gap:6px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;column-gap:6px;row-gap:4px;
   margin-top:8px;padding-top:7px;border-top:1px solid var(--line-soft);
   font-size:.625rem;color:var(--txt-3);white-space:nowrap;
 }
-.crtv__st{display:inline-flex;align-items:baseline;gap:3px;min-width:0}
+/* flex-shrink:0 é o par obrigatório do wrap: sem ele o item ainda encolheria
+   abaixo do próprio texto antes de decidir quebrar, e a colisão voltava. */
+.crtv__st{display:inline-flex;align-items:baseline;gap:3px;min-width:0;flex-shrink:0}
 .crtv__st b{
   font-size:.75rem;font-weight:640;color:var(--txt);
   font-variant-numeric:tabular-nums;letter-spacing:-.01em;
@@ -1156,8 +1167,16 @@ h1,h2,h3,h4,p{margin:0}
      LINHA POR CANAL (grupo e perfil contam coisas diferentes), então precisam
      caber "1.692  CLIQUES · R$ 501,80" sem virar reticências. A tabela já
      rolava na horizontal, o custo dos +112px é rolagem, não corte. */
-  grid-template-columns:122px 90px minmax(116px,1fr) 134px 100px 58px 84px 38px 90px 90px 86px 90px 90px;
-  min-width:1344px;
+  /* as colunas de dinheiro são dimensionadas pelo PIOR caso real, não pelo
+     valor médio: "R$ 121.523,25" (investido do institucional) e
+     "R$ 1.522.167,40" (volume) têm 13-15 caracteres. Com 86-90px elas eram
+     cortadas no meio do número -- e número cortado num painel de verba é pior
+     que rolagem horizontal, que a tabela já tem. */
+  /* FTD saiu de 38px pra 48px em 11/08: 38 cabia "707" (um dia), não "2.540"
+     (trinta dias) -- o milhar com ponto passa de 40px e o número era cortado.
+     Coluna de contagem também é valor: não pode aparecer pela metade. */
+  grid-template-columns:122px 116px minmax(138px,1fr) 134px 100px 68px 84px 48px 92px 118px 108px 118px 122px;
+  min-width:1544px;
   padding:11px 16px;
   border-top:1px solid var(--line-soft);
 }
@@ -1232,12 +1251,12 @@ h1,h2,h3,h4,p{margin:0}
 @media (max-width:1179px){
   /* tela média: cabe o funil (resultado, cadastro, FTD e os dois custos), some
      o dinheiro da TAP -- quem quer depósito/volume/net PL abre o card. */
-  .cmp__row{grid-template-columns:114px 86px minmax(76px,1fr) 110px 96px 54px 38px 92px;gap:10px;min-width:0}
+  .cmp__row{grid-template-columns:114px 110px minmax(76px,1fr) 110px 96px 64px 48px 92px;gap:10px;min-width:0}
   .cmp__dep,.cmp__valorftd,.cmp__volume,.cmp__netpl,.cmp__custocad{display:none}
 }
 @media (max-width:759px){
   /* sobram nome, investido e os dois custos: o que decide ação */
-  .cmp__row{grid-template-columns:minmax(0,1fr) 78px 84px 84px;gap:9px;padding:10px 14px}
+  .cmp__row{grid-template-columns:minmax(0,1fr) 96px 84px 84px;gap:9px;padding:10px 14px}
   .cmp__bar-cell,.cmp__res,.cmp__cad,.cmp__ftd{display:none}
   .cmp__row--head{font-size:.5rem;letter-spacing:.08em}
 }
@@ -1427,7 +1446,13 @@ h1,h2,h3,h4,p{margin:0}
 .contas__tbl{padding:2px 16px 14px}
 .contas__row{
   display:grid;align-items:center;gap:12px;
-  grid-template-columns:minmax(0,1.7fr) 100px 100px 108px 56px;
+  /* colunas de dinheiro em minmax(px, max-content), não px fixo: em período de
+     30 dias o Institucional passa de R$ 253.720,18 (103px) e estourava os
+     100px fixos -- e como .contas__num é nowrap sem overflow, o valor vazava
+     por cima da coluna vizinha. Com max-content a coluna cresce até caber o
+     maior valor da tabela e quem cede espaço é o nome da conta (1.7fr,
+     min 0, já com ellipsis). */
+  grid-template-columns:minmax(0,1.7fr) repeat(2,minmax(100px,max-content)) minmax(108px,max-content) 56px;
   padding:9px 0;
   border-top:1px solid var(--line-soft);
 }
@@ -1658,7 +1683,7 @@ h1,h2,h3,h4,p{margin:0}
 }
 
 @media (max-width:1179px){
-  .contas__row{grid-template-columns:minmax(0,1.5fr) 92px 92px 100px 52px;gap:10px}
+  .contas__row{grid-template-columns:minmax(0,1.5fr) repeat(2,minmax(92px,max-content)) minmax(100px,max-content) 52px;gap:10px}
 }
 @media (max-width:759px){
   .scopebar{gap:6px}
@@ -1667,7 +1692,7 @@ h1,h2,h3,h4,p{margin:0}
   .scopebar__sub{font-size:.5rem;letter-spacing:.08em}
   /* no celular sobram conta, total e participação: o recorte que responde
      "como ele está dividindo a verba". Grupo e direto voltam no desktop. */
-  .contas__row{grid-template-columns:minmax(0,1fr) 96px 52px;gap:9px}
+  .contas__row{grid-template-columns:minmax(0,1fr) minmax(96px,max-content) 52px;gap:9px}
   .contas__c--g,.contas__c--d{display:none}
   .contas__tbl{padding:2px 14px 12px}
   .contas__sum{padding:9px 14px}
@@ -5517,6 +5542,72 @@ function pintarTotais(d, isHoje, raiz, rodape) {
   var legendas = $$('.splitbar__legend b.num', raiz);
   if (legendas[0]) legendas[0].textContent = pct(pctGrupo);
   if (legendas[1]) legendas[1].textContent = pct(pctDireto);
+
+}
+
+/* ── AJUSTE DE FONTE POR CAIXA ────────────────────────────────────────────
+   Descoberto em 11/08 filtrando 30 dias: todo valor deste painel é nowrap com
+   overflow hidden e caixa de largura fixa (tile, coluna do funil, célula da
+   tabela). Num dia "R$ 2.749,25" sobra espaço; num mês o mesmo campo vira
+   "R$ 1.019.191,52" e o número aparecia CORTADO -- sem reticência, sem aviso,
+   parecendo outro valor. Num painel de verba isso é pior que layout feio.
+
+   Em vez de calibrar largura métrica por métrica pra um pior caso que muda
+   junto com o período, quem não couber encolhe a própria fonte até caber.
+   Só encolhe quem estoura: valor curto continua no tamanho de sempre e a
+   hierarquia (tile-herói maior que os outros) se mantém.
+   ────────────────────────────────────────────────────────────────────────── */
+function caberNaCaixa(el, minPx) {
+  if (!el) return;
+  el.style.fontSize = '';
+  /* elemento em aba escondida mede 0: não dá pra decidir nada agora. Quem
+     resolve esse caso é o ResizeObserver de ligarAjusteDeFonte(). */
+  if (!el.clientWidth || el.scrollWidth <= el.clientWidth + 1) return;
+  var px = parseFloat(getComputedStyle(el).fontSize);
+  /* piso RELATIVO ao tamanho original, não um px fixo: os campos deste painel
+     vão de 30px (tile-herói) a 14px (linha financeira da TAP), e um piso fixo
+     de 15px simplesmente não deixava o campo de 14px encolher -- o valor
+     continuava cortado. 72% preserva legibilidade e resolve todos os piores
+     casos reais medidos em 30 dias (dá 21,6px no herói, 10px no menor). */
+  var piso = minPx || Math.max(10, px * 0.72);
+  var guarda = 0;
+  while (el.scrollWidth > el.clientWidth + 1 && px > piso && guarda++ < 24) {
+    px -= 1;
+    el.style.fontSize = px + 'px';
+  }
+  el.setAttribute('data-fit', '1');
+}
+
+/* passa em todos os valores de uma raiz. A ordem (limpar -> ler todos ->
+   escrever nos poucos) é de propósito: escrever style dentro do laço de
+   leitura forçaria o navegador a recalcular o layout a cada elemento, e são
+   ~400 valores com os 28 cards do escopo Geral abertos. */
+function ajustarValores(raiz) {
+  if (!raiz || !raiz.clientWidth) return;
+  $$('[data-fit]', raiz).forEach(function (el) {
+    el.style.fontSize = ''; el.removeAttribute('data-fit');
+  });
+  $$('.tcard__val, .m__val', raiz).filter(function (el) {
+    return el.clientWidth && el.scrollWidth > el.clientWidth + 1;
+  }).forEach(function (el) { caberNaCaixa(el); });
+}
+
+/* o ajuste só decide alguma coisa quando o elemento TEM tamanho, e escopo e
+   sub-aba escondidos são display:none (medem 0). Então além da pintura ele
+   precisa rodar de novo em dois momentos:
+     · troca de escopo/aba -- a tela que aparece nunca foi medida;
+     · janela redimensionada -- as caixas mudam de largura, o texto não.
+   Duas tentativas que NÃO funcionam aqui, documentadas pra ninguém repetir:
+   ResizeObserver nos quatro .view (não dispara na transição display:none ->
+   block) e requestAnimationFrame (a aba só entrega frame quando está em
+   primeiro plano -- painel aberto numa aba de fundo ficaria com o valor
+   cortado até alguém olhar). A medição direta funciona sem os dois: ler
+   clientWidth força o navegador a aplicar o display novo antes de responder,
+   então dá pra medir na hora, no próprio handler. */
+function ligarAjusteDeFonte() {
+  function refazer() { $$('.view').forEach(ajustarValores); }
+  $$('.views > input').forEach(function (i) { i.addEventListener('change', refazer); });
+  window.addEventListener('resize', refazer);
 }
 
 function pintarComparativo(d, isHoje, raiz, geral) {
@@ -5736,6 +5827,10 @@ function pintarEscopo(bloco, periodo, isHoje, raiz, geral) {
   pintarComparativo(d, isHoje, raiz, geral);
   pintarTopCriativos(d, isHoje, raiz);
   pintarExperts(d.experts, isHoje, raiz, geral);
+  /* números novos, larguras velhas: refaz o ajuste de fonte deste escopo.
+     Só resolve o que estiver visível agora -- o resto o ResizeObserver pega
+     quando a aba aparecer. */
+  $$('.view', raiz).forEach(ajustarValores);
 }
 
 /* rótulo dos dois cartões de escopo: contagem real, não número escrito à mão */
@@ -6793,6 +6888,7 @@ function ligarAbas() {
 /* ── 11. partida ────────────────────────────────────────────────────────── */
 guardarMoldes();
 ligarAbas();
+ligarAjusteDeFonte();
 ligarPainel();
 restaurarEscolha();
 restaurarOrdenacao();
