@@ -341,8 +341,7 @@ NOTA SOBRE OS DADOS DE EXEMPLO
 
    ONDE O DOURADO APARECE, E SÓ AÍ (3 significados no painel inteiro):
      1. selo "maior investimento" no primeiro expert
-     2. retorno sobre o investido (múltiplo no card de Depósito e o maior
-        múltiplo do comparativo: é a mesma leitura, em dois lugares)
+     2. retorno sobre o investido (múltiplo no card de Depósito)
      3. criativo de maior CTR dentro de cada expert
    Se dourado virar cor de uso corrente, ele para de significar "isso é alto
    valor" e vira decoração.
@@ -1117,7 +1116,7 @@ h1,h2,h3,h4,p{margin:0}
 }
 .cmp__row{
   display:grid;align-items:center;gap:14px;
-  grid-template-columns:132px 96px minmax(120px,1fr) 46px 104px 112px 104px 104px 104px 66px;
+  grid-template-columns:132px 96px minmax(120px,1fr) 46px 104px 112px 104px 104px 104px;
   padding:11px 16px;
   border-top:1px solid var(--line-soft);
 }
@@ -1152,11 +1151,6 @@ h1,h2,h3,h4,p{margin:0}
   display:block;margin-top:5px;
   font-size:.625rem;color:var(--txt-3);font-variant-numeric:tabular-nums;
 }
-.cmp__mult{
-  font-size:.8125rem;font-weight:640;font-variant-numeric:tabular-nums;
-  color:var(--txt-2);white-space:nowrap;text-align:right;
-}
-.cmp__mult--gold{color:var(--gold)}
 .chip--sm{font-size:.75rem;font-weight:600;padding:2px 8px}
 .chip--sm.chip--na{font-size:.6875rem}
 .cmp__foot{
@@ -1165,14 +1159,14 @@ h1,h2,h3,h4,p{margin:0}
   font-size:.6875rem;color:var(--txt-3);
 }
 @media (max-width:1179px){
-  .cmp__row{grid-template-columns:120px 92px minmax(90px,1fr) 40px 100px 62px;gap:11px}
+  .cmp__row{grid-template-columns:120px 92px minmax(90px,1fr) 40px 100px;gap:11px}
   /* tela média: só cabe o essencial pra decidir ação. Depósito, valor FTD,
      volume e net PL somem primeiro -- quem quer o detalhe abre o card. */
   .cmp__dep,.cmp__valorftd,.cmp__volume,.cmp__netpl{display:none}
 }
 @media (max-width:759px){
-  /* sobram nome, investido, custo por FTD e retorno: o que decide ação */
-  .cmp__row{grid-template-columns:minmax(0,1fr) 84px 92px 52px;gap:9px;padding:10px 14px}
+  /* sobram nome, investido e custo por FTD: o que decide ação */
+  .cmp__row{grid-template-columns:minmax(0,1fr) 84px 92px;gap:9px;padding:10px 14px}
   .cmp__bar-cell,.cmp__ftd{display:none}
   .cmp__row--head{font-size:.5rem;letter-spacing:.08em}
 }
@@ -1417,7 +1411,6 @@ h1,h2,h3,h4,p{margin:0}
   text-transform:uppercase;color:var(--txt-3);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.cmp__mult.val--na{color:var(--txt-3);font-weight:400}
 
 /* ── AVISO DO ESCOPO GERAL ────────────────────────────────────────────────
    Enquanto a permissão da Meta não liberar nas contas novas, o investimento
@@ -2223,7 +2216,6 @@ body.pnl-aberto{overflow:hidden}
         <span class="cmp__valorftd">Valor FTD</span>
         <span class="cmp__volume">Volume</span>
         <span class="cmp__netpl">Net PL</span>
-        <span style="text-align:right">Retorno</span>
       </div>
 
       <div class="cmp__body">
@@ -2241,7 +2233,6 @@ body.pnl-aberto{overflow:hidden}
           <span class="cmp__num cmp__num--soft cmp__valorftd">R$ 909,00</span>
           <span class="cmp__num cmp__num--soft cmp__volume">R$ 19.647,35</span>
           <span class="cmp__num cmp__num--soft cmp__netpl">R$ 1.570,62</span>
-          <span class="cmp__mult">15,0×</span>
         </div>
 
         <div class="cmp__row" data-expert="DEKO">
@@ -2254,7 +2245,6 @@ body.pnl-aberto{overflow:hidden}
           <span class="cmp__num cmp__ftd">2</span>
           <span><span class="chip chip--sm chip--warn">R$ 306,40</span></span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 12.480,30</span>
-          <span class="cmp__mult">20,4×</span>
         </div>
 
         <div class="cmp__row" data-expert="CHARLES">
@@ -2267,7 +2257,6 @@ body.pnl-aberto{overflow:hidden}
           <span class="cmp__num cmp__ftd">1</span>
           <span><span class="chip chip--sm chip--bad">R$ 498,31</span></span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 6.320,90</span>
-          <span class="cmp__mult">12,7×</span>
         </div>
 
         <div class="cmp__row" data-expert="TANOS">
@@ -2280,7 +2269,6 @@ body.pnl-aberto{overflow:hidden}
           <span class="cmp__num cmp__ftd">3</span>
           <span><span class="chip chip--sm chip--good">R$ 134,05</span></span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 9.740,10</span>
-          <span class="cmp__mult">24,2×</span>
         </div>
 
         <div class="cmp__row" data-expert="QZL">
@@ -2293,7 +2281,6 @@ body.pnl-aberto{overflow:hidden}
           <span class="cmp__num cmp__ftd">3</span>
           <span><span class="chip chip--sm chip--good">R$ 84,41</span></span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 800,00</span>
-          <span class="cmp__mult">3,2×</span>
         </div>
 
         <div class="cmp__row" data-expert="GREGORIO BIG">
@@ -2306,7 +2293,6 @@ body.pnl-aberto{overflow:hidden}
           <span class="cmp__num cmp__ftd">0</span>
           <span><span class="chip chip--sm chip--na">Aguardando</span></span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 3.350,20</span>
-          <span class="cmp__mult">13,9×</span>
         </div>
 
         <div class="cmp__row" data-expert="EDERSON">
@@ -2319,18 +2305,12 @@ body.pnl-aberto{overflow:hidden}
           <span class="cmp__num cmp__ftd">0</span>
           <span><span class="chip chip--sm chip--na">Aguardando</span></span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 16.730,00</span>
-          <!-- uso 3 de 3 do dourado: retorno fora da curva. O JS marca .cmp__mult--gold
-               no maior retorno do dia. Aqui é herança de base antiga com verba mínima
-               hoje, por isso o número explode. É real, não é bug de formatação. -->
-          <span class="cmp__mult cmp__mult--gold">459,0×</span>
         </div>
 
       </div>
 
       <p class="cmp__foot">
-        Barra proporcional ao maior investimento do dia. Retorno é depósito da TAP
-        dividido pelo investido no Meta no mesmo período, então quem tem base antiga
-        depositando e pouca verba hoje aparece com múltiplo alto.
+        Barra proporcional ao maior investimento do dia.
         <br>
         <!-- label, não link: troca de aba sem JS -->
         <label class="tablink" for="v-experts">
@@ -3441,7 +3421,6 @@ body.pnl-aberto{overflow:hidden}
         <span class="cmp__valorftd">Valor FTD</span>
         <span class="cmp__volume">Volume</span>
         <span class="cmp__netpl">Net PL</span>
-        <span style="text-align:right">Retorno</span>
       </div>
 
       <div class="cmp__body">
@@ -3456,7 +3435,6 @@ body.pnl-aberto{overflow:hidden}
           <span class="cmp__num cmp__ftd">3</span>
           <span><span class="chip chip--sm chip--good">R$ 134,05</span></span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 9.740,10</span>
-          <span class="cmp__mult">24,2×</span>
         </div>
 
         <div class="cmp__row" data-expert="JOTA PE">
@@ -3469,7 +3447,6 @@ body.pnl-aberto{overflow:hidden}
           <span class="cmp__num cmp__ftd">60</span>
           <span><span class="chip chip--sm chip--na">Sem verba</span></span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 11.961,48</span>
-          <span class="cmp__mult val--na">n/d</span>
         </div>
 
         <div class="cmp__row" data-expert="INSTITUCIONAL">
@@ -3482,7 +3459,6 @@ body.pnl-aberto{overflow:hidden}
           <span class="cmp__num cmp__ftd">41</span>
           <span><span class="chip chip--sm chip--na">Sem verba</span></span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 96.204,80</span>
-          <span class="cmp__mult val--na">n/d</span>
         </div>
 
         <div class="cmp__row" data-expert="FELIPE BORGES">
@@ -3495,7 +3471,6 @@ body.pnl-aberto{overflow:hidden}
           <span class="cmp__num cmp__ftd">9</span>
           <span><span class="chip chip--sm chip--na">Sem verba</span></span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 22.480,15</span>
-          <span class="cmp__mult val--na">n/d</span>
         </div>
 
         <div class="cmp__row" data-expert="EMPIRE">
@@ -3508,15 +3483,13 @@ body.pnl-aberto{overflow:hidden}
           <span class="cmp__num cmp__ftd">0</span>
           <span><span class="chip chip--sm chip--na">Sem verba</span></span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 0,00</span>
-          <span class="cmp__mult val--na">n/d</span>
         </div>
 
       </div>
 
       <p class="cmp__foot">
         Barra proporcional ao maior investimento do dia. Entidade sem verba no
-        período aparece com barra vazia e retorno n/d: sem denominador não existe
-        múltiplo, e imprimir um número ali seria invenção.
+        período aparece com barra vazia.
         <br>
         <label class="tablink" for="v-experts">
           Abrir o detalhe por entidade
@@ -5220,13 +5193,6 @@ function pintarComparativo(d, isHoje, raiz, geral) {
   var total = (d.totais && d.totais.investimento_total) || 0;
   var maxInv = exps.reduce(function (m, e) { return Math.max(m, e.investimento_total || 0); }, 0);
 
-  var mults = exps.map(function (e) {
-    var inv = e.investimento_total || 0;
-    var dep = (e.tap && e.tap.deposito) || 0;
-    return inv > 0 ? dep / inv : null;
-  });
-  var maxMult = mults.reduce(function (m, v) { return v != null && v > m ? v : m; }, -1);
-
   var frag = document.createDocumentFragment();
   exps.forEach(function (e, i) {
     var linha = MOLDE.cmpLinha.cloneNode(true);
@@ -5264,11 +5230,6 @@ function pintarComparativo(d, isHoje, raiz, geral) {
     escreve($('.cmp__valorftd', linha), brl(tap.valor_ftd));
     escreve($('.cmp__volume', linha), brl(tap.volume));
     escreve($('.cmp__netpl', linha), brl(tap.net_pl));
-
-    var m = $('.cmp__mult', linha);
-    m.classList.remove('cmp__mult--gold');
-    escreve(m, vezes(mults[i]));
-    if (mults[i] != null && mults[i] === maxMult && maxMult > 0) m.classList.add('cmp__mult--gold');
 
     linha.style.setProperty('--i', String(Math.min(i, 12)));
     frag.appendChild(linha);
