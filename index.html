@@ -274,6 +274,10 @@ CLASSES DE ESTADO (já estilizadas, o JS só aplica)
       CUSTO POR RESULTADO DO META (da conta de anúncio), não custo por FTD.
   .chip--info        -> custo por resultado do Meta, neutro de propósito:
                         a régua 300/350 é de FTD e não se aplica a resultado.
+                        Vale também pra toda linha cujo resultado NÃO é 100%
+                        de grupo (tráfego pro perfil ou misto): clique no
+                        link custa centavos e não pode aparecer verde.
+                        Ver unidadeResultado() / chipResultado().
   .num--neg / .num--pos -> net dep e net PL, pelo sinal
   .expert--marca     -> entidade que não é pessoa (INSTITUCIONAL). Troca o
                         rótulo do cabeçalho e some com o selo dourado.
@@ -1436,6 +1440,9 @@ h1,h2,h3,h4,p{margin:0}
   text-transform:uppercase;color:var(--txt-3);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
+/* verba relevante sem nenhum FTD. É a única tag que grita, de propósito:
+   com o custo por resultado neutro, é ela que carrega o alerta da linha. */
+.cmp__tag--alerta{color:var(--bad);font-weight:700}
 
 /* ── AVISO DO ESCOPO GERAL ────────────────────────────────────────────────
    Enquanto a permissão da Meta não liberar nas contas novas, o investimento
@@ -2184,7 +2191,7 @@ body.pnl-aberto{overflow:hidden}
       <div class="tcard tcard--direto">
         <span class="tcard__lbl"><i class="dot dot--direto"></i> Tráfego pro perfil</span>
         <span class="tcard__val" data-field="totais.investimento_direto">R$ 253,22</span>
-        <span class="tcard__sub" data-derived="direto / total; soma dos resultados de direto">9,2% do total · 850 resultados</span>
+        <span class="tcard__sub" data-derived="direto / total; soma dos resultados de direto">9,2% do total · 850 cliques no perfil</span>
       </div>
 
       <div class="tcard">
@@ -3158,8 +3165,8 @@ body.pnl-aberto{overflow:hidden}
             </h4>
             <div class="metrics">
               <div class="m"><span class="m__lbl">Investido</span><span class="m__val" data-field="direto.valor_investido">R$ 253,22</span></div>
-              <div class="m"><span class="m__lbl">Resultados</span><span class="m__val" data-field="direto.resultado">850</span></div>
-              <div class="m"><span class="m__lbl">Custo / resultado</span><span class="m__val" data-field="direto.custo_por_resultado">R$ 0,30</span></div>
+              <div class="m"><span class="m__lbl">Cliques no perfil</span><span class="m__val" data-field="direto.resultado">850</span></div>
+              <div class="m"><span class="m__lbl">Custo / clique</span><span class="m__val" data-field="direto.custo_por_resultado">R$ 0,30</span></div>
             </div>
           </section>
           <section class="block block--tap">
@@ -3426,7 +3433,7 @@ body.pnl-aberto{overflow:hidden}
       <div class="tcard tcard--direto">
         <span class="tcard__lbl"><i class="dot dot--direto"></i> Tráfego pro perfil</span>
         <span class="tcard__val" data-field="totais.investimento_direto">R$ 253,22</span>
-        <span class="tcard__sub" data-derived="direto / total; soma dos resultados de direto">9,2% do total · 850 resultados</span>
+        <span class="tcard__sub" data-derived="direto / total; soma dos resultados de direto">9,2% do total · 850 cliques no perfil</span>
       </div>
 
       <div class="tcard">
@@ -4416,7 +4423,8 @@ function ehMarca(nome) { return !!MARCAS[String(nome || '').toUpperCase()]; }
    conversão daquela verba.
    Ressalva honesta: grupo (OUTCOME_LEADS/SALES) e tráfego pro perfil
    (OUTCOME_TRAFFIC) contam resultados de tipos diferentes; a soma serve de
-   volume comparável, não de métrica de qualidade. */
+   volume, NUNCA de métrica de qualidade -- por isso o custo derivado dela só
+   é julgado quando a linha é 100% grupo. Ver unidadeResultado(). */
 function metaResultado(e) {
   if (!e) return 0;
   var g = e.grupo  && ehNum(e.grupo.resultado)  ? e.grupo.resultado  : 0;
@@ -4427,6 +4435,40 @@ function metaCusto(e) {
   var r = metaResultado(e);
   var inv = e && ehNum(e.investimento_total) ? e.investimento_total : 0;
   return (r > 0 && inv > 0) ? inv / r : null;
+}
+/* ── UNIDADE DO "RESULTADO" DO META ───────────────────────────────────────
+   Grave o bastante pra ter função própria: `resultado` NÃO é a mesma coisa
+   nos dois canais.
+     grupo  -> conversa iniciada / entrada no grupo. Custa REAIS (~R$ 8).
+     perfil -> clique no link da campanha de tráfego. Custa CENTAVOS.
+   Somar os dois e dividir a verba pelo total inventa um custo médio que não
+   existe em canal nenhum, e a régua de R$ 14 (feita pra entrada em grupo)
+   pinta de VERDE justamente quem só comprou clique barato.
+   Foi assim que o Gregório Big apareceu como o mais eficiente da operação:
+   R$ 935,30 investidos, 1.603 cliques a R$ 0,58 (chip verde) e ZERO FTD.
+   Daqui pra frente só resultado de grupo passa pela régua; perfil e misto
+   saem neutros, sem juízo de valor. */
+function unidadeResultado(e) {
+  var g = e && e.grupo  || {}, d = e && e.direto || {};
+  /* olha GASTO, não só resultado: metaCusto() divide a verba TOTAL da linha
+     pelo resultado somado. Se os dois canais gastaram, o custo é misto mesmo
+     que um deles não tenha trazido nada -- é o caso do Gregório Big, que
+     queimou R$ 451,54 em grupo sem UMA entrada e R$ 500,54 em perfil. Chamar
+     aquele R$ 0,57 de "custo por clique" seria trocar uma mentira por outra:
+     metade daquela verba não comprou clique nenhum. */
+  var temG = (ehNum(g.valor_investido) && g.valor_investido > 0) || (ehNum(g.resultado) && g.resultado > 0);
+  var temD = (ehNum(d.valor_investido) && d.valor_investido > 0) || (ehNum(d.resultado) && d.resultado > 0);
+  if (temG && temD) return 'misto';
+  if (temD) return 'perfil';
+  if (temG) return 'grupo';
+  return 'nenhum';
+}
+/* rótulo curto da unidade, pro cabeçalho do card e pra tag do comparativo.
+   Sem rótulo o número fica ambíguo e 1.603 é lido como 1.603 conversões. */
+function rotuloResultado(u) {
+  if (u === 'perfil') return 'clique no perfil';
+  if (u === 'misto')  return 'entrada + clique';
+  return 'resultado';
 }
 /* ── RÉGUA DA COR DO CUSTO POR RESULTADO ──────────────────────────────────
    Faixa FIXA, fechada com o operador em 11/08 -- não é relativa à média do
@@ -4456,11 +4498,17 @@ function faixaResultado(nome) {
    verde faria o painel premiar exatamente quem não converteu nada. */
 function chipResultado(e) {
   var c = metaCusto(e);
-  if (!ehNum(c)) return { classe: 'chip--info', txt: brl(0) };
+  var u = unidadeResultado(e);
+  if (!ehNum(c)) return { classe: 'chip--info', txt: brl(0), unidade: 'nenhum' };
+  /* SÓ resultado de grupo é julgado. Clique no perfil custa centavos por
+     definição -- não existe meta de custo pra ele, e verde ali faria o painel
+     premiar quem comprou tráfego que não converte. Misto não é comparável com
+     nada (média de duas unidades diferentes). Os dois saem neutros. */
+  if (u !== 'grupo') return { classe: 'chip--info', txt: brl(c), unidade: u };
   var f = faixaResultado(e.expert_name);
   var classe = c <= f.teto ? 'chip--good'
              : (c <= f.teto * f.amarelo ? 'chip--warn' : 'chip--bad');
-  return { classe: classe, txt: brl(c) };
+  return { classe: classe, txt: brl(c), unidade: u };
 }
 
 /* ── APELIDO DE CONTA DE ANÚNCIO ──────────────────────────────────────────
@@ -5114,7 +5162,13 @@ function pintarExpert(expert, ehPrimeiro, isHoje, geral) {
   /* cabeçalho do card: conversão do Meta (da conta de anúncio), não FTD da
      TAP -- o btag pode ser compartilhado e o custo por FTD daria número
      falso aqui. O custo por FTD segue impresso dentro do bloco TAP. */
-  if (hms[1]) $('.hm__lbl', hms[1]).textContent = 'Custo por resultado';
+  /* o rótulo diz a UNIDADE, senão o número do cabeçalho é lido como custo de
+     conversão em qualquer canal. Ver unidadeResultado(). */
+  var uniH = unidadeResultado(expert);
+  if (hms[1]) $('.hm__lbl', hms[1]).textContent =
+    uniH === 'perfil' ? 'Custo por clique no perfil'
+    : uniH === 'misto' ? 'Custo por resultado · grupo + perfil'
+    : 'Custo por resultado';
   var chip = $('.expert__head-metrics .chip', art);
   if (chip) {
     var cc = chipResultado(expert);
@@ -5314,7 +5368,9 @@ function pintarTotais(d, isHoje, raiz, rodape) {
 
   var elD = campo(raiz, 'totais.investimento_direto');
   escreve(elD, brl(t.investimento_direto));
-  escreve(sub(elD), pct(pctDireto) + ' do total · ' + inteiro(somaDireto) + ' resultados');
+  /* "resultado" desse canal é clique no link da campanha de tráfego -- dizer
+     "resultados" aqui deixava parecer conversão. Ver unidadeResultado(). */
+  escreve(sub(elD), pct(pctDireto) + ' do total · ' + inteiro(somaDireto) + ' cliques no perfil');
 
   var elC = campo(raiz, 'totais.cadastros');
   escreve(elC, inteiro(t.cadastros));
@@ -5375,6 +5431,15 @@ function pintarComparativo(d, isHoje, raiz, geral) {
     if (tap.fonte === 'tap_utm') marcas.push('por UTM');
     else if (tap.fonte === 'meta_pixel') marcas.push('FTD pelo pixel');
     else if (e.sem_btag) marcas.push('sem btag');
+    /* diz em que unidade está a coluna Result. desta linha. Sem isso, 1.603
+       cliques no perfil a R$ 0,58 sentam na mesma coluna que 85 entradas de
+       grupo a R$ 8,31 e a leitura vira "o Gregório é 14× mais eficiente". */
+    var uni = unidadeResultado(e);
+    /* texto curto de propósito: a tag é nowrap com ellipsis e cabem ~22
+       caracteres na largura da célula de nome. Frase maior vira "CLIQUE NO
+       P…" e não comunica nada. */
+    if (uni === 'perfil')     marcas.push('result. = clique');
+    else if (uni === 'misto') marcas.push('grupo + perfil juntos');
     if (geral) {
       if (ehMarca(e.expert_name)) marcas.push('marca');
       if ((e.contas || []).length > 1) marcas.push(e.contas.length + ' contas');
@@ -5386,6 +5451,18 @@ function pintarComparativo(d, isHoje, raiz, geral) {
         tag.textContent = marcas.join(' · ');
         cel.appendChild(tag);
       }
+    }
+    /* ALERTA DE VERBA QUEIMADA: gastou mais que o teto de UM FTD aceitável
+       (R$ 350) e não trouxe nenhum. Com o custo por resultado neutralizado,
+       esta é a informação que precisa saltar da linha -- é o caso do Gregório.
+       Só marca quem tem como medir: sem btag é ausência de rastreio, não
+       ausência de resultado, e acusar isso seria cobrar por um número que
+       não existe. */
+    if (inv >= FAIXA_ALTA && !(ehNum(tap.ftd) && tap.ftd > 0) && !e.sem_btag) {
+      var alerta = document.createElement('i');
+      alerta.className = 'cmp__tag cmp__tag--alerta';
+      alerta.textContent = 'zero FTD com ' + brl(inv);
+      cel.appendChild(alerta);
     }
     escreve($('.cmp__num:not(.cmp__res):not(.cmp__dep)', linha), brl(inv));
     $('.cmp__bar i', linha).style.width = (maxInv > 0 ? (inv / maxInv * 100) : 0).toFixed(1) + '%';
@@ -5441,10 +5518,13 @@ function pintarComparativo(d, isHoje, raiz, geral) {
       .map(function (e) {
         return nomeExpert(e.expert_name) + ' até ' + brl(faixaResultado(e.expert_name).teto);
       });
-    leg.textContent = 'Custo por resultado: verde até ' + brl(TETO_RESULT_PADRAO) +
+    leg.textContent = 'Custo por resultado: a régua vale só pra resultado de GRUPO ' +
+      '(entrada/conversa) — verde até ' + brl(TETO_RESULT_PADRAO) +
       ', amarelo até ' + brl(TETO_RESULT_PADRAO * FATOR_AMARELO) + ', vermelho acima' +
       (excecoes.length ? ' (' + excecoes.join('; ') + ')' : '') +
-      '. R$ 0,00 = sem resultado no período.';
+      '. Linha com tráfego pro perfil (sozinho ou misturado com grupo) sai CINZA: ' +
+      'ali o resultado é clique no link, custa centavos e não se compara com entrada ' +
+      'em grupo. R$ 0,00 = sem resultado no período.';
     leg.hidden = false;
   }
 
