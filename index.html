@@ -269,6 +269,11 @@ CLASSES DE ESTADO (já estilizadas, o JS só aplica)
       (faixa oficial do cliente, fechada na v4. R$ 300 exato é BOM e R$ 350
        exato é ALTO: os operadores de faixaChip() estão escritos pra isso.
        Trocar em 1 lugar só, no JS: FAIXA_BOA / FAIXA_ALTA.)
+      Essas 4 faixas valem no painel de KPI (que é de FTD). O chip do
+      cabeçalho do card e o do comparativo mudaram de unidade: mostram
+      CUSTO POR RESULTADO DO META (da conta de anúncio), não custo por FTD.
+  .chip--info        -> custo por resultado do Meta, neutro de propósito:
+                        a régua 300/350 é de FTD e não se aplica a resultado.
   .num--neg / .num--pos -> net dep e net PL, pelo sinal
   .expert--marca     -> entidade que não é pessoa (INSTITUCIONAL). Troca o
                         rótulo do cabeçalho e some com o selo dourado.
@@ -724,6 +729,12 @@ h1,h2,h3,h4,p{margin:0}
 .chip--bad{color:var(--bad);background:var(--bad-soft);border-color:rgba(255,77,77,.32)}
 .chip--na{color:var(--txt-2);background:var(--neutro);border-color:var(--line);font-size:.8125rem;font-weight:500}
 .chip--na::before{opacity:.45}
+/* custo por resultado do Meta: número real, mas SEM juízo de valor. A régua
+   de R$ 300/350 é de custo por FTD (dinheiro depositado); resultado do Meta
+   é outra unidade (conversa iniciada, clique) e pintar de verde só porque é
+   barato seria mentir. Por isso neutro, não good/warn/bad. */
+.chip--info{color:var(--txt-1);background:var(--neutro);border-color:var(--line)}
+.chip--info::before{opacity:.35}
 
 /* corpo: grupo | direto | tap */
 .expert__body{
@@ -1114,9 +1125,15 @@ h1,h2,h3,h4,p{margin:0}
   border-radius:var(--r);
   overflow:hidden;
 }
+/* 13 colunas: identidade, verba, e aí o funil inteiro na ordem em que ele
+   acontece -- resultado do Meta -> cadastro -> FTD -> dinheiro. Não cabe em
+   tela estreita, e espremer transformaria número em reticências: por isso a
+   tabela rola na horizontal (min-width abaixo) em vez de encolher. */
+.cmp{overflow-x:auto}
 .cmp__row{
-  display:grid;align-items:center;gap:14px;
-  grid-template-columns:132px 96px minmax(120px,1fr) 46px 104px 112px 104px 104px 104px;
+  display:grid;align-items:center;gap:12px;
+  grid-template-columns:126px 92px minmax(104px,1fr) 44px 98px 62px 92px 40px 98px 100px 96px 100px 100px;
+  min-width:1316px;
   padding:11px 16px;
   border-top:1px solid var(--line-soft);
 }
@@ -1142,6 +1159,11 @@ h1,h2,h3,h4,p{margin:0}
   min-width:0;overflow:hidden;text-overflow:clip;
 }
 .cmp__num--soft{font-weight:520;color:var(--txt-2)}
+/* custo por FTD colorido pela faixa oficial (R$ 300/350), sem chip: dois
+   chips na mesma linha competiriam entre si e nenhum seria lido. */
+.cmp__custoftd.is-good{color:var(--good)}
+.cmp__custoftd.is-warn{color:var(--warn)}
+.cmp__custoftd.is-bad{color:var(--bad)}
 .cmp__bar{display:block;position:relative;height:7px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden}
 .cmp__bar i{
   display:block;height:100%;border-radius:999px;
@@ -1151,23 +1173,26 @@ h1,h2,h3,h4,p{margin:0}
   display:block;margin-top:5px;
   font-size:.625rem;color:var(--txt-3);font-variant-numeric:tabular-nums;
 }
-.chip--sm{font-size:.75rem;font-weight:600;padding:2px 8px}
+.chip--sm{font-size:.75rem;font-weight:600;padding:2px 8px;white-space:nowrap}
 .chip--sm.chip--na{font-size:.6875rem}
 .cmp__foot{
   padding:9px 16px;border-top:1px solid var(--line-soft);
   background:var(--surface-sunk);
   font-size:.6875rem;color:var(--txt-3);
 }
+/* legenda da régua de cor: a faixa é relativa à média do escopo, então o
+   número da média precisa aparecer junto, senão a cor não é auditável. */
+.cmp__regua{display:block;margin-bottom:4px;color:var(--txt-2)}
 @media (max-width:1179px){
-  .cmp__row{grid-template-columns:120px 92px minmax(90px,1fr) 40px 100px;gap:11px}
-  /* tela média: só cabe o essencial pra decidir ação. Depósito, valor FTD,
-     volume e net PL somem primeiro -- quem quer o detalhe abre o card. */
-  .cmp__dep,.cmp__valorftd,.cmp__volume,.cmp__netpl{display:none}
+  /* tela média: cabe o funil (resultado, cadastro, FTD e os dois custos), some
+     o dinheiro da TAP -- quem quer depósito/volume/net PL abre o card. */
+  .cmp__row{grid-template-columns:118px 88px minmax(80px,1fr) 40px 94px 56px 40px 94px;gap:10px;min-width:0}
+  .cmp__dep,.cmp__valorftd,.cmp__volume,.cmp__netpl,.cmp__custocad{display:none}
 }
 @media (max-width:759px){
-  /* sobram nome, investido e custo por FTD: o que decide ação */
-  .cmp__row{grid-template-columns:minmax(0,1fr) 84px 92px;gap:9px;padding:10px 14px}
-  .cmp__bar-cell,.cmp__ftd{display:none}
+  /* sobram nome, investido e os dois custos: o que decide ação */
+  .cmp__row{grid-template-columns:minmax(0,1fr) 78px 84px 84px;gap:9px;padding:10px 14px}
+  .cmp__bar-cell,.cmp__res,.cmp__cad,.cmp__ftd{display:none}
   .cmp__row--head{font-size:.5rem;letter-spacing:.08em}
 }
 
@@ -2210,8 +2235,12 @@ body.pnl-aberto{overflow:hidden}
         <span>Expert</span>
         <span>Investido</span>
         <span class="cmp__bar-cell">Participação na verba</span>
+        <span class="cmp__res">Result.</span>
+        <span>Custo/result.</span>
+        <span class="cmp__cad">Cadastros</span>
+        <span class="cmp__custocad">Custo/cad.</span>
         <span class="cmp__ftd">FTD</span>
-        <span>Custo por FTD (CPA)</span>
+        <span class="cmp__custoftd">Custo por FTD</span>
         <span class="cmp__dep">Depósito</span>
         <span class="cmp__valorftd">Valor FTD</span>
         <span class="cmp__volume">Volume</span>
@@ -2227,8 +2256,12 @@ body.pnl-aberto{overflow:hidden}
             <span class="cmp__bar"><i style="width:100%"></i></span>
             <span class="cmp__share">25,7% da verba do dia</span>
           </span>
-          <span class="cmp__num cmp__ftd">6</span>
+          <span class="cmp__num cmp__res">6</span>
           <span><span class="chip chip--sm chip--good">R$ 117,68</span></span>
+          <span class="cmp__num cmp__cad">0</span>
+          <span class="cmp__num cmp__custocad">R$ 0,00</span>
+          <span class="cmp__num cmp__ftd">0</span>
+          <span class="cmp__num cmp__custoftd">R$ 0,00</span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 10.585,51</span>
           <span class="cmp__num cmp__num--soft cmp__valorftd">R$ 909,00</span>
           <span class="cmp__num cmp__num--soft cmp__volume">R$ 19.647,35</span>
@@ -2242,8 +2275,12 @@ body.pnl-aberto{overflow:hidden}
             <span class="cmp__bar"><i style="width:86.8%"></i></span>
             <span class="cmp__share">22,3% da verba do dia</span>
           </span>
-          <span class="cmp__num cmp__ftd">2</span>
+          <span class="cmp__num cmp__res">2</span>
           <span><span class="chip chip--sm chip--warn">R$ 306,40</span></span>
+          <span class="cmp__num cmp__cad">0</span>
+          <span class="cmp__num cmp__custocad">R$ 0,00</span>
+          <span class="cmp__num cmp__ftd">0</span>
+          <span class="cmp__num cmp__custoftd">R$ 0,00</span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 12.480,30</span>
         </div>
 
@@ -2254,8 +2291,12 @@ body.pnl-aberto{overflow:hidden}
             <span class="cmp__bar"><i style="width:70.6%"></i></span>
             <span class="cmp__share">18,1% da verba do dia</span>
           </span>
-          <span class="cmp__num cmp__ftd">1</span>
+          <span class="cmp__num cmp__res">1</span>
           <span><span class="chip chip--sm chip--bad">R$ 498,31</span></span>
+          <span class="cmp__num cmp__cad">0</span>
+          <span class="cmp__num cmp__custocad">R$ 0,00</span>
+          <span class="cmp__num cmp__ftd">0</span>
+          <span class="cmp__num cmp__custoftd">R$ 0,00</span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 6.320,90</span>
         </div>
 
@@ -2266,8 +2307,12 @@ body.pnl-aberto{overflow:hidden}
             <span class="cmp__bar"><i style="width:56.9%"></i></span>
             <span class="cmp__share">14,6% da verba do dia</span>
           </span>
-          <span class="cmp__num cmp__ftd">3</span>
+          <span class="cmp__num cmp__res">3</span>
           <span><span class="chip chip--sm chip--good">R$ 134,05</span></span>
+          <span class="cmp__num cmp__cad">0</span>
+          <span class="cmp__num cmp__custocad">R$ 0,00</span>
+          <span class="cmp__num cmp__ftd">0</span>
+          <span class="cmp__num cmp__custoftd">R$ 0,00</span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 9.740,10</span>
         </div>
 
@@ -2278,8 +2323,12 @@ body.pnl-aberto{overflow:hidden}
             <span class="cmp__bar"><i style="width:35.9%"></i></span>
             <span class="cmp__share">9,2% da verba do dia</span>
           </span>
-          <span class="cmp__num cmp__ftd">3</span>
+          <span class="cmp__num cmp__res">3</span>
           <span><span class="chip chip--sm chip--good">R$ 84,41</span></span>
+          <span class="cmp__num cmp__cad">0</span>
+          <span class="cmp__num cmp__custocad">R$ 0,00</span>
+          <span class="cmp__num cmp__ftd">0</span>
+          <span class="cmp__num cmp__custoftd">R$ 0,00</span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 800,00</span>
         </div>
 
@@ -2290,8 +2339,12 @@ body.pnl-aberto{overflow:hidden}
             <span class="cmp__bar"><i style="width:34.0%"></i></span>
             <span class="cmp__share">8,7% da verba do dia</span>
           </span>
-          <span class="cmp__num cmp__ftd">0</span>
+          <span class="cmp__num cmp__res">0</span>
           <span><span class="chip chip--sm chip--na">Aguardando</span></span>
+          <span class="cmp__num cmp__cad">0</span>
+          <span class="cmp__num cmp__custocad">R$ 0,00</span>
+          <span class="cmp__num cmp__ftd">0</span>
+          <span class="cmp__num cmp__custoftd">R$ 0,00</span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 3.350,20</span>
         </div>
 
@@ -2302,8 +2355,12 @@ body.pnl-aberto{overflow:hidden}
             <span class="cmp__bar"><i style="width:5.2%"></i></span>
             <span class="cmp__share">1,3% da verba do dia</span>
           </span>
-          <span class="cmp__num cmp__ftd">0</span>
+          <span class="cmp__num cmp__res">0</span>
           <span><span class="chip chip--sm chip--na">Aguardando</span></span>
+          <span class="cmp__num cmp__cad">0</span>
+          <span class="cmp__num cmp__custocad">R$ 0,00</span>
+          <span class="cmp__num cmp__ftd">0</span>
+          <span class="cmp__num cmp__custoftd">R$ 0,00</span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 16.730,00</span>
         </div>
 
@@ -2444,8 +2501,8 @@ body.pnl-aberto{overflow:hidden}
               <span class="hm__val" data-field="investimento_total">R$ 706,06</span>
             </div>
             <div class="hm">
-              <span class="hm__lbl">Custo por FTD (CPA)</span>
-              <span class="chip chip--good" data-field="tap.custo_por_ftd">R$ 117,68</span>
+              <span class="hm__lbl">Custo por resultado</span>
+              <span class="chip chip--good" data-field="meta.custo_por_resultado">R$ 117,68</span>
             </div>
           </div>
         </header>
@@ -2634,8 +2691,8 @@ body.pnl-aberto{overflow:hidden}
               <span class="hm__val" data-field="investimento_total">R$ 612,80</span>
             </div>
             <div class="hm">
-              <span class="hm__lbl">Custo por FTD</span>
-              <span class="chip chip--warn" data-field="tap.custo_por_ftd">R$ 306,40</span>
+              <span class="hm__lbl">Custo por resultado</span>
+              <span class="chip chip--warn" data-field="meta.custo_por_resultado">R$ 306,40</span>
             </div>
           </div>
         </header>
@@ -2801,8 +2858,8 @@ body.pnl-aberto{overflow:hidden}
               <span class="hm__val" data-field="investimento_total">R$ 498,31</span>
             </div>
             <div class="hm">
-              <span class="hm__lbl">Custo por FTD</span>
-              <span class="chip chip--bad" data-field="tap.custo_por_ftd">R$ 498,31</span>
+              <span class="hm__lbl">Custo por resultado</span>
+              <span class="chip chip--bad" data-field="meta.custo_por_resultado">R$ 498,31</span>
             </div>
           </div>
         </header>
@@ -2884,8 +2941,8 @@ body.pnl-aberto{overflow:hidden}
               <span class="hm__val" data-field="investimento_total">R$ 402,15</span>
             </div>
             <div class="hm">
-              <span class="hm__lbl">Custo por FTD</span>
-              <span class="chip chip--good" data-field="tap.custo_por_ftd">R$ 134,05</span>
+              <span class="hm__lbl">Custo por resultado</span>
+              <span class="chip chip--good" data-field="meta.custo_por_resultado">R$ 134,05</span>
             </div>
           </div>
         </header>
@@ -3081,8 +3138,8 @@ body.pnl-aberto{overflow:hidden}
               <span class="hm__val" data-field="investimento_total">R$ 253,22</span>
             </div>
             <div class="hm">
-              <span class="hm__lbl">Custo por FTD</span>
-              <span class="chip chip--good" data-field="tap.custo_por_ftd">R$ 84,41</span>
+              <span class="hm__lbl">Custo por resultado</span>
+              <span class="chip chip--good" data-field="meta.custo_por_resultado">R$ 84,41</span>
             </div>
           </div>
         </header>
@@ -3146,8 +3203,8 @@ body.pnl-aberto{overflow:hidden}
               <span class="hm__val" data-field="investimento_total">R$ 240,26</span>
             </div>
             <div class="hm">
-              <span class="hm__lbl">Custo por FTD</span>
-              <span class="chip chip--na" data-field="tap.custo_por_ftd">Aguardando</span>
+              <span class="hm__lbl">Custo por resultado</span>
+              <span class="chip chip--na" data-field="meta.custo_por_resultado">Aguardando</span>
             </div>
           </div>
         </header>
@@ -3209,8 +3266,8 @@ body.pnl-aberto{overflow:hidden}
               <span class="hm__val" data-field="investimento_total">R$ 36,45</span>
             </div>
             <div class="hm">
-              <span class="hm__lbl">Custo por FTD</span>
-              <span class="chip chip--na" data-field="tap.custo_por_ftd">Aguardando</span>
+              <span class="hm__lbl">Custo por resultado</span>
+              <span class="chip chip--na" data-field="meta.custo_por_resultado">Aguardando</span>
             </div>
           </div>
         </header>
@@ -3415,8 +3472,12 @@ body.pnl-aberto{overflow:hidden}
         <span>Entidade</span>
         <span>Investido</span>
         <span class="cmp__bar-cell">Participação na verba</span>
+        <span class="cmp__res">Result.</span>
+        <span>Custo/result.</span>
+        <span class="cmp__cad">Cadastros</span>
+        <span class="cmp__custocad">Custo/cad.</span>
         <span class="cmp__ftd">FTD</span>
-        <span>Custo por FTD (CPA)</span>
+        <span class="cmp__custoftd">Custo por FTD</span>
         <span class="cmp__dep">Depósito</span>
         <span class="cmp__valorftd">Valor FTD</span>
         <span class="cmp__volume">Volume</span>
@@ -3432,8 +3493,12 @@ body.pnl-aberto{overflow:hidden}
             <span class="cmp__bar"><i style="width:100%"></i></span>
             <span class="cmp__share">14,6% da verba do dia</span>
           </span>
-          <span class="cmp__num cmp__ftd">3</span>
+          <span class="cmp__num cmp__res">3</span>
           <span><span class="chip chip--sm chip--good">R$ 134,05</span></span>
+          <span class="cmp__num cmp__cad">0</span>
+          <span class="cmp__num cmp__custocad">R$ 0,00</span>
+          <span class="cmp__num cmp__ftd">0</span>
+          <span class="cmp__num cmp__custoftd">R$ 0,00</span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 9.740,10</span>
         </div>
 
@@ -3444,8 +3509,12 @@ body.pnl-aberto{overflow:hidden}
             <span class="cmp__bar"><i style="width:0%"></i></span>
             <span class="cmp__share">0,0% da verba do dia</span>
           </span>
-          <span class="cmp__num cmp__ftd">60</span>
+          <span class="cmp__num cmp__res">60</span>
           <span><span class="chip chip--sm chip--na">Sem verba</span></span>
+          <span class="cmp__num cmp__cad">0</span>
+          <span class="cmp__num cmp__custocad">R$ 0,00</span>
+          <span class="cmp__num cmp__ftd">0</span>
+          <span class="cmp__num cmp__custoftd">R$ 0,00</span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 11.961,48</span>
         </div>
 
@@ -3456,8 +3525,12 @@ body.pnl-aberto{overflow:hidden}
             <span class="cmp__bar"><i style="width:0%"></i></span>
             <span class="cmp__share">0,0% da verba do dia</span>
           </span>
-          <span class="cmp__num cmp__ftd">41</span>
+          <span class="cmp__num cmp__res">41</span>
           <span><span class="chip chip--sm chip--na">Sem verba</span></span>
+          <span class="cmp__num cmp__cad">0</span>
+          <span class="cmp__num cmp__custocad">R$ 0,00</span>
+          <span class="cmp__num cmp__ftd">0</span>
+          <span class="cmp__num cmp__custoftd">R$ 0,00</span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 96.204,80</span>
         </div>
 
@@ -3468,8 +3541,12 @@ body.pnl-aberto{overflow:hidden}
             <span class="cmp__bar"><i style="width:0%"></i></span>
             <span class="cmp__share">0,0% da verba do dia</span>
           </span>
-          <span class="cmp__num cmp__ftd">9</span>
+          <span class="cmp__num cmp__res">9</span>
           <span><span class="chip chip--sm chip--na">Sem verba</span></span>
+          <span class="cmp__num cmp__cad">0</span>
+          <span class="cmp__num cmp__custocad">R$ 0,00</span>
+          <span class="cmp__num cmp__ftd">0</span>
+          <span class="cmp__num cmp__custoftd">R$ 0,00</span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 22.480,15</span>
         </div>
 
@@ -3480,8 +3557,12 @@ body.pnl-aberto{overflow:hidden}
             <span class="cmp__bar"><i style="width:0%"></i></span>
             <span class="cmp__share">0,0% da verba do dia</span>
           </span>
-          <span class="cmp__num cmp__ftd">0</span>
+          <span class="cmp__num cmp__res">0</span>
           <span><span class="chip chip--sm chip--na">Sem verba</span></span>
+          <span class="cmp__num cmp__cad">0</span>
+          <span class="cmp__num cmp__custocad">R$ 0,00</span>
+          <span class="cmp__num cmp__ftd">0</span>
+          <span class="cmp__num cmp__custoftd">R$ 0,00</span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 0,00</span>
         </div>
 
@@ -3586,8 +3667,8 @@ body.pnl-aberto{overflow:hidden}
               <span class="hm__val" data-field="investimento_total">R$ 402,15</span>
             </div>
             <div class="hm">
-              <span class="hm__lbl">Custo por FTD</span>
-              <span class="chip chip--good" data-field="tap.custo_por_ftd">R$ 134,05</span>
+              <span class="hm__lbl">Custo por resultado</span>
+              <span class="chip chip--good" data-field="meta.custo_por_resultado">R$ 134,05</span>
             </div>
           </div>
         </header>
@@ -3657,9 +3738,9 @@ body.pnl-aberto{overflow:hidden}
               <span class="hm__val" data-field="investimento_total">R$ 0,00</span>
             </div>
             <div class="hm">
-              <span class="hm__lbl">Custo por FTD</span>
+              <span class="hm__lbl">Custo por resultado</span>
               <!-- NUNCA "R$ 0,00" em verde aqui: sem verba não é barato, é sem dado -->
-              <span class="chip chip--na" data-field="tap.custo_por_ftd">Sem verba</span>
+              <span class="chip chip--na" data-field="meta.custo_por_resultado">Sem verba</span>
             </div>
           </div>
         </header>
@@ -3814,8 +3895,8 @@ body.pnl-aberto{overflow:hidden}
               <span class="hm__val" data-field="investimento_total">R$ 0,00</span>
             </div>
             <div class="hm">
-              <span class="hm__lbl">Custo por FTD</span>
-              <span class="chip chip--na" data-field="tap.custo_por_ftd">Sem verba</span>
+              <span class="hm__lbl">Custo por resultado</span>
+              <span class="chip chip--na" data-field="meta.custo_por_resultado">Sem verba</span>
             </div>
           </div>
         </header>
@@ -3939,8 +4020,8 @@ body.pnl-aberto{overflow:hidden}
               <span class="hm__val" data-field="investimento_total">R$ 0,00</span>
             </div>
             <div class="hm">
-              <span class="hm__lbl">Custo por FTD</span>
-              <span class="chip chip--na" data-field="tap.custo_por_ftd">Sem verba</span>
+              <span class="hm__lbl">Custo por resultado</span>
+              <span class="chip chip--na" data-field="meta.custo_por_resultado">Sem verba</span>
             </div>
           </div>
         </header>
@@ -4111,8 +4192,11 @@ body.pnl-aberto{overflow:hidden}
 
     <div class="pnl__body">
 
-      <!-- âncora: os mesmos três números do cabeçalho do card. Estão aqui pra
-           quem abriu o painel não precisar voltar a olhar o card. -->
+      <!-- âncora do painel. Aqui o chip é CUSTO POR FTD (unidade da TAP) de
+           propósito: todo o diagnóstico abaixo (tendência, retenção, giro,
+           margem) é lido em cima do funil da TAP. O cabeçalho do card mostra
+           custo por RESULTADO do Meta -- unidades diferentes, rótulos
+           diferentes, não é divergência. -->
       <section class="pnl-topo">
         <div class="hm">
           <span class="hm__lbl">Investido</span>
@@ -4317,6 +4401,67 @@ function nomeExpert(n) {
    se amanhã entrar outro bloco agregado, é uma linha aqui. */
 var MARCAS = { 'INSTITUCIONAL': 1, 'CA04 INSTITUCIONAL': 1 };
 function ehMarca(nome) { return !!MARCAS[String(nome || '').toUpperCase()]; }
+
+/* ── CONVERSÃO DA CONTA DE ANÚNCIO (META) ─────────────────────────────────
+   O funil da TAP é por btag, e btag pode ser compartilhado por várias contas
+   (Institucional: 1 btag pras 9 contas; Jota Pê: 1 pras 4). Numa linha de
+   conta/entidade que divide btag, o FTD da TAP é o da MARCA INTEIRA, não
+   daquele investimento -- e o custo saía absurdamente barato (R$ 149,28 de
+   verba ÷ 15 FTD da marca = "R$ 9,95", número que não existe).
+   Cabeçalho do card e comparativo passam a usar o resultado que a própria
+   conta de anúncio reporta: grupo.resultado + direto.resultado, custo =
+   investimento_total ÷ resultado. O funil da TAP continua inteiro no bloco
+   TAP do card e nas colunas de depósito/volume/net PL do comparativo -- lá
+   ele é o número certo, porque é lido como funil da entidade, não como
+   conversão daquela verba.
+   Ressalva honesta: grupo (OUTCOME_LEADS/SALES) e tráfego pro perfil
+   (OUTCOME_TRAFFIC) contam resultados de tipos diferentes; a soma serve de
+   volume comparável, não de métrica de qualidade. */
+function metaResultado(e) {
+  if (!e) return 0;
+  var g = e.grupo  && ehNum(e.grupo.resultado)  ? e.grupo.resultado  : 0;
+  var d = e.direto && ehNum(e.direto.resultado) ? e.direto.resultado : 0;
+  return g + d;
+}
+function metaCusto(e) {
+  var r = metaResultado(e);
+  var inv = e && ehNum(e.investimento_total) ? e.investimento_total : 0;
+  return (r > 0 && inv > 0) ? inv / r : null;
+}
+/* ── RÉGUA DA COR DO CUSTO POR RESULTADO ──────────────────────────────────
+   Faixa FIXA, fechada com o operador em 11/08 -- não é relativa à média do
+   dia. O motivo de existir teto por entidade: "resultado" não é a mesma coisa
+   em toda conta. Na maioria é conversa iniciada / entrada em grupo, que custa
+   poucos reais; na CA04 o resultado é o próprio FTD, que custa ordem de
+   grandeza a mais. Uma régua só reprovaria a CA04 todo dia.
+     padrão  -> verde até R$ 14, amarelo até R$ 21 (1,5×), vermelho acima
+     CA04    -> verde até R$ 150, vermelho acima (sem faixa amarela, por
+                pedido explícito do operador)
+   Entidade nova sem entrada aqui cai no padrão. */
+var TETO_RESULT_PADRAO = 14;
+var FATOR_AMARELO = 1.5;
+var TETO_RESULT = {
+  'CA04 INSTITUCIONAL': { teto: 150, amarelo: 1 }
+};
+function faixaResultado(nome) {
+  var c = TETO_RESULT[String(nome == null ? '' : nome).toUpperCase()];
+  return c
+    ? { teto: c.teto, amarelo: c.amarelo }
+    : { teto: TETO_RESULT_PADRAO, amarelo: FATOR_AMARELO };
+}
+/* mesma ideia do chipCusto(), mas na unidade do Meta. Decisão do operador
+   (11/08): sem verba e verba sem resultado imprimem R$ 0,00, não texto --
+   ele lê a coluna como número e o estado em texto atrapalhava a varredura.
+   Esses zeros ficam NEUTROS: zero sem resultado não é "barato", e pintar de
+   verde faria o painel premiar exatamente quem não converteu nada. */
+function chipResultado(e) {
+  var c = metaCusto(e);
+  if (!ehNum(c)) return { classe: 'chip--info', txt: brl(0) };
+  var f = faixaResultado(e.expert_name);
+  var classe = c <= f.teto ? 'chip--good'
+             : (c <= f.teto * f.amarelo ? 'chip--warn' : 'chip--bad');
+  return { classe: classe, txt: brl(c) };
+}
 
 /* ── APELIDO DE CONTA DE ANÚNCIO ──────────────────────────────────────────
    O JSON manda só `conta_id`, e 17 dígitos numa tabela não dizem nada pra
@@ -4966,9 +5111,13 @@ function pintarExpert(expert, ehPrimeiro, isHoje, geral) {
     escreve($('.hm__val', hms[0]), brl(expert.investimento_total));
   }
   var tap = expert.tap || {};
+  /* cabeçalho do card: conversão do Meta (da conta de anúncio), não FTD da
+     TAP -- o btag pode ser compartilhado e o custo por FTD daria número
+     falso aqui. O custo por FTD segue impresso dentro do bloco TAP. */
+  if (hms[1]) $('.hm__lbl', hms[1]).textContent = 'Custo por resultado';
   var chip = $('.expert__head-metrics .chip', art);
   if (chip) {
-    var cc = chipCusto(expert);
+    var cc = chipResultado(expert);
     chip.className = 'chip ' + cc.classe;
     chip.textContent = cc.txt;
   }
@@ -4977,17 +5126,29 @@ function pintarExpert(expert, ehPrimeiro, isHoje, geral) {
      importa avisar é que o btag é um só e o funil não se separa por conta. */
   var subTap = $('.block--tap .block__title small', art);
   if (subTap) {
-    if (contas.length > 1) subTap.textContent = 'btag único da entidade, não separa por conta';
+    /* sem btag próprio, o funil não é zero de performance: é ausência de
+       rastreio. Dizer isso aqui evita que alguém leia R$ 0,00 como resultado
+       ruim -- ou pior, cobre o operador por um número que não existe. */
+    /* fonte meta_pixel: o btag da TAP é da marca inteira, então o funil desta
+       conta vem do pixel dela. Cadastro e FTD existem; depósito, volume e net
+       PL não — o pixel não sabe disso. Dizer aqui evita ler o R$ 0,00 do
+       depósito como queda de resultado. */
+    if (tap.fonte === 'tap_utm')
+      subTap.textContent = 'filtrado pelas UTMs desta conta dentro do btag da marca';
+    else if (tap.fonte === 'meta_pixel')
+      subTap.textContent = 'FTD pelo pixel da conta (a TAP não separa esta conta do btag da marca)';
+    else if (expert.sem_btag) subTap.textContent = 'sem btag próprio: a TAP não separa esta conta';
+    else if (contas.length > 1) subTap.textContent = 'btag único da entidade, não separa por conta';
     else if (geral)        subTap.textContent = 'blend da entidade, não separa grupo e tráf. perfil';
   }
 
   pintarBloco(art, expert, 'grupo', isHoje);
   pintarBloco(art, expert, 'direto', isHoje);
 
-  /* ATENÇÃO: o card tem DOIS [data-field="tap.custo_por_ftd"], o chip do
-     cabeçalho e o número dentro do funil. Escrever a partir do <article>
-     pegaria sempre o primeiro e o funil ficaria com o valor do molde.
-     Por isso os campos da TAP são escritos a partir do bloco, não do card. */
+  /* Os campos da TAP são escritos a partir do bloco, não do <article>. O chip
+     do cabeçalho já foi separado (data-field="meta.custo_por_resultado"), mas
+     manter a leitura escopada no bloco evita repetir a armadilha se algum dia
+     voltar a existir campo repetido entre cabeçalho e funil. */
   var boxTap = $('.block--tap', art) || art;
   escreve(campo(boxTap, 'tap.cadastros'), inteiro(tap.cadastros));
   escreve(campo(boxTap, 'tap.ftd'), inteiro(tap.ftd));
@@ -5107,7 +5268,10 @@ function pintarSinais(d, raiz) {
     preencher('.sinal--bad', null, 'Nenhum FTD com verba ainda');
   }
 
-  var semFtd = exps.filter(function (e) { return !e.tap || !e.tap.ftd; });
+  /* entidade sem btag próprio fica fora de "ainda sem FTD": ela não deixou de
+     converter, ela não tem como ser medida. Misturar as duas coisas faria o
+     card cobrar resultado de quem nem está sendo rastreado. */
+  var semFtd = exps.filter(function (e) { return !e.sem_btag && (!e.tap || !e.tap.ftd); });
   var verba = semFtd.reduce(function (s, e) { return s + (e.investimento_total || 0); }, 0);
   var boxNa = $('.sinal--na', raiz);
   if (!boxNa) return;
@@ -5204,10 +5368,18 @@ function pintarComparativo(d, isHoje, raiz, geral) {
     cel.textContent = nomeExpert(e.expert_name);
     /* marcador de segunda linha: "marca" e/ou "N contas". É o que explica um
        investimento alto numa linha só, então vale o ruído extra. */
+    var marcas = [];
+    /* vale nos dois escopos: avisa que o funil daquela linha não veio do BO da
+       afiliação e sim do pixel da conta de anúncio. Sem isso, o número parece
+       comparável com o das outras linhas e não é a mesma medição. */
+    if (tap.fonte === 'tap_utm') marcas.push('por UTM');
+    else if (tap.fonte === 'meta_pixel') marcas.push('FTD pelo pixel');
+    else if (e.sem_btag) marcas.push('sem btag');
     if (geral) {
-      var marcas = [];
       if (ehMarca(e.expert_name)) marcas.push('marca');
       if ((e.contas || []).length > 1) marcas.push(e.contas.length + ' contas');
+    }
+    {
       if (marcas.length) {
         var tag = document.createElement('i');
         tag.className = 'cmp__tag';
@@ -5215,16 +5387,33 @@ function pintarComparativo(d, isHoje, raiz, geral) {
         cel.appendChild(tag);
       }
     }
-    escreve($('.cmp__num:not(.cmp__ftd):not(.cmp__dep)', linha), brl(inv));
+    escreve($('.cmp__num:not(.cmp__res):not(.cmp__dep)', linha), brl(inv));
     $('.cmp__bar i', linha).style.width = (maxInv > 0 ? (inv / maxInv * 100) : 0).toFixed(1) + '%';
     $('.cmp__share', linha).textContent =
       pct(total > 0 ? inv / total * 100 : 0) + ' da verba' + (isHoje ? ' do dia' : ' do período');
-    escreve($('.cmp__ftd', linha), inteiro(tap.ftd));
+    /* conversão do Meta (da conta), não FTD da TAP (do btag). Ver metaResultado(). */
+    escreve($('.cmp__res', linha), inteiro(metaResultado(e)));
 
     var chip = $('.chip', linha);
-    var cc = chipCusto(e);
+    var cc = chipResultado(e);
     chip.className = 'chip chip--sm ' + cc.classe;
     chip.textContent = cc.txt;
+
+    /* funil da TAP, na ordem em que acontece. Custo por cadastro não vem da
+       API: é verba ÷ cadastros, a mesma conta do tile de totais. Zero em vez
+       de "n/d" nas colunas de custo, por decisão do operador (11/08).
+       O custo por FTD mantém a régua OFICIAL do cliente (R$ 300/350) -- é a
+       única métrica aqui que tem faixa fechada, e por isso é a única colorida
+       por valor absoluto, não por comparação com a média. */
+    var cad = ehNum(tap.cadastros) ? tap.cadastros : 0;
+    escreve($('.cmp__cad', linha), inteiro(cad));
+    escreve($('.cmp__custocad', linha), brl(cad > 0 && inv > 0 ? inv / cad : 0));
+    escreve($('.cmp__ftd', linha), inteiro(ehNum(tap.ftd) ? tap.ftd : 0));
+    var cpf = temCusto(e) ? tap.custo_por_ftd : null;
+    var celCpf = $('.cmp__custoftd', linha);
+    escreve(celCpf, brl(ehNum(cpf) ? cpf : 0));
+    celCpf.className = 'cmp__num cmp__custoftd' + (cpf == null ? '' :
+      (cpf <= FAIXA_BOA ? ' is-good' : (cpf < FAIXA_ALTA ? ' is-warn' : ' is-bad')));
 
     escreve($('.cmp__dep', linha), brl(tap.deposito));
     escreve($('.cmp__valorftd', linha), brl(tap.valor_ftd));
@@ -5236,6 +5425,29 @@ function pintarComparativo(d, isHoje, raiz, geral) {
   });
   corpo.innerHTML = '';
   corpo.appendChild(frag);
+
+  /* cor relativa tem que dizer relativa a quê, senão vira semáforo mágico. */
+  var rodape = $('.cmp__foot', raiz);
+  if (rodape) {
+    var leg = $('.cmp__regua', rodape);
+    if (!leg) {
+      leg = document.createElement('span');
+      leg.className = 'cmp__regua';
+      rodape.insertBefore(leg, rodape.firstChild);
+    }
+    /* a régua tem exceção por entidade, então a legenda lista as exceções que
+       estão em tela -- senão a linha da CA04 parece estar quebrando a regra. */
+    var excecoes = exps.filter(function (e) { return TETO_RESULT[String(e.expert_name).toUpperCase()]; })
+      .map(function (e) {
+        return nomeExpert(e.expert_name) + ' até ' + brl(faixaResultado(e.expert_name).teto);
+      });
+    leg.textContent = 'Custo por resultado: verde até ' + brl(TETO_RESULT_PADRAO) +
+      ', amarelo até ' + brl(TETO_RESULT_PADRAO * FATOR_AMARELO) + ', vermelho acima' +
+      (excecoes.length ? ' (' + excecoes.join('; ') + ')' : '') +
+      '. R$ 0,00 = sem resultado no período.';
+    leg.hidden = false;
+  }
+
   cascata(corpo, (geral ? 'g' : 'c') + ':cmp');
 }
 
