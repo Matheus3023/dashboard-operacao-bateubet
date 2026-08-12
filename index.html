@@ -618,10 +618,17 @@ h1,h2,h3,h4,p{margin:0}
 
 .totals{
   display:grid;gap:var(--gap);
-  /* 4 colunas, 3 linhas temáticas: verba · funil (cadastro→custo→FTD→custo) ·
-     dinheiro. Com 6 colunas o par "FTD / custo por FTD" quebrava entre linhas. */
-  grid-template-columns:repeat(4,minmax(0,1fr));
+  /* 3 linhas temáticas: verba · funil (cadastro→custo→FTD→custo) · dinheiro.
+     Com 6 colunas o par "FTD / custo por FTD" quebrava entre linhas.
+     A grade base tem 20 colunas (mmc de 4 e 5) só pra permitir DUAS larguras
+     de linha sem quebrar o agrupamento: as duas primeiras linhas são de 4
+     tiles (span 5) e a de dinheiro é de 5 (span 4, .tcard--fifth), desde que
+     o net dep entrou. Sem isso, 13 tiles numa grade de 4 deixariam um tile
+     sozinho na última linha. */
+  grid-template-columns:repeat(20,minmax(0,1fr));
 }
+.totals > .tcard{grid-column:span 5}
+.totals > .tcard--fifth{grid-column:span 4}
 .tcard{
   position:relative;
   background:var(--surface);
@@ -1198,7 +1205,7 @@ h1,h2,h3,h4,p{margin:0}
   border-radius:var(--r);
   overflow:hidden;
 }
-/* 13 colunas: identidade, verba, e aí o funil inteiro na ordem em que ele
+/* 14 colunas: identidade, verba, e aí o funil inteiro na ordem em que ele
    acontece -- resultado do Meta -> cadastro -> FTD -> dinheiro. Não cabe em
    tela estreita, e espremer transformaria número em reticências: por isso a
    tabela rola na horizontal (min-width abaixo) em vez de encolher. */
@@ -1217,8 +1224,10 @@ h1,h2,h3,h4,p{margin:0}
   /* FTD saiu de 38px pra 48px em 11/08: 38 cabia "707" (um dia), não "2.540"
      (trinta dias) -- o milhar com ponto passa de 40px e o número era cortado.
      Coluna de contagem também é valor: não pode aparecer pela metade. */
-  grid-template-columns:122px 116px minmax(138px,1fr) 134px 100px 68px 84px 48px 92px 118px 108px 118px 122px;
-  min-width:1544px;
+  /* net dep entrou colado no depósito (é o mesmo dinheiro, líquido de saque):
+     mesma largura de 118px, porque o pior caso é o mesmo valor com sinal. */
+  grid-template-columns:122px 116px minmax(138px,1fr) 134px 100px 68px 84px 48px 92px 118px 118px 108px 118px 122px;
+  min-width:1674px;
   padding:11px 16px;
   border-top:1px solid var(--line-soft);
 }
@@ -1251,6 +1260,12 @@ h1,h2,h3,h4,p{margin:0}
   min-width:0;overflow:hidden;text-overflow:clip;
 }
 .cmp__num--soft{font-weight:520;color:var(--txt-2)}
+/* net dep NEGATIVO (sacaram mais do que depositaram) é a única cor que a
+   coluna ganha. Positivo fica neutro de propósito: verde nesta tabela se lê
+   como "coloca mais verba aqui", e quase toda linha tem net dep positivo --
+   pintar todas de verde não recomendaria nada. Precisa de .cmp__num junto
+   porque .cmp__num--soft vem depois de .num--neg na folha. */
+.cmp__num.num--neg{color:var(--bad);font-weight:620}
 /* custo por FTD colorido pela faixa oficial (R$ 300/350), sem chip: dois
    chips na mesma linha competiriam entre si e nenhum seria lido. */
 .cmp__custoftd.is-good{color:var(--good)}
@@ -1406,7 +1421,7 @@ h1,h2,h3,h4,p{margin:0}
   /* tela média: cabe o funil (resultado, cadastro, FTD e os dois custos), some
      o dinheiro da TAP -- quem quer depósito/volume/net PL abre o card. */
   .cmp__row{grid-template-columns:114px 110px minmax(76px,1fr) 110px 96px 64px 48px 92px;gap:10px;min-width:0}
-  .cmp__dep,.cmp__valorftd,.cmp__volume,.cmp__netpl,.cmp__custocad{display:none}
+  .cmp__dep,.cmp__netdep,.cmp__valorftd,.cmp__volume,.cmp__netpl,.cmp__custocad{display:none}
 }
 @media (max-width:759px){
   /* sobram nome, investido e os dois custos: o que decide ação */
@@ -1433,7 +1448,10 @@ h1,h2,h3,h4,p{margin:0}
 
 /* ── RESPONSIVO ─────────────────────────────────────────────────────────── */
 @media (max-width:1179px){
+  /* abaixo de 1180 a grade volta a ser simples: 3 por linha, sem span. O
+     agrupamento temático já não se sustenta aqui de qualquer forma. */
   .totals{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .totals > .tcard,.totals > .tcard--fifth{grid-column:auto}
 }
 @media (max-width:759px){
   .wrap{padding:0 14px 44px}
@@ -1448,6 +1466,7 @@ h1,h2,h3,h4,p{margin:0}
   .range-apply{min-height:44px;flex:1 1 100%}
   .rangebar__warn{margin-left:0}
   .totals{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .totals > .tcard,.totals > .tcard--fifth{grid-column:auto}
   .tcard__val{font-size:1.25rem}
   .tcard--hero{grid-column:1 / -1}
   .tcard--hero .tcard__val{font-size:1.625rem}
@@ -2459,25 +2478,31 @@ body.pnl-aberto{overflow:hidden}
         <span class="tcard__sub">—</span>
       </div>
 
-      <div class="tcard">
+      <div class="tcard tcard--fifth">
         <span class="tcard__lbl">Ticket médio do FTD</span>
         <span class="tcard__val" data-field="totais.ticket_ftd" data-derived="valor_ftd / ftd">R$ 60,00</span>
         <span class="tcard__sub">valor do 1º depósito</span>
       </div>
 
-      <div class="tcard">
+      <div class="tcard tcard--fifth">
         <span class="tcard__lbl">Depósito médio por FTD</span>
         <span class="tcard__val" data-field="totais.deposito_ftd" data-derived="deposito / ftd">R$ 4.000,47</span>
         <span class="tcard__sub">—</span>
       </div>
 
-      <div class="tcard">
+      <div class="tcard tcard--fifth">
+        <span class="tcard__lbl">Net dep</span>
+        <span class="tcard__val num--pos" data-field="totais.net_dep">R$ 45.120,88</span>
+        <span class="tcard__sub" data-derived="net_dep / deposito * 100">—</span>
+      </div>
+
+      <div class="tcard tcard--fifth">
         <span class="tcard__lbl">Net PL</span>
         <span class="tcard__val" data-field="totais.net_pl">R$ 3.026,80</span>
         <span class="tcard__sub" data-derived="net_pl / volume * 100">—</span>
       </div>
 
-      <div class="tcard">
+      <div class="tcard tcard--fifth">
         <span class="tcard__lbl">Volume</span>
         <span class="tcard__val" data-field="totais.volume">R$ 20.728,05</span>
         <span class="tcard__sub" data-derived="volume / deposito">—</span>
@@ -2553,6 +2578,7 @@ body.pnl-aberto{overflow:hidden}
         <span class="cmp__ftd">FTD</span>
         <span class="cmp__custoftd">Custo por FTD</span>
         <span class="cmp__dep">Depósito</span>
+        <span class="cmp__netdep">Net dep</span>
         <span class="cmp__valorftd">Valor FTD</span>
         <span class="cmp__volume">Volume</span>
         <span class="cmp__netpl">Net PL</span>
@@ -2574,6 +2600,7 @@ body.pnl-aberto{overflow:hidden}
           <span class="cmp__num cmp__ftd">0</span>
           <span class="cmp__num cmp__custoftd">R$ 0,00</span>
           <span class="cmp__num cmp__num--soft cmp__dep">R$ 10.585,51</span>
+          <span class="cmp__num cmp__num--soft cmp__netdep">R$ 6.410,20</span>
           <span class="cmp__num cmp__num--soft cmp__valorftd">R$ 909,00</span>
           <span class="cmp__num cmp__num--soft cmp__volume">R$ 19.647,35</span>
           <span class="cmp__num cmp__num--soft cmp__netpl">R$ 1.570,62</span>
@@ -3773,25 +3800,31 @@ body.pnl-aberto{overflow:hidden}
         <span class="tcard__sub">—</span>
       </div>
 
-      <div class="tcard">
+      <div class="tcard tcard--fifth">
         <span class="tcard__lbl">Ticket médio do FTD</span>
         <span class="tcard__val" data-field="totais.ticket_ftd" data-derived="valor_ftd / ftd">R$ 60,00</span>
         <span class="tcard__sub">valor do 1º depósito</span>
       </div>
 
-      <div class="tcard">
+      <div class="tcard tcard--fifth">
         <span class="tcard__lbl">Depósito médio por FTD</span>
         <span class="tcard__val" data-field="totais.deposito_ftd" data-derived="deposito / ftd">R$ 4.000,47</span>
         <span class="tcard__sub">—</span>
       </div>
 
-      <div class="tcard">
+      <div class="tcard tcard--fifth">
+        <span class="tcard__lbl">Net dep</span>
+        <span class="tcard__val num--pos" data-field="totais.net_dep">R$ 45.120,88</span>
+        <span class="tcard__sub" data-derived="net_dep / deposito * 100">—</span>
+      </div>
+
+      <div class="tcard tcard--fifth">
         <span class="tcard__lbl">Net PL</span>
         <span class="tcard__val" data-field="totais.net_pl">R$ 3.026,80</span>
         <span class="tcard__sub" data-derived="net_pl / volume * 100">—</span>
       </div>
 
-      <div class="tcard">
+      <div class="tcard tcard--fifth">
         <span class="tcard__lbl">Volume</span>
         <span class="tcard__val" data-field="totais.volume">R$ 20.728,05</span>
         <span class="tcard__sub" data-derived="volume / deposito">—</span>
@@ -3857,6 +3890,7 @@ body.pnl-aberto{overflow:hidden}
         <span class="cmp__ftd">FTD</span>
         <span class="cmp__custoftd">Custo por FTD</span>
         <span class="cmp__dep">Depósito</span>
+        <span class="cmp__netdep">Net dep</span>
         <span class="cmp__valorftd">Valor FTD</span>
         <span class="cmp__volume">Volume</span>
         <span class="cmp__netpl">Net PL</span>
@@ -5917,7 +5951,7 @@ function pintarSinais(d, raiz) {
 function somarTotais(exps) {
   var t = {
     investimento_total: 0, investimento_grupo: 0, investimento_direto: 0,
-    cadastros: 0, ftd: 0, deposito: 0, valor_ftd: 0, net_pl: 0, volume: 0
+    cadastros: 0, ftd: 0, deposito: 0, valor_ftd: 0, net_dep: 0, net_pl: 0, volume: 0
   };
   (exps || []).forEach(function (e) {
     var g = e.grupo || {}, dir = e.direto || {}, tap = e.tap || {};
@@ -5928,6 +5962,7 @@ function somarTotais(exps) {
     t.ftd       += tap.ftd || 0;
     t.deposito  += tap.deposito || 0;
     t.valor_ftd += tap.valor_ftd || 0;
+    t.net_dep   += tap.net_dep || 0;
     t.net_pl    += tap.net_pl || 0;
     t.volume    += tap.volume || 0;
   });
@@ -6021,6 +6056,20 @@ function pintarTotais(d, isHoje, raiz, rodape, nSelecionados) {
   escreve(sub(elDF), temFtd
     ? 'depósito ÷ ' + inteiro(t.ftd) + (t.ftd === 1 ? ' FTD' : ' FTDs')
     : 'nenhum FTD no período');
+
+  /* Net dep é o único tile de dinheiro que a API NÃO manda no bloco `totais`
+     (ela só tem por expert). Somar os experts do bloco dá o mesmo número --
+     net dep é aditivo -- e o `ehNum` na frente já aproveita o campo automa-
+     ticamente no dia em que o n8n passar a mandá-lo. Com recorte no
+     comparativo o valor já chega somado por somarTotais(). */
+  var netDep = ehNum(t.net_dep) ? t.net_dep
+    : exps.reduce(function (s, e) { return s + ((e.tap && e.tap.net_dep) || 0); }, 0);
+  var elND = campo(raiz, 'totais.net_dep');
+  escreve(elND, brl(netDep));
+  classeSinal(elND, netDep);
+  escreve(sub(elND), ehNum(t.deposito) && t.deposito > 0
+    ? pct(netDep / t.deposito * 100) + ' do depósito bruto'
+    : 'sem depósito no período');
 
   var elNP = campo(raiz, 'totais.net_pl');
   escreve(elNP, brl(t.net_pl));
@@ -6683,6 +6732,11 @@ function pintarComparativo(d, isHoje, raiz, geral) {
       (cpf <= FAIXA_BOA ? ' is-good' : (cpf < FAIXA_ALTA ? ' is-warn' : ' is-bad')));
 
     escreve($('.cmp__dep', linha), brl(tap.deposito));
+    /* net dep = depósito líquido de saque. Só o sinal negativo ganha cor
+       (ver .cmp__num.num--neg): é o caso em que a operação devolveu dinheiro. */
+    var celNd = $('.cmp__netdep', linha);
+    escreve(celNd, brl(tap.net_dep));
+    if (celNd) celNd.classList.toggle('num--neg', ehNum(tap.net_dep) && tap.net_dep < 0);
     escreve($('.cmp__valorftd', linha), brl(tap.valor_ftd));
     escreve($('.cmp__volume', linha), brl(tap.volume));
     escreve($('.cmp__netpl', linha), brl(tap.net_pl));
@@ -6832,7 +6886,9 @@ function pintarGoogle(g, periodo) {
   }
 
   pintar('google.investimento_total', inv == null ? null : brl(inv),
-         pend ? 'aguardando acesso à API do Google' : 'no período', 'aguardando API');
+         pend ? 'aguardando acesso à API do Google'
+              : inteiro(g.cliques) + ' cliques · CPC ' + (ehNum(g.cpc) ? brl(g.cpc) : '—'),
+         'aguardando API');
   pintar('google.deposito', brl(t.deposito),
          inv ? vezes((t.deposito || 0) / inv) + ' o investido' : 'total depositado no período');
   var elNp = campo(raiz, 'google.net_pl');
@@ -6842,19 +6898,29 @@ function pintarGoogle(g, periodo) {
   pintar('google.volume', brl(t.volume),
          ehNum(t.deposito) && t.deposito > 0 ? vezes((t.volume || 0) / t.deposito) + ' o depósito' : '—');
   pintar('google.cadastros', inteiro(t.cadastros), 'vindos do btag ' + (g.btag || '—'));
-  pintar('google.custo_cadastro', inv && t.cadastros > 0 ? brl(inv / t.cadastros) : null,
-         pend ? 'depende do investimento' : '—', 'aguardando API');
+  pintar('google.custo_cadastro', ehNum(g.custo_por_cadastro) ? brl(g.custo_por_cadastro) : null,
+         pend ? 'depende do investimento' : inteiro(t.cadastros) + ' cadastros no período', 'aguardando API');
   pintar('google.ftd', inteiro(t.ftd),
          t.cadastros > 0 ? pct((t.ftd || 0) / t.cadastros * 100) + ' dos cadastros' : 'sem cadastro');
-  pintar('google.custo_ftd', inv && t.ftd > 0 ? brl(inv / t.ftd) : null,
-         pend ? 'depende do investimento' : '—', 'aguardando API');
+  var elCfg = campo(raiz, 'google.custo_ftd');
+  pintar('google.custo_ftd', ehNum(g.custo_por_ftd) ? brl(g.custo_por_ftd) : null,
+         pend ? 'depende do investimento'
+              : (g.custo_por_ftd <= FAIXA_BOA ? 'dentro da faixa boa (até ' + brl(FAIXA_BOA) + ')'
+                : g.custo_por_ftd < FAIXA_ALTA ? 'acima do confortável' : 'alto (teto ' + brl(FAIXA_ALTA) + ')'),
+         'aguardando API');
+  if (elCfg) {
+    elCfg.classList.remove('val--good', 'val--warn', 'val--bad');
+    if (ehNum(g.custo_por_ftd)) elCfg.classList.add(g.custo_por_ftd <= FAIXA_BOA ? 'val--good'
+      : g.custo_por_ftd < FAIXA_ALTA ? 'val--warn' : 'val--bad');
+  }
   pintar('google.ticket_ftd', ehNum(t.ticket_ftd) ? brl(t.ticket_ftd) : null,
          'valor do 1º depósito', 'sem FTD');
   pintar('google.deposito_ftd', ehNum(t.deposito_por_ftd) ? brl(t.deposito_por_ftd) : null,
          t.ftd > 0 ? 'depósito ÷ ' + inteiro(t.ftd) + ' FTD' : '—', 'sem FTD');
   pintar('google.conversao', ehNum(t.conversao_cadastro_ftd) ? pct(t.conversao_cadastro_ftd) : null,
          'cadastro que virou FTD', 'sem cadastro');
-  pintar('google.valor_ftd', brl(t.valor_ftd), 'soma dos primeiros depósitos');
+  pintar('google.valor_ftd', brl(t.valor_ftd),
+         ehNum(g.conversoes) ? inteiro(g.conversoes) + ' conversões no Google Ads' : 'soma dos primeiros depósitos');
 
   /* lista de contas da MCC */
   var lista = $('[data-list="google-contas"]', raiz);
@@ -6866,7 +6932,9 @@ function pintarGoogle(g, periodo) {
       var n = document.createElement('span'); n.className = 'gcontas__nome'; n.textContent = c.nome || c.conta_id;
       var id = document.createElement('span'); id.className = 'gcontas__val gcontas__id'; id.textContent = c.conta_id;
       var v = document.createElement('span'); v.className = 'gcontas__val';
-      v.textContent = ehNum(c.investimento) ? brl(c.investimento) : 'aguardando API';
+      v.textContent = ehNum(c.investimento)
+        ? brl(c.investimento) + (ehNum(c.cliques) && c.cliques > 0 ? ' · ' + inteiro(c.cliques) + ' cliq' : '')
+        : 'aguardando API';
       if (!ehNum(c.investimento)) v.classList.add('val--na');
       row.appendChild(n); row.appendChild(id); row.appendChild(v);
       lista.appendChild(row);
