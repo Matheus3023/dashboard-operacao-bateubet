@@ -124,11 +124,24 @@ module.exports = async function handler(req, res) {
   const timer = setTimeout(() => ctrl.abort(), UPSTREAM_TIMEOUT_MS);
 
   try {
-    const r = await fetch(url.toString(), {
-      signal: ctrl.signal,
-      headers: { accept: 'application/json' }
-    });
-    const texto = await r.text();
+    /* Uma tentativa extra existe por um motivo concreto: quando a Meta estrangula
+       o token (rate limit), a execução do n8n morre no meio e o webhook devolve
+       200 com CORPO VAZIO. É transitório — a chamada seguinte costuma passar, e
+       quase sempre já cai no cache que a primeira tentativa deixou gravado.
+       Sem isto, o painel mostra "Falha ao atualizar" por um soluço de segundos. */
+    let r = null;
+    let texto = '';
+    for (let tentativa = 0; tentativa < 2; tentativa++) {
+      if (tentativa > 0) await new Promise((ok) => setTimeout(ok, 1500));
+      r = await fetch(url.toString(), {
+        signal: ctrl.signal,
+        headers: { accept: 'application/json' }
+      });
+      texto = await r.text();
+      if (r.ok && texto && texto.trim()) break;
+      // 4xx que não é 429 é erro de parâmetro nosso: repetir não muda nada.
+      if (!r.ok && r.status >= 400 && r.status < 500 && r.status !== 429) break;
+    }
 
     if (!r.ok) {
       res.setHeader('Cache-Control', 'no-store');

@@ -4401,6 +4401,10 @@ var ENDPOINT   = '/api/dashboard';
 var REFRESH_MS = parseInt(ROOT.getAttribute('data-refresh-ms'), 10) || 300000;
 var STALE_MS   = REFRESH_MS + 60000;          /* 6 min: dado envelhecendo */
 var RETRY_MS   = 60000;                        /* nova tentativa depois de falha */
+/* Falha em busca que a PESSOA pediu (trocou o período) tenta de novo bem mais
+   rápido: ela está olhando a tela esperando. Falha de refresh silencioso pode
+   esperar o minuto inteiro — ninguém está travado por ela. */
+var RETRY_INTERATIVO_MS = 8000;
 var TZ         = 'America/Sao_Paulo';
 /* FAIXA OFICIAL DO CLIENTE (v4). Cuidado com os extremos: R$ 300 exato é BOM
    e R$ 350 exato é ALTO. Quem carrega essa regra é faixaChip(), e o veredito
@@ -6060,7 +6064,36 @@ function agendar(ms) {
   clearTimeout(estado.timer);
   estado.timer = null;
   if (ms == null) return;
-  estado.timer = setTimeout(function () { carregar(); }, ms);
+  var o = opts || {};
+  estado.timer = setTimeout(function () { carregar(o); }, ms);
+}
+
+/* Nome do período pra escrever DENTRO da pílula de carregando. Quem trocou o
+   filtro precisa ler que a busca é do recorte que ACABOU de pedir, não do que
+   ainda está na tela. */
+function rotuloPreset(preset, r) {
+  if (preset === 'hoje')  return 'os dados de hoje';
+  if (preset === 'ontem') return 'os dados de ontem';
+  if (preset === '7d')    return 'os últimos 7 dias';
+  if (preset === '30d')   return 'os últimos 30 dias';
+  if (r && r.de && r.ate) {
+    return r.de === r.ate
+      ? 'o dia ' + dataBR(r.de)
+      : 'o período ' + dataBR(r.de) + ' a ' + dataBR(r.ate);
+  }
+  return 'o período escolhido';
+}
+
+function pintarBoot(texto) {
+  var el = $('#boot');
+  if (texto == null) { el.hidden = true; return; }
+  el.textContent = '';
+  var spin = document.createElement('span');
+  spin.className = 'boot__spin';
+  spin.setAttribute('aria-hidden', 'true');
+  el.appendChild(spin);
+  el.appendChild(document.createTextNode(texto));
+  el.hidden = false;
 }
 
 function carregar(opts) {
@@ -6079,9 +6112,23 @@ function carregar(opts) {
   if (r.de && r.ate) url += '?de=' + encodeURIComponent(r.de) + '&ate=' + encodeURIComponent(r.ate);
 
   var id = ++estado.reqId;
+  var primeira = !estado.jaCarregou;
+  /* TROCA DE PERÍODO É PERGUNTA NOVA. Os números que estão na tela são de outro
+     recorte, então desfocam e a pílula diz o que está sendo buscado — período
+     fechado ainda não cacheado leva ~20s no n8n, e sem sinal nenhum a tela
+     parece travada mostrando o recorte antigo como se fosse a resposta.
+     O auto-refresh de 5 min continua silencioso de propósito: ele repinta o
+     MESMO recorte e não pode piscar a tela de quem está lendo. */
+  var interativo = !!opts.interativo;
   estado.carregando = true;
-  ROOT.setAttribute('data-state', estado.jaCarregou ? 'atualizando' : 'carregando');
-  $('#boot').hidden = estado.jaCarregou;
+  ROOT.setAttribute('data-state', (primeira || interativo) ? 'carregando' : 'atualizando');
+  pintarBoot(
+    primeira  ? 'Carregando ' + rotuloPreset(preset, r) + '…' :
+    interativo ? 'Buscando ' + rotuloPreset(preset, r) + '…' : null
+  );
+  /* erro velho não pode ficar embaixo de uma busca nova; some só na busca que a
+     pessoa pediu, senão pisca a cada tentativa automática. */
+  if (interativo) $('#erro-banner').hidden = true;
   /* período custom pode levar 30-40s no n8n: sem isto o botão parece travado
      e a pessoa clica de novo ou desiste achando que quebrou. */
   if (preset === 'custom') {
@@ -6172,15 +6219,24 @@ function carregar(opts) {
       if (id !== estado.reqId) return;
       estado.carregando = false;
       $('#boot').hidden = true;
-      ROOT.setAttribute('data-state', estado.jaCarregou ? 'pronto' : 'carregando');
       elApply.disabled = false; elApply.textContent = 'Aplicar';
 
       var banner = $('#erro-banner');
-      if (estado.jaCarregou) {
+      if (interativo && estado.jaCarregou) {
+        /* Os números na tela são de OUTRO período. Não podem voltar a ficar
+           nítidos como se fossem a resposta do que a pessoa acabou de pedir:
+           seguem desfocados até a tentativa dar certo. */
+        ROOT.setAttribute('data-state', 'carregando');
+        banner.textContent = 'Não consegui carregar ' + rotuloPreset(preset, r) + '. ' +
+          String(e.message || e) +
+          ' Tentando de novo em ' + Math.round(RETRY_INTERATIVO_MS / 1000) + ' segundos.';
+      } else if (estado.jaCarregou) {
+        ROOT.setAttribute('data-state', 'pronto');
         banner.innerHTML = 'Falha ao atualizar. Os números abaixo são da última leitura bem-sucedida (' +
           '<span data-field="atualizado_em" data-tz="America/Sao_Paulo">' +
           horaBR(estado.dados.atualizado_em) + '</span>). Tentando de novo…';
       } else {
+        ROOT.setAttribute('data-state', 'carregando');
         /* primeira carga falhou: não existe número bom pra manter na tela, então
            o recado precisa dizer o que houve, não só que houve. */
         banner.textContent = 'Não foi possível carregar os dados. ' +
@@ -6188,7 +6244,10 @@ function carregar(opts) {
       }
       banner.hidden = false;
       pintarStatus('erro');
-      agendar(RETRY_MS);
+      /* a nova tentativa herda o motivo: se a pessoa está esperando um período,
+         ela continua sendo uma busca "dela" (rápida e com a tela desfocada). */
+      agendar(interativo ? RETRY_INTERATIVO_MS : RETRY_MS,
+              interativo ? { interativo: true } : null);
     });
 }
 
@@ -6898,17 +6957,17 @@ $$('input[name="range"]').forEach(function (inp) {
   inp.addEventListener('change', function () {
     sincronizarCustom();
     if (presetAtual() === 'custom') return;          /* espera escolher as datas */
-    carregar();
+    carregar({ interativo: true });
   });
 });
-$('#range-apply').addEventListener('click', function () { carregar(); });
-elForm.addEventListener('submit', function (ev) { ev.preventDefault(); carregar(); });
+$('#range-apply').addEventListener('click', function () { carregar({ interativo: true }); });
+elForm.addEventListener('submit', function (ev) { ev.preventDefault(); carregar({ interativo: true }); });
 [elDe, elAte].forEach(function (el) {
   el.addEventListener('change', function () {
     mostrarMsg(null);
     /* escolher a data já dispara a busca — não espera clique em "Aplicar".
        O botão continua existindo como reforço visual/acessível. */
-    if (presetAtual() === 'custom') carregar();
+    if (presetAtual() === 'custom') carregar({ interativo: true });
   });
 });
 
