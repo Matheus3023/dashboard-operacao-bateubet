@@ -1248,6 +1248,25 @@ h1,h2,h3,h4,p{margin:0}
 /* legenda da régua de cor: a faixa é relativa à média do escopo, então o
    número da média precisa aparecer junto, senão a cor não é auditável. */
 .cmp__regua{display:block;margin-bottom:4px;color:var(--txt-2)}
+
+/* ── FILTRO "SÓ QUEM ESTÁ INVESTINDO" ─────────────────────────────────────
+   Vive no cabeçalho da seção. order:1 joga a pílula pro fim da linha (o traço
+   do ::after tem order 0), então a leitura fica título → régua → controle. */
+.cmpfil{
+  order:1;flex:none;display:inline-flex;align-items:center;gap:8px;
+  padding:5px 11px;border-radius:999px;cursor:pointer;user-select:none;
+  border:1px solid var(--line);background:var(--surface-sunk);
+  color:var(--txt-2);font-size:.6875rem;
+  transition:border-color .14s ease,color .14s ease;
+}
+.cmpfil:hover{border-color:var(--line-strong);color:var(--txt-1)}
+.cmpfil__in{width:14px;height:14px;flex:none;margin:0;accent-color:var(--acao);cursor:pointer}
+.cmpfil__n{color:var(--txt-3);font-family:var(--mono);font-size:.625rem}
+.cmpfil:has(.cmpfil__in:checked){border-color:var(--acao-line,var(--acao));color:var(--txt-1)}
+.cmpfil__in:focus-visible{outline:2px solid var(--acao);outline-offset:2px}
+.cmp__vazio{margin:0;padding:18px 16px;text-align:center;color:var(--txt-3);font-size:.8125rem}
+@media (prefers-reduced-motion:reduce){.cmpfil{transition:none}}
+
 @media (max-width:1179px){
   /* tela média: cabe o funil (resultado, cadastro, FTD e os dois custos), some
      o dinheiro da TAP -- quem quer depósito/volume/net PL abre o card. */
@@ -1259,6 +1278,9 @@ h1,h2,h3,h4,p{margin:0}
   .cmp__row{grid-template-columns:minmax(0,1fr) 96px 84px 84px;gap:9px;padding:10px 14px}
   .cmp__bar-cell,.cmp__res,.cmp__cad,.cmp__ftd{display:none}
   .cmp__row--head{font-size:.5rem;letter-spacing:.08em}
+  /* no celular o controle desce pra linha própria em vez de espremer o título */
+  .section-head{flex-wrap:wrap}
+  .cmpfil{order:2;width:100%;justify-content:center}
 }
 
 /* ── RODAPÉ ─────────────────────────────────────────────────────────────── */
@@ -2302,7 +2324,16 @@ body.pnl-aberto{overflow:hidden}
            share  = investimento_total / totais.investimento_total * 100
            retorno= tap.deposito / investimento_total
          Ordem idêntica à da lista de cards (o mesmo array já ordenado). -->
-    <div class="section-head"><h2 class="eyebrow">Comparativo · onde a verba está indo</h2></div>
+    <!-- Filtro de linhas do comparativo. Fica no cabeçalho de propósito: é a
+         primeira coisa antes da tabela, e é onde a pessoa decide se quer ver a
+         operação inteira ou só quem está com verba rodando agora. O texto e a
+         contagem são reescritos pelo JS conforme o período. -->
+    <div class="section-head"><h2 class="eyebrow">Comparativo · onde a verba está indo</h2>
+      <label class="cmpfil"><input type="checkbox" class="cmpfil__in">
+        <span class="cmpfil__txt">Só quem está investindo</span>
+        <span class="cmpfil__n"></span>
+      </label>
+    </div>
 
     <section class="cmp" aria-label="Comparativo por expert">
       <div class="cmp__row cmp__row--head" aria-hidden="true">
@@ -3542,7 +3573,12 @@ body.pnl-aberto{overflow:hidden}
          de nome: "N contas" (multi-conta) e "marca" (Institucional).
          Com 24 linhas o ranking é a tela mais útil do escopo Geral: é onde se
          vê a verba da BM inteira numa olhada só. -->
-    <div class="section-head"><h2 class="eyebrow">Comparativo · onde a verba da operação está indo</h2></div>
+    <div class="section-head"><h2 class="eyebrow">Comparativo · onde a verba da operação está indo</h2>
+      <label class="cmpfil"><input type="checkbox" class="cmpfil__in">
+        <span class="cmpfil__txt">Só quem está investindo</span>
+        <span class="cmpfil__n"></span>
+      </label>
+    </div>
 
     <section class="cmp" aria-label="Comparativo por entidade">
       <div class="cmp__row cmp__row--head" aria-hidden="true">
@@ -5614,10 +5650,88 @@ function ligarAjusteDeFonte() {
   window.addEventListener('resize', refazer);
 }
 
+/* ── FILTRO DO COMPARATIVO ────────────────────────────────────────────────
+   Uma caixinha por escopo, cada uma com memória própria: quem acompanha só o
+   Costa e Lobão costuma querer a lista inteira (são 8 linhas), e quem abre o
+   Geral quase sempre quer só quem está com verba rodando (são 28).
+   ────────────────────────────────────────────────────────────────────────── */
+var LS_KEY_CMP = 'bb-dash-cmp-ativos';
+
+function filtroCmpLigado(raiz) {
+  var inp = $('.cmpfil__in', raiz);
+  return !!(inp && inp.checked);
+}
+
+function salvarFiltroCmp() {
+  try {
+    localStorage.setItem(LS_KEY_CMP, JSON.stringify({
+      cl: filtroCmpLigado(RAIZ_CL),
+      geral: filtroCmpLigado(RAIZ_GERAL)
+    }));
+  } catch (e) {}
+}
+
+function restaurarFiltroCmp() {
+  var salvo = null;
+  try { salvo = JSON.parse(localStorage.getItem(LS_KEY_CMP) || 'null'); } catch (e) {}
+  if (!salvo) return;
+  var a = $('.cmpfil__in', RAIZ_CL);
+  var b = $('.cmpfil__in', RAIZ_GERAL);
+  if (a) a.checked = !!salvo.cl;
+  if (b) b.checked = !!salvo.geral;
+}
+
+/* Rótulo e contagem. A contagem é o motivo de a caixinha existir: sem ela, a
+   pessoa não sabe se marcar vai esconder 1 linha ou 20. */
+function pintarFiltroCmp(raiz, todas, isHoje) {
+  var cx = $('.cmpfil', raiz);
+  if (!cx) return;
+  var ativos = todas.filter(function (e) { return (e.investimento_total || 0) > 0; }).length;
+  escreve($('.cmpfil__txt', cx), isHoje ? 'Só quem está investindo hoje' : 'Só quem investiu no período');
+  escreve($('.cmpfil__n', cx), ativos + ' de ' + todas.length);
+  /* nada a esconder = controle que só ocupa espaço e confunde */
+  cx.hidden = !todas.length || ativos === todas.length;
+}
+
+function ligarFiltroCmp() {
+  [[RAIZ_CL, false], [RAIZ_GERAL, true]].forEach(function (par) {
+    var inp = $('.cmpfil__in', par[0]);
+    if (!inp) return;
+    inp.addEventListener('change', function () {
+      salvarFiltroCmp();
+      var b = blocoDoEscopo(par[1]);
+      if (b) pintarComparativo(b, estado.ehHoje, par[0], par[1]);
+    });
+  });
+}
+
+/* Repinta só o comparativo sem refazer o fetch: o dado da última leitura boa
+   já está em memória. */
+function blocoDoEscopo(geral) {
+  var d = estado.dados;
+  if (!d) return null;
+  if (geral) {
+    if (!d.geral || !d.geral.experts) return null;
+    return { totais: d.geral.totais || {}, experts: d.geral.experts, periodo: d.periodo };
+  }
+  return { totais: d.totais || {}, experts: d.experts || [], periodo: d.periodo };
+}
+
 function pintarComparativo(d, isHoje, raiz, geral) {
   var corpo = $('.cmp__body', raiz);
   if (!corpo) return;
-  var exps = d.experts || [];
+  var todas = d.experts || [];
+  /* FILTRO DE LINHAS. Entidade sem verba no período ocupa linha, entra na
+     contagem e não responde nenhuma pergunta de operação — mas ela também não
+     é lixo: some só quando a pessoa pede. */
+  var soAtivos = filtroCmpLigado(raiz);
+  var exps = soAtivos
+    ? todas.filter(function (e) { return (e.investimento_total || 0) > 0; })
+    : todas;
+  pintarFiltroCmp(raiz, todas, isHoje);
+  /* O denominador da participação é o total do período INTEIRO, com filtro ou
+     sem: "25% da verba" tem que continuar querendo dizer a mesma coisa nas duas
+     visões, senão esconder linha zerada inflaria a fatia de quem sobrou. */
   var total = (d.totais && d.totais.investimento_total) || 0;
   var maxInv = exps.reduce(function (m, e) { return Math.max(m, e.investimento_total || 0); }, 0);
 
@@ -5755,6 +5869,17 @@ function pintarComparativo(d, isHoje, raiz, geral) {
   });
   corpo.innerHTML = '';
   corpo.appendChild(frag);
+  /* filtro ligado num período em que ninguém gastou: tabela vazia parece bug.
+     O recado diz que a tabela está vazia POR ESCOLHA e como desfazer. */
+  if (!exps.length) {
+    var vazio = document.createElement('p');
+    vazio.className = 'cmp__vazio';
+    vazio.textContent = soAtivos
+      ? 'Nenhuma operação com verba ' + (isHoje ? 'hoje' : 'nesse período') +
+        '. Desmarque a caixa acima pra ver todas as ' + todas.length + '.'
+      : 'Sem dados pra esse período.';
+    corpo.appendChild(vazio);
+  }
 
   /* cor relativa tem que dizer relativa a quê, senão vira semáforo mágico. */
   var rodape = $('.cmp__foot', raiz);
@@ -6060,7 +6185,7 @@ function aplicarBusca() {
 elBusca.addEventListener('input', aplicarBusca);
 
 /* ── 9. ciclo: fetch, refresh e retry ───────────────────────────────────── */
-function agendar(ms) {
+function agendar(ms, opts) {
   clearTimeout(estado.timer);
   estado.timer = null;
   if (ms == null) return;
@@ -6951,6 +7076,8 @@ ligarAjusteDeFonte();
 ligarPainel();
 restaurarEscolha();
 restaurarOrdenacao();
+restaurarFiltroCmp();
+ligarFiltroCmp();
 pintarNotaPeriodo();
 
 $$('input[name="range"]').forEach(function (inp) {
