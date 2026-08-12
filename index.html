@@ -1346,6 +1346,26 @@ h1,h2,h3,h4,p{margin:0}
   color:var(--acao);font:inherit;text-decoration:underline;text-underline-offset:2px;
 }
 .cmp__mostrartudo:hover{color:var(--txt-1)}
+
+/* ── BARRA DE CONFIRMAR A MARCAÇÃO ────────────────────────────────────────
+   Aparece só com marcação pendente. É o que separa "estou escolhendo" de
+   "filtra agora" — sem ela, marcar o primeiro expert já sumia com os outros. */
+.opsbar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  margin:0 0 10px;padding:9px 14px;border-radius:12px;
+  border:1px solid var(--acao);background:var(--acao-soft);
+}
+.opsbar__txt{flex:1;min-width:120px;color:var(--txt-1);font-size:.75rem;font-weight:600}
+.opsbar__ok,.opsbar__x{
+  padding:7px 14px;border-radius:999px;cursor:pointer;font:inherit;font-size:.75rem;
+  border:1px solid transparent;transition:filter .14s ease,border-color .14s ease;
+}
+.opsbar__ok{background:var(--acao);color:#fff;font-weight:600}
+.opsbar__ok:hover{filter:brightness(1.08)}
+.opsbar__x{background:transparent;border-color:var(--line-strong);color:var(--txt-2)}
+.opsbar__x:hover{color:var(--txt-1)}
+.opsbar__ok:focus-visible,.opsbar__x:focus-visible{outline:2px solid var(--acao);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.opsbar__ok,.opsbar__x{transition:none}}
 .cmp__vazio{margin:0;padding:18px 16px;text-align:center;color:var(--txt-3);font-size:.8125rem}
 @media (prefers-reduced-motion:reduce){.opsfil__btn,.opsfil__chev,.opsfil__acao{transition:none}}
 
@@ -2471,6 +2491,14 @@ body.pnl-aberto{overflow:hidden}
       </div>
     </div>
     <p class="cmp__exibindo" hidden></p>
+
+    <!-- Barra de confirmação. Só aparece quando existe marcação pendente:
+         marcar não filtra nada até a pessoa dizer "compara". -->
+    <div class="opsbar" hidden role="status">
+      <span class="opsbar__txt"></span>
+      <button type="button" class="opsbar__ok">Aplicar</button>
+      <button type="button" class="opsbar__x">Cancelar</button>
+    </div>
 
     <section class="cmp" aria-label="Comparativo por expert">
       <div class="cmp__row cmp__row--head" aria-hidden="true">
@@ -3765,6 +3793,14 @@ body.pnl-aberto{overflow:hidden}
       </div>
     </div>
     <p class="cmp__exibindo" hidden></p>
+
+    <!-- Barra de confirmação. Só aparece quando existe marcação pendente:
+         marcar não filtra nada até a pessoa dizer "compara". -->
+    <div class="opsbar" hidden role="status">
+      <span class="opsbar__txt"></span>
+      <button type="button" class="opsbar__ok">Aplicar</button>
+      <button type="button" class="opsbar__x">Cancelar</button>
+    </div>
 
     <section class="cmp" aria-label="Comparativo por expert">
       <div class="cmp__row cmp__row--head" aria-hidden="true">
@@ -5933,16 +5969,36 @@ function ligarAjusteDeFonte() {
    Um estado por escopo: a lista de operações do Costa e Lobão e a do Geral são
    conjuntos diferentes.
    ────────────────────────────────────────────────────────────────────────── */
+/* DOIS ESTADOS, DE PROPÓSITO:
+     · ops      = o que a tabela está mostrando (null = todas)
+     · rascunho = o que a pessoa está marcando agora, ainda sem efeito
+   Marcar não filtra nada. Filtrar só acontece no "Comparar só estes". Sem essa
+   separação, marcar o primeiro expert já tirava os outros da tela e não dava
+   pra montar a comparação de 2 ou 3 — que é o motivo de o seletor existir. */
 estado.ops = { cl: null, geral: null };
+estado.opsRascunho = { cl: [], geral: [] };
 
 function chaveEscopo(geral) { return geral ? 'geral' : 'cl'; }
 
 function opsSelecao(geral) { return estado.ops[chaveEscopo(geral)]; }
 
+function opsRascunho(geral) { return estado.opsRascunho[chaveEscopo(geral)] || []; }
+
+function marcarOps(geral, sel, raiz) {
+  estado.opsRascunho[chaveEscopo(geral)] = sel || [];
+  sincronizarOps(raiz, geral);
+}
+
+/* Aplica o rascunho na tabela. Rascunho vazio = "todas": tabela vazia não
+   responde nada e ninguém marca zero de propósito. */
+function aplicarOps(geral, raiz) {
+  var r = opsRascunho(geral);
+  definirOps(geral, r.length ? r.slice() : null, raiz);
+}
+
 function definirOps(geral, sel, raiz) {
-  /* seleção vazia viraria tabela vazia sem motivo: cai de volta pra "todas",
-     que é o estado que sempre responde alguma coisa. */
   estado.ops[chaveEscopo(geral)] = (sel && sel.length) ? sel : null;
+  estado.opsRascunho[chaveEscopo(geral)] = (sel && sel.length) ? sel.slice() : [];
   var b = blocoDoEscopo(geral);
   if (!b) return;
   /* os tiles de total seguem a seleção junto com a tabela: são a resposta de
@@ -5950,6 +6006,45 @@ function definirOps(geral, sel, raiz) {
   pintarTotaisFiltrados(b, estado.ehHoje, raiz, geral);
   pintarComparativo(b, estado.ehHoje, raiz, geral);
   $$('.view', raiz).forEach(ajustarValores);
+}
+
+function mesmaLista(a, b) {
+  a = a || []; b = b || [];
+  if (a.length !== b.length) return false;
+  for (var i = 0; i < a.length; i++) if (b.indexOf(a[i]) === -1) return false;
+  return true;
+}
+
+/* Reflete o rascunho nas caixinhas (tabela e seletor) e na barra de confirmar,
+   SEM redesenhar a tabela: enquanto a pessoa escolhe, nada some da tela. */
+function sincronizarOps(raiz, geral) {
+  var r = opsRascunho(geral);
+  var marcado = function (v) { return r.indexOf(v) !== -1; };
+  $$('.cmp__body .cmp__pick', raiz).forEach(function (cb) {
+    cb.checked = marcado(cb.value);
+    cb.setAttribute('aria-label', (cb.checked ? 'Tirar ' : 'Comparar ') + nomeExpert(cb.value));
+  });
+  $$('.opsfil__item input[value]', raiz).forEach(function (cb) { cb.checked = marcado(cb.value); });
+
+  var lista = $('.opsfil__lista', raiz);
+  var todasCb = lista ? $('input[data-todas]', lista) : null;
+  if (todasCb) {
+    var total = $$('.opsfil__item input[value]', lista).length;
+    todasCb.checked = total > 0 && r.length === total;
+    todasCb.indeterminate = r.length > 0 && r.length < total;
+  }
+
+  var barra = $('.opsbar', raiz);
+  if (!barra) return;
+  var aplicada = opsSelecao(geral);
+  /* a barra só existe quando há mudança pendente: sem isso ela vira ruído fixo */
+  if (mesmaLista(r, aplicada || [])) { barra.hidden = true; return; }
+  barra.hidden = false;
+  escreve($('.opsbar__txt', barra), r.length
+    ? (r.length === 1 ? '1 expert marcado' : r.length + ' experts marcados')
+    : 'nenhum expert marcado');
+  var ok = $('.opsbar__ok', barra);
+  if (ok) ok.textContent = 'Aplicar';
 }
 
 /* Tiles de total no recorte escolhido. Sem recorte, usa o `totais` da API (é a
@@ -6032,14 +6127,16 @@ function montarListaOps(cx, todas, geral) {
 
   /* SEM ESCOLHA = NADA MARCADO. A caixinha responde "eu escolhi esta pra
      comparar?", não "ela está na tela?". Por isso o estado inicial é vazio: a
-     pessoa MARCA quem quer comparar, em vez de desmarcar as outras 25. */
+     pessoa MARCA quem quer comparar, em vez de desmarcar as outras 25.
+     Quem manda aqui é o rascunho — é o que está marcado agora. */
+  var rasc = opsRascunho(geral);
   $$('.opsfil__item input[value]', lista).forEach(function (cb) {
-    cb.checked = !!sel && sel.indexOf(cb.value) !== -1;
+    cb.checked = rasc.indexOf(cb.value) !== -1;
   });
   var todasCb = $('input[data-todas]', lista);
   if (todasCb) {
     var marcados = $$('.opsfil__item input[value]:checked', lista).length;
-    todasCb.checked = marcados === todas.length;
+    todasCb.checked = todas.length > 0 && marcados === todas.length;
     todasCb.indeterminate = marcados > 0 && marcados < todas.length;
   }
 }
@@ -6054,6 +6151,10 @@ function pintarOpsFil(raiz, todas, geral, mostrados) {
     if (sel && sel.length < todas.length) cx.setAttribute('data-filtrando', '');
     else cx.removeAttribute('data-filtrando');
     cx.hidden = !todas.length;
+    /* rascunho não pode citar quem sumiu da API na leitura nova */
+    var nomes = todas.map(function (e) { return e.expert_name; });
+    estado.opsRascunho[chaveEscopo(geral)] = opsRascunho(geral)
+      .filter(function (n) { return nomes.indexOf(n) !== -1; });
     montarListaOps(cx, todas, geral);
   }
   var aviso = $('.cmp__exibindo', raiz);
@@ -6160,10 +6261,8 @@ function ligarOpsFil() {
         visiveis.forEach(function (cb) { cb.checked = alvo.checked; });
       }
       var sel = todosCb.filter(function (cb) { return cb.checked; }).map(function (cb) { return cb.value; });
-      /* "tudo marcado" é estado legítimo (a pessoa clicou selecionar todas) e é
-         diferente de "não escolhi nada ainda". Os dois mostram a tabela inteira;
-         só o segundo deixa as caixinhas vazias. */
-      definirOps(geral, sel, raiz);
+      /* só rascunho: a tabela não muda enquanto a pessoa marca */
+      marcarOps(geral, sel, raiz);
     });
 
     /* caixinha da própria linha da tabela: mesma seleção, atalho mais curto */
@@ -6172,13 +6271,13 @@ function ligarOpsFil() {
       corpo.addEventListener('change', function (ev) {
         var alvo = ev.target;
         if (!alvo || !alvo.classList || !alvo.classList.contains('cmp__pick')) return;
-        /* sem escolha ainda = lista vazia (não "todas"): marcar a primeira faz a
-           tabela mostrar SÓ ela, que é o gesto que a caixinha promete. */
-        var atual = opsSelecao(geral) || [];
+        /* marca no RASCUNHO: a linha marcada continua na tela e as outras
+           também, então dá pra marcar a segunda e a terceira antes de aplicar. */
+        var atual = opsRascunho(geral);
         var sel = alvo.checked
           ? (atual.indexOf(alvo.value) === -1 ? atual.concat([alvo.value]) : atual)
           : atual.filter(function (n) { return n !== alvo.value; });
-        definirOps(geral, sel, raiz);
+        marcarOps(geral, sel, raiz);
       });
     }
 
@@ -6201,15 +6300,28 @@ function ligarOpsFil() {
       });
     }
 
+    /* confirmar / desistir da marcação */
+    var barra = $('.opsbar', raiz);
+    if (barra) {
+      $('.opsbar__ok', barra).addEventListener('click', function () {
+        fecharTodosOps();
+        aplicarOps(geral, raiz);
+      });
+      $('.opsbar__x', barra).addEventListener('click', function () {
+        /* volta o rascunho pro que está aplicado: as caixinhas desmarcam
+           sozinhas e a tabela nem chega a mudar. */
+        marcarOps(geral, (opsSelecao(geral) || []).slice(), raiz);
+      });
+    }
+
     $$('.opsfil__acao', cx).forEach(function (bt) {
       bt.addEventListener('click', function () {
         if (bt.getAttribute('data-acao') === 'todas') {
-          /* marca tudo de verdade (caixinhas cheias); a tabela já mostrava tudo */
+          /* marca tudo no rascunho; ainda precisa confirmar */
           var b = blocoDoEscopo(geral);
-          definirOps(geral, ((b && b.experts) || []).map(function (e) { return e.expert_name; }), raiz);
+          marcarOps(geral, ((b && b.experts) || []).map(function (e) { return e.expert_name; }), raiz);
         } else {
-          /* limpar volta pro estado "nada escolhido": caixinhas vazias e tabela
-             inteira, em vez de tabela vazia. */
+          /* limpar é ação direta: desfaz o recorte e volta a tabela inteira */
           definirOps(geral, null, raiz);
         }
         var busca = $('.opsfil__busca', cx);
@@ -6272,12 +6384,12 @@ function pintarComparativo(d, isHoje, raiz, geral) {
     pick.type = 'checkbox';
     pick.className = 'cmp__pick';
     pick.value = e.expert_name;
-    /* vazia enquanto ninguém escolheu nada: marcar é o gesto de "quero comparar
-       esta", e a tabela passa a mostrar só as marcadas. */
-    var escolhidas = opsSelecao(geral);
-    pick.checked = !!escolhidas && escolhidas.indexOf(e.expert_name) !== -1;
-    pick.setAttribute('aria-label', (pick.checked ? 'Tirar ' : 'Comparar só ') + nomeExpert(e.expert_name));
-    pick.title = pick.checked ? 'Tirar da comparação' : 'Comparar só esta (marque mais pra somar)';
+    /* reflete o RASCUNHO (o que está marcado agora), não o que a tabela está
+       mostrando: marcar não filtra até confirmar. */
+    var escolhidas = opsRascunho(geral);
+    pick.checked = escolhidas.indexOf(e.expert_name) !== -1;
+    pick.setAttribute('aria-label', (pick.checked ? 'Tirar ' : 'Comparar ') + nomeExpert(e.expert_name));
+    pick.title = 'Marcar pra comparar';
     celula.appendChild(pick);
     var cel = document.createElement('span');
     cel.className = 'cmp__nomewrap';
@@ -6444,6 +6556,9 @@ function pintarComparativo(d, isHoje, raiz, geral) {
   }
 
   cascata(corpo, (geral ? 'g' : 'c') + ':cmp');
+  /* as linhas foram redesenhadas: repõe as marcas do rascunho e o estado da
+     barra de confirmar (o refresh de 5 min passa por aqui). */
+  sincronizarOps(raiz, geral);
 }
 
 function pintarTopCriativos(d, isHoje, raiz) {
