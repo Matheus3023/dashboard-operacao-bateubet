@@ -2864,7 +2864,7 @@ body.pnl-aberto{overflow:hidden}
         <input type="radio" name="range" id="r-ontem" value="ontem">
         <label for="r-ontem">Ontem</label>
         <input type="radio" name="range" id="r-7" value="7d">
-        <label for="r-7" title="Últimos 7 dias">7d</label>
+        <label for="r-7" title="Últimos 7 dias fechados (hoje não entra)">7d</label>
         <input type="radio" name="range" id="r-30" value="30d">
         <label for="r-30" title="Últimos 30 dias">30d</label>
         <input type="radio" name="range" id="r-mes" value="mes">
@@ -8054,7 +8054,14 @@ function presetAtual() {
 function intervaloDe(preset) {
   var hoje = hojeSP();
   if (preset === 'ontem') { var o = somaDias(hoje, -1); return { de: o, ate: o }; }
-  if (preset === '7d')  return { de: somaDias(hoje, -6), ate: hoje };
+  /* 7d = os 7 dias FECHADOS antes de hoje, hoje NÃO entra. Pedido do operador.
+     Hoje é um dia pela metade: entrar na conta puxa a média pra baixo e faz o
+     recorte mudar de valor a cada refresh, o que impede comparar duas leituras
+     do mesmo "7 dias". Quem quer o dia corrente tem o botão "Hoje" do lado.
+     Efeito colateral bom: sem hoje o período é fechado, então cacheia pra
+     sempre e a leitura passa a ser instantânea.
+     "30d" e "Mês atual" continuam incluindo hoje — não foram pedidos. */
+  if (preset === '7d')  return { de: somaDias(hoje, -7), ate: somaDias(hoje, -1) };
   if (preset === '30d') return { de: somaDias(hoje, -29), ate: hoje };
   /* MÊS CALENDÁRIO, não "últimos 30 dias": é o recorte com que a operação
      fecha conta com a casa. Mês atual vai do dia 1 até HOJE (parcial, ainda
@@ -8222,7 +8229,7 @@ function agendar(ms, opts) {
 function rotuloPreset(preset, r) {
   if (preset === 'hoje')  return 'os dados de hoje';
   if (preset === 'ontem') return 'os dados de ontem';
-  if (preset === '7d')    return 'os últimos 7 dias';
+  if (preset === '7d')    return 'os últimos 7 dias fechados';
   if (preset === '30d')   return 'os últimos 30 dias';
   if (preset === 'mes')   return 'o mês atual';
   if (preset === 'mes_passado') return 'o mês passado';
