@@ -1028,14 +1028,17 @@ h1,h2,h3,h4,p{margin:0}
   text-transform:uppercase;color:var(--txt-3);
 }
 #e-cl:checked ~ .scopebar label[for="e-cl"],
-#e-geral:checked ~ .scopebar label[for="e-geral"]{
+#e-geral:checked ~ .scopebar label[for="e-geral"],
+#e-google:checked ~ .scopebar label[for="e-google"]{
   background:linear-gradient(150deg,var(--acao-soft),transparent 68%),var(--surface-2);
   border-color:var(--acao-line);
 }
 #e-cl:checked ~ .scopebar label[for="e-cl"] .scopebar__nome,
-#e-geral:checked ~ .scopebar label[for="e-geral"] .scopebar__nome{color:var(--txt)}
+#e-geral:checked ~ .scopebar label[for="e-geral"] .scopebar__nome,
+#e-google:checked ~ .scopebar label[for="e-google"] .scopebar__nome{color:var(--txt)}
 #e-cl:checked ~ .scopebar label[for="e-cl"] .scopebar__nome::before,
-#e-geral:checked ~ .scopebar label[for="e-geral"] .scopebar__nome::before{
+#e-geral:checked ~ .scopebar label[for="e-geral"] .scopebar__nome::before,
+#e-google:checked ~ .scopebar label[for="e-google"] .scopebar__nome::before{
   background:var(--acao);box-shadow:0 0 0 3px var(--acao-soft);
 }
 #e-cl:focus-visible ~ .scopebar label[for="e-cl"],
@@ -1043,7 +1046,33 @@ h1,h2,h3,h4,p{margin:0}
 
 .scope{display:none}
 #e-cl:checked ~ .scope--cl,
-#e-geral:checked ~ .scope--geral{display:block}
+#e-geral:checked ~ .scope--geral,
+#e-google:checked ~ .scope--google{display:block}
+
+/* ── ESCOPO GOOGLE ────────────────────────────────────────────────────────
+   Estrutura enxuta de propósito: o Google é UMA operação (não N experts),
+   então não tem comparativo nem card por pessoa — tem os totais do funil e a
+   lista das contas de anúncio da MCC. */
+.gcontas{
+  margin-top:18px;border:1px solid var(--line);border-radius:14px;overflow:hidden;
+  background:var(--surface);
+}
+.gcontas__row{
+  display:grid;grid-template-columns:minmax(0,1fr) 150px 160px;gap:12px;
+  padding:12px 16px;align-items:center;border-top:1px solid var(--line-soft);
+}
+.gcontas__row:first-child{border-top:0}
+.gcontas__row--head{
+  background:var(--surface-sunk);color:var(--txt-3);
+  font-family:var(--mono);font-size:.5625rem;letter-spacing:.11em;text-transform:uppercase;
+}
+.gcontas__nome{font-size:.8125rem;font-weight:640;letter-spacing:.02em;text-transform:uppercase}
+.gcontas__id{font-family:var(--mono);font-size:.6875rem;color:var(--txt-3)}
+.gcontas__val{font-size:.8125rem;font-weight:620;font-variant-numeric:tabular-nums;text-align:right}
+@media (max-width:759px){
+  .gcontas__row{grid-template-columns:minmax(0,1fr) 110px;gap:8px}
+  .gcontas__row > :last-child{display:none}
+}
 
 .tabs{
   display:flex;gap:2px;margin:16px 0 0;
@@ -2292,6 +2321,7 @@ body.pnl-aberto{overflow:hidden}
   <div class="views">
     <input type="radio" name="escopo" id="e-cl" checked>
     <input type="radio" name="escopo" id="e-geral">
+    <input type="radio" name="escopo" id="e-google">
     <input type="radio" name="view" id="v-geral" checked>
     <input type="radio" name="view" id="v-experts">
 
@@ -2305,6 +2335,10 @@ body.pnl-aberto{overflow:hidden}
         <span class="scopebar__nome">Geral</span>
         <!-- JS: geral.experts.length + soma de geral.experts[].contas.length -->
         <span class="scopebar__sub" data-derived="geral.experts.length + contas">24 experts · 33 contas</span>
+      </label>
+      <label for="e-google">
+        <span class="scopebar__nome">Google</span>
+        <span class="scopebar__sub" data-derived="google.contas.length">3 contas · MCC</span>
       </label>
     </nav>
 
@@ -4448,6 +4482,94 @@ body.pnl-aberto{overflow:hidden}
     </div><!-- ══════════ /GERAL · ABA 2 ══════════ -->
 
     </div><!-- ╚══ /ESCOPO 2 · GERAL ══╝ -->
+
+    <!-- ╔═══════════════════════════════════════════════════════════════════╗
+         ║ ESCOPO 3 · GOOGLE · consome o bloco  google  da API               ║
+         ╚═══════════════════════════════════════════════════════════════════╝
+         O Google é UMA operação, não N experts: não tem comparativo nem card
+         por pessoa. Tem o funil da TAP do btag 543779 e a lista de contas da
+         MCC Bateu Bet. O investimento só aparece quando a credencial da
+         Google Ads API estiver ligada — até lá o campo diz isso em letras, em
+         vez de mostrar R$ 0,00, que seria lido como "não gastou". -->
+    <div class="scope scope--google" id="escopo-google" data-escopo="google">
+
+      <div class="geral-aviso" id="google-aviso" hidden></div>
+
+      <div class="section-head">
+        <h2 class="eyebrow">Google Ads · <span data-field="periodo_label">hoje</span></h2>
+      </div>
+
+      <section class="totals" aria-label="Totais do Google">
+        <div class="tcard tcard--hero">
+          <span class="tcard__lbl">Investimento Google</span>
+          <span class="tcard__val" data-field="google.investimento_total">—</span>
+          <span class="tcard__sub">—</span>
+        </div>
+        <div class="tcard">
+          <span class="tcard__lbl">Depósito</span>
+          <span class="tcard__val" data-field="google.deposito">—</span>
+          <span class="tcard__sub">—</span>
+        </div>
+        <div class="tcard">
+          <span class="tcard__lbl">Net PL</span>
+          <span class="tcard__val" data-field="google.net_pl">—</span>
+          <span class="tcard__sub">—</span>
+        </div>
+        <div class="tcard">
+          <span class="tcard__lbl">Volume</span>
+          <span class="tcard__val" data-field="google.volume">—</span>
+          <span class="tcard__sub">—</span>
+        </div>
+        <div class="tcard">
+          <span class="tcard__lbl">Cadastros</span>
+          <span class="tcard__val" data-field="google.cadastros">—</span>
+          <span class="tcard__sub">—</span>
+        </div>
+        <div class="tcard">
+          <span class="tcard__lbl">Custo por cadastro</span>
+          <span class="tcard__val" data-field="google.custo_cadastro">—</span>
+          <span class="tcard__sub">—</span>
+        </div>
+        <div class="tcard">
+          <span class="tcard__lbl">FTD</span>
+          <span class="tcard__val" data-field="google.ftd">—</span>
+          <span class="tcard__sub">—</span>
+        </div>
+        <div class="tcard">
+          <span class="tcard__lbl">Custo por FTD</span>
+          <span class="tcard__val" data-field="google.custo_ftd">—</span>
+          <span class="tcard__sub">—</span>
+        </div>
+        <div class="tcard">
+          <span class="tcard__lbl">Ticket médio do FTD</span>
+          <span class="tcard__val" data-field="google.ticket_ftd">—</span>
+          <span class="tcard__sub">—</span>
+        </div>
+        <div class="tcard">
+          <span class="tcard__lbl">Depósito médio por FTD</span>
+          <span class="tcard__val" data-field="google.deposito_ftd">—</span>
+          <span class="tcard__sub">—</span>
+        </div>
+        <div class="tcard">
+          <span class="tcard__lbl">Conversão cadastro → FTD</span>
+          <span class="tcard__val" data-field="google.conversao">—</span>
+          <span class="tcard__sub">—</span>
+        </div>
+        <div class="tcard">
+          <span class="tcard__lbl">Valor dos FTD</span>
+          <span class="tcard__val" data-field="google.valor_ftd">—</span>
+          <span class="tcard__sub">—</span>
+        </div>
+      </section>
+
+      <div class="section-head"><h2 class="eyebrow">Contas de anúncio · MCC <span data-field="google.mcc">—</span></h2></div>
+      <div class="gcontas" data-list="google-contas">
+        <div class="gcontas__row gcontas__row--head" aria-hidden="true">
+          <span>Conta</span><span class="gcontas__val">ID</span><span class="gcontas__val">Investimento</span>
+        </div>
+      </div>
+
+    </div><!-- ╚══ /ESCOPO 3 · GOOGLE ══╝ -->
   </div><!-- /.views -->
 
     <footer class="foot">
@@ -4687,6 +4809,7 @@ var LS_KEY_ORD = 'bb-dash-ordenar';
    escreve o número do Costa e Lobão dentro do card do Geral. */
 var RAIZ_CL    = document.getElementById('escopo-cl');
 var RAIZ_GERAL = document.getElementById('escopo-geral');
+var RAIZ_GOOGLE = document.getElementById('escopo-google');
 
 /* ── 1. utilidades ──────────────────────────────────────────────────────── */
 function $(sel, ctx) { return (ctx || document).querySelector(sel); }
@@ -6664,6 +6787,97 @@ function pintarEscopo(bloco, periodo, isHoje, raiz, geral) {
   $$('.view', raiz).forEach(ajustarValores);
 }
 
+/* ── ESCOPO GOOGLE ────────────────────────────────────────────────────────
+   Uma operação só, não uma lista de experts: os tiles saem direto do bloco
+   `google` da API. O investimento vem NULO enquanto a credencial da Google Ads
+   API não estiver ligada — e nulo aqui vira texto ("aguardando acesso"), nunca
+   R$ 0,00: numa tela de mídia, zero se lê como "não gastou", e a conta 03 está
+   gastando de verdade. */
+function pintarGoogle(g, periodo) {
+  var raiz = RAIZ_GOOGLE;
+  if (!raiz) return;
+  var botao = $('.scopebar label[for="e-google"]');
+  if (!g) {
+    /* API antiga (sem o bloco): esconde o escopo em vez de mostrar tela vazia */
+    if (botao) botao.hidden = true;
+    if (document.getElementById('e-google').checked) document.getElementById('e-cl').checked = true;
+    return;
+  }
+  if (botao) botao.hidden = false;
+
+  var t = g.tap || {};
+  var inv = ehNum(g.investimento_total) ? g.investimento_total : null;
+  var pend = !!g.investimento_pendente;
+
+  escreve(campo(raiz, 'periodo_label'), rotuloPeriodo(periodo));
+  escreve(campo(raiz, 'google.mcc'), g.mcc || '—');
+
+  function sub(el) { return el ? el.parentElement.querySelector('.tcard__sub') : null; }
+  function pintar(nome, valor, textoSub, textoQuandoNulo) {
+    var el = campo(raiz, nome);
+    escreve(el, valor == null ? (textoQuandoNulo || '—') : valor);
+    escreve(sub(el), textoSub || '');
+  }
+
+  var aviso = $('#google-aviso', raiz);
+  if (aviso) {
+    aviso.hidden = !pend;
+    if (pend) {
+      aviso.innerHTML = '<b>O investimento do Google ainda não entra sozinho.</b> ' +
+        'O funil abaixo (cadastros, FTD, depósito, volume) é real e vem da TAP pelo btag ' +
+        (g.btag || '—') + '. O gasto por conta depende da credencial da Google Ads API, ' +
+        'que está sendo liberada — por isso os campos de investimento e custo aparecem ' +
+        'como <b>aguardando</b> em vez de R$ 0,00.';
+    }
+  }
+
+  pintar('google.investimento_total', inv == null ? null : brl(inv),
+         pend ? 'aguardando acesso à API do Google' : 'no período', 'aguardando API');
+  pintar('google.deposito', brl(t.deposito),
+         inv ? vezes((t.deposito || 0) / inv) + ' o investido' : 'total depositado no período');
+  var elNp = campo(raiz, 'google.net_pl');
+  escreve(elNp, brl(t.net_pl));
+  classeSinal(elNp, t.net_pl);
+  escreve(sub(elNp), ehNum(t.volume) && t.volume > 0 ? pct((t.net_pl || 0) / t.volume * 100) + ' do volume' : '—');
+  pintar('google.volume', brl(t.volume),
+         ehNum(t.deposito) && t.deposito > 0 ? vezes((t.volume || 0) / t.deposito) + ' o depósito' : '—');
+  pintar('google.cadastros', inteiro(t.cadastros), 'vindos do btag ' + (g.btag || '—'));
+  pintar('google.custo_cadastro', inv && t.cadastros > 0 ? brl(inv / t.cadastros) : null,
+         pend ? 'depende do investimento' : '—', 'aguardando API');
+  pintar('google.ftd', inteiro(t.ftd),
+         t.cadastros > 0 ? pct((t.ftd || 0) / t.cadastros * 100) + ' dos cadastros' : 'sem cadastro');
+  pintar('google.custo_ftd', inv && t.ftd > 0 ? brl(inv / t.ftd) : null,
+         pend ? 'depende do investimento' : '—', 'aguardando API');
+  pintar('google.ticket_ftd', ehNum(t.ticket_ftd) ? brl(t.ticket_ftd) : null,
+         'valor do 1º depósito', 'sem FTD');
+  pintar('google.deposito_ftd', ehNum(t.deposito_por_ftd) ? brl(t.deposito_por_ftd) : null,
+         t.ftd > 0 ? 'depósito ÷ ' + inteiro(t.ftd) + ' FTD' : '—', 'sem FTD');
+  pintar('google.conversao', ehNum(t.conversao_cadastro_ftd) ? pct(t.conversao_cadastro_ftd) : null,
+         'cadastro que virou FTD', 'sem cadastro');
+  pintar('google.valor_ftd', brl(t.valor_ftd), 'soma dos primeiros depósitos');
+
+  /* lista de contas da MCC */
+  var lista = $('[data-list="google-contas"]', raiz);
+  if (lista) {
+    $$('.gcontas__row:not(.gcontas__row--head)', lista).forEach(function (el) { el.remove(); });
+    (g.contas || []).forEach(function (c) {
+      var row = document.createElement('div');
+      row.className = 'gcontas__row';
+      var n = document.createElement('span'); n.className = 'gcontas__nome'; n.textContent = c.nome || c.conta_id;
+      var id = document.createElement('span'); id.className = 'gcontas__val gcontas__id'; id.textContent = c.conta_id;
+      var v = document.createElement('span'); v.className = 'gcontas__val';
+      v.textContent = ehNum(c.investimento) ? brl(c.investimento) : 'aguardando API';
+      if (!ehNum(c.investimento)) v.classList.add('val--na');
+      row.appendChild(n); row.appendChild(id); row.appendChild(v);
+      lista.appendChild(row);
+    });
+  }
+
+  var sb = $('.scopebar label[for="e-google"] .scopebar__sub');
+  if (sb) sb.textContent = (g.contas || []).length + ' contas · MCC';
+  $$('.view, .totals', raiz).forEach(ajustarValores);
+}
+
 /* rótulo dos dois cartões de escopo: contagem real, não número escrito à mão */
 function pintarScopebar(d) {
   var subs = $$('.scopebar__sub');
@@ -7041,6 +7255,7 @@ function carregar(opts) {
       } else {
         marcarGeralIndisponivel();
       }
+      pintarGoogle(d.google, d.periodo);
       pintarScopebar(d);
       conferirPeriodo(r, d.periodo);
       pintarStatus('ok');
