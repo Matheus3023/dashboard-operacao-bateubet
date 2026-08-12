@@ -1561,8 +1561,12 @@ html.rolado .brand__logo{height:19px}
      já rola na horizontal, a trajetória virava ruído no meio dos valores em
      vez de ajudar a decidir. A série continua existindo inteira no painel de
      análise do expert, que é onde se olha um de cada vez. */
-  grid-template-columns:122px 116px minmax(138px,1fr) 134px 100px 68px 84px 48px 92px 118px 118px 108px 118px 122px;
-  min-width:1674px;
+  /* ROI net dep e ROI net PL entram ENCOSTADOS NO NOME, antes da verba: são a
+     pergunta que se faz varrendo a coluna da esquerda ("esta operação se paga?")
+     e ficariam invisíveis no fim de uma tabela que rola 1,8 mil pixels. 84px
+     cabem o pior caso real ("sem verba", "-12,4×"). */
+  grid-template-columns:122px 84px 84px 116px minmax(138px,1fr) 134px 100px 68px 84px 48px 92px 118px 118px 108px 118px 122px;
+  min-width:1866px;
   padding:11px 16px;
   border-top:1px solid var(--line-soft);
 }
@@ -1606,6 +1610,13 @@ html.rolado .brand__logo{height:19px}
 .cmp__custoftd.is-good{color:var(--good)}
 .cmp__custoftd.is-warn{color:var(--warn)}
 .cmp__custoftd.is-bad{color:var(--bad)}
+/* ROI é a ÚNICA coluna com ponto de empate de verdade: 1,00× quer dizer que a
+   operação devolveu exatamente o que custou. Por isso aqui a cor recomenda
+   mesmo -- exceção declarada à regra de "só o negativo ganha cor" que vale nas
+   colunas de dinheiro (lá, verde em toda linha não recomendaria nada; aqui
+   verde e vermelho separam duas situações opostas). */
+.cmp__roi.is-good{color:var(--good)}
+.cmp__roi.is-bad{color:var(--bad)}
 
 .cmp__bar{display:block;position:relative;height:7px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden}
 .cmp__bar i{
@@ -1756,14 +1767,17 @@ html.rolado .brand__logo{height:19px}
 @media (max-width:1179px){
   /* tela média: cabe o funil (resultado, cadastro, FTD e os dois custos), some
      o dinheiro da TAP -- quem quer depósito/volume/net PL abre o card. */
-  .cmp__row{grid-template-columns:114px 110px minmax(76px,1fr) 110px 96px 64px 48px 92px;gap:10px;min-width:0}
+  .cmp__row{grid-template-columns:114px 78px 78px 110px minmax(76px,1fr) 110px 96px 64px 48px 92px;gap:10px;min-width:0}
   .cmp__dep,.cmp__netdep,.cmp__valorftd,.cmp__volume,.cmp__netpl,
   .cmp__custocad{display:none}
 }
 @media (max-width:759px){
   /* sobram nome, investido e os dois custos: o que decide ação */
+  /* os dois ROI saem aqui: seis colunas numa tela de 360px dariam ~58px cada e
+     "sem verba" viraria reticências. O mesmo número continua nos tiles de
+     totais, que no celular ficam logo acima desta tabela. */
   .cmp__row{grid-template-columns:minmax(0,1fr) 96px 84px 84px;gap:9px;padding:10px 14px}
-  .cmp__bar-cell,.cmp__res,.cmp__cad,.cmp__ftd{display:none}
+  .cmp__bar-cell,.cmp__res,.cmp__cad,.cmp__ftd,.cmp__roind,.cmp__roinp{display:none}
   .cmp__row--head{font-size:.5rem;letter-spacing:.08em}
   /* no celular o controle desce pra linha própria em vez de espremer o título,
      e o popover ocupa a largura toda — 270px encostados na direita ficariam
@@ -3170,6 +3184,54 @@ body.pnl-aberto{overflow:hidden}
         </div>
       </div>
 
+      <!-- ── NÍVEL 4 · RETORNO SOBRE A MÍDIA E CUSTO DE AFILIADO ───────────
+           Entrou em 13/08 a pedido do operador. Tudo em MULTIPLICADOR: o
+           ponto de empate é 1,00×, não zero — "2,9×" quer dizer que cada R$ 1
+           de mídia voltou como R$ 2,90.
+           O ROI de net PL vem JÁ DESCONTADA a comissão do afiliado (margem
+           real). É por isso que a comissão mora nesta mesma faixa e não solta
+           no meio dos totais: ela é o outro lado da mesma conta.
+           "Pago a afiliados" é dinheiro que SAIU no período — pagamento em
+           lote, não o custo deste recorte. Os dois números convivem de
+           propósito, com o rótulo dizendo qual é qual. -->
+      <div class="totals__fin totals__fin--roi">
+        <div class="tcard">
+          <span class="tcard__lbl">ROAS no FTD</span>
+          <span class="tcard__val" data-field="totais.roas_ftd" data-derived="valor_ftd / investimento_total">—</span>
+          <span class="tcard__sub">—</span>
+        </div>
+
+        <div class="tcard">
+          <span class="tcard__lbl">ROAS no net dep</span>
+          <span class="tcard__val" data-field="totais.roas_netdep" data-derived="net_dep / investimento_total">—</span>
+          <span class="tcard__sub">—</span>
+        </div>
+
+        <div class="tcard">
+          <span class="tcard__lbl">ROI no net PL</span>
+          <span class="tcard__val" data-field="totais.roi_netpl" data-derived="(net_pl - comissao) / investimento_total">—</span>
+          <span class="tcard__sub">—</span>
+        </div>
+
+        <div class="tcard">
+          <span class="tcard__lbl">Comissão de afiliado</span>
+          <span class="tcard__val" data-field="totais.comissao">—</span>
+          <span class="tcard__sub">—</span>
+        </div>
+
+        <div class="tcard">
+          <span class="tcard__lbl">Pago a afiliados</span>
+          <span class="tcard__val" data-field="totais.pagamentos">—</span>
+          <span class="tcard__sub">—</span>
+        </div>
+
+        <div class="tcard">
+          <span class="tcard__lbl">Sobra da operação</span>
+          <span class="tcard__val" data-field="totais.sobra" data-derived="net_pl - investimento_total - comissao">—</span>
+          <span class="tcard__sub">—</span>
+        </div>
+      </div>
+
     </section>
 
     <!-- Participação de cada tipo de tráfego no investimento do dia.
@@ -3230,6 +3292,8 @@ body.pnl-aberto{overflow:hidden}
     <section class="cmp" aria-label="Comparativo por expert">
       <div class="cmp__row cmp__row--head" aria-hidden="true">
         <span>Expert</span>
+        <span class="cmp__roind">ROI net dep</span>
+        <span class="cmp__roinp">ROI net PL</span>
         <span>Investido</span>
         <span class="cmp__bar-cell">Participação na verba</span>
         <span class="cmp__res">Result. por canal</span>
@@ -3249,6 +3313,8 @@ body.pnl-aberto{overflow:hidden}
 
         <div class="cmp__row" data-expert="GP DADOS">
           <span class="cmp__name">GP Dados</span>
+          <span class="cmp__num cmp__roi cmp__roind">—</span>
+          <span class="cmp__num cmp__roi cmp__roinp">—</span>
           <span class="cmp__num">R$ 706,06</span>
           <span class="cmp__bar-cell">
             <span class="cmp__bar"><i style="width:100%"></i></span>
@@ -3269,6 +3335,8 @@ body.pnl-aberto{overflow:hidden}
 
         <div class="cmp__row" data-expert="DEKO">
           <span class="cmp__name">Deko</span>
+          <span class="cmp__num cmp__roi cmp__roind">—</span>
+          <span class="cmp__num cmp__roi cmp__roinp">—</span>
           <span class="cmp__num">R$ 612,80</span>
           <span class="cmp__bar-cell">
             <span class="cmp__bar"><i style="width:86.8%"></i></span>
@@ -3285,6 +3353,8 @@ body.pnl-aberto{overflow:hidden}
 
         <div class="cmp__row" data-expert="CHARLES">
           <span class="cmp__name">Charles</span>
+          <span class="cmp__num cmp__roi cmp__roind">—</span>
+          <span class="cmp__num cmp__roi cmp__roinp">—</span>
           <span class="cmp__num">R$ 498,31</span>
           <span class="cmp__bar-cell">
             <span class="cmp__bar"><i style="width:70.6%"></i></span>
@@ -3301,6 +3371,8 @@ body.pnl-aberto{overflow:hidden}
 
         <div class="cmp__row" data-expert="TANOS">
           <span class="cmp__name">Tanos</span>
+          <span class="cmp__num cmp__roi cmp__roind">—</span>
+          <span class="cmp__num cmp__roi cmp__roinp">—</span>
           <span class="cmp__num">R$ 402,15</span>
           <span class="cmp__bar-cell">
             <span class="cmp__bar"><i style="width:56.9%"></i></span>
@@ -3317,6 +3389,8 @@ body.pnl-aberto{overflow:hidden}
 
         <div class="cmp__row" data-expert="QZL">
           <span class="cmp__name">QZL</span>
+          <span class="cmp__num cmp__roi cmp__roind">—</span>
+          <span class="cmp__num cmp__roi cmp__roinp">—</span>
           <span class="cmp__num">R$ 253,22</span>
           <span class="cmp__bar-cell">
             <span class="cmp__bar"><i style="width:35.9%"></i></span>
@@ -3333,6 +3407,8 @@ body.pnl-aberto{overflow:hidden}
 
         <div class="cmp__row" data-expert="GREGORIO BIG">
           <span class="cmp__name">Gregório Big</span>
+          <span class="cmp__num cmp__roi cmp__roind">—</span>
+          <span class="cmp__num cmp__roi cmp__roinp">—</span>
           <span class="cmp__num">R$ 240,26</span>
           <span class="cmp__bar-cell">
             <span class="cmp__bar"><i style="width:34.0%"></i></span>
@@ -3349,6 +3425,8 @@ body.pnl-aberto{overflow:hidden}
 
         <div class="cmp__row" data-expert="EDERSON">
           <span class="cmp__name">Ederson</span>
+          <span class="cmp__num cmp__roi cmp__roind">—</span>
+          <span class="cmp__num cmp__roi cmp__roinp">—</span>
           <span class="cmp__num">R$ 36,45</span>
           <span class="cmp__bar-cell">
             <span class="cmp__bar"><i style="width:5.2%"></i></span>
@@ -4499,6 +4577,54 @@ body.pnl-aberto{overflow:hidden}
         </div>
       </div>
 
+      <!-- ── NÍVEL 4 · RETORNO SOBRE A MÍDIA E CUSTO DE AFILIADO ───────────
+           Entrou em 13/08 a pedido do operador. Tudo em MULTIPLICADOR: o
+           ponto de empate é 1,00×, não zero — "2,9×" quer dizer que cada R$ 1
+           de mídia voltou como R$ 2,90.
+           O ROI de net PL vem JÁ DESCONTADA a comissão do afiliado (margem
+           real). É por isso que a comissão mora nesta mesma faixa e não solta
+           no meio dos totais: ela é o outro lado da mesma conta.
+           "Pago a afiliados" é dinheiro que SAIU no período — pagamento em
+           lote, não o custo deste recorte. Os dois números convivem de
+           propósito, com o rótulo dizendo qual é qual. -->
+      <div class="totals__fin totals__fin--roi">
+        <div class="tcard">
+          <span class="tcard__lbl">ROAS no FTD</span>
+          <span class="tcard__val" data-field="totais.roas_ftd" data-derived="valor_ftd / investimento_total">—</span>
+          <span class="tcard__sub">—</span>
+        </div>
+
+        <div class="tcard">
+          <span class="tcard__lbl">ROAS no net dep</span>
+          <span class="tcard__val" data-field="totais.roas_netdep" data-derived="net_dep / investimento_total">—</span>
+          <span class="tcard__sub">—</span>
+        </div>
+
+        <div class="tcard">
+          <span class="tcard__lbl">ROI no net PL</span>
+          <span class="tcard__val" data-field="totais.roi_netpl" data-derived="(net_pl - comissao) / investimento_total">—</span>
+          <span class="tcard__sub">—</span>
+        </div>
+
+        <div class="tcard">
+          <span class="tcard__lbl">Comissão de afiliado</span>
+          <span class="tcard__val" data-field="totais.comissao">—</span>
+          <span class="tcard__sub">—</span>
+        </div>
+
+        <div class="tcard">
+          <span class="tcard__lbl">Pago a afiliados</span>
+          <span class="tcard__val" data-field="totais.pagamentos">—</span>
+          <span class="tcard__sub">—</span>
+        </div>
+
+        <div class="tcard">
+          <span class="tcard__lbl">Sobra da operação</span>
+          <span class="tcard__val" data-field="totais.sobra" data-derived="net_pl - investimento_total - comissao">—</span>
+          <span class="tcard__sub">—</span>
+        </div>
+      </div>
+
     </section>
 
     <div class="splitbar">
@@ -4549,6 +4675,8 @@ body.pnl-aberto{overflow:hidden}
     <section class="cmp" aria-label="Comparativo por expert">
       <div class="cmp__row cmp__row--head" aria-hidden="true">
         <span>Expert</span>
+        <span class="cmp__roind">ROI net dep</span>
+        <span class="cmp__roinp">ROI net PL</span>
         <span>Investido</span>
         <span class="cmp__bar-cell">Participação na verba</span>
         <span class="cmp__res">Result. por canal</span>
@@ -4568,6 +4696,8 @@ body.pnl-aberto{overflow:hidden}
 
         <div class="cmp__row" data-expert="TANOS">
           <span class="cmp__name">Tanos</span>
+          <span class="cmp__num cmp__roi cmp__roind">—</span>
+          <span class="cmp__num cmp__roi cmp__roinp">—</span>
           <span class="cmp__num">R$ 402,15</span>
           <span class="cmp__bar-cell">
             <span class="cmp__bar"><i style="width:100%"></i></span>
@@ -4584,6 +4714,8 @@ body.pnl-aberto{overflow:hidden}
 
         <div class="cmp__row" data-expert="JOTA PE">
           <span class="cmp__name">Jota Pê<i class="cmp__tag">4 contas</i></span>
+          <span class="cmp__num cmp__roi cmp__roind">—</span>
+          <span class="cmp__num cmp__roi cmp__roinp">—</span>
           <span class="cmp__num">R$ 0,00</span>
           <span class="cmp__bar-cell">
             <span class="cmp__bar"><i style="width:0%"></i></span>
@@ -4600,6 +4732,8 @@ body.pnl-aberto{overflow:hidden}
 
         <div class="cmp__row" data-expert="INSTITUCIONAL">
           <span class="cmp__name">Institucional<i class="cmp__tag">marca · 9 contas</i></span>
+          <span class="cmp__num cmp__roi cmp__roind">—</span>
+          <span class="cmp__num cmp__roi cmp__roinp">—</span>
           <span class="cmp__num">R$ 0,00</span>
           <span class="cmp__bar-cell">
             <span class="cmp__bar"><i style="width:0%"></i></span>
@@ -4616,6 +4750,8 @@ body.pnl-aberto{overflow:hidden}
 
         <div class="cmp__row" data-expert="FELIPE BORGES">
           <span class="cmp__name">Felipe Borges<i class="cmp__tag">2 contas</i></span>
+          <span class="cmp__num cmp__roi cmp__roind">—</span>
+          <span class="cmp__num cmp__roi cmp__roinp">—</span>
           <span class="cmp__num">R$ 0,00</span>
           <span class="cmp__bar-cell">
             <span class="cmp__bar"><i style="width:0%"></i></span>
@@ -4632,6 +4768,8 @@ body.pnl-aberto{overflow:hidden}
 
         <div class="cmp__row" data-expert="EMPIRE">
           <span class="cmp__name">Empire</span>
+          <span class="cmp__num cmp__roi cmp__roind">—</span>
+          <span class="cmp__num cmp__roi cmp__roinp">—</span>
           <span class="cmp__num">R$ 0,00</span>
           <span class="cmp__bar-cell">
             <span class="cmp__bar"><i style="width:0%"></i></span>
@@ -5822,6 +5960,58 @@ function chipCusto(e) {
   return { classe: faixaChip(cpf), txt: brl(cpf) };
 }
 
+/* ── RETORNO SOBRE A MÍDIA ────────────────────────────────────────────────
+   Em MULTIPLICADOR, não em percentual: "2,9×" quer dizer que cada R$ 1 de
+   mídia voltou como R$ 2,90. O ponto de empate é 1,00× (não zero) — é o que
+   separa esta leitura de um "+190%", e é por isso que 1,00× é a fronteira da
+   cor no comparativo.
+   Nunca imprime 0,0× sem denominador: numa coluna de retorno isso leria como
+   "a operação não devolveu nada", quando o que houve foi não ter investido. */
+function roi(valor, inv) {
+  if (!(ehNum(inv) && inv > 0)) return null;
+  if (!ehNum(valor)) return null;
+  return valor / inv;
+}
+
+/* mesma fronteira do comparativo, aplicada ao algarismo do tile: 1,00× separa
+   "se pagou" de "não se pagou". Sem valor, nenhuma cor — tile cinza é estado
+   legítimo aqui (sem verba, sem funil). */
+function corRetorno(el, v) {
+  if (!el) return;
+  el.classList.remove('val--good', 'val--warn', 'val--bad');
+  if (ehNum(v)) el.classList.add(v >= 1 ? 'val--good' : 'val--bad');
+}
+
+/* NET PL JÁ DESCONTADA A COMISSÃO DO AFILIADO — é o que sobra pra casa de
+   verdade, e é a base do ROI de net PL em toda a tela (escolha do operador em
+   13/08: "margem real").
+   A comissão entra AQUI e não no ROI de net dep de propósito: ela é custo
+   sobre a RECEITA da casa (net PL), não sobre o caixa (net dep = depósito
+   menos saque). Descontar de caixa misturaria duas contas diferentes. */
+function netPlLiquido(tap) {
+  if (!tap || !ehNum(tap.net_pl)) return null;
+  return tap.net_pl - (ehNum(tap.comissao) ? tap.comissao : 0);
+}
+
+/* Entidade cujo funil não vem do BO da afiliação (sem btag, FTD lido pelo
+   pixel) não tem net dep nem net PL — logo não tem ROI. Isso é ausência de
+   medição, não retorno zero, e a tela precisa dizer isso com todas as letras
+   em vez de imprimir um número que ninguém consegue defender. */
+function temFunilTap(e) {
+  return !!(e && e.tap && e.tap.fonte !== 'meta_pixel' && !e.sem_btag);
+}
+
+/* Escreve uma célula de ROI do comparativo com os mesmos três estados das
+   colunas de custo — nenhum deles é o algarismo zero. */
+function escreveRoi(cel, v, inv, temFunil) {
+  if (!cel) return;
+  var vazio = !(ehNum(inv) && inv > 0) ? 'sem verba' : (!temFunil ? 'sem funil' : null);
+  escreve(cel, vazio || vezes(v));
+  cel.className = 'cmp__num cmp__roi ' +
+    (cel.classList.contains('cmp__roind') ? 'cmp__roind' : 'cmp__roinp') +
+    (vazio || !ehNum(v) ? ' cmp__num--soft' : (v >= 1 ? ' is-good' : ' is-bad'));
+}
+
 /* ── 2. datas (sempre no fuso de Brasília, não no do navegador) ─────────── */
 function ymd(d) {
   return new Intl.DateTimeFormat('en-CA', {
@@ -6468,7 +6658,14 @@ function pintarExpert(expert, ehPrimeiro, isHoje, geral) {
        conta vem do pixel dela. Cadastro e FTD existem; depósito, volume e net
        PL não — o pixel não sabe disso. Dizer aqui evita ler o R$ 0,00 do
        depósito como queda de resultado. */
-    if (tap.fonte === 'tap_utm')
+    /* fonte tap_marca: a conta divide o btag com a marca inteira e o recorte por
+       UTM está desligado, então o funil aqui é o das 9 contas institucionais
+       enquanto a verba é só desta conta. Custo por FTD e conversão desta linha
+       ficam otimistas de propósito — dizer isso aqui é o que impede ler o
+       número como desempenho da CA 04 sozinha. */
+    if (tap.fonte === 'tap_marca')
+      subTap.textContent = 'funil do btag da marca inteira (9 contas), não só desta conta';
+    else if (tap.fonte === 'tap_utm')
       subTap.textContent = 'filtrado pelas UTMs desta conta dentro do btag da marca';
     else if (tap.fonte === 'meta_pixel')
       subTap.textContent = 'FTD pelo pixel da conta (a TAP não separa esta conta do btag da marca)';
@@ -6645,7 +6842,10 @@ function pintarSinais(d, raiz) {
 function somarTotais(exps) {
   var t = {
     investimento_total: 0, investimento_grupo: 0, investimento_direto: 0,
-    cadastros: 0, ftd: 0, deposito: 0, valor_ftd: 0, net_dep: 0, net_pl: 0, volume: 0
+    cadastros: 0, ftd: 0, deposito: 0, valor_ftd: 0, net_dep: 0, net_pl: 0, volume: 0,
+    /* comissão e pagamento de afiliado são aditivos como o resto: com recorte
+       no comparativo, os tiles têm que somar só quem está marcado. */
+    comissao: 0, pagamentos: 0
   };
   (exps || []).forEach(function (e) {
     var g = e.grupo || {}, dir = e.direto || {}, tap = e.tap || {};
@@ -6659,6 +6859,8 @@ function somarTotais(exps) {
     t.net_dep   += tap.net_dep || 0;
     t.net_pl    += tap.net_pl || 0;
     t.volume    += tap.volume || 0;
+    t.comissao   += tap.comissao || 0;
+    t.pagamentos += tap.pagamentos || 0;
   });
   return t;
 }
@@ -6787,6 +6989,62 @@ function pintarTotais(d, isHoje, raiz, rodape, nSelecionados) {
   escreve(sub(elVol), ehNum(t.deposito) && t.deposito > 0
     ? vezes((t.volume || 0) / t.deposito) + ' o depósito'
     : 'sem depósito no período');
+
+  /* ── NÍVEL 4 · retorno sobre a mídia e custo de afiliado ─────────────────
+     Tudo em multiplicador, empate em 1,00× (ver roi()). Sem verba nenhum
+     deles vira 0,0×: "não investi" e "investi e não voltou nada" são
+     situações opostas e não podem imprimir o mesmo algarismo. */
+  var comissao = ehNum(t.comissao) ? t.comissao : 0;
+  var netPl = ehNum(t.net_pl) ? t.net_pl : 0;
+  var temVerba = inv > 0;
+
+  var elRF = campo(raiz, 'totais.roas_ftd');
+  var roasFtd = roi(t.valor_ftd, inv);
+  escreve(elRF, temVerba ? vezes(roasFtd) : 'sem verba');
+  corRetorno(elRF, roasFtd);
+  escreve(sub(elRF), temVerba
+    ? brl(t.valor_ftd) + ' de 1º depósito sobre ' + brl(inv) + ' de mídia'
+    : 'nada investido no período');
+
+  var elRD = campo(raiz, 'totais.roas_netdep');
+  var roasNd = roi(netDep, inv);
+  escreve(elRD, temVerba ? vezes(roasNd) : 'sem verba');
+  corRetorno(elRD, roasNd);
+  escreve(sub(elRD), temVerba
+    ? brl(netDep) + ' de depósito já líquido de saque'
+    : 'nada investido no período');
+
+  /* o único que desconta a comissão: net PL é a receita da casa, e é dela que
+     sai o pagamento do afiliado. O bruto continua na sublinha pra ninguém
+     precisar refazer a conta na mão. */
+  var elRP = campo(raiz, 'totais.roi_netpl');
+  var roiNp = roi(netPl - comissao, inv);
+  escreve(elRP, temVerba ? vezes(roiNp) : 'sem verba');
+  corRetorno(elRP, roiNp);
+  escreve(sub(elRP), temVerba
+    ? (comissao !== 0
+      ? 'comissão já descontada · sem ela ' + vezes(roi(netPl, inv))
+      : 'nenhuma comissão no período')
+    : 'nada investido no período');
+
+  var elCom = campo(raiz, 'totais.comissao');
+  escreve(elCom, brl(comissao));
+  escreve(sub(elCom), netPl > 0
+    ? pct(comissao / netPl * 100) + ' do net PL'
+    : (comissao !== 0 ? 'sem net PL positivo no período' : 'nenhuma comissão no período'));
+
+  var elPag = campo(raiz, 'totais.pagamentos');
+  escreve(elPag, brl(ehNum(t.pagamentos) ? t.pagamentos : 0));
+  /* dito com todas as letras porque os dois números moram lado a lado e são
+     coisas diferentes: comissão é o que o período GEROU, pagamento é o que
+     SAIU da conta nele (em lote, quase sempre de meses anteriores). */
+  escreve(sub(elPag), 'dinheiro que saiu no período · não é o custo do recorte');
+
+  var elSobra = campo(raiz, 'totais.sobra');
+  var sobra = netPl - inv - comissao;
+  escreve(elSobra, brl(sobra));
+  classeSinal(elSobra, sobra);
+  escreve(sub(elSobra), 'net PL − mídia − comissão');
 
   /* a média citada no rodapé é dado, não copy: acompanha o período na tela.
      Sai do escopo Costa e Lobão (rodape === true), que é o recorte que o
@@ -7538,7 +7796,8 @@ function pintarComparativo(d, isHoje, raiz, geral) {
     /* vale nos dois escopos: avisa que o funil daquela linha não veio do BO da
        afiliação e sim do pixel da conta de anúncio. Sem isso, o número parece
        comparável com o das outras linhas e não é a mesma medição. */
-    if (tap.fonte === 'tap_utm') marcas.push('por UTM');
+    if (tap.fonte === 'tap_marca') marcas.push('funil da marca');
+    else if (tap.fonte === 'tap_utm') marcas.push('por UTM');
     else if (tap.fonte === 'meta_pixel') marcas.push('FTD pelo pixel');
     else if (e.sem_btag) marcas.push('sem btag');
     /* diz em que unidade está a coluna Result. desta linha. Sem isso, 1.603
@@ -7578,7 +7837,11 @@ function pintarComparativo(d, isHoje, raiz, geral) {
       alerta.textContent = 'zero FTD · R$ ' + inteiro(Math.round(inv));
       cel.appendChild(alerta);
     }
-    escreve($('.cmp__num:not(.cmp__res):not(.cmp__dep)', linha), brl(inv));
+    /* a célula de INVESTIDO é achada por "primeiro .cmp__num que não é de outra
+       coluna". As duas colunas de ROI nasceram antes dela no DOM (ficam
+       encostadas no nome), então precisam entrar nessa lista de exclusão —
+       senão a verba do período era escrita em cima do ROI. */
+    escreve($('.cmp__num:not(.cmp__res):not(.cmp__dep):not(.cmp__roi)', linha), brl(inv));
     $('.cmp__bar i', linha).style.width = (maxInv > 0 ? (inv / maxInv * 100) : 0).toFixed(1) + '%';
     $('.cmp__share', linha).textContent =
       pct(total > 0 ? inv / total * 100 : 0) + ' da verba' + (isHoje ? ' do dia' : ' do período');
@@ -7678,6 +7941,16 @@ function pintarComparativo(d, isHoje, raiz, geral) {
     escreve($('.cmp__valorftd', linha), brl(tap.valor_ftd));
     escreve($('.cmp__volume', linha), brl(tap.volume));
     escreve($('.cmp__netpl', linha), brl(tap.net_pl));
+
+    /* ── OS DOIS ROI, ENCOSTADOS NO NOME ────────────────────────────────────
+       Ficam na esquerda de propósito: é a pergunta que se faz varrendo a
+       coluna ("esta operação se paga?"), e no fim de uma tabela que rola 1,8
+       mil pixels ninguém chegaria nelas.
+       Os mesmos três estados das colunas de custo, pelo mesmo motivo: 0,0×
+       numa coluna de retorno leria como "não devolveu nada" quando o que
+       houve foi não ter investido, ou não ter funil pra medir. */
+    escreveRoi($('.cmp__roind', linha), roi(tap.net_dep, inv), inv, temFunilTap(e));
+    escreveRoi($('.cmp__roinp', linha), roi(netPlLiquido(tap), inv), inv, temFunilTap(e));
 
     linha.style.setProperty('--i', String(Math.min(i, 12)));
     frag.appendChild(linha);
