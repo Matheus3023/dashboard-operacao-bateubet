@@ -7718,12 +7718,7 @@ function pintarComparativo(d, isHoje, raiz, geral) {
       'Traço (—) no chip = gastou e não trouxe nenhum resultado. ' +
       'Nas colunas Custo/cad. e Custo por FTD, "sem verba" = não gastou nada e ' +
       '"sem cad." / "sem FTD" = gastou e não converteu. Custo nunca é impresso ' +
-      'como R$ 0,00: zero sem denominador leria como "saiu de graça". ' +
-      'A miniatura ao lado do custo por FTD mostra os últimos DIAS FECHADOS ' +
-      '(hoje nunca entra nela, então ela pode discordar do número ao lado, e ' +
-      'isso é o esperado). Cada barra é medida contra o pico do próprio expert, ' +
-      'então o que se compara entre linhas é a FORMA; a grandeza quem diz é a ' +
-      'cor, na mesma régua 300/350. Hachura = dia sem FTD, que não é custo zero.';
+      'como R$ 0,00: zero sem denominador leria como "saiu de graça".';
     leg.hidden = false;
   }
 
@@ -8405,9 +8400,10 @@ function carregar(opts) {
       ROOT.removeAttribute('data-carga');
       elApply.disabled = false; elApply.textContent = 'Aplicar';
 
-      /* SPARKLINE: uma chamada por escopo, revalidada aqui a cada refresh mas
-         só executada na virada do dia (a série é de dias FECHADOS). Vai depois
-         de tudo de propósito -- é enfeite informativo, e nenhum pixel da tabela
+      /* TENDÊNCIA EM LOTE: uma chamada por escopo, revalidada aqui a cada
+         refresh mas só executada na virada do dia (a série é de dias
+         FECHADOS). Deixa o painel de análise de qualquer expert abrir
+         instantâneo. Vai depois de tudo de propósito -- nenhum pixel da tela
          depende dela pra existir. */
       buscarLoteTendencia('cl');
       if (d.geral && d.geral.experts) buscarLoteTendencia('geral');
