@@ -3105,10 +3105,17 @@ body.pnl-aberto{overflow:hidden}
            faixa oficial que colore o número (300/350). O fio do topo vira cor
            de saúde em vez do magenta da marca — é a única exceção do sistema,
            e existe porque de longe a cor chega antes do algarismo. -->
-      <div class="tcard tcard--hero tcard--cpa">
-        <span class="tcard__lbl">Custo por FTD</span>
-        <span class="tcard__val" data-field="totais.custo_ftd" data-derived="investimento_total / ftd">R$ 183,28</span>
-        <span class="tcard__sub">dentro da faixa boa (até R$ 300,00)</span>
+      <!-- HERÓI 2 · NET DEP (13/08, pedido do operador: era o custo por FTD).
+           Net dep é o dinheiro que de fato ficou na casa — depósito menos
+           saque. Ao lado do investimento total, o par vira a pergunta inteira
+           numa olhada: quanto entrou de mídia, quanto sobrou de caixa.
+           Sem fio de saúde colorido: net dep não tem faixa oficial como o CPA
+           tinha (300/350), e inventar uma régua aqui seria semáforo mágico. O
+           sinal (positivo/negativo) é a única cor, posta por classeSinal(). -->
+      <div class="tcard tcard--hero">
+        <span class="tcard__lbl">Net dep</span>
+        <span class="tcard__val num--pos" data-field="totais.net_dep">R$ 45.120,88</span>
+        <span class="tcard__sub">7,4% do depósito bruto</span>
       </div>
 
       <!-- ── NÍVEL 2 · funil e canal ─────────────────────────────────────── -->
@@ -3153,6 +3160,16 @@ body.pnl-aberto{overflow:hidden}
 
       <!-- ── NÍVEL 3 · linha de dinheiro ─────────────────────────────────── -->
       <div class="totals__fin">
+        <!-- custo por FTD saiu do herói em 13/08 e abre a linha de dinheiro.
+             Continua colorido pela faixa oficial (300/350) no algarismo, e
+             continua no veredito, no card de cada expert e no comparativo:
+             mudou de lugar, não de importância. -->
+        <div class="tcard tcard--fifth">
+          <span class="tcard__lbl">Custo por FTD</span>
+          <span class="tcard__val" data-field="totais.custo_ftd" data-derived="investimento_total / ftd">R$ 183,28</span>
+          <span class="tcard__sub">dentro da faixa boa (até R$ 300,00)</span>
+        </div>
+
         <div class="tcard tcard--fifth">
           <span class="tcard__lbl">Ticket médio do FTD</span>
           <span class="tcard__val" data-field="totais.ticket_ftd" data-derived="valor_ftd / ftd">R$ 60,00</span>
@@ -3163,12 +3180,6 @@ body.pnl-aberto{overflow:hidden}
           <span class="tcard__lbl">Depósito médio por FTD</span>
           <span class="tcard__val" data-field="totais.deposito_ftd" data-derived="deposito / ftd">R$ 4.000,47</span>
           <span class="tcard__sub">—</span>
-        </div>
-
-        <div class="tcard tcard--fifth">
-          <span class="tcard__lbl">Net dep</span>
-          <span class="tcard__val num--pos" data-field="totais.net_dep">R$ 45.120,88</span>
-          <span class="tcard__sub" data-derived="net_dep / deposito * 100">—</span>
         </div>
 
         <div class="tcard tcard--fifth">
@@ -3214,14 +3225,8 @@ body.pnl-aberto{overflow:hidden}
         </div>
 
         <div class="tcard">
-          <span class="tcard__lbl">Comissão de afiliado</span>
-          <span class="tcard__val" data-field="totais.comissao">—</span>
-          <span class="tcard__sub">—</span>
-        </div>
-
-        <div class="tcard">
           <span class="tcard__lbl">Pago a afiliados</span>
-          <span class="tcard__val" data-field="totais.pagamentos">—</span>
+          <span class="tcard__val" data-field="totais.comissao">—</span>
           <span class="tcard__sub">—</span>
         </div>
 
@@ -4501,10 +4506,17 @@ body.pnl-aberto{overflow:hidden}
         <span class="tcard__sub" data-derived="totais.investimento_total / totais.ftd">R$ 15,45 por FTD</span>
       </div>
 
-      <div class="tcard tcard--hero tcard--cpa">
-        <span class="tcard__lbl">Custo por FTD</span>
-        <span class="tcard__val" data-field="totais.custo_ftd" data-derived="investimento_total / ftd">R$ 183,28</span>
-        <span class="tcard__sub">dentro da faixa boa (até R$ 300,00)</span>
+      <!-- HERÓI 2 · NET DEP (13/08, pedido do operador: era o custo por FTD).
+           Net dep é o dinheiro que de fato ficou na casa — depósito menos
+           saque. Ao lado do investimento total, o par vira a pergunta inteira
+           numa olhada: quanto entrou de mídia, quanto sobrou de caixa.
+           Sem fio de saúde colorido: net dep não tem faixa oficial como o CPA
+           tinha (300/350), e inventar uma régua aqui seria semáforo mágico. O
+           sinal (positivo/negativo) é a única cor, posta por classeSinal(). -->
+      <div class="tcard tcard--hero">
+        <span class="tcard__lbl">Net dep</span>
+        <span class="tcard__val num--pos" data-field="totais.net_dep">R$ 45.120,88</span>
+        <span class="tcard__sub">7,4% do depósito bruto</span>
       </div>
 
       <!-- ── NÍVEL 2 ─────────────────────────────────────────────────────── -->
@@ -4546,6 +4558,16 @@ body.pnl-aberto{overflow:hidden}
 
       <!-- ── NÍVEL 3 ─────────────────────────────────────────────────────── -->
       <div class="totals__fin">
+        <!-- custo por FTD saiu do herói em 13/08 e abre a linha de dinheiro.
+             Continua colorido pela faixa oficial (300/350) no algarismo, e
+             continua no veredito, no card de cada expert e no comparativo:
+             mudou de lugar, não de importância. -->
+        <div class="tcard tcard--fifth">
+          <span class="tcard__lbl">Custo por FTD</span>
+          <span class="tcard__val" data-field="totais.custo_ftd" data-derived="investimento_total / ftd">R$ 183,28</span>
+          <span class="tcard__sub">dentro da faixa boa (até R$ 300,00)</span>
+        </div>
+
         <div class="tcard tcard--fifth">
           <span class="tcard__lbl">Ticket médio do FTD</span>
           <span class="tcard__val" data-field="totais.ticket_ftd" data-derived="valor_ftd / ftd">R$ 60,00</span>
@@ -4556,12 +4578,6 @@ body.pnl-aberto{overflow:hidden}
           <span class="tcard__lbl">Depósito médio por FTD</span>
           <span class="tcard__val" data-field="totais.deposito_ftd" data-derived="deposito / ftd">R$ 4.000,47</span>
           <span class="tcard__sub">—</span>
-        </div>
-
-        <div class="tcard tcard--fifth">
-          <span class="tcard__lbl">Net dep</span>
-          <span class="tcard__val num--pos" data-field="totais.net_dep">R$ 45.120,88</span>
-          <span class="tcard__sub" data-derived="net_dep / deposito * 100">—</span>
         </div>
 
         <div class="tcard tcard--fifth">
@@ -4607,14 +4623,8 @@ body.pnl-aberto{overflow:hidden}
         </div>
 
         <div class="tcard">
-          <span class="tcard__lbl">Comissão de afiliado</span>
-          <span class="tcard__val" data-field="totais.comissao">—</span>
-          <span class="tcard__sub">—</span>
-        </div>
-
-        <div class="tcard">
           <span class="tcard__lbl">Pago a afiliados</span>
-          <span class="tcard__val" data-field="totais.pagamentos">—</span>
+          <span class="tcard__val" data-field="totais.comissao">—</span>
           <span class="tcard__sub">—</span>
         </div>
 
@@ -5348,9 +5358,9 @@ body.pnl-aberto{overflow:hidden}
           <span class="tcard__val" data-field="google.investimento_total">—</span>
           <span class="tcard__sub">—</span>
         </div>
-        <div class="tcard tcard--hero tcard--cpa">
-          <span class="tcard__lbl">Custo por FTD</span>
-          <span class="tcard__val" data-field="google.custo_ftd">—</span>
+        <div class="tcard tcard--hero">
+          <span class="tcard__lbl">Net dep</span>
+          <span class="tcard__val" data-field="google.net_dep">—</span>
           <span class="tcard__sub">—</span>
         </div>
         <!-- ── NÍVEL 2 ───────────────────────────────────────────────────── -->
@@ -5387,6 +5397,11 @@ body.pnl-aberto{overflow:hidden}
         <!-- ── NÍVEL 3 ───────────────────────────────────────────────────── -->
         <div class="totals__fin">
           <div class="tcard tcard--fifth">
+            <span class="tcard__lbl">Custo por FTD</span>
+            <span class="tcard__val" data-field="google.custo_ftd">—</span>
+            <span class="tcard__sub">—</span>
+          </div>
+          <div class="tcard tcard--fifth">
             <span class="tcard__lbl">Ticket médio do FTD</span>
             <span class="tcard__val" data-field="google.ticket_ftd">—</span>
             <span class="tcard__sub">—</span>
@@ -5404,6 +5419,39 @@ body.pnl-aberto{overflow:hidden}
           <div class="tcard tcard--fifth">
             <span class="tcard__lbl">Volume</span>
             <span class="tcard__val" data-field="google.volume">—</span>
+            <span class="tcard__sub">—</span>
+          </div>
+        </div>
+
+        <!-- ── NÍVEL 4 · retorno e afiliado, igual aos outros dois escopos ──
+             Aqui o investimento pode ser NULL (leitura da Google Ads API que
+             falhou, ver investimento_pendente). Nesse caso o retorno não é
+             zero nem 1×: é "aguardando API". Zero seria mentira sobre uma
+             conta que pode ter gasto muito. -->
+        <div class="totals__fin totals__fin--roi">
+          <div class="tcard">
+            <span class="tcard__lbl">ROAS no FTD</span>
+            <span class="tcard__val" data-field="google.roas_ftd">—</span>
+            <span class="tcard__sub">—</span>
+          </div>
+          <div class="tcard">
+            <span class="tcard__lbl">ROAS no net dep</span>
+            <span class="tcard__val" data-field="google.roas_netdep">—</span>
+            <span class="tcard__sub">—</span>
+          </div>
+          <div class="tcard">
+            <span class="tcard__lbl">ROI no net PL</span>
+            <span class="tcard__val" data-field="google.roi_netpl">—</span>
+            <span class="tcard__sub">—</span>
+          </div>
+          <div class="tcard">
+            <span class="tcard__lbl">Pago a afiliados</span>
+            <span class="tcard__val" data-field="google.comissao">—</span>
+            <span class="tcard__sub">—</span>
+          </div>
+          <div class="tcard">
+            <span class="tcard__lbl">Sobra da operação</span>
+            <span class="tcard__val" data-field="google.sobra">—</span>
             <span class="tcard__sub">—</span>
           </div>
         </div>
@@ -7027,18 +7075,17 @@ function pintarTotais(d, isHoje, raiz, rodape, nSelecionados) {
       : 'nenhuma comissão no período')
     : 'nada investido no período');
 
+  /* "Pago a afiliados" é a COMISSÃO GERADA no período (CPA + revshare +
+     ajustes), não o dinheiro que saiu da conta. Decisão do operador em 13/08:
+     o repasse em lote não casa com o recorte na tela (quase sempre se refere a
+     meses anteriores), então mostrar os dois lado a lado só levantava a
+     pergunta "qual desses é o custo?". O campo `pagamentos` continua vindo da
+     API — se um dia fizer falta, é um tile. */
   var elCom = campo(raiz, 'totais.comissao');
   escreve(elCom, brl(comissao));
   escreve(sub(elCom), netPl > 0
     ? pct(comissao / netPl * 100) + ' do net PL'
     : (comissao !== 0 ? 'sem net PL positivo no período' : 'nenhuma comissão no período'));
-
-  var elPag = campo(raiz, 'totais.pagamentos');
-  escreve(elPag, brl(ehNum(t.pagamentos) ? t.pagamentos : 0));
-  /* dito com todas as letras porque os dois números moram lado a lado e são
-     coisas diferentes: comissão é o que o período GEROU, pagamento é o que
-     SAIU da conta nele (em lote, quase sempre de meses anteriores). */
-  escreve(sub(elPag), 'dinheiro que saiu no período · não é o custo do recorte');
 
   var elSobra = campo(raiz, 'totais.sobra');
   var sobra = netPl - inv - comissao;
@@ -7232,7 +7279,12 @@ var GLOSSARIO = {
   net_pl: 'Net P&L = o que a casa ganhou depois de pagar os prêmios. É a margem, não o faturamento.',
   volume: 'Volume total apostado no período. Serve de base pra margem: net P&L dividido por volume.',
   valor_ftd: 'Soma dos primeiros depósitos do período.',
-  conversao: 'Quanto dos cadastros virou FTD.'
+  conversao: 'Quanto dos cadastros virou FTD.',
+  roas_ftd: 'Valor dos primeiros depósitos dividido pela mídia. 1,00× é o empate: cada R$ 1 investido voltou como R$ 1 de FTD.',
+  roas_netdep: 'Net dep dividido pela mídia. Mede caixa: quanto de depósito já líquido de saque cada real de mídia trouxe.',
+  roi_netpl: 'Net PL MENOS a comissão do afiliado, dividido pela mídia. É a margem real: o que sobra da receita da casa depois de pagar quem trouxe o jogador. Empate em 1,00×.',
+  comissao: 'O que os afiliados ganharam NESTE período: CPA + revshare + ajustes. É a comissão gerada pelo recorte na tela, não o repasse em lote (que quase sempre se refere a meses anteriores). Pode vir negativo quando o revshare do período ficou negativo e carrega pro mês seguinte.',
+  sobra: 'Net PL menos a mídia menos a comissão. É o que a operação deixou no período, em reais.'
 };
 function ligarGlossario() {
   $$('.totals .tcard').forEach(function (tile) {
@@ -7991,7 +8043,12 @@ function pintarComparativo(d, isHoje, raiz, geral) {
       'Traço (—) no chip = gastou e não trouxe nenhum resultado. ' +
       'Nas colunas Custo/cad. e Custo por FTD, "sem verba" = não gastou nada e ' +
       '"sem cad." / "sem FTD" = gastou e não converteu. Custo nunca é impresso ' +
-      'como R$ 0,00: zero sem denominador leria como "saiu de graça".';
+      'como R$ 0,00: zero sem denominador leria como "saiu de graça". ' +
+      'ROI net dep e ROI net PL são multiplicadores da mídia: 1,00× é o empate ' +
+      '(voltou exatamente o que custou), verde acima disso e vermelho abaixo. ' +
+      'O ROI de net PL já vem SEM a comissão do afiliado — é a margem real. ' +
+      '"Sem funil" nessas duas colunas = operação sem btag na TAP, que não tem ' +
+      'net dep nem net PL pra medir.';
     leg.hidden = false;
   }
 
@@ -8145,6 +8202,52 @@ function pintarGoogle(g, periodo) {
          'cadastro que virou FTD', 'sem cadastro');
   pintar('google.valor_ftd', brl(t.valor_ftd),
          ehNum(g.conversoes) ? inteiro(g.conversoes) + ' conversões no Google Ads' : 'soma dos primeiros depósitos');
+
+  var elNd = campo(raiz, 'google.net_dep');
+  escreve(elNd, brl(t.net_dep));
+  classeSinal(elNd, t.net_dep);
+  escreve(sub(elNd), ehNum(t.deposito) && t.deposito > 0
+    ? pct((t.net_dep || 0) / t.deposito * 100) + ' do depósito bruto' : '—');
+
+  /* ── retorno e afiliado ────────────────────────────────────────────────
+     Mesmas contas dos outros escopos. A diferença é que aqui o investimento
+     pode não ter sido lido (inv === null): nesse caso não existe retorno, e
+     dizer "aguardando API" é a única resposta honesta — 0,0× ou "sem verba"
+     afirmariam algo sobre um gasto que ninguém mediu. */
+  var comissaoG = ehNum(t.comissao) ? t.comissao : 0;
+  var netPlG = ehNum(t.net_pl) ? t.net_pl : 0;
+  var temInvG = ehNum(inv) && inv > 0;
+
+  function pintarRetorno(nome, valor, textoSub) {
+    var el = campo(raiz, nome);
+    var v = temInvG ? roi(valor, inv) : null;
+    escreve(el, temInvG ? vezes(v) : (pend ? 'aguardando API' : 'sem verba'));
+    corRetorno(el, v);
+    escreve(sub(el), temInvG ? textoSub : (pend ? 'investimento do Google não foi lido' : 'nada investido no período'));
+  }
+  pintarRetorno('google.roas_ftd', t.valor_ftd,
+    brl(t.valor_ftd) + ' de 1º depósito sobre ' + brl(inv) + ' de mídia');
+  pintarRetorno('google.roas_netdep', t.net_dep, brl(t.net_dep) + ' de depósito já líquido de saque');
+  pintarRetorno('google.roi_netpl', netPlG - comissaoG,
+    comissaoG !== 0 ? 'comissão já descontada · sem ela ' + vezes(roi(netPlG, inv))
+                    : 'nenhuma comissão no período');
+
+  var elComG = campo(raiz, 'google.comissao');
+  escreve(elComG, brl(comissaoG));
+  escreve(sub(elComG), netPlG > 0 ? pct(comissaoG / netPlG * 100) + ' do net PL'
+    : (comissaoG !== 0 ? 'sem net PL positivo no período' : 'nenhuma comissão no período'));
+
+  var elSobraG = campo(raiz, 'google.sobra');
+  if (temInvG) {
+    var sobraG = netPlG - inv - comissaoG;
+    escreve(elSobraG, brl(sobraG));
+    classeSinal(elSobraG, sobraG);
+    escreve(sub(elSobraG), 'net PL − mídia − comissão');
+  } else {
+    escreve(elSobraG, pend ? 'aguardando API' : brl(netPlG - comissaoG));
+    escreve(sub(elSobraG), pend ? 'sem o gasto do Google não dá pra fechar a conta'
+                                : 'net PL − comissão · nada investido');
+  }
 
   /* lista de contas da MCC */
   var lista = $('[data-list="google-contas"]', raiz);
