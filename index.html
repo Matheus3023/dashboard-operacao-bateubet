@@ -547,6 +547,10 @@ h1,h2,h3,h4,p{margin:0}
 .busca-input:focus-visible{outline:2px solid var(--acao);outline-offset:1px}
 /* card fora da busca: sai do fluxo, não só opacidade -- senão o grid deixa buraco */
 .expert[data-busca-oculto]{display:none}
+.cmp__row[data-busca-oculto]{display:none}
+/* busca do comparativo: mora no cabeçalho da seção, ao lado do seletor */
+.cmpbusca{order:1;flex:none;width:190px;max-width:38vw}
+@media (max-width:759px){.cmpbusca{order:2;width:100%;max-width:none}}
 .range-apply{
   min-height:32px;padding:0 15px;border-radius:7px;cursor:pointer;
   border:1px solid var(--acao-line);background:var(--acao-soft);color:#FF9AC4;
@@ -2194,6 +2198,10 @@ body.pnl-aberto{overflow:hidden}
         <label for="r-7">7 dias</label>
         <input type="radio" name="range" id="r-30" value="30d">
         <label for="r-30">30 dias</label>
+        <input type="radio" name="range" id="r-mes" value="mes">
+        <label for="r-mes">Mês atual</label>
+        <input type="radio" name="range" id="r-mespassado" value="mes_passado">
+        <label for="r-mespassado">Mês passado</label>
         <input type="radio" name="range" id="r-custom" value="custom">
         <label for="r-custom">Período</label>
       </div>
@@ -2240,9 +2248,6 @@ body.pnl-aberto{overflow:hidden}
         <input type="radio" name="sortdir" id="sd-asc" value="asc">
         <label for="sd-asc">Crescente ↑</label>
       </div>
-      <span class="rangebar__lbl busca__lbl">Buscar</span>
-      <input type="search" id="busca-expert" class="busca-input"
-             placeholder="Nome do expert…" aria-label="Buscar expert por nome" autocomplete="off">
     </div>
   </header>
 
@@ -2474,6 +2479,8 @@ body.pnl-aberto{overflow:hidden}
          R$ 0 de mídia ainda pode ter cadastro, FTD e depósito pra analisar.
          Miolo escrito pelo JS. -->
     <div class="section-head"><h2 class="eyebrow">Comparativo · onde a verba está indo</h2>
+      <input type="search" class="cmpbusca busca-input" placeholder="Buscar expert…"
+             aria-label="Buscar expert por nome" autocomplete="off">
       <div class="opsfil" data-ops>
         <button type="button" class="opsfil__btn" aria-expanded="false" aria-haspopup="dialog">
           <span class="opsfil__lbl">Operações</span>
@@ -3776,6 +3783,8 @@ body.pnl-aberto{overflow:hidden}
          Com 24 linhas o ranking é a tela mais útil do escopo Geral: é onde se
          vê a verba da BM inteira numa olhada só. -->
     <div class="section-head"><h2 class="eyebrow">Comparativo · onde a verba da operação está indo</h2>
+      <input type="search" class="cmpbusca busca-input" placeholder="Buscar expert…"
+             aria-label="Buscar expert por nome" autocomplete="off">
       <div class="opsfil" data-ops>
         <button type="button" class="opsfil__btn" aria-expanded="false" aria-haspopup="dialog">
           <span class="opsfil__lbl">Operações</span>
@@ -4727,12 +4736,46 @@ var NOMES = {
   'PR TIPSTER': 'PR Tipster', 'CAIO TIPS': 'Caio Tips',
   'INSTITUCIONAL': 'Institucional', 'CA04 INSTITUCIONAL': 'CA04 Institucional'
 };
+/* Lixo que vem no nome da CONTA e não identifica ninguém: toda conta desta BM
+   é "Bateu Bet", e o número de ID já está no btag. Numa célula que cabe ~14
+   caracteres, "BATEU BET - TALYSON" vira "BATEU BET -…" — o prefixo comeu
+   justamente a única parte que diz de quem é a linha. */
+var LIXO_NOME = [
+  /^CA\s*\d*\s*[-–]\s*/i,          /* "CA 05 - ..." */
+  /^BATEU\s*BET\s*[-–]\s*/i,       /* "BATEU BET - ..." */
+  /^BATEU\s*[-–]\s*/i,             /* "BATEU - ..." */
+  /^EXPERTS?\s*[-–]\s*/i,          /* "EXPERT - ..." */
+  /\s*[-–]\s*BATEU(\s*BET)?\s*$/i, /* "... - BATEU BET" */
+  /\s*[-–]\s*ID\s*\d+\s*$/i,       /* "... - ID 543714" */
+  /\s*[-–]?\s*\b\d{5,}\b\s*$/       /* "... 539199" */
+];
+
+function limparNome(n) {
+  var s = String(n || '').trim();
+  var antes;
+  do {
+    antes = s;
+    LIXO_NOME.forEach(function (re) { s = s.replace(re, '').trim(); });
+  } while (s !== antes && s);
+  /* se a limpeza comeu tudo (nome era só prefixo), volta o original */
+  return s || String(n || '').trim();
+}
+
 function nomeExpert(n) {
   if (!n) return '';
   if (NOMES[n]) return NOMES[n];
-  return String(n).split(' ').map(function (p) {
+  return limparNome(n).split(' ').map(function (p) {
     return p.length <= 3 ? p : p.charAt(0) + p.slice(1).toLowerCase();
   }).join(' ');
+}
+
+/* Nome cheio pro title=, sempre que o rótulo pode estar cortado. Mostra o que
+   foi podado entre parênteses só quando há diferença — repetir o mesmo texto
+   num tooltip é ruído. */
+function nomeCompleto(n) {
+  var curto = nomeExpert(n);
+  var cru = String(n || '').trim();
+  return curto.toUpperCase() === cru.toUpperCase() ? cru : cru + ' (' + curto + ')';
 }
 
 /* entidades que NÃO são pessoa. Ganham .expert--marca, etiqueta própria e
@@ -5461,7 +5504,9 @@ function pintarExpert(expert, ehPrimeiro, isHoje, geral) {
   art.setAttribute('data-expert', expert.expert_name);
   if (marca)    art.classList.add('expert--marca');
   if (inv <= 0) art.classList.add('expert--zerado');
-  escreve($('.expert__name', art), nomeExpert(expert.expert_name));
+  var elNome = $('.expert__name', art);
+  escreve(elNome, nomeExpert(expert.expert_name));
+  if (elNome) elNome.title = nomeCompleto(expert.expert_name);
 
   /* ── CARD CLICÁVEL (v4) ────────────────────────────────────────────────
      O card inteiro abre o painel de análise. role="button" + tabindex="0"
@@ -5649,7 +5694,7 @@ function pintarExperts(exps, isHoje, raiz, geral) {
   }
   var badge = $('.tab__badge', raiz);
   if (badge) badge.textContent = String(exps.length);
-  if (typeof aplicarBusca === 'function') aplicarBusca();
+  if (typeof aplicarBusca === 'function') aplicarBusca(raiz);
 }
 
 function pintarVeredito(d, isHoje, raiz) {
@@ -6111,6 +6156,7 @@ function montarListaOps(cx, todas, geral) {
       var nm = document.createElement('span');
       nm.className = 'opsfil__nome';
       nm.textContent = nomeExpert(e.expert_name);
+      nm.title = nomeCompleto(e.expert_name);
       var iv = document.createElement('span');
       iv.className = 'opsfil__inv';
       iv.textContent = brl(e.investimento_total || 0);
@@ -6395,6 +6441,9 @@ function pintarComparativo(d, isHoje, raiz, geral) {
     cel.className = 'cmp__nomewrap';
     celula.appendChild(cel);
     cel.textContent = nomeExpert(e.expert_name);
+    /* a célula é estreita e corta com reticências: o nome cheio fica no hover
+       (e no toque longo, no celular) em vez de sumir. */
+    cel.title = nomeCompleto(e.expert_name);
     /* marcador de segunda linha: "marca" e/ou "N contas". É o que explica um
        investimento alto numa linha só, então vale o ruído extra. */
     var marcas = [];
@@ -6749,6 +6798,19 @@ function intervaloDe(preset) {
   if (preset === 'ontem') { var o = somaDias(hoje, -1); return { de: o, ate: o }; }
   if (preset === '7d')  return { de: somaDias(hoje, -6), ate: hoje };
   if (preset === '30d') return { de: somaDias(hoje, -29), ate: hoje };
+  /* MÊS CALENDÁRIO, não "últimos 30 dias": é o recorte com que a operação
+     fecha conta com a casa. Mês atual vai do dia 1 até HOJE (parcial, ainda
+     recebendo dado); mês passado é o mês fechado inteiro. */
+  if (preset === 'mes') return { de: hoje.slice(0, 8) + '01', ate: hoje };
+  if (preset === 'mes_passado') {
+    var ano = +hoje.slice(0, 4), mes = +hoje.slice(5, 7);
+    var anoP = mes === 1 ? ano - 1 : ano;
+    var mesP = mes === 1 ? 12 : mes - 1;
+    var mm = String(mesP).padStart(2, '0');
+    /* dia 0 do mês seguinte = último dia do mês anterior, sem tabela de 28/30/31 */
+    var ultimo = new Date(Date.UTC(anoP, mesP, 0)).getUTCDate();
+    return { de: anoP + '-' + mm + '-01', ate: anoP + '-' + mm + '-' + String(ultimo).padStart(2, '0') };
+  }
   if (preset === 'custom') return { de: elDe.value, ate: elAte.value };
   /* "hoje": não manda de/ate. Quem decide o dia é o servidor, no fuso certo. */
   return { de: null, ate: null };
@@ -6823,19 +6885,32 @@ $$('input[name="sortdir"]').forEach(function (inp) {
    Esconde os cards que não batem -- display:none, não opacidade, senão o
    grid deixa buraco no lugar de quem sumiu. Roda de novo em todo refresh
    (a lista é reconstruída do zero a cada pintarExperts). */
-var elBusca = $('#busca-expert');
-function aplicarBusca() {
-  var termo = elBusca.value.trim().toUpperCase();
-  [RAIZ_CL, RAIZ_GERAL].forEach(function (raiz) {
-    $$('.expert', raiz).forEach(function (art) {
-      var nome = (art.getAttribute('data-expert') || '').toUpperCase();
-      var bate = !termo || nome.indexOf(termo) !== -1;
-      if (bate) art.removeAttribute('data-busca-oculto');
-      else art.setAttribute('data-busca-oculto', '');
-    });
+/* Uma busca POR ESCOPO, morando no cabeçalho do comparativo: é ali que se
+   procura um expert no meio de 28 linhas. Filtra a tabela E os cards do mesmo
+   escopo — o termo digitado vale pras duas visões da mesma operação. */
+function aplicarBusca(raiz) {
+  var campo = $('.cmpbusca', raiz);
+  var termo = campo ? campo.value.trim().toUpperCase() : '';
+  var bate = function (el) {
+    var n = (el.getAttribute('data-expert') || '').toUpperCase();
+    /* casa pelo nome cru E pelo exibido: quem digita "talyson" tem que achar
+       "BATEU BET - TALYSON", e quem digita "bateu" também. */
+    return !termo || n.indexOf(termo) !== -1 ||
+      nomeExpert(el.getAttribute('data-expert')).toUpperCase().indexOf(termo) !== -1;
+  };
+  $$('.expert', raiz).concat($$('.cmp__body .cmp__row', raiz)).forEach(function (el) {
+    if (bate(el)) el.removeAttribute('data-busca-oculto');
+    else el.setAttribute('data-busca-oculto', '');
   });
 }
-elBusca.addEventListener('input', aplicarBusca);
+
+function aplicarBuscaTudo() {
+  [RAIZ_CL, RAIZ_GERAL].forEach(aplicarBusca);
+}
+[RAIZ_CL, RAIZ_GERAL].forEach(function (raiz) {
+  var campo = $('.cmpbusca', raiz);
+  if (campo) campo.addEventListener('input', function () { aplicarBusca(raiz); });
+});
 
 /* ── 9. ciclo: fetch, refresh e retry ───────────────────────────────────── */
 function agendar(ms, opts) {
@@ -6854,6 +6929,8 @@ function rotuloPreset(preset, r) {
   if (preset === 'ontem') return 'os dados de ontem';
   if (preset === '7d')    return 'os últimos 7 dias';
   if (preset === '30d')   return 'os últimos 30 dias';
+  if (preset === 'mes')   return 'o mês atual';
+  if (preset === 'mes_passado') return 'o mês passado';
   if (r && r.de && r.ate) {
     return r.de === r.ate
       ? 'o dia ' + dataBR(r.de)
