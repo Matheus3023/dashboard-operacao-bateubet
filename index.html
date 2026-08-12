@@ -1065,8 +1065,12 @@ h1,h2,h3,h4,p{margin:0}
   background:var(--surface);
 }
 .gcontas__row{
-  display:grid;grid-template-columns:minmax(0,1fr) 150px 160px;gap:12px;
-  padding:12px 16px;align-items:center;border-top:1px solid var(--line-soft);
+  display:grid;
+  /* 4 colunas: nome · id · investimento · entrega. Antes eram 3 e o
+     investimento carregava "R$ 58.770,53 · 7.828 cliq" na mesma célula, que
+     quebrava a linha no meio da palavra. Cada número no seu lugar. */
+  grid-template-columns:minmax(0,1fr) 150px minmax(140px,max-content) minmax(150px,max-content);
+  gap:14px;padding:13px 16px;align-items:center;border-top:1px solid var(--line-soft);
 }
 .gcontas__row:first-child{border-top:0}
 .gcontas__row--head{
@@ -1075,10 +1079,22 @@ h1,h2,h3,h4,p{margin:0}
 }
 .gcontas__nome{font-size:.8125rem;font-weight:640;letter-spacing:.02em;text-transform:uppercase}
 .gcontas__id{font-family:var(--mono);font-size:.6875rem;color:var(--txt-3)}
-.gcontas__val{font-size:.8125rem;font-weight:620;font-variant-numeric:tabular-nums;text-align:right}
+.gcontas__val{font-size:.8125rem;font-weight:620;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+/* entrega da conta (cliques · CPC): contexto, não valor de fechamento — peso
+   menor pra não competir com o investimento na leitura. */
+.gcontas__entrega{
+  text-align:right;white-space:nowrap;
+  font-family:var(--mono);font-size:.6875rem;color:var(--txt-3);
+}
+.gcontas__val--na{color:var(--txt-3);font-weight:520}
+@media (max-width:1179px){
+  /* some o ID: nome e dinheiro decidem, o ID é conferência */
+  .gcontas__row{grid-template-columns:minmax(0,1fr) minmax(120px,max-content) minmax(130px,max-content);gap:10px}
+  .gcontas__id{display:none}
+}
 @media (max-width:759px){
-  .gcontas__row{grid-template-columns:minmax(0,1fr) 110px;gap:8px}
-  .gcontas__row > :last-child{display:none}
+  .gcontas__row{grid-template-columns:minmax(0,1fr) minmax(110px,max-content);gap:8px}
+  .gcontas__entrega{display:none}
 }
 
 .tabs{
@@ -4599,7 +4615,7 @@ body.pnl-aberto{overflow:hidden}
       <div class="section-head"><h2 class="eyebrow">Contas de anúncio · MCC <span data-field="google.mcc">—</span></h2></div>
       <div class="gcontas" data-list="google-contas">
         <div class="gcontas__row gcontas__row--head" aria-hidden="true">
-          <span>Conta</span><span class="gcontas__val">ID</span><span class="gcontas__val">Investimento</span>
+          <span>Conta</span><span class="gcontas__val gcontas__id">ID</span><span class="gcontas__val">Investimento</span><span class="gcontas__entrega">Cliques · CPC</span>
         </div>
       </div>
 
@@ -6932,11 +6948,18 @@ function pintarGoogle(g, periodo) {
       var n = document.createElement('span'); n.className = 'gcontas__nome'; n.textContent = c.nome || c.conta_id;
       var id = document.createElement('span'); id.className = 'gcontas__val gcontas__id'; id.textContent = c.conta_id;
       var v = document.createElement('span'); v.className = 'gcontas__val';
-      v.textContent = ehNum(c.investimento)
-        ? brl(c.investimento) + (ehNum(c.cliques) && c.cliques > 0 ? ' · ' + inteiro(c.cliques) + ' cliq' : '')
-        : 'aguardando API';
-      if (!ehNum(c.investimento)) v.classList.add('val--na');
-      row.appendChild(n); row.appendChild(id); row.appendChild(v);
+      v.textContent = ehNum(c.investimento) ? brl(c.investimento) : 'aguardando API';
+      if (!ehNum(c.investimento)) v.classList.add('gcontas__val--na');
+      var ent = document.createElement('span'); ent.className = 'gcontas__entrega';
+      /* conta sem clique não escreve "0 cliques · CPC —": não entregou nada,
+         e três traços seguidos só poluem a linha. */
+      if (ehNum(c.cliques) && c.cliques > 0) {
+        var cpc = ehNum(c.investimento) && c.investimento > 0 ? c.investimento / c.cliques : null;
+        ent.textContent = inteiro(c.cliques) + ' cliq' + (cpc ? ' · ' + brl(cpc) : '');
+      } else {
+        ent.textContent = ehNum(c.investimento) ? 'sem entrega' : '—';
+      }
+      row.appendChild(n); row.appendChild(id); row.appendChild(v); row.appendChild(ent);
       lista.appendChild(row);
     });
   }
