@@ -1249,23 +1249,84 @@ h1,h2,h3,h4,p{margin:0}
    número da média precisa aparecer junto, senão a cor não é auditável. */
 .cmp__regua{display:block;margin-bottom:4px;color:var(--txt-2)}
 
-/* ── FILTRO "SÓ QUEM ESTÁ INVESTINDO" ─────────────────────────────────────
-   Vive no cabeçalho da seção. order:1 joga a pílula pro fim da linha (o traço
-   do ::after tem order 0), então a leitura fica título → régua → controle. */
-.cmpfil{
-  order:1;flex:none;display:inline-flex;align-items:center;gap:8px;
-  padding:5px 11px;border-radius:999px;cursor:pointer;user-select:none;
+/* ── SELETOR DE OPERAÇÕES ─────────────────────────────────────────────────
+   Vive no cabeçalho da seção. order:1 joga o controle pro fim da linha (o
+   traço do ::after tem order 0), então a leitura fica título → régua →
+   controle. A lista rola por dentro: com dezenas de operações o popover
+   continua do mesmo tamanho em vez de empurrar a tabela pra baixo. */
+.opsfil{order:1;flex:none;position:relative}
+.opsfil__btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;border-radius:999px;cursor:pointer;
   border:1px solid var(--line);background:var(--surface-sunk);
-  color:var(--txt-2);font-size:.6875rem;
+  color:var(--txt-2);font:inherit;font-size:.6875rem;
   transition:border-color .14s ease,color .14s ease;
 }
-.cmpfil:hover{border-color:var(--line-strong);color:var(--txt-1)}
-.cmpfil__in{width:14px;height:14px;flex:none;margin:0;accent-color:var(--acao);cursor:pointer}
-.cmpfil__n{color:var(--txt-3);font-family:var(--mono);font-size:.625rem}
-.cmpfil:has(.cmpfil__in:checked){border-color:var(--acao-line,var(--acao));color:var(--txt-1)}
-.cmpfil__in:focus-visible{outline:2px solid var(--acao);outline-offset:2px}
+.opsfil__btn:hover{border-color:var(--line-strong);color:var(--txt-1)}
+.opsfil__btn:focus-visible{outline:2px solid var(--acao);outline-offset:2px}
+.opsfil__lbl{letter-spacing:.08em;text-transform:uppercase;font-size:.5625rem;color:var(--txt-3)}
+.opsfil__val{color:var(--txt-1);font-weight:600}
+.opsfil__chev{
+  width:0;height:0;flex:none;
+  border-left:4px solid transparent;border-right:4px solid transparent;
+  border-top:5px solid currentColor;opacity:.75;
+  transition:transform .14s ease;
+}
+.opsfil[data-aberto] .opsfil__btn{border-color:var(--acao);color:var(--txt-1)}
+.opsfil[data-aberto] .opsfil__chev{transform:rotate(180deg)}
+/* seleção parcial ativa: o controle precisa avisar de longe que a tabela NÃO
+   está mostrando a operação inteira. */
+.opsfil[data-filtrando] .opsfil__btn{border-color:var(--acao);background:var(--acao-soft)}
+
+.opsfil__pop{
+  position:absolute;z-index:50;top:calc(100% + 7px);right:0;
+  width:270px;max-width:calc(100vw - 32px);
+  display:flex;flex-direction:column;
+  border-radius:12px;border:1px solid var(--line-strong);
+  background:var(--surface);box-shadow:0 16px 44px rgba(0,0,0,.5);
+  overflow:hidden;
+}
+.opsfil__busca{
+  flex:none;margin:0;padding:9px 12px;
+  border:0;border-bottom:1px solid var(--line-soft);
+  background:var(--surface-sunk);color:var(--txt-1);
+  font:inherit;font-size:.75rem;
+}
+.opsfil__busca::placeholder{color:var(--txt-3)}
+.opsfil__busca:focus{outline:0;border-bottom-color:var(--acao)}
+.opsfil__lista{max-height:262px;overflow-y:auto;padding:5px 0}
+.opsfil__item{
+  display:flex;align-items:center;gap:9px;
+  padding:7px 12px;cursor:pointer;color:var(--txt-2);font-size:.75rem;
+  user-select:none;
+}
+.opsfil__item:hover{background:rgba(255,255,255,.045);color:var(--txt-1)}
+.opsfil__item input{width:14px;height:14px;flex:none;margin:0;accent-color:var(--acao);cursor:pointer}
+.opsfil__item--todas{border-bottom:1px solid var(--line-soft);margin-bottom:4px;padding-bottom:9px;font-weight:600;color:var(--txt-1)}
+.opsfil__nome{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* verba do período ao lado do nome: é o que ajuda a escolher quem comparar
+   sem fechar o seletor. R$ 0 continua na lista, só fica apagado. */
+.opsfil__inv{flex:none;color:var(--txt-3);font-family:var(--mono);font-size:.625rem}
+.opsfil__vazio{padding:14px 12px;color:var(--txt-3);font-size:.75rem;text-align:center}
+.opsfil__acoes{
+  flex:none;display:flex;gap:6px;padding:8px;
+  border-top:1px solid var(--line-soft);background:var(--surface-sunk);
+}
+.opsfil__acao{
+  flex:1;padding:6px 8px;border-radius:8px;cursor:pointer;
+  border:1px solid var(--line);background:transparent;
+  color:var(--txt-2);font:inherit;font-size:.6875rem;
+  transition:border-color .14s ease,color .14s ease;
+}
+.opsfil__acao:hover{border-color:var(--line-strong);color:var(--txt-1)}
+.opsfil__acao:focus-visible{outline:2px solid var(--acao);outline-offset:1px}
+
+/* "Exibindo 3 de 8 operações": discreto, mas sempre visível quando há recorte,
+   pra ninguém ler a tabela achando que está vendo a operação inteira. */
+.cmp__exibindo{margin:0 0 8px;color:var(--txt-3);font-size:.6875rem}
+.cmp__exibindo b{color:var(--txt-2);font-weight:600}
 .cmp__vazio{margin:0;padding:18px 16px;text-align:center;color:var(--txt-3);font-size:.8125rem}
-@media (prefers-reduced-motion:reduce){.cmpfil{transition:none}}
+@media (prefers-reduced-motion:reduce){.opsfil__btn,.opsfil__chev,.opsfil__acao{transition:none}}
 
 @media (max-width:1179px){
   /* tela média: cabe o funil (resultado, cadastro, FTD e os dois custos), some
@@ -1278,9 +1339,13 @@ h1,h2,h3,h4,p{margin:0}
   .cmp__row{grid-template-columns:minmax(0,1fr) 96px 84px 84px;gap:9px;padding:10px 14px}
   .cmp__bar-cell,.cmp__res,.cmp__cad,.cmp__ftd{display:none}
   .cmp__row--head{font-size:.5rem;letter-spacing:.08em}
-  /* no celular o controle desce pra linha própria em vez de espremer o título */
+  /* no celular o controle desce pra linha própria em vez de espremer o título,
+     e o popover ocupa a largura toda — 270px encostados na direita ficariam
+     cortados numa tela de 360. */
   .section-head{flex-wrap:wrap}
-  .cmpfil{order:2;width:100%;justify-content:center}
+  .opsfil{order:2;width:100%}
+  .opsfil__btn{width:100%;justify-content:center}
+  .opsfil__pop{width:auto;left:0;right:0}
 }
 
 /* ── RODAPÉ ─────────────────────────────────────────────────────────────── */
@@ -2324,16 +2389,30 @@ body.pnl-aberto{overflow:hidden}
            share  = investimento_total / totais.investimento_total * 100
            retorno= tap.deposito / investimento_total
          Ordem idêntica à da lista de cards (o mesmo array já ordenado). -->
-    <!-- Filtro de linhas do comparativo. Fica no cabeçalho de propósito: é a
-         primeira coisa antes da tabela, e é onde a pessoa decide se quer ver a
-         operação inteira ou só quem está com verba rodando agora. O texto e a
-         contagem são reescritos pelo JS conforme o período. -->
+    <!-- SELETOR DE OPERAÇÕES. Fica no cabeçalho da seção: é onde se escolhe
+         QUAIS linhas entram na comparação, antes de olhar a tabela. A lista
+         sai sempre do conjunto COMPLETO de operações do escopo — ter ou não
+         verba no período não decide quem aparece no seletor, porque quem tem
+         R$ 0 de mídia ainda pode ter cadastro, FTD e depósito pra analisar.
+         Miolo escrito pelo JS. -->
     <div class="section-head"><h2 class="eyebrow">Comparativo · onde a verba está indo</h2>
-      <label class="cmpfil"><input type="checkbox" class="cmpfil__in">
-        <span class="cmpfil__txt">Só quem está investindo</span>
-        <span class="cmpfil__n"></span>
-      </label>
+      <div class="opsfil" data-ops>
+        <button type="button" class="opsfil__btn" aria-expanded="false" aria-haspopup="dialog">
+          <span class="opsfil__lbl">Operações</span>
+          <span class="opsfil__val">Todas</span>
+          <span class="opsfil__chev" aria-hidden="true"></span>
+        </button>
+        <div class="opsfil__pop" hidden role="dialog" aria-label="Escolher operações">
+          <input type="search" class="opsfil__busca" placeholder="Buscar operação…" autocomplete="off">
+          <div class="opsfil__lista"></div>
+          <div class="opsfil__acoes">
+            <button type="button" class="opsfil__acao" data-acao="todas">Selecionar todas</button>
+            <button type="button" class="opsfil__acao" data-acao="limpar">Limpar seleção</button>
+          </div>
+        </div>
+      </div>
     </div>
+    <p class="cmp__exibindo" hidden></p>
 
     <section class="cmp" aria-label="Comparativo por expert">
       <div class="cmp__row cmp__row--head" aria-hidden="true">
@@ -3574,11 +3653,23 @@ body.pnl-aberto{overflow:hidden}
          Com 24 linhas o ranking é a tela mais útil do escopo Geral: é onde se
          vê a verba da BM inteira numa olhada só. -->
     <div class="section-head"><h2 class="eyebrow">Comparativo · onde a verba da operação está indo</h2>
-      <label class="cmpfil"><input type="checkbox" class="cmpfil__in">
-        <span class="cmpfil__txt">Só quem está investindo</span>
-        <span class="cmpfil__n"></span>
-      </label>
+      <div class="opsfil" data-ops>
+        <button type="button" class="opsfil__btn" aria-expanded="false" aria-haspopup="dialog">
+          <span class="opsfil__lbl">Operações</span>
+          <span class="opsfil__val">Todas</span>
+          <span class="opsfil__chev" aria-hidden="true"></span>
+        </button>
+        <div class="opsfil__pop" hidden role="dialog" aria-label="Escolher operações">
+          <input type="search" class="opsfil__busca" placeholder="Buscar operação…" autocomplete="off">
+          <div class="opsfil__lista"></div>
+          <div class="opsfil__acoes">
+            <button type="button" class="opsfil__acao" data-acao="todas">Selecionar todas</button>
+            <button type="button" class="opsfil__acao" data-acao="limpar">Limpar seleção</button>
+          </div>
+        </div>
+      </div>
     </div>
+    <p class="cmp__exibindo" hidden></p>
 
     <section class="cmp" aria-label="Comparativo por entidade">
       <div class="cmp__row cmp__row--head" aria-hidden="true">
@@ -5650,59 +5741,224 @@ function ligarAjusteDeFonte() {
   window.addEventListener('resize', refazer);
 }
 
-/* ── FILTRO DO COMPARATIVO ────────────────────────────────────────────────
-   Uma caixinha por escopo, cada uma com memória própria: quem acompanha só o
-   Costa e Lobão costuma querer a lista inteira (são 8 linhas), e quem abre o
-   Geral quase sempre quer só quem está com verba rodando (são 28).
+/* ── SELETOR DE OPERAÇÕES DO COMPARATIVO ──────────────────────────────────
+   Escolhe QUAIS operações entram na tabela, pra comparar 2 ou 3 lado a lado
+   sem as outras 25 no meio.
+
+   REGRA QUE NÃO PODE SER QUEBRADA: a lista do seletor sai do conjunto COMPLETO
+   de operações do escopo, nunca de um recorte por investimento. Operação com
+   R$ 0 de mídia no período continua na lista e continua aparecendo na tabela
+   se estiver marcada — ela pode ter cadastro, FTD, depósito e volume vindos de
+   tráfego anterior, que é justamente o que se quer olhar nesse caso.
+
+   Estado: null = todas (padrão). Array de nomes = recorte.
+   Um estado por escopo: a lista de operações do Costa e Lobão e a do Geral são
+   conjuntos diferentes.
    ────────────────────────────────────────────────────────────────────────── */
-var LS_KEY_CMP = 'bb-dash-cmp-ativos';
+estado.ops = { cl: null, geral: null };
 
-function filtroCmpLigado(raiz) {
-  var inp = $('.cmpfil__in', raiz);
-  return !!(inp && inp.checked);
+function chaveEscopo(geral) { return geral ? 'geral' : 'cl'; }
+
+function opsSelecao(geral) { return estado.ops[chaveEscopo(geral)]; }
+
+function definirOps(geral, sel, raiz) {
+  /* seleção vazia viraria tabela vazia sem motivo: cai de volta pra "todas",
+     que é o estado que sempre responde alguma coisa. */
+  estado.ops[chaveEscopo(geral)] = (sel && sel.length) ? sel : null;
+  var b = blocoDoEscopo(geral);
+  if (b) pintarComparativo(b, estado.ehHoje, raiz, geral);
 }
 
-function salvarFiltroCmp() {
-  try {
-    localStorage.setItem(LS_KEY_CMP, JSON.stringify({
-      cl: filtroCmpLigado(RAIZ_CL),
-      geral: filtroCmpLigado(RAIZ_GERAL)
-    }));
-  } catch (e) {}
+/* Aplica o recorte. Sem seleção, devolve a lista inteira — inclusive quem está
+   zerado. */
+function filtrarOps(todas, geral) {
+  var sel = opsSelecao(geral);
+  if (!sel) return todas;
+  return todas.filter(function (e) { return sel.indexOf(e.expert_name) !== -1; });
 }
 
-function restaurarFiltroCmp() {
-  var salvo = null;
-  try { salvo = JSON.parse(localStorage.getItem(LS_KEY_CMP) || 'null'); } catch (e) {}
-  if (!salvo) return;
-  var a = $('.cmpfil__in', RAIZ_CL);
-  var b = $('.cmpfil__in', RAIZ_GERAL);
-  if (a) a.checked = !!salvo.cl;
-  if (b) b.checked = !!salvo.geral;
+function rotuloOps(sel, todas) {
+  if (!sel || sel.length === todas.length) return 'Todas';
+  if (sel.length === 1) return nomeExpert(sel[0]);
+  return sel.length + ' selecionadas';
 }
 
-/* Rótulo e contagem. A contagem é o motivo de a caixinha existir: sem ela, a
-   pessoa não sabe se marcar vai esconder 1 linha ou 20. */
-function pintarFiltroCmp(raiz, todas, isHoje) {
-  var cx = $('.cmpfil', raiz);
-  if (!cx) return;
-  var ativos = todas.filter(function (e) { return (e.investimento_total || 0) > 0; }).length;
-  escreve($('.cmpfil__txt', cx), isHoje ? 'Só quem está investindo hoje' : 'Só quem investiu no período');
-  escreve($('.cmpfil__n', cx), ativos + ' de ' + todas.length);
-  /* nada a esconder = controle que só ocupa espaço e confunde */
-  cx.hidden = !todas.length || ativos === todas.length;
+/* Monta a lista de itens do popover. Só reconstrói quando o CONJUNTO de nomes
+   muda (troca de período pode tirar/pôr operação): reconstruir a cada refresh
+   de 5 min apagaria a busca digitada e a rolagem de quem está com o seletor
+   aberto. */
+function montarListaOps(cx, todas, geral) {
+  var lista = $('.opsfil__lista', cx);
+  if (!lista) return;
+  var chave = todas.map(function (e) { return e.expert_name; }).join('|');
+  var sel = opsSelecao(geral);
+  if (lista.getAttribute('data-chave') !== chave) {
+    lista.setAttribute('data-chave', chave);
+    lista.innerHTML = '';
+
+    var todasItem = document.createElement('label');
+    todasItem.className = 'opsfil__item opsfil__item--todas';
+    todasItem.innerHTML = '<input type="checkbox" data-todas><span class="opsfil__nome">Todas as operações</span>';
+    lista.appendChild(todasItem);
+
+    todas.forEach(function (e) {
+      var it = document.createElement('label');
+      it.className = 'opsfil__item';
+      it.setAttribute('data-nome', String(e.expert_name).toUpperCase());
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.value = e.expert_name;
+      var nm = document.createElement('span');
+      nm.className = 'opsfil__nome';
+      nm.textContent = nomeExpert(e.expert_name);
+      var iv = document.createElement('span');
+      iv.className = 'opsfil__inv';
+      iv.textContent = brl(e.investimento_total || 0);
+      it.appendChild(cb); it.appendChild(nm); it.appendChild(iv);
+      lista.appendChild(it);
+    });
+  } else {
+    /* mesma lista, valores novos: atualiza só a verba ao lado do nome */
+    todas.forEach(function (e) {
+      var it = $('.opsfil__item[data-nome="' + String(e.expert_name).toUpperCase().replace(/"/g, '') + '"]', lista);
+      if (it) escreve($('.opsfil__inv', it), brl(e.investimento_total || 0));
+    });
+  }
+
+  /* marca o que está selecionado (sem seleção = tudo marcado, que é o que a
+     tabela está mostrando) */
+  $$('.opsfil__item input[value]', lista).forEach(function (cb) {
+    cb.checked = !sel || sel.indexOf(cb.value) !== -1;
+  });
+  var todasCb = $('input[data-todas]', lista);
+  if (todasCb) {
+    var marcados = $$('.opsfil__item input[value]:checked', lista).length;
+    todasCb.checked = marcados === todas.length;
+    todasCb.indeterminate = marcados > 0 && marcados < todas.length;
+  }
 }
 
-function ligarFiltroCmp() {
+function pintarOpsFil(raiz, todas, geral, mostrados) {
+  var cx = $('.opsfil', raiz);
+  if (cx) {
+    var sel = opsSelecao(geral);
+    escreve($('.opsfil__val', cx), rotuloOps(sel, todas));
+    if (sel) cx.setAttribute('data-filtrando', '');
+    else cx.removeAttribute('data-filtrando');
+    cx.hidden = !todas.length;
+    montarListaOps(cx, todas, geral);
+  }
+  var aviso = $('.cmp__exibindo', raiz);
+  if (aviso) {
+    var plural = todas.length === 1 ? ' operação' : ' operações';
+    aviso.innerHTML = '';
+    var b = document.createElement('b');
+    if (mostrados === todas.length) {
+      b.textContent = 'todas as ' + todas.length;
+      aviso.appendChild(document.createTextNode('Exibindo '));
+      aviso.appendChild(b);
+      aviso.appendChild(document.createTextNode(plural));
+    } else {
+      b.textContent = mostrados + ' de ' + todas.length;
+      aviso.appendChild(document.createTextNode('Exibindo '));
+      aviso.appendChild(b);
+      aviso.appendChild(document.createTextNode(plural + ' · os totais e a participação na verba continuam sobre a operação inteira'));
+    }
+    aviso.hidden = !todas.length;
+  }
+}
+
+function abrirOps(cx, abrir) {
+  var pop = $('.opsfil__pop', cx);
+  var btn = $('.opsfil__btn', cx);
+  if (!pop || !btn) return;
+  pop.hidden = !abrir;
+  btn.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+  if (abrir) {
+    cx.setAttribute('data-aberto', '');
+    var busca = $('.opsfil__busca', cx);
+    if (busca) { busca.value = ''; filtrarListaOps(cx, ''); busca.focus(); }
+  } else {
+    cx.removeAttribute('data-aberto');
+  }
+}
+
+function filtrarListaOps(cx, termo) {
+  var t = String(termo || '').trim().toUpperCase();
+  var itens = $$('.opsfil__item[data-nome]', cx);
+  var visiveis = 0;
+  itens.forEach(function (it) {
+    var bate = !t || it.getAttribute('data-nome').indexOf(t) !== -1;
+    it.hidden = !bate;
+    if (bate) visiveis++;
+  });
+  /* "Todas as operações" some durante a busca: marcar ele ali marcaria também
+     quem a busca escondeu, o que ninguém espera. */
+  var todasIt = $('.opsfil__item--todas', cx);
+  if (todasIt) todasIt.hidden = !!t;
+  var vazio = $('.opsfil__vazio', cx);
+  if (!vazio) {
+    vazio = document.createElement('p');
+    vazio.className = 'opsfil__vazio';
+    vazio.textContent = 'Nenhuma operação com esse nome.';
+    $('.opsfil__lista', cx).appendChild(vazio);
+  }
+  vazio.hidden = visiveis > 0;
+}
+
+function ligarOpsFil() {
   [[RAIZ_CL, false], [RAIZ_GERAL, true]].forEach(function (par) {
-    var inp = $('.cmpfil__in', par[0]);
-    if (!inp) return;
-    inp.addEventListener('change', function () {
-      salvarFiltroCmp();
-      var b = blocoDoEscopo(par[1]);
-      if (b) pintarComparativo(b, estado.ehHoje, par[0], par[1]);
+    var raiz = par[0], geral = par[1];
+    var cx = $('.opsfil', raiz);
+    if (!cx) return;
+
+    $('.opsfil__btn', cx).addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      var abrindo = $('.opsfil__pop', cx).hidden;
+      fecharTodosOps();
+      if (abrindo) abrirOps(cx, true);
+    });
+
+    /* clique DENTRO do popover não pode fechar: a pessoa vai marcar várias */
+    $('.opsfil__pop', cx).addEventListener('click', function (ev) { ev.stopPropagation(); });
+
+    $('.opsfil__busca', cx).addEventListener('input', function () {
+      filtrarListaOps(cx, this.value);
+    });
+
+    $('.opsfil__lista', cx).addEventListener('change', function (ev) {
+      var alvo = ev.target;
+      if (!alvo || alvo.tagName !== 'INPUT') return;
+      var todosCb = $$('.opsfil__item input[value]', cx);
+      if (alvo.hasAttribute('data-todas')) {
+        /* respeita a busca: marca/desmarca só o que está à vista */
+        var visiveis = todosCb.filter(function (cb) { return !cb.closest('.opsfil__item').hidden; });
+        visiveis.forEach(function (cb) { cb.checked = alvo.checked; });
+      }
+      var sel = todosCb.filter(function (cb) { return cb.checked; }).map(function (cb) { return cb.value; });
+      definirOps(geral, sel.length === todosCb.length ? null : sel, raiz);
+    });
+
+    $$('.opsfil__acao', cx).forEach(function (bt) {
+      bt.addEventListener('click', function () {
+        /* os dois caem no mesmo lugar de propósito: limpar seleção volta pra
+           "todas" em vez de deixar a tabela vazia (foi o pedido). */
+        definirOps(geral, null, raiz);
+        var busca = $('.opsfil__busca', cx);
+        if (busca) { busca.value = ''; filtrarListaOps(cx, ''); }
+        if (bt.getAttribute('data-acao') === 'limpar') abrirOps(cx, false);
+      });
     });
   });
+
+  document.addEventListener('click', fecharTodosOps);
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape') fecharTodosOps();
+  });
+}
+
+function fecharTodosOps() {
+  $$('.opsfil').forEach(function (cx) { abrirOps(cx, false); });
 }
 
 /* Repinta só o comparativo sem refazer o fetch: o dado da última leitura boa
@@ -5720,15 +5976,12 @@ function blocoDoEscopo(geral) {
 function pintarComparativo(d, isHoje, raiz, geral) {
   var corpo = $('.cmp__body', raiz);
   if (!corpo) return;
+  /* `todas` é a lista COMPLETA de operações do escopo — é dela que sai o
+     seletor. `exps` é o que a tabela mostra. Ter ou não investimento no período
+     nunca decide isso: quem escolhe é a pessoa, no seletor. */
   var todas = d.experts || [];
-  /* FILTRO DE LINHAS. Entidade sem verba no período ocupa linha, entra na
-     contagem e não responde nenhuma pergunta de operação — mas ela também não
-     é lixo: some só quando a pessoa pede. */
-  var soAtivos = filtroCmpLigado(raiz);
-  var exps = soAtivos
-    ? todas.filter(function (e) { return (e.investimento_total || 0) > 0; })
-    : todas;
-  pintarFiltroCmp(raiz, todas, isHoje);
+  var exps = filtrarOps(todas, geral);
+  pintarOpsFil(raiz, todas, geral, exps.length);
   /* O denominador da participação é o total do período INTEIRO, com filtro ou
      sem: "25% da verba" tem que continuar querendo dizer a mesma coisa nas duas
      visões, senão esconder linha zerada inflaria a fatia de quem sobrou. */
@@ -5869,15 +6122,12 @@ function pintarComparativo(d, isHoje, raiz, geral) {
   });
   corpo.innerHTML = '';
   corpo.appendChild(frag);
-  /* filtro ligado num período em que ninguém gastou: tabela vazia parece bug.
-     O recado diz que a tabela está vazia POR ESCOLHA e como desfazer. */
   if (!exps.length) {
     var vazio = document.createElement('p');
     vazio.className = 'cmp__vazio';
-    vazio.textContent = soAtivos
-      ? 'Nenhuma operação com verba ' + (isHoje ? 'hoje' : 'nesse período') +
-        '. Desmarque a caixa acima pra ver todas as ' + todas.length + '.'
-      : 'Sem dados pra esse período.';
+    /* seleção vazia cai pra "todas" antes de chegar aqui, então tabela vazia
+       só acontece quando a API não trouxe operação nenhuma. */
+    vazio.textContent = 'Sem operações pra esse período.';
     corpo.appendChild(vazio);
   }
 
@@ -7076,8 +7326,7 @@ ligarAjusteDeFonte();
 ligarPainel();
 restaurarEscolha();
 restaurarOrdenacao();
-restaurarFiltroCmp();
-ligarFiltroCmp();
+ligarOpsFil();
 pintarNotaPeriodo();
 
 $$('input[name="range"]').forEach(function (inp) {
