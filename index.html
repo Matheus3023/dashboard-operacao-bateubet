@@ -1192,8 +1192,15 @@ h1,h2,h3,h4,p{margin:0}
 .cmp__body .cmp__row:hover{background:rgba(255,255,255,.035)}
 .cmp__name{
   font-size:.8125rem;font-weight:640;letter-spacing:.02em;text-transform:uppercase;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
+  min-width:0;display:flex;align-items:flex-start;gap:9px;
 }
+/* caixinha de cada linha: mesma seleção do seletor OPERAÇÕES, atalho pra tirar
+   uma operação da comparação sem abrir nada. */
+.cmp__pick{width:14px;height:14px;flex:none;margin:2px 0 0;accent-color:var(--acao);cursor:pointer}
+.cmp__pick:focus-visible{outline:2px solid var(--acao);outline-offset:2px}
+.cmp__nomewrap{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* alinha o rótulo da coluna com o nome, já que agora a linha começa na caixinha */
+.cmp__row--head span:first-child{padding-left:23px}
 .cmp__num{
   font-size:.875rem;font-weight:620;font-variant-numeric:tabular-nums;letter-spacing:-.01em;white-space:nowrap;
   /* item de grid sem min-width:0 não deixa a coluna encolher abaixo do
@@ -1325,6 +1332,11 @@ h1,h2,h3,h4,p{margin:0}
    pra ninguém ler a tabela achando que está vendo a operação inteira. */
 .cmp__exibindo{margin:0 0 8px;color:var(--txt-3);font-size:.6875rem}
 .cmp__exibindo b{color:var(--txt-2);font-weight:600}
+.cmp__mostrartudo{
+  padding:0;border:0;background:transparent;cursor:pointer;
+  color:var(--acao);font:inherit;text-decoration:underline;text-underline-offset:2px;
+}
+.cmp__mostrartudo:hover{color:var(--txt-1)}
 .cmp__vazio{margin:0;padding:18px 16px;text-align:center;color:var(--txt-3);font-size:.8125rem}
 @media (prefers-reduced-motion:reduce){.opsfil__btn,.opsfil__chev,.opsfil__acao{transition:none}}
 
@@ -5862,7 +5874,12 @@ function pintarOpsFil(raiz, todas, geral, mostrados) {
       b.textContent = mostrados + ' de ' + todas.length;
       aviso.appendChild(document.createTextNode('Exibindo '));
       aviso.appendChild(b);
-      aviso.appendChild(document.createTextNode(plural + ' · os totais e a participação na verba continuam sobre a operação inteira'));
+      aviso.appendChild(document.createTextNode(plural + ' · os totais e a participação na verba continuam sobre a operação inteira · '));
+      var volta = document.createElement('button');
+      volta.type = 'button';
+      volta.className = 'cmp__mostrartudo';
+      volta.textContent = 'mostrar todas';
+      aviso.appendChild(volta);
     }
     aviso.hidden = !todas.length;
   }
@@ -5939,6 +5956,32 @@ function ligarOpsFil() {
       definirOps(geral, sel.length === todosCb.length ? null : sel, raiz);
     });
 
+    /* caixinha da própria linha da tabela: mesma seleção, atalho mais curto */
+    var corpo = $('.cmp__body', raiz);
+    if (corpo) {
+      corpo.addEventListener('change', function (ev) {
+        var alvo = ev.target;
+        if (!alvo || !alvo.classList || !alvo.classList.contains('cmp__pick')) return;
+        var b = blocoDoEscopo(geral);
+        var nomes = ((b && b.experts) || []).map(function (e) { return e.expert_name; });
+        var atual = opsSelecao(geral) || nomes.slice();
+        var sel = alvo.checked
+          ? (atual.indexOf(alvo.value) === -1 ? atual.concat([alvo.value]) : atual)
+          : atual.filter(function (n) { return n !== alvo.value; });
+        definirOps(geral, sel.length === nomes.length ? null : sel, raiz);
+      });
+    }
+
+    /* "Mostrar todas" ao lado do "Exibindo X de Y": desmarcar uma linha faz ela
+       sumir da tabela, então precisa existir um caminho de volta que não seja
+       abrir o seletor e caçar o nome. */
+    var aviso = $('.cmp__exibindo', raiz);
+    if (aviso) {
+      aviso.addEventListener('click', function (ev) {
+        if (ev.target && ev.target.classList.contains('cmp__mostrartudo')) definirOps(geral, null, raiz);
+      });
+    }
+
     $$('.opsfil__acao', cx).forEach(function (bt) {
       bt.addEventListener('click', function () {
         /* os dois caem no mesmo lugar de propósito: limpar seleção volta pra
@@ -5995,7 +6038,22 @@ function pintarComparativo(d, isHoje, raiz, geral) {
     var tap = e.tap || {};
     var inv = e.investimento_total || 0;
 
-    var cel = $('.cmp__name', linha);
+    /* CAIXINHA NA PRÓPRIA LINHA. É o caminho curto: dá pra tirar uma operação
+       da comparação sem abrir o seletor. Fica sempre em sincronia com ele —
+       são a mesma seleção, dois jeitos de mexer nela. */
+    var celula = $('.cmp__name', linha);
+    celula.textContent = '';
+    var pick = document.createElement('input');
+    pick.type = 'checkbox';
+    pick.className = 'cmp__pick';
+    pick.value = e.expert_name;
+    pick.checked = true;                 /* está na tabela = está selecionada */
+    pick.setAttribute('aria-label', 'Tirar ' + nomeExpert(e.expert_name) + ' da comparação');
+    pick.title = 'Tirar da comparação';
+    celula.appendChild(pick);
+    var cel = document.createElement('span');
+    cel.className = 'cmp__nomewrap';
+    celula.appendChild(cel);
     cel.textContent = nomeExpert(e.expert_name);
     /* marcador de segunda linha: "marca" e/ou "N contas". É o que explica um
        investimento alto numa linha só, então vale o ruído extra. */
