@@ -15,8 +15,13 @@
 
 const UPSTREAM = 'https://n8n.srv1865704.hstgr.cloud/webhook/dashboard-operacao';
 
-// o n8n leva ~10s numa consulta de período. Margem generosa, mas finita.
-const UPSTREAM_TIMEOUT_MS = 45000;
+/* Orçamento TOTAL desta função, tentativas somadas. A função tem maxDuration de
+   60s (vercel.json): abortar em 52s garante que quem responde é este código,
+   com JSON explicando o que houve, e não a plataforma com uma página de 504.
+   Período longo ainda não cacheado chega a levar 45s no n8n — daí a folga. */
+const UPSTREAM_TIMEOUT_MS = 52000;
+/* Uma segunda tentativa só faz sentido se sobrar tempo pra ela terminar. */
+const RETRY_MIN_SOBRA_MS = 20000;
 const MAX_RANGE_DIAS = 366;
 const TZ = 'America/Sao_Paulo';
 
@@ -129,10 +134,17 @@ module.exports = async function handler(req, res) {
        200 com CORPO VAZIO. É transitório — a chamada seguinte costuma passar, e
        quase sempre já cai no cache que a primeira tentativa deixou gravado.
        Sem isto, o painel mostra "Falha ao atualizar" por um soluço de segundos. */
+    const comecou = Date.now();
     let r = null;
     let texto = '';
     for (let tentativa = 0; tentativa < 2; tentativa++) {
-      if (tentativa > 0) await new Promise((ok) => setTimeout(ok, 1500));
+      if (tentativa > 0) {
+        const sobra = UPSTREAM_TIMEOUT_MS - (Date.now() - comecou);
+        /* Repetir sem tempo de terminar só troca "erro em 8s" por "504 em 52s",
+           que é pior: o painel demora mais pra saber que precisa tentar de novo. */
+        if (sobra < RETRY_MIN_SOBRA_MS) break;
+        await new Promise((ok) => setTimeout(ok, 1500));
+      }
       r = await fetch(url.toString(), {
         signal: ctrl.signal,
         headers: { accept: 'application/json' }
