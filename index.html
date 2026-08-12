@@ -136,7 +136,7 @@ O QUE MUDOU NA v3 (esta entrega, `designer`)
      Entidade de 1 conta não mostra prateleira nenhuma (o card já é a conta).
   3. INSTITUCIONAL não é pessoa: é bloco de marca. Recebe .expert--marca e a
      etiqueta "Institucional · marca", pra ninguém ler como expert.
-  4. Verba zerada virou ESTADO PREVISTO, não erro. Hoje 17 das 24 entidades
+  4. Verba zerada virou ESTADO PREVISTO, não erro. Hoje 17 dos 24 experts
      vêm com investimento 0 (permissão da Meta em liberação). O card aguenta:
      grupo/direto caem no .block--off de sempre, o chip de custo por FTD vira
      "Sem verba" (nunca "R$ 0,00" verde, que mentiria dizendo que está barato)
@@ -3553,7 +3553,7 @@ body.pnl-aberto{overflow:hidden}
          motivo errado (denominador faltando), e a tela mentiria com cara de
          certa. Mesmo princípio do #periodo-banner. -->
     <div class="errbar errbar--warn scope-aviso" id="geral-aviso" role="status">
-      <b data-derived="entidades com investimento_total === 0">17 das 24 entidades</b>
+      <b data-derived="entidades com investimento_total === 0">17 dos 24 experts</b>
       ainda estão com investimento zerado nesta leitura (sem campanha ativa no
       período, ou verba ainda não postada hoje). O funil da TAP delas já é
       real, o investimento não, então
@@ -3578,7 +3578,7 @@ body.pnl-aberto{overflow:hidden}
         </p>
         <p class="verdict__why">
           R$ 15,45 por FTD hoje, contra o teto de R$ 300,00 da faixa boa. Número
-          ainda distorcido: 17 das 24 entidades entram com investimento zerado.
+          ainda distorcido: 17 dos 24 experts entram com investimento zerado.
         </p>
       </div>
 
@@ -3596,7 +3596,7 @@ body.pnl-aberto{overflow:hidden}
 
       <div class="sinal sinal--na">
         <span class="sinal__lbl">Ainda sem FTD</span>
-        <span class="sinal__who" data-derived="entidades com tap.ftd === 0">6 entidades</span>
+        <span class="sinal__who" data-derived="entidades com tap.ftd === 0">6 experts</span>
         <span class="sinal__val">Empire, Cremosinho, BMidia e mais 3 · R$ 0,00 investidos</span>
       </div>
 
@@ -3683,9 +3683,9 @@ body.pnl-aberto{overflow:hidden}
     </div>
     <p class="cmp__exibindo" hidden></p>
 
-    <section class="cmp" aria-label="Comparativo por entidade">
+    <section class="cmp" aria-label="Comparativo por expert">
       <div class="cmp__row cmp__row--head" aria-hidden="true">
-        <span>Entidade</span>
+        <span>Expert</span>
         <span>Investido</span>
         <span class="cmp__bar-cell">Participação na verba</span>
         <span class="cmp__res">Result. por canal</span>
@@ -3785,11 +3785,11 @@ body.pnl-aberto{overflow:hidden}
       </div>
 
       <p class="cmp__foot">
-        Barra proporcional ao maior investimento do dia. Entidade sem verba no
+        Barra proporcional ao maior investimento do dia. Expert sem verba no
         período aparece com barra vazia.
         <br>
         <label class="tablink" for="v-experts">
-          Abrir o detalhe por entidade
+          Abrir o detalhe por expert
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
         </label>
       </p>
@@ -3860,7 +3860,7 @@ body.pnl-aberto{overflow:hidden}
 
     <div class="section-head"><h2 class="eyebrow">Por expert · 24 na operação · maior investimento primeiro</h2></div>
 
-    <section class="experts" id="geral-list" data-list="experts" aria-label="Desempenho por entidade">
+    <section class="experts" id="geral-list" data-list="experts" aria-label="Desempenho por expert">
 
       <!-- ── ESTADO A · entidade de 1 conta, com verba. Igual a um card do
            Costa e Lobão: sem prateleira de contas, porque o card já É a conta. -->
@@ -3908,7 +3908,7 @@ body.pnl-aberto{overflow:hidden}
             <p class="block__off">Sem campanha ativa hoje</p>
           </section>
           <section class="block block--tap">
-            <h4 class="block__title">Funil TAP <small>blend da entidade, não separa grupo e tráf. perfil</small></h4>
+            <h4 class="block__title">Funil TAP <small>blend do expert, não separa grupo e tráf. perfil</small></h4>
             <div class="tap-funnel">
               <div class="m"><span class="m__lbl">Cadastros</span><span class="m__val" data-field="tap.cadastros">8</span></div>
               <div class="m"><span class="m__lbl">FTD</span><span class="m__val" data-field="tap.ftd">3</span></div>
@@ -3996,7 +3996,7 @@ body.pnl-aberto{overflow:hidden}
         <!-- ═══ BREAKDOWN POR CONTA ═══
              Renderizar SÓ quando contas.length > 1. Entra fechado: o cabeçalho
              do card já respondeu "quanto", isto responde "como dividiu".
-             Colunas: conta · grupo · direto · total · participação na entidade.
+             Colunas: conta · grupo · direto · total · participação no expert.
              A última linha fecha a soma e TEM que bater com investimento_total.
              Canal inativo imprime n/d, não R$ 0,00, mesma regra do .block--off.
              Exemplo de linha com verba (é assim que fica depois da liberação):
@@ -4071,7 +4071,7 @@ body.pnl-aberto{overflow:hidden}
 
             <!-- ▼ LINHA DE FECHAMENTO: prova que o cabeçalho é a soma das contas ▼ -->
             <div class="contas__row contas__row--tot">
-              <span class="contas__nome"><b>Total da entidade</b></span>
+              <span class="contas__nome"><b>Total do expert</b></span>
               <span class="contas__num contas__c--g" data-field="grupo.valor_investido">R$ 0,00</span>
               <span class="contas__num contas__c--d" data-field="direto.valor_investido">R$ 0,00</span>
               <span class="contas__num" data-field="investimento_total">R$ 0,00</span>
@@ -4298,7 +4298,7 @@ body.pnl-aberto{overflow:hidden}
               <span class="contas__num val--na contas__c--g">n/d</span><span class="contas__num val--na contas__c--d">n/d</span><span class="contas__num val--na">n/d</span><span class="contas__share">n/d</span>
             </div>
             <div class="contas__row contas__row--tot">
-              <span class="contas__nome"><b>Total da entidade</b></span>
+              <span class="contas__nome"><b>Total do expert</b></span>
               <span class="contas__num contas__c--g">R$ 0,00</span>
               <span class="contas__num contas__c--d">R$ 0,00</span>
               <span class="contas__num" data-field="investimento_total">R$ 0,00</span>
@@ -4325,17 +4325,17 @@ body.pnl-aberto{overflow:hidden}
     <footer class="foot">
       <p>
         <b>Costa e Lobão</b> é o recorte dos 7 experts da casa. <b>Geral</b> é a
-        operação inteira da BM, 24 entidades em 33 contas de anúncio, incluindo
+        operação inteira da BM, 28 experts em 33 contas de anúncio, incluindo
         os 7 do recorte. Os dois escopos leem a mesma API, em blocos separados:
         um não é a soma nem o filtro do outro na tela.
       </p>
       <p>
-        <b>Entidade</b> nem sempre é pessoa: Institucional é a marca anunciando,
+        <b>Expert</b> aqui nem sempre é pessoa: Institucional é a marca anunciando,
         e algumas pessoas anunciam por mais de uma conta. Nesses casos o
         cabeçalho do card mostra o <b>total somado</b> e a prateleira
         <b>"Investimento conta a conta"</b> abre o detalhe, com a última linha
-        fechando a soma. O funil da TAP nunca se separa por conta: o btag é da
-        entidade, não da conta de anúncio.
+        fechando a soma. O funil da TAP nunca se separa por conta: o btag é do
+        expert, não da conta de anúncio.
       </p>
       <p>
         <b>Grupo</b> são as campanhas de WhatsApp e Telegram (a pessoa entra num grupo antes).
@@ -4430,7 +4430,7 @@ body.pnl-aberto{overflow:hidden}
 
       <!-- a entidade saiu da última leitura da API (refresh com payload novo) -->
       <div class="pnl-aviso" id="pnl-sumiu" hidden>
-        Esta entidade não veio na última leitura da API. Os números abaixo são
+        Este expert não veio na última leitura da API. Os números abaixo são
         da leitura anterior.
       </div>
 
@@ -5266,7 +5266,7 @@ function pintarContas(art, ent, isHoje) {
   });
 
   var fim = MOLDE.contaTotal.cloneNode(true);
-  $('.contas__nome b', fim).textContent = ehMarca(ent.expert_name) ? 'Total da marca' : 'Total da entidade';
+  $('.contas__nome b', fim).textContent = ehMarca(ent.expert_name) ? 'Total da marca' : 'Total do expert';
   var nf = $$('.contas__num', fim);
   escreve(nf[0], brl(somaG));
   escreve(nf[1], brl(somaD));
@@ -5458,8 +5458,8 @@ function pintarExpert(expert, ehPrimeiro, isHoje, geral) {
     else if (tap.fonte === 'meta_pixel')
       subTap.textContent = 'FTD pelo pixel da conta (a TAP não separa esta conta do btag da marca)';
     else if (expert.sem_btag) subTap.textContent = 'sem btag próprio: a TAP não separa esta conta';
-    else if (contas.length > 1) subTap.textContent = 'btag único da entidade, não separa por conta';
-    else if (geral)        subTap.textContent = 'blend da entidade, não separa grupo e tráf. perfil';
+    else if (contas.length > 1) subTap.textContent = 'btag único do expert, não separa por conta';
+    else if (geral)        subTap.textContent = 'blend do expert, não separa grupo e tráf. perfil';
   }
 
   pintarBloco(art, expert, 'grupo', isHoje);
@@ -5562,7 +5562,7 @@ function pintarVeredito(d, isHoje, raiz) {
   else if (cpf < FAIXA_ALTA) { box.classList.add('verdict--warn'); escreveVeredito(txt, 'alerta', 'Custo por FTD (CPA) acima do confortável'); }
   else { box.classList.add('verdict--bad'); escreveVeredito(txt, 'alerta', 'Custo por FTD (CPA) alto'); }
 
-  var quem = (d.experts || []).length > 10 ? 'entidades' : 'experts';
+  var quem = 'experts';
   var frase = brl(cpf) + ' por FTD ' + quando + ', contra o teto de ' + brl(FAIXA_BOA) + ' da faixa boa. ';
   if (!acima.length) frase += 'Nenhuma linha em ' + brl(FAIXA_ALTA) + ' ou acima.';
   else if (acima.length === 1) frase += 'Uma linha em ' + brl(FAIXA_ALTA) + ' ou acima está levando ' + pct(share) + ' da verba.';
@@ -5582,7 +5582,7 @@ function pintarVeredito(d, isHoje, raiz) {
 function pintarSinais(d, raiz) {
   var exps = d.experts || [];
   var comCpf = exps.filter(temCusto);
-  var rotulo = exps.length > 10 ? 'entidade' : 'expert';
+  var rotulo = 'expert';
 
   function preencher(sel, quem, valor) {
     var box = $(sel, raiz);
@@ -5837,10 +5837,11 @@ function montarListaOps(cx, todas, geral) {
     });
   }
 
-  /* marca o que está selecionado (sem seleção = tudo marcado, que é o que a
-     tabela está mostrando) */
+  /* SEM ESCOLHA = NADA MARCADO. A caixinha responde "eu escolhi esta pra
+     comparar?", não "ela está na tela?". Por isso o estado inicial é vazio: a
+     pessoa MARCA quem quer comparar, em vez de desmarcar as outras 25. */
   $$('.opsfil__item input[value]', lista).forEach(function (cb) {
-    cb.checked = !sel || sel.indexOf(cb.value) !== -1;
+    cb.checked = !!sel && sel.indexOf(cb.value) !== -1;
   });
   var todasCb = $('input[data-todas]', lista);
   if (todasCb) {
@@ -5855,7 +5856,9 @@ function pintarOpsFil(raiz, todas, geral, mostrados) {
   if (cx) {
     var sel = opsSelecao(geral);
     escreve($('.opsfil__val', cx), rotuloOps(sel, todas));
-    if (sel) cx.setAttribute('data-filtrando', '');
+    /* destaque só quando a tabela está mesmo cortada: tudo marcado mostra a
+       operação inteira e não é recorte nenhum. */
+    if (sel && sel.length < todas.length) cx.setAttribute('data-filtrando', '');
     else cx.removeAttribute('data-filtrando');
     cx.hidden = !todas.length;
     montarListaOps(cx, todas, geral);
@@ -5875,6 +5878,15 @@ function pintarOpsFil(raiz, todas, geral, mostrados) {
       aviso.appendChild(document.createTextNode('Exibindo '));
       aviso.appendChild(b);
       aviso.appendChild(document.createTextNode(plural + ' · os totais e a participação na verba continuam sobre a operação inteira · '));
+      /* marcar uma linha tira as outras da tabela, então o caminho pra SOMAR
+         mais uma tem que estar aqui: é onde a pessoa está olhando quando
+         percebe que quer comparar duas. */
+      var mais = document.createElement('button');
+      mais.type = 'button';
+      mais.className = 'cmp__mostrartudo cmp__addmais';
+      mais.textContent = 'adicionar mais';
+      aviso.appendChild(mais);
+      aviso.appendChild(document.createTextNode(' · '));
       var volta = document.createElement('button');
       volta.type = 'button';
       volta.className = 'cmp__mostrartudo';
@@ -5953,7 +5965,10 @@ function ligarOpsFil() {
         visiveis.forEach(function (cb) { cb.checked = alvo.checked; });
       }
       var sel = todosCb.filter(function (cb) { return cb.checked; }).map(function (cb) { return cb.value; });
-      definirOps(geral, sel.length === todosCb.length ? null : sel, raiz);
+      /* "tudo marcado" é estado legítimo (a pessoa clicou selecionar todas) e é
+         diferente de "não escolhi nada ainda". Os dois mostram a tabela inteira;
+         só o segundo deixa as caixinhas vazias. */
+      definirOps(geral, sel, raiz);
     });
 
     /* caixinha da própria linha da tabela: mesma seleção, atalho mais curto */
@@ -5962,13 +5977,13 @@ function ligarOpsFil() {
       corpo.addEventListener('change', function (ev) {
         var alvo = ev.target;
         if (!alvo || !alvo.classList || !alvo.classList.contains('cmp__pick')) return;
-        var b = blocoDoEscopo(geral);
-        var nomes = ((b && b.experts) || []).map(function (e) { return e.expert_name; });
-        var atual = opsSelecao(geral) || nomes.slice();
+        /* sem escolha ainda = lista vazia (não "todas"): marcar a primeira faz a
+           tabela mostrar SÓ ela, que é o gesto que a caixinha promete. */
+        var atual = opsSelecao(geral) || [];
         var sel = alvo.checked
           ? (atual.indexOf(alvo.value) === -1 ? atual.concat([alvo.value]) : atual)
           : atual.filter(function (n) { return n !== alvo.value; });
-        definirOps(geral, sel.length === nomes.length ? null : sel, raiz);
+        definirOps(geral, sel, raiz);
       });
     }
 
@@ -5978,15 +5993,30 @@ function ligarOpsFil() {
     var aviso = $('.cmp__exibindo', raiz);
     if (aviso) {
       aviso.addEventListener('click', function (ev) {
-        if (ev.target && ev.target.classList.contains('cmp__mostrartudo')) definirOps(geral, null, raiz);
+        var alvo = ev.target;
+        if (!alvo || !alvo.classList) return;
+        if (alvo.classList.contains('cmp__addmais')) {
+          ev.stopPropagation();
+          fecharTodosOps();
+          abrirOps(cx, true);
+          $('.opsfil__btn', cx).scrollIntoView({ block: 'center' });
+          return;
+        }
+        if (alvo.classList.contains('cmp__mostrartudo')) definirOps(geral, null, raiz);
       });
     }
 
     $$('.opsfil__acao', cx).forEach(function (bt) {
       bt.addEventListener('click', function () {
-        /* os dois caem no mesmo lugar de propósito: limpar seleção volta pra
-           "todas" em vez de deixar a tabela vazia (foi o pedido). */
-        definirOps(geral, null, raiz);
+        if (bt.getAttribute('data-acao') === 'todas') {
+          /* marca tudo de verdade (caixinhas cheias); a tabela já mostrava tudo */
+          var b = blocoDoEscopo(geral);
+          definirOps(geral, ((b && b.experts) || []).map(function (e) { return e.expert_name; }), raiz);
+        } else {
+          /* limpar volta pro estado "nada escolhido": caixinhas vazias e tabela
+             inteira, em vez de tabela vazia. */
+          definirOps(geral, null, raiz);
+        }
         var busca = $('.opsfil__busca', cx);
         if (busca) { busca.value = ''; filtrarListaOps(cx, ''); }
         if (bt.getAttribute('data-acao') === 'limpar') abrirOps(cx, false);
@@ -6047,9 +6077,12 @@ function pintarComparativo(d, isHoje, raiz, geral) {
     pick.type = 'checkbox';
     pick.className = 'cmp__pick';
     pick.value = e.expert_name;
-    pick.checked = true;                 /* está na tabela = está selecionada */
-    pick.setAttribute('aria-label', 'Tirar ' + nomeExpert(e.expert_name) + ' da comparação');
-    pick.title = 'Tirar da comparação';
+    /* vazia enquanto ninguém escolheu nada: marcar é o gesto de "quero comparar
+       esta", e a tabela passa a mostrar só as marcadas. */
+    var escolhidas = opsSelecao(geral);
+    pick.checked = !!escolhidas && escolhidas.indexOf(e.expert_name) !== -1;
+    pick.setAttribute('aria-label', (pick.checked ? 'Tirar ' : 'Comparar só ') + nomeExpert(e.expert_name));
+    pick.title = pick.checked ? 'Tirar da comparação' : 'Comparar só esta (marque mais pra somar)';
     celula.appendChild(pick);
     var cel = document.createElement('span');
     cel.className = 'cmp__nomewrap';
@@ -6302,7 +6335,7 @@ function pintarAvisoGeral(ents) {
   /* innerHTML inteiro, não só o <b>: o aviso de indisponibilidade pode ter
      apagado a estrutura antes, e um refresh não pode deixar frase pela metade */
   aviso.innerHTML =
-    '<b>' + zeradas.length + ' das ' + ents.length + ' entidades</b> ainda estão com ' +
+    '<b>' + zeradas.length + ' dos ' + ents.length + ' experts</b> ainda estão com ' +
     'investimento zerado nesta leitura (sem campanha ativa no período, ou verba ainda ' +
     'não postada hoje). O funil da TAP delas já é real, o investimento não, então ' +
     '<b>custo por FTD e retorno deste escopo ficam otimistas</b> até a verba entrar.';
