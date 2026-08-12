@@ -206,12 +206,23 @@ module.exports = async function handler(req, res) {
        `dias: []` é resposta legítima (expert novo, histórico ainda
        acumulando), então array vazio passa: só a AUSÊNCIA do array é erro. */
     if (tendencia) {
-      if (!dados || typeof dados.expert_name !== 'string' ||
-          typeof dados.escopo !== 'string' || !Array.isArray(dados.dias)) {
+      /* Duas formas de resposta, uma por rota:
+         - tendencia=<nome>  → { expert_name, escopo, dias[] }  (um expert)
+         - tendencia=*       → { escopo, lote:true, experts[] }  (todos de uma
+           vez, é o que alimenta a sparkline de cada linha do comparativo sem
+           disparar uma chamada por expert). */
+      const emLote = tendencia === '*';
+      const formaOk = emLote
+        ? (dados && typeof dados.escopo === 'string' && Array.isArray(dados.experts))
+        : (dados && typeof dados.expert_name === 'string' &&
+           typeof dados.escopo === 'string' && Array.isArray(dados.dias));
+      if (!formaOk) {
         res.setHeader('Cache-Control', 'no-store');
         return res.status(502).json({
           error: 'upstream_incompleto',
-          detail: 'A resposta do n8n veio sem os campos expert_name/escopo/dias.'
+          detail: emLote
+            ? 'A resposta do n8n veio sem os campos escopo/experts.'
+            : 'A resposta do n8n veio sem os campos expert_name/escopo/dias.'
         });
       }
       /* Só entra dia fechado, e o dia fecha uma vez por dia: 30 min de cache na

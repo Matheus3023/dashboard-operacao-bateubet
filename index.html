@@ -155,7 +155,23 @@ ONDE MOTION *NÃO* ENTRA NESTA PÁGINA (decisão, não esquecimento)
   respirando e number-counting (número correndo de 0 até o valor) ficaram
   de fora. Os três primeiros competem com número; o counting é pior: mente
   por 800ms mostrando um valor que não existe, num painel em que gente decide
-  verba olhando de relance. Se a operação quiser peça de marca com movimento
+  verba olhando de relance.
+
+  ⚠️ REVISTO NA v5, e de propósito: o number-counting VOLTOU, mas capado nos
+  três pontos que sustentavam o veto acima. Quem ler o parágrafo anterior
+  achando que a v5 o ignorou, leia isto antes:
+    · SÓ NA PRIMEIRA PINTURA de cada escopo, nunca no refresh de 5 min. O veto
+      original valia pra uma tela que recontasse sozinha o dia inteiro; aí o
+      "mente por 800ms" acontece infinitas vezes por dia, na frente de quem
+      está decidindo. Uma vez, na abertura, o que ele substitui não é um
+      número verdadeiro: é o skeleton.
+    · SÓ NOS TILES DE TOTAL (herói e nível 2). Card, tabela e linha de
+      dinheiro não contam.
+    · NUNCA EM CAMPO DE CUSTO (ver SEM_CONTAGEM no JS). Contar de 0 faria o
+      campo passar por "R$ 0,00", que é exatamente a leitura errada que a v5
+      corrigiu na tabela do comparativo.
+  E some inteiro em prefers-reduced-motion e em aba de segundo plano.
+  Se a operação quiser peça de marca com movimento
   (abertura de reunião, story, capa de deck), o lugar é FORA do painel:
     · og-image 1200x630 (a que está no <head>) pode ganhar arte gerada;
     · uma abertura em vídeo pra apresentação mensal;
@@ -192,6 +208,86 @@ O QUE MUDOU NA v4 (esta entrega, `designer`)
      Decisão do cliente: a TAP não amarra FTD a criativo, então cruzar os dois
      ali dentro seria inventar causalidade. A prateleira de criativos do card
      continua como está, é outra leitura.
+
+O QUE MUDOU NA v5 (esta entrega, `designer`) · REFINO, NÃO REDESENHO
+  Identidade, tokens e regras de cor intocados. Duas coisas mudaram: quanto
+  espaço o cromo cobra, e qual número grita primeiro.
+
+  1. CABEÇALHO: DE QUATRO FAIXAS PRA UMA.
+     Antes: topbar (marca + hora) · filtro de período · "ordenar por" ·
+     seletor de escopo, mais as abas = ~294px medidos antes do primeiro
+     número. Agora: UMA barra de comando (~63px) + as abas (~45px) = ~108px.
+     Economia de ~186px em repouso e ~200px com a barra encolhida.
+       · o SELETOR DE ESCOPO virou segmented control DENTRO da barra, colado
+         na marca: é a navegação primária (troca o painel inteiro).
+       · o PERÍODO ficou à direita, com rótulos curtos (7d / 30d / Mês /
+         Mês ant. / Datas) e title= com o nome por extenso.
+       · "ORDENAR POR" virou popover (.sortpop) e SÓ existe na aba "Por
+         expert" (e nunca no Google, que não tem card pra ordenar).
+       · a pílula "Atualizado às HH:MM" e o aviso "Mostrando DD/MM (hoje, em
+         andamento)" viraram UMA pílula de duas linhas.
+       · a barra ENCOLHE ao rolar (html.rolado) e as ABAS grudam logo abaixo
+         dela (position:sticky em top:var(--topbar-h)).
+     MUDANÇA ESTRUTURAL QUE PRECISA SER LEMBRADA: os 5 <input> de navegação
+     saíram de .views e são filhos diretos de #dashboard-root. Todo seletor
+     ~ do CSS ganhou um salto (~ .topbar ... / ~ .wrap ...). Ver o bloco
+     NAVEGAÇÃO EM DOIS NÍVEIS no CSS.
+
+  2. HIERARQUIA DOS NÚMEROS: 13 tiles iguais viraram três níveis.
+     NENHUMA MÉTRICA FOI REMOVIDA. É recomposição de peso.
+       nível 1 · investimento total + custo por FTD (2 tiles-herói, 42px)
+       nível 2 · cadastros · custo/cad · FTD · depósito · grupo · perfil
+       nível 3 · a linha de dinheiro, dentro de .totals__fin (contida)
+     O tile-herói de custo por FTD (.tcard--cpa) pinta o fio do topo e a
+     borda pela faixa oficial (300/350), não pelo magenta da marca: é a
+     única exceção do sistema, e existe porque numa TV a cor chega antes do
+     algarismo. Vale nos TRÊS escopos.
+
+  3. BUG DE LEITURA CORRIGIDO (tabela do comparativo).
+     "Custo por FTD" e "Custo/cad." imprimiam R$ 0,00 com denominador zero
+     (o caso do Deko: R$ 612,80 gastos, 0 FTD, coluna dizendo R$ 0,00). Em
+     coluna de custo, R$ 0,00 lê como "saiu de graça". Agora seguem a mesma
+     regra que os CARDS já usavam: "sem verba" (não gastou) × "sem FTD" /
+     "sem cad." (gastou e não converteu). O traço (—) continua reservado ao
+     chip de custo por resultado, pra um símbolo não ter dois sentidos na
+     mesma linha.
+
+O QUE MUDOU NA v5 · RODADA 2 (`designer`)
+  0. REGRESSÃO DO CABEÇALHO, CORRIGIDA. Em 388px a .rangebar media 429px e
+     quem rolava na horizontal era a PÁGINA. Causa: item flex nasce com
+     min-width:auto, que o trava no tamanho do conteúdo e impede o
+     overflow-x:auto de agir. min-width:0 nos dois trilhos (escopo e período).
+
+  1. MOTION, quatro peças, todas com desligamento em prefers-reduced-motion:
+     · CONTAGEM DOS NÚMEROS na primeira pintura de cada escopo, só nos tiles
+       de total, NUNCA em campo de custo (ver SEM_CONTAGEM). Isto REVISA a
+       decisão da v3 que vetava number-counting: leia a ressalva no bloco
+       "ONDE MOTION NÃO ENTRA", logo acima, antes de achar que foi descuido.
+     · SKELETON na primeira carga, no lugar do desfoque. O desfoque CONTINUA
+       na troca de período, e isso não é inconsistência: ali os números são
+       reais, só são de outro recorte, e não podem ficar nítidos fingindo que
+       são a resposta. Dois estados diferentes, dois tratamentos.
+     · TRANSIÇÃO de aba (160ms) e de escopo (180ms), só opacity/transform —
+       propriedades que não entram no layout, senão o caberNaCaixa mediria a
+       caixa no meio do movimento.
+     · title= com a definição da métrica em todo rótulo de tile (GLOSSARIO).
+       É apoio, não conteúdo: no toque title não existe, e é por isso que o
+       rodapé continua explicando tudo por escrito.
+
+  2. LOTE DE TENDÊNCIA  GET /api/dashboard?tendencia=*&escopo=<costa_lobao|geral>.
+     Uma chamada por escopo, guardada no MESMO estado.tendencia que o painel
+     de análise usa — por isso abrir o painel de um expert não dispara mais
+     busca nenhuma, a série já está em memória. Revalidada junto do refresh,
+     mas só executada na VIRADA DO DIA: a série é de dias fechados e não muda
+     entre 10h05 e 10h10. Chegou a existir uma coluna de sparkline na tabela
+     alimentada por isso; foi removida a pedido do operador (virava ruído no
+     meio dos valores). O lote ficou porque paga o painel de análise.
+
+  3. TEXTURA DE MARCA (fundo-marca.jpg) no body, sob um véu de 62%→88%. Sem o
+     véu o topo da imagem (~#B4004E) fica MAIS CLARO que a superfície dos
+     cards (#3B0038) e a escada de profundidade inverte. O gradiente antigo
+     continua embaixo como fallback. Pra remover: duas linhas, ver o comentário
+     do body.
 
 CONTRATO DE DADOS
   Raiz da injeção:  <div id="dashboard-root">
@@ -421,14 +517,35 @@ NOTA SOBRE OS DADOS DE EXEMPLO
 
 *,*::before,*::after{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
+/* ── TEXTURA DE MARCA (fundo-marca.jpg) ───────────────────────────────────
+   Quatro camadas, de cima pra baixo na declaração:
+     1. VÉU. Não é enfeite, é o que torna a textura utilizável. A imagem crua
+        tem pico ~#B4004E no topo, mais CLARA que a superfície dos cards
+        (#3B0038). Sem o véu o canvas fica mais claro que o card e a escada de
+        profundidade inverte: o card vira buraco no lugar de camada elevada.
+        Com 62%→88% de véu o pico cai pra ~#550035 na faixa que o topbar já
+        cobre e pra ~#3F0031 na faixa do conteúdo, ou seja, empatado com o
+        card. Sobra o halo magenta e o fio dourado, que é a assinatura.
+     2. A TEXTURA. `100% auto` ancorada no topo: ela existe no primeiro dobra
+        e some depois, igual ao gradiente que substituiu.
+     3. FALLBACK. O gradiente antigo, inteiro. Se o JPG não carregar (rede
+        ruim, deploy sem o asset), a tela continua sendo a de sempre e
+        ninguém percebe -- é por isso que ele não foi removido.
+     4. A cor de canvas.
+   PRA REMOVER A TEXTURA: apague as linhas 1 e 2. A 3 e a 4 sozinhas são
+   exatamente o fundo anterior. Nenhuma outra regra depende dela.
+   Nenhum número desta tela é lido sobre a textura: todo valor mora dentro de
+   .tcard / .expert / .cmp, que são superfícies opacas com borda própria.
+   ────────────────────────────────────────────────────────────────────────── */
 body{
   margin:0;
-  /* brilho magenta muito baixo no topo: dá profundidade sem virar "gamer".
-     Fixo, não acompanha o scroll, pra não competir com o conteúdo. */
   background:
+    linear-gradient(180deg, rgba(44,0,40,.62) 0%, rgba(44,0,40,.88) 42%, var(--bg) 74%),
+    url("fundo-marca.jpg") top center / 100% auto no-repeat,
     radial-gradient(1100px 420px at 50% -180px, rgba(226,2,102,.22), transparent 70%),
     var(--bg);
-  background-attachment:fixed;
+  /* fixo, não acompanha o scroll, pra não competir com o conteúdo */
+  background-attachment:fixed,fixed,fixed,fixed;
   color:var(--txt);
   font-family:var(--sans);
   font-size:16px;
@@ -450,11 +567,35 @@ h1,h2,h3,h4,p{margin:0}
 
 .wrap{max-width:1560px;margin:0 auto;padding:0 20px 56px}
 
-/* ── TOPBAR ─────────────────────────────────────────────────────────────── */
+/* ── BARRA DE COMANDO (topbar) ────────────────────────────────────────────
+   ANTES: quatro faixas empilhadas (marca+hora · período · ordenar por ·
+   escopo) mais as abas = ~300px de cromo antes do primeiro número. Num
+   notebook de 1000px de altura, a pessoa rolava pra ver dado.
+
+   AGORA: UMA faixa de comando + as abas. Duas, no total.
+     marca · ESCOPO · [período · ordenar · estado]
+   Hierarquia da faixa, na ordem de quem manda:
+     1. ESCOPO é navegação primária (troca o painel inteiro), então é o único
+        controle com peso de botão e mora colado na marca.
+     2. PERÍODO é o segundo controle mais usado: segmented à direita.
+     3. ORDENAR POR ocupava uma faixa inteira e é usado raramente. Virou
+        popover (.sortpop) e some fora da aba "Por expert", que é a única
+        onde ordenar cards significa alguma coisa.
+     4. FRESCOR + PERÍODO APLICADO eram dois textos dizendo quase o mesmo
+        ("Atualizado às 12:03" e "Mostrando 12/08/2026 (hoje, em andamento)").
+        Viraram UMA pílula de duas linhas: o que está na tela em cima, quando
+        chegou embaixo.
+   A faixa ENCOLHE ao rolar (html.rolado): o logo diminui, a contagem do
+   escopo some e a pílula vira uma linha só. Sobra ~46px.
+   ────────────────────────────────────────────────────────────────────────── */
+#dashboard-root{position:relative}
+/* os 5 radios de navegação vivem aqui, fora de qualquer caixa visível, porque
+   precisam ser IRMÃOS ANTERIORES de .topbar (escopo) e de .wrap (conteúdo) */
+#dashboard-root > input{position:absolute;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none}
 .topbar{
-  position:sticky;top:0;z-index:20;
-  background:rgba(59,0,56,.94);
-  backdrop-filter:saturate(150%) blur(9px);
+  position:sticky;top:0;z-index:30;
+  background:rgba(52,0,48,.95);
+  backdrop-filter:saturate(150%) blur(10px);
   border-bottom:1px solid var(--line);
 }
 /* assinatura da marca: fio magenta que fecha em dourado */
@@ -463,10 +604,11 @@ h1,h2,h3,h4,p{margin:0}
   background:linear-gradient(90deg,var(--acao) 0%,var(--acao-2) 58%,var(--gold-2) 100%);
 }
 .topbar__in{
-  max-width:1560px;margin:0 auto;padding:15px 20px 11px;
-  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  max-width:1560px;margin:0 auto;padding:9px 20px;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  transition:padding .16s ease;
 }
-.brand{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;flex:none}
 /* ═══ SLOT DA LOGO ═══════════════════════════════════════════════════════
    O site é SPA e não entrega o arquivo da logo no HTML, então isto aqui é um
    LOCKUP PROVISÓRIO na paleta da marca, não a logo oficial.
@@ -475,7 +617,7 @@ h1,h2,h3,h4,p{margin:0}
      <img class="brand__logo" src="logo-bateubet.svg" alt="Bateu Bet" width="132" height="28">
    Só isso. O resto do header não muda.
    ──────────────────────────────────────────────────────────────────────── */
-.brand__logo{height:28px;width:auto;display:block}
+.brand__logo{height:24px;width:auto;display:block;transition:height .16s ease}
 .brand__lockup{display:inline-flex;align-items:center;gap:9px;text-decoration:none;color:inherit}
 .brand__mark{
   width:30px;height:30px;border-radius:9px;flex:none;
@@ -489,18 +631,61 @@ h1,h2,h3,h4,p{margin:0}
   text-transform:uppercase;
 }
 .brand__word i{font-style:normal;color:var(--acao);margin-left:.16em}
-.brand__name{font-size:.8125rem;font-weight:500;color:var(--txt-2)}
-.brand__sep{color:var(--line-strong);font-weight:300}
+/* .vh = visualmente escondido, presente pro leitor de tela. A barra compacta
+   corta palavra de ligação ("Operação ao vivo…", "Atualizado às…") porque o
+   operador já sabe o que está olhando; quem usa leitor de tela não sabe, e
+   pra ele o texto continua inteiro. */
+.brand__name,
+.vh{
+  position:absolute;width:1px;height:1px;margin:-1px;padding:0;
+  overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
+}
+.brand__sep{display:none}
 .brand__ctx{font-size:.8125rem;color:var(--txt-2)}
+
+/* ── SELETOR DE ESCOPO · navegação primária ───────────────────────────────
+   Era um trio de cartões de 56px numa faixa própria. Virou segmented control
+   dentro da barra, colado na marca: continua sendo "troca de universo" (fundo
+   afundado + pílula magenta no ativo, o mesmo gradiente do .tcard--hero), mas
+   custa 38px de altura no lugar de 76px.
+   A contagem ("28 experts · 33 contas") só aparece no escopo ATIVO: nos
+   outros dois ela é ruído e ainda cobrava ~200px de largura.
+   ────────────────────────────────────────────────────────────────────────── */
+.scopebar{
+  display:flex;gap:3px;padding:3px;flex:none;margin:0;
+  background:var(--surface-sunk);border:1px solid var(--line);border-radius:10px;
+}
+.scopebar label{
+  display:inline-flex;align-items:center;gap:8px;
+  min-height:36px;padding:0 12px;border-radius:7px;cursor:pointer;
+  border:1px solid transparent;background:transparent;
+  transition:background .16s ease,border-color .16s ease,color .16s ease;
+}
+.scopebar label:hover{background:rgba(255,255,255,.06)}
+.scopebar__nome{
+  display:flex;align-items:center;gap:7px;white-space:nowrap;
+  font-size:.8125rem;font-weight:640;letter-spacing:-.01em;color:var(--txt-2);
+}
+.scopebar__nome::before{
+  content:"";width:6px;height:6px;border-radius:50%;flex:none;
+  background:var(--neutro);
+}
+.scopebar__sub{
+  display:none;
+  font-family:var(--mono);font-size:.5rem;letter-spacing:.09em;
+  text-transform:uppercase;color:rgba(255,255,255,.72);white-space:nowrap;
+  padding:2px 6px;border-radius:5px;background:rgba(0,0,0,.22);
+}
 
 /* ── FILTRO DE PERÍODO ────────────────────────────────────────────────────
    Segmented control em radio + label: funciona e mostra estado ativo sem JS.
    O JS só lê o valor e refaz o fetch. Ver contrato no HTML.
+   Mora na barra, empurrado pra direita pelo margin-left:auto. O rótulo
+   "Período" saiu: sete botões que dizem Hoje/Ontem/7d não precisam de legenda.
    ────────────────────────────────────────────────────────────────────────── */
 .rangebar{
-  max-width:1560px;margin:0 auto;
-  padding:0 20px 13px;
-  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  margin:0 0 0 auto;padding:0;max-width:none;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
 }
 .rangebar__lbl{
   font-family:var(--mono);font-size:.5625rem;letter-spacing:.14em;
@@ -513,7 +698,7 @@ h1,h2,h3,h4,p{margin:0}
 .seg input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .seg label{
   display:inline-flex;align-items:center;justify-content:center;
-  min-height:30px;padding:0 13px;border-radius:6px;cursor:pointer;
+  min-height:30px;padding:0 11px;border-radius:6px;cursor:pointer;
   font-size:.75rem;font-weight:560;color:var(--txt-2);white-space:nowrap;
   transition:background .14s ease,color .14s ease;
 }
@@ -532,11 +717,47 @@ h1,h2,h3,h4,p{margin:0}
 }
 .range-custom input[type=date]:focus-visible{outline:2px solid var(--acao);outline-offset:1px}
 .sort-select{
-  min-height:32px;padding:0 9px;border-radius:7px;
+  min-height:32px;padding:0 9px;border-radius:7px;width:100%;
   background:var(--surface-sunk);border:1px solid var(--line);color:var(--txt);
   font-family:var(--sans);font-size:.75rem;font-weight:560;cursor:pointer;
 }
 .sort-select:focus-visible{outline:2px solid var(--acao);outline-offset:1px}
+
+/* ── ORDENAR POR · popover ────────────────────────────────────────────────
+   Ocupava uma FAIXA INTEIRA do cabeçalho (rótulo + select + dois botões de
+   direção) pra um controle que se mexe uma vez por semana. Virou um gatilho
+   de ~150px que abre em camada, e some inteiro fora da aba "Por expert" e no
+   escopo Google (que não tem card pra ordenar). Nada foi cortado: o mesmo
+   select e os mesmos dois radios, só que guardados.
+   ────────────────────────────────────────────────────────────────────────── */
+.sortpop{position:relative;flex:none}
+.sortpop__sum{
+  list-style:none;display:inline-flex;align-items:center;gap:7px;
+  min-height:32px;padding:0 11px;border-radius:8px;cursor:pointer;
+  background:var(--surface-sunk);border:1px solid var(--line);color:var(--txt-3);
+  font-size:.6875rem;font-weight:600;white-space:nowrap;
+  transition:color .14s ease,border-color .14s ease,background .14s ease;
+}
+.sortpop__sum::-webkit-details-marker{display:none}
+.sortpop__sum::marker{content:""}
+.sortpop__sum svg{width:13px;height:13px;flex:none;opacity:.8}
+.sortpop__sum:hover{color:var(--txt);border-color:var(--line-strong)}
+.sortpop__sum:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.sortpop[open] .sortpop__sum{
+  color:#FF9AC4;border-color:var(--acao-line);background:var(--acao-soft);
+}
+.sortpop__val{color:var(--txt-2);font-weight:640}
+.sortpop[open] .sortpop__val{color:#fff}
+.sortpop__pop{
+  position:absolute;right:0;top:calc(100% + 9px);z-index:45;
+  width:270px;max-width:calc(100vw - 32px);
+  display:flex;flex-direction:column;gap:9px;
+  padding:13px;border-radius:12px;
+  background:var(--surface-2);border:1px solid var(--line-strong);
+  box-shadow:0 18px 46px rgba(0,0,0,.55);
+}
+.sortpop__pop .seg{width:100%}
+.sortpop__pop .seg label{flex:1;font-size:.6875rem}
 .busca__lbl{margin-left:6px}
 .busca-input{
   min-height:32px;padding:0 11px;border-radius:7px;min-width:160px;
@@ -567,16 +788,27 @@ h1,h2,h3,h4,p{margin:0}
   color:var(--gold);font-size:.6875rem;
 }
 
-.freshness{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+/* ── PÍLULA DE ESTADO · uma só ────────────────────────────────────────────
+   Antes eram TRÊS elementos dizendo quase a mesma coisa em dois lugares:
+     · pílula "Atualizado às 12:03" + "horário de Brasília · atualiza 5 min"
+     · #range-note  "Ao vivo · atualiza sozinho a cada 5 min"
+     · #range-applied "Mostrando 12/08/2026 (hoje, em andamento)"
+   Agora é UMA pílula de duas linhas, na ordem em que a pergunta é feita:
+     linha 1 -> O QUE estou vendo   (#range-applied: "Hoje, 12/08/2026")
+     linha 2 -> QUANDO chegou       (hora + "ao vivo" / "período fechado")
+   #range-note foi removido do HTML; pintarNotaPeriodo() virou tolerante a
+   ausência dele de propósito, pra não quebrar se alguém repuser.
+   ────────────────────────────────────────────────────────────────────────── */
+.freshness{display:flex;align-items:center;gap:10px;flex:none}
 .status{
-  display:inline-flex;align-items:center;gap:8px;
-  padding:6px 12px 6px 10px;
+  display:inline-flex;align-items:center;gap:9px;
+  padding:5px 13px 5px 11px;
   border:1px solid var(--line);border-radius:999px;
   background:var(--surface);
-  font-size:.8125rem;color:var(--txt);
+  font-size:.75rem;color:var(--txt);line-height:1.25;
 }
 .status__dot{
-  width:7px;height:7px;border-radius:50%;background:var(--good);
+  width:7px;height:7px;border-radius:50%;background:var(--good);flex:none;
   box-shadow:0 0 0 0 rgba(46,212,122,.5);
   animation:pulse 2.4s ease-out infinite;
 }
@@ -589,9 +821,49 @@ h1,h2,h3,h4,p{margin:0}
 .status--stale{border-color:rgba(255,158,44,.38)}
 .status--error .status__dot{background:var(--bad);animation:none}
 .status--error{border-color:rgba(255,77,77,.42)}
-.status__time{font-family:var(--mono);font-variant-numeric:tabular-nums}
-.freshness__meta{font-size:.75rem;color:var(--txt-3)}
+.status__stack{display:flex;flex-direction:column;min-width:0}
+.status__periodo{
+  font-size:.75rem;font-weight:640;letter-spacing:-.01em;white-space:nowrap;
+}
+.status__sub{display:flex;align-items:baseline;gap:6px;white-space:nowrap}
+.status__time{
+  font-family:var(--mono);font-size:.625rem;color:var(--txt-2);
+  font-variant-numeric:tabular-nums;
+}
+.freshness__meta{font-size:.625rem;color:var(--txt-3)}
+.freshness__meta::before{content:"· ";color:var(--line-strong)}
 @media (prefers-reduced-motion:reduce){.status__dot{animation:none}}
+
+/* ── A FAIXA ENCOLHIDA (rolando) ──────────────────────────────────────────
+   O JS põe .rolado no <html> depois de ~44px de scroll (histerese em 24px pra
+   não piscar). Some o que é CONTEXTO (contagem do escopo, segunda linha da
+   pílula) e fica o que é COMANDO (escopo, período, hora). ~63px viram ~48px.
+
+   Só de 760px pra cima. No celular a barra encolhe apenas o respiro e o logo:
+   reduzir a altura dos botões ali quebraria o alvo de polegar, e ganhar 12px
+   numa tela de toque não paga esse preço.
+   ────────────────────────────────────────────────────────────────────────── */
+/* padding-block, não padding: o recuo LATERAL é do breakpoint (20px no
+   desktop, 14px no celular) e não pode ser reescrito por um estado de scroll */
+html.rolado .topbar__in{padding-block:5px}
+html.rolado .brand__logo{height:19px}
+@media (min-width:760px){
+  html.rolado .topbar__in{padding-block:4px}
+  html.rolado .scopebar label{min-height:30px;padding:0 10px}
+  /* !important porque a regra que MOSTRA a contagem carrega um #id (o
+     :checked do escopo ativo) e ganharia por especificidade */
+  html.rolado .scopebar__sub{display:none !important}
+  html.rolado .seg label{min-height:26px}
+  html.rolado .status{padding:3px 12px 3px 10px}
+  html.rolado .status__stack{flex-direction:row;align-items:baseline;gap:7px}
+  /* em linha única o "·" do meta some junto, então o separador passa a nascer
+     do rótulo do período -- sem ele viraria "Hoje, 12/08/2026 12:03" */
+  html.rolado .status__periodo::after{content:" ·";color:var(--line-strong);font-weight:400}
+  html.rolado .freshness__meta{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .topbar__in,.brand__logo{transition:none}
+}
 
 /* ── BANNER DE ERRO ─────────────────────────────────────────────────────── */
 .errbar{
@@ -616,28 +888,57 @@ h1,h2,h3,h4,p{margin:0}
 }
 .section-head::after{content:"";flex:1;height:1px;background:var(--line-soft)}
 
+/* ── HIERARQUIA DOS NÚMEROS (v5) ──────────────────────────────────────────
+   ANTES: 13 tiles do MESMO peso numa grade de 20 colunas. Nada gritava
+   primeiro, e "Volume" tinha exatamente a mesma presença de "Custo por FTD",
+   que é o número que decide se o dia foi bom.
+
+   AGORA, três níveis declarados. Nenhuma métrica saiu: é recomposição de
+   peso, não corte.
+     NÍVEL 1 · HERÓI (.tcard--hero, span 6, valor 2.625rem)
+        investimento total  +  custo por FTD
+        O par que responde "quanto saiu e quanto custou o resultado".
+        O de custo por FTD (.tcard--cpa) tem faixa oficial (300/350), então
+        o fio do topo dele acompanha a saúde: verde/laranja/vermelho. É a
+        ÚNICA exceção à regra "fio magenta no herói", e existe porque num
+        painel de TV a cor tem que chegar antes do algarismo.
+     NÍVEL 2 · FUNIL E CANAL (.tcard, span 2, valor 1.25rem)
+        cadastros · custo por cadastro · FTD · depósito · grupo · perfil
+     NÍVEL 3 · LINHA DE DINHEIRO (.totals__fin, valor 1.0625rem)
+        ticket · depósito por FTD · net dep · net PL · volume
+        Agrupados numa faixa própria, tipograficamente contidos: são
+        conferência, não decisão. Continuam todos na tela.
+   O wrapper .totals__fin é seguro pro JS: pintarTotais() acha os campos por
+   [data-field] na raiz inteira e o .tcard__sub continua irmão do .tcard__val
+   dentro do mesmo .tcard.
+   ────────────────────────────────────────────────────────────────────────── */
 .totals{
   display:grid;gap:var(--gap);
-  /* 3 linhas temáticas: verba · funil (cadastro→custo→FTD→custo) · dinheiro.
-     Com 6 colunas o par "FTD / custo por FTD" quebrava entre linhas.
-     A grade base tem 20 colunas (mmc de 4 e 5) só pra permitir DUAS larguras
-     de linha sem quebrar o agrupamento: as duas primeiras linhas são de 4
-     tiles (span 5) e a de dinheiro é de 5 (span 4, .tcard--fifth), desde que
-     o net dep entrou. Sem isso, 13 tiles numa grade de 4 deixariam um tile
-     sozinho na última linha. */
-  grid-template-columns:repeat(20,minmax(0,1fr));
+  grid-template-columns:repeat(12,minmax(0,1fr));
 }
-.totals > .tcard{grid-column:span 5}
-.totals > .tcard--fifth{grid-column:span 4}
+/* NÍVEL 2 SÃO SEMPRE 6 TILES, nos três escopos. Os únicos spans que fecham
+   linha sem deixar buraco numa grade de 12 são 2 (6/linha), 4 (3/linha) e
+   6 (2/linha) -- span 3 daria 4+2 e abriria um vão de dois tiles no meio dos
+   totais. Por isso o responsivo pula de 6 direto pra 3 por linha. */
+.totals > .tcard{grid-column:span 2}          /* nível 2: 6 por linha        */
+.totals > .tcard--hero{grid-column:span 6}    /* nível 1: 2 por linha        */
+.totals__fin{
+  grid-column:1/-1;
+  display:grid;gap:var(--gap);
+  /* auto-fit resolve 4 (Google) e 5 (Meta) tiles sem media query própria e
+     ainda dobra sozinho no celular */
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+}
 .tcard{
   position:relative;
   background:var(--surface);
   border:1px solid var(--line);
   border-radius:var(--r);
-  padding:15px 16px 14px;
+  padding:13px 15px 12px;
   min-width:0;
 }
 .tcard--hero{
+  padding:18px 20px 17px;
   background:linear-gradient(150deg,var(--acao-soft),transparent 64%),var(--surface-2);
   border-color:var(--acao-line);
 }
@@ -646,20 +947,33 @@ h1,h2,h3,h4,p{margin:0}
   border-radius:var(--r) var(--r) 0 0;
   background:linear-gradient(90deg,var(--acao),var(--acao-2));
 }
+/* o fio do herói de CUSTO POR FTD fala saúde, não marca. Classe posta pelo JS
+   em pintarTotais(), junto com a cor do número — mesma régua, uma decisão só. */
+.tcard--cpa.is-good::before{background:linear-gradient(90deg,var(--good),rgba(46,212,122,.3))}
+.tcard--cpa.is-warn::before{background:linear-gradient(90deg,var(--warn),rgba(255,158,44,.3))}
+.tcard--cpa.is-bad::before {background:linear-gradient(90deg,var(--bad),rgba(255,77,77,.3))}
+.tcard--cpa.is-good{border-color:rgba(46,212,122,.34);background:linear-gradient(150deg,var(--good-soft),transparent 64%),var(--surface-2)}
+.tcard--cpa.is-warn{border-color:rgba(255,158,44,.36);background:linear-gradient(150deg,var(--warn-soft),transparent 64%),var(--surface-2)}
+.tcard--cpa.is-bad {border-color:rgba(255,77,77,.40);background:linear-gradient(150deg,var(--bad-soft),transparent 64%),var(--surface-2)}
 .tcard__lbl{
   display:flex;align-items:center;gap:7px;
-  font-family:var(--mono);font-size:.625rem;letter-spacing:.12em;
+  font-family:var(--mono);font-size:.5625rem;letter-spacing:.12em;
   text-transform:uppercase;color:var(--txt-3);
 }
+.tcard--hero .tcard__lbl{font-size:.6875rem;letter-spacing:.14em;color:var(--txt-2)}
 .tcard__val{
-  display:block;margin-top:9px;
-  font-size:1.5rem;font-weight:640;letter-spacing:-.02em;
+  display:block;margin-top:7px;
+  font-size:1.25rem;font-weight:640;letter-spacing:-.02em;
   font-variant-numeric:tabular-nums;white-space:nowrap;
   /* valor de 6+ dígitos (a operação cresceu) sem isso vazava pra fora do
-     tile -- mesma proteção que .m__val já tinha nos cards. */
+     tile -- mesma proteção que .m__val já tinha nos cards. Quem não couber
+     encolhe a fonte em caberNaCaixa(), nunca é cortado em silêncio. */
   overflow:hidden;text-overflow:clip;
 }
-.tcard--hero .tcard__val{font-size:1.875rem}
+.tcard--hero .tcard__val{font-size:2.625rem;margin-top:9px;line-height:1.06}
+/* nível 3: contido de propósito. Mesmo componente, metade da presença. */
+.totals__fin .tcard__val{font-size:1.0625rem}
+.totals__fin .tcard__sub{font-size:.6875rem}
 /* só o custo por FTD é colorido: é o único destes tiles com faixa oficial do
    cliente (R$ 300 bom / R$ 350 alto). Média e volume não têm régua. */
 .tcard__val.val--good{color:var(--good)}
@@ -668,10 +982,11 @@ h1,h2,h3,h4,p{margin:0}
 /* recorte ativo no cabeçalho dos totais */
 .eyebrow__recorte{color:var(--acao)}
 .tcard__sub{
-  display:block;margin-top:6px;
+  display:block;margin-top:5px;
   font-size:.75rem;color:var(--txt-2);
   font-variant-numeric:tabular-nums;
 }
+.tcard--hero .tcard__sub{margin-top:7px;font-size:.8125rem}
 /* único múltiplo que merece dourado: retorno sobre o investido */
 .tcard__sub--gold{color:var(--gold);font-weight:600}
 .dot{width:7px;height:7px;border-radius:2px;display:inline-block;flex:none}
@@ -994,9 +1309,12 @@ h1,h2,h3,h4,p{margin:0}
    NÍVEL 1 · ESCOPO   Costa e Lobão | Geral      (radio name="escopo")
    NÍVEL 2 · SUB-ABA  Visão geral   | Detalhe    (radio name="view")
 
-   Os 4 <input> ficam juntos no topo de .views e PRECISAM continuar sendo
-   IRMÃOS ANTERIORES de .scopebar e de .scope, senão os seletores ~ quebram
-   e a tela some inteira. Nada de JS pra trocar de aba: radio + :checked.
+   MUDOU NA v5: os 5 <input> saíram de dentro de .views e subiram pra
+   #dashboard-root, como IRMÃOS ANTERIORES de .topbar e de .wrap. Era a única
+   forma de o seletor de escopo morar na barra fixa (dentro de .topbar) e o
+   conteúdo continuar em .wrap, sem duplicar controle nem meter JS na troca de
+   aba. Todo seletor ~ ganhou um salto: ~ .topbar ... e ~ .wrap ...
+   Se algum dia alguém mover os inputs de novo, é AQUI que quebra tudo.
 
    O nível 2 é COMPARTILHADO entre os escopos de propósito: quem está lendo
    "Visão geral" do Costa e Lobão e pula pro Geral continua na visão geral,
@@ -1007,54 +1325,41 @@ h1,h2,h3,h4,p{margin:0}
      legado sem barra: #geral -> #cl/visao · #experts -> #cl/detalhe
    ────────────────────────────────────────────────────────────────────────── */
 .views{position:relative}
-.views > input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 
-/* nível 1: cartões largos, não abas. Precisa ler como "troca de universo",
-   não como "troca de seção". Ecoa o .tcard--hero (mesmo gradiente de ação)
-   pra pertencer ao sistema sem inventar componente novo. */
-.scopebar{display:flex;gap:8px;margin:20px 0 0;flex-wrap:wrap}
-.scopebar label{
-  position:relative;overflow:hidden;
-  display:flex;flex-direction:column;justify-content:center;gap:3px;
-  min-height:56px;padding:9px 18px 9px 17px;cursor:pointer;
-  border:1px solid var(--line);border-radius:var(--r);
-  background:var(--surface);
-  transition:background .16s ease,border-color .16s ease,color .16s ease;
+/* nível 1 · o visual do seletor de escopo está no bloco BARRA DE COMANDO,
+   lá em cima. Aqui ficam só os estados dependentes do :checked. */
+#e-cl:checked ~ .topbar .scopebar label[for="e-cl"],
+#e-geral:checked ~ .topbar .scopebar label[for="e-geral"],
+#e-google:checked ~ .topbar .scopebar label[for="e-google"]{
+  background:linear-gradient(135deg,var(--acao),var(--acao-2));
+  border-color:transparent;
+  box-shadow:0 1px 10px rgba(226,2,102,.38);
 }
-.scopebar label:hover{border-color:var(--line-strong);background:var(--surface-2)}
-.scopebar__nome{
-  display:flex;align-items:center;gap:8px;
-  font-size:.9375rem;font-weight:680;letter-spacing:-.01em;color:var(--txt-2);
+#e-cl:checked ~ .topbar .scopebar label[for="e-cl"] .scopebar__nome,
+#e-geral:checked ~ .topbar .scopebar label[for="e-geral"] .scopebar__nome,
+#e-google:checked ~ .topbar .scopebar label[for="e-google"] .scopebar__nome{color:#fff;font-weight:680}
+#e-cl:checked ~ .topbar .scopebar label[for="e-cl"] .scopebar__nome::before,
+#e-geral:checked ~ .topbar .scopebar label[for="e-geral"] .scopebar__nome::before,
+#e-google:checked ~ .topbar .scopebar label[for="e-google"] .scopebar__nome::before{
+  background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.22);
 }
-.scopebar__nome::before{
-  content:"";width:7px;height:7px;border-radius:50%;flex:none;
-  background:var(--neutro);
-}
-.scopebar__sub{
-  font-family:var(--mono);font-size:.5625rem;letter-spacing:.11em;
-  text-transform:uppercase;color:var(--txt-3);
-}
-#e-cl:checked ~ .scopebar label[for="e-cl"],
-#e-geral:checked ~ .scopebar label[for="e-geral"],
-#e-google:checked ~ .scopebar label[for="e-google"]{
-  background:linear-gradient(150deg,var(--acao-soft),transparent 68%),var(--surface-2);
-  border-color:var(--acao-line);
-}
-#e-cl:checked ~ .scopebar label[for="e-cl"] .scopebar__nome,
-#e-geral:checked ~ .scopebar label[for="e-geral"] .scopebar__nome,
-#e-google:checked ~ .scopebar label[for="e-google"] .scopebar__nome{color:var(--txt)}
-#e-cl:checked ~ .scopebar label[for="e-cl"] .scopebar__nome::before,
-#e-geral:checked ~ .scopebar label[for="e-geral"] .scopebar__nome::before,
-#e-google:checked ~ .scopebar label[for="e-google"] .scopebar__nome::before{
-  background:var(--acao);box-shadow:0 0 0 3px var(--acao-soft);
-}
-#e-cl:focus-visible ~ .scopebar label[for="e-cl"],
-#e-geral:focus-visible ~ .scopebar label[for="e-geral"]{outline:2px solid var(--gold);outline-offset:2px}
+/* a contagem só existe no escopo ativo: nos outros é ruído e cobra largura */
+#e-cl:checked ~ .topbar .scopebar label[for="e-cl"] .scopebar__sub,
+#e-geral:checked ~ .topbar .scopebar label[for="e-geral"] .scopebar__sub,
+#e-google:checked ~ .topbar .scopebar label[for="e-google"] .scopebar__sub{display:inline-flex}
+#e-cl:focus-visible ~ .topbar .scopebar label[for="e-cl"],
+#e-geral:focus-visible ~ .topbar .scopebar label[for="e-geral"],
+#e-google:focus-visible ~ .topbar .scopebar label[for="e-google"]{outline:2px solid var(--gold);outline-offset:2px}
+
+/* ordenação só faz sentido onde existe card pra ordenar: fora da aba
+   "Por expert" e no escopo Google, o gatilho some inteiro da barra. */
+#v-geral:checked ~ .topbar .sortpop,
+#e-google:checked ~ .topbar .sortpop{display:none}
 
 .scope{display:none}
-#e-cl:checked ~ .scope--cl,
-#e-geral:checked ~ .scope--geral,
-#e-google:checked ~ .scope--google{display:block}
+#e-cl:checked ~ .wrap .scope--cl,
+#e-geral:checked ~ .wrap .scope--geral,
+#e-google:checked ~ .wrap .scope--google{display:block}
 
 /* ── ESCOPO GOOGLE ────────────────────────────────────────────────────────
    Estrutura enxuta de propósito: o Google é UMA operação (não N experts),
@@ -1097,14 +1402,22 @@ h1,h2,h3,h4,p{margin:0}
   .gcontas__entrega{display:none}
 }
 
+/* SEGUNDA (E ÚLTIMA) FAIXA DE CROMO. Gruda logo abaixo da barra de comando:
+   --topbar-h é medido em JS (ResizeObserver no .topbar), com fallback de 62px
+   pro primeiro frame. Sangra 20px pra cada lado pra cobrir o padding do .wrap,
+   senão o conteúdo passa por baixo aparecendo nas beiradas. */
 .tabs{
-  display:flex;gap:2px;margin:16px 0 0;
+  position:sticky;top:var(--topbar-h,62px);z-index:18;
+  display:flex;align-items:center;gap:2px;
+  margin:0 -20px 6px;padding:0 20px;
   border-bottom:1px solid var(--line);
+  background:rgba(52,0,48,.95);
+  backdrop-filter:saturate(150%) blur(10px);
 }
 .tabs label{
   display:inline-flex;align-items:center;gap:9px;
-  padding:11px 16px;cursor:pointer;
-  font-size:.875rem;font-weight:600;color:var(--txt-3);
+  padding:10px 15px;cursor:pointer;
+  font-size:.8125rem;font-weight:600;color:var(--txt-3);
   border-bottom:2px solid transparent;margin-bottom:-1px;
   transition:color .14s ease,border-color .14s ease;
 }
@@ -1114,21 +1427,22 @@ h1,h2,h3,h4,p{margin:0}
   padding:2px 6px;border-radius:4px;
   background:rgba(255,255,255,.08);color:var(--txt-2);
 }
-/* as .tabs agora vivem DENTRO de cada .scope (pra cada escopo ter a própria
-   contagem no badge), então o seletor é irmão + descendente. */
+/* as .tabs vivem DENTRO de cada .scope (pra cada escopo ter a própria
+   contagem no badge), e os inputs subiram pra #dashboard-root: o seletor é
+   irmão de .wrap + descendente. */
 .view{display:none}
-#v-geral:checked ~ .scope .view--geral,
-#v-experts:checked ~ .scope .view--experts{display:block}
-#v-geral:checked ~ .scope .tabs label[for="v-geral"],
-#v-experts:checked ~ .scope .tabs label[for="v-experts"]{
+#v-geral:checked ~ .wrap .scope .view--geral,
+#v-experts:checked ~ .wrap .scope .view--experts{display:block}
+#v-geral:checked ~ .wrap .scope .tabs label[for="v-geral"],
+#v-experts:checked ~ .wrap .scope .tabs label[for="v-experts"]{
   color:var(--txt);border-bottom-color:var(--acao);
 }
-#v-geral:checked ~ .scope .tabs label[for="v-geral"] .tab__badge,
-#v-experts:checked ~ .scope .tabs label[for="v-experts"] .tab__badge{
+#v-geral:checked ~ .wrap .scope .tabs label[for="v-geral"] .tab__badge,
+#v-experts:checked ~ .wrap .scope .tabs label[for="v-experts"] .tab__badge{
   background:var(--acao-soft);color:#FF9AC4;
 }
-#v-geral:focus-visible ~ .scope .tabs label[for="v-geral"],
-#v-experts:focus-visible ~ .scope .tabs label[for="v-experts"]{outline:2px solid var(--gold);outline-offset:-3px}
+#v-geral:focus-visible ~ .wrap .scope .tabs label[for="v-geral"],
+#v-experts:focus-visible ~ .wrap .scope .tabs label[for="v-experts"]{outline:2px solid var(--gold);outline-offset:-3px}
 .tablink{
   display:inline-flex;align-items:center;gap:6px;cursor:pointer;
   border:0;background:none;padding:0;
@@ -1242,6 +1556,11 @@ h1,h2,h3,h4,p{margin:0}
      Coluna de contagem também é valor: não pode aparecer pela metade. */
   /* net dep entrou colado no depósito (é o mesmo dinheiro, líquido de saque):
      mesma largura de 118px, porque o pior caso é o mesmo valor com sinal. */
+  /* v5 chegou a ter uma coluna de SPARKLINE de custo por FTD aqui (104px,
+     colada no custo por FTD). Removida a pedido do operador: numa tabela que
+     já rola na horizontal, a trajetória virava ruído no meio dos valores em
+     vez de ajudar a decidir. A série continua existindo inteira no painel de
+     análise do expert, que é onde se olha um de cada vez. */
   grid-template-columns:122px 116px minmax(138px,1fr) 134px 100px 68px 84px 48px 92px 118px 118px 108px 118px 122px;
   min-width:1674px;
   padding:11px 16px;
@@ -1287,6 +1606,7 @@ h1,h2,h3,h4,p{margin:0}
 .cmp__custoftd.is-good{color:var(--good)}
 .cmp__custoftd.is-warn{color:var(--warn)}
 .cmp__custoftd.is-bad{color:var(--bad)}
+
 .cmp__bar{display:block;position:relative;height:7px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden}
 .cmp__bar i{
   display:block;height:100%;border-radius:999px;
@@ -1437,7 +1757,8 @@ h1,h2,h3,h4,p{margin:0}
   /* tela média: cabe o funil (resultado, cadastro, FTD e os dois custos), some
      o dinheiro da TAP -- quem quer depósito/volume/net PL abre o card. */
   .cmp__row{grid-template-columns:114px 110px minmax(76px,1fr) 110px 96px 64px 48px 92px;gap:10px;min-width:0}
-  .cmp__dep,.cmp__netdep,.cmp__valorftd,.cmp__volume,.cmp__netpl,.cmp__custocad{display:none}
+  .cmp__dep,.cmp__netdep,.cmp__valorftd,.cmp__volume,.cmp__netpl,
+  .cmp__custocad{display:none}
 }
 @media (max-width:759px){
   /* sobram nome, investido e os dois custos: o que decide ação */
@@ -1463,29 +1784,70 @@ h1,h2,h3,h4,p{margin:0}
 .foot b{color:var(--txt-2);font-weight:600}
 
 /* ── RESPONSIVO ─────────────────────────────────────────────────────────── */
+/* ORÇAMENTO DE LARGURA DA BARRA (medido, não chutado). Em 1440px sobram
+   ~1400px úteis e a faixa cheia pede ~1284: cabe. Em 1280 já não cabe, e a
+   ordem de sacrifício é: primeiro o que é CONTEXTO (a contagem do escopo e a
+   palavra "Ordenar"), depois o que é COMANDO (o período, que desce inteiro
+   pra segunda linha). Nada some sem ter onde reaparecer: a contagem volta no
+   escopo ativo acima de 1400, e o período nunca perde botão.
+
+   TOTAIS: nível 2 só cabe em 6 por linha a partir de ~1400px. Abaixo disso a
+   caixa ficaria com ~134px úteis, e "R$ 1.019.191,52" (30 dias do escopo
+   Geral, não um dia) encolheria a fonte de todos ao mesmo tempo. Passa pra 3
+   por linha -- nunca 4, que deixaria dois tiles órfãos numa terceira linha. */
+@media (max-width:1399px){
+  .scopebar__sub{display:none !important}
+  .sortpop__pre{display:none}
+  .totals > .tcard{grid-column:span 4}
+}
 @media (max-width:1179px){
-  /* abaixo de 1180 a grade volta a ser simples: 3 por linha, sem span. O
-     agrupamento temático já não se sustenta aqui de qualquer forma. */
-  .totals{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .totals > .tcard,.totals > .tcard--fifth{grid-column:auto}
+  /* barra de comando de tablet: a faixa aguenta marca + escopo + estado, o
+     período desce pra própria linha em vez de espremer o segmented. */
+  .rangebar{margin-left:0;flex:1 1 100%;order:5}
+  .freshness{margin-left:auto}
+  .tcard--hero .tcard__val{font-size:2.25rem}
 }
 @media (max-width:759px){
   .wrap{padding:0 14px 44px}
-  .topbar__in{padding:14px 14px 10px}
+  .topbar__in{padding:7px 14px;gap:8px}
+  .brand__logo{height:20px}
+  /* linha 1: marca · ordenar · estado   ·   linha 2: escopo   ·   linha 3: período
+     Três linhas curtas no celular ainda somam menos que as quatro faixas de
+     antes, e cada alvo fica com 38px+ de altura pro polegar. */
+  /* ITEM FLEX SÓ ENCOLHE COM min-width:0. O padrão é min-width:auto, que
+     trava o item no tamanho do conteúdo: sem isto o overflow-x:auto nunca
+     chega a agir, a faixa mede o conteúdo inteiro (429px num viewport de
+     388px) e quem rola na horizontal é a PÁGINA, não o controle.
+     Vale pros dois trilhos da barra, escopo e período. */
+  .scopebar{flex:1 1 100%;min-width:0;order:4;overflow-x:auto;scrollbar-width:none}
+  .scopebar::-webkit-scrollbar{display:none}
+  .rangebar{flex:1 1 100%;min-width:0;order:5;margin-left:0}
+  .freshness{margin-left:auto}
+  /* no celular a primeira linha é marca + ordenar + estado em 388px. O texto
+     do gatilho ("Investimento ↓") custa ~78px e é a única coisa ali que não é
+     comando: vira só o ícone, e o estado migra pro title/aria-label, que o JS
+     mantém em dia junto com o rótulo (ver resumirOrdenacao). */
+  .sortpop__val{display:none}
+  .sortpop__sum{padding:0 9px}
+  .sortpop__pop{right:0;left:auto}
+  .tabs{margin:0 -14px 6px;padding:0 14px}
   /* alvo de toque confortável no celular */
-  .rangebar{padding:0 14px 12px;gap:8px}
-  .seg{width:100%;overflow-x:auto;scrollbar-width:none}
+  .seg{width:100%;min-width:0;max-width:100%;overflow-x:auto;scrollbar-width:none}
   .seg::-webkit-scrollbar{display:none}
-  .seg label{min-height:40px;padding:0 14px;font-size:.8125rem}
+  .seg label{min-height:38px;padding:0 13px;font-size:.8125rem;flex:none}
   .range-custom{width:100%;flex-wrap:wrap}
   .range-custom input[type=date]{flex:1 1 120px;min-height:44px}
   .range-apply{min-height:44px;flex:1 1 100%}
   .rangebar__warn{margin-left:0}
   .totals{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-  .totals > .tcard,.totals > .tcard--fifth{grid-column:auto}
-  .tcard__val{font-size:1.25rem}
-  .tcard--hero{grid-column:1 / -1}
-  .tcard--hero .tcard__val{font-size:1.625rem}
+  .totals > .tcard{grid-column:auto}
+  .totals__fin{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .tcard__val{font-size:1.125rem}
+  /* no celular os dois heróis ficam um por linha: são os dois números que a
+     pessoa abre o painel pra ver, e meia largura mataria o tamanho deles. */
+  .totals > .tcard--hero{grid-column:1 / -1}
+  .tcard--hero{padding:15px 16px 14px}
+  .tcard--hero .tcard__val{font-size:1.875rem}
   .expert__body{grid-template-columns:minmax(0,1fr)}
   .expert__head{padding:12px 14px}
   .expert__head-metrics{gap:16px;width:100%;justify-content:space-between}
@@ -1513,9 +1875,12 @@ h1,h2,h3,h4,p{margin:0}
    esconde nada: a regra do UA perde na cascata. */
 [hidden]{display:none !important}
 
-/* recado do filtro (substitui o antigo .rangebar__warn de dependência) */
+/* O antigo #range-note ("Ao vivo · atualiza sozinho a cada 5 min") saiu do
+   HTML na v5: dizia a mesma coisa que a segunda linha da pílula de estado.
+   As regras ficam porque pintarNotaPeriodo() ainda sabe pintá-lo se alguém
+   repuser o elemento — o JS está null-safe, não morto. */
 .rangebar__note{
-  margin-left:auto;display:inline-flex;align-items:center;gap:7px;
+  display:inline-flex;align-items:center;gap:7px;
   padding:4px 10px;border-radius:999px;
   border:1px solid var(--line);background:var(--surface-sunk);
   color:var(--txt-3);font-size:.6875rem;
@@ -1523,36 +1888,195 @@ h1,h2,h3,h4,p{margin:0}
 .rangebar__note--pausado{
   border-color:var(--gold-line);background:var(--gold-soft);color:var(--gold);
 }
-.rangebar__applied{color:var(--txt-2);font-family:var(--mono)}
+/* #range-applied virou a PRIMEIRA LINHA da pílula de estado (.status__periodo).
+   Período fechado ganha o âmbar da marca: é a diferença entre "isto está
+   correndo agora" e "isto é história". */
+.status--stale .status__periodo{color:var(--gold)}
+.status--error .status__periodo{color:#FFD3CD}
 
 /* veredito sem FTD: o design pediu .verdict--na e não tinha regra */
 .verdict--na::before{background:var(--neutro)}
 .verdict--na .verdict__txt{color:var(--txt-2)}
 
-/* PRIMEIRA CARGA. A API leva ~10s, então o conteúdo de exemplo não pode
-   ficar legível fingindo ser real: desfoca até o primeiro dado bom entrar. */
+/* ── ESPERA: DOIS ESTADOS DIFERENTES, DOIS TRATAMENTOS ────────────────────
+   Eles pareciam a mesma coisa e não são:
+
+   A) PRIMEIRA CARGA (data-carga="primeira"). Não existe número real na tela;
+      o que está atrás é o conteúdo de EXEMPLO deste arquivo. Vira SKELETON:
+      os rótulos continuam legíveis (a pessoa vê "Investimento total" e sabe
+      o que está chegando) e só os VALORES viram barra pulsando. É melhor que
+      o desfoque em duas frentes: diz o que vai aparecer, e o número falso
+      nunca fica legível nem por um frame.
+
+   B) TROCA DE PERÍODO (data-state="carregando" sem data-carga). Continua
+      DESFOCADO, de propósito, e isso não é preguiça: os números na tela são
+      de OUTRO período. Eles são reais, só não são a resposta do que a pessoa
+      acabou de pedir -- não podem ficar nítidos fingindo que são.
+
+   O skeleton só troca `color` e `background`. Nada de font-size, white-space
+   ou padding: ajustarValores() roda ANTES do data-state virar "pronto", e se
+   o skeleton mexesse em métrica de texto o caberNaCaixa() mediria a caixa
+   errada e o valor entraria com a fonte encolhida à toa.
+   ────────────────────────────────────────────────────────────────────────── */
 #dashboard-root[data-state="carregando"] .views{
   filter:blur(4px);opacity:.4;pointer-events:none;user-select:none;
 }
 #dashboard-root[data-state="atualizando"] .views{opacity:.72;transition:opacity .18s ease}
 #dashboard-root[data-state="pronto"] .views{opacity:1;transition:opacity .18s ease}
 
+/* A) skeleton ganha do desfoque quando as duas condições batem */
+#dashboard-root[data-carga="primeira"] .views{
+  filter:none;opacity:1;pointer-events:none;user-select:none;
+}
+#dashboard-root[data-carga="primeira"] .views :is(
+  .tcard__val,.tcard__sub,.m__val,.cmp__num,.cmp__share,.cmp__resline,
+  .sinal__who,.sinal__val,.verdict__txt,.verdict__why,.chip,
+  .hm__val,.crtv__ctr,.gcontas__val,.gcontas__entrega,.tab__badge,
+  /* a casca estática carrega valores de exemplo de 06/08/2026. O rótulo de
+     período e a legenda da splitbar são texto solto (não são .tcard__val),
+     então escapavam do skeleton e imprimiam "Totais · hoje, 06/08/2026" e
+     "90,8% / 9,2%" como se fossem a leitura de hoje. Data errada na tela é
+     pior que campo vazio: ninguém desconfia de uma data. */
+  [data-field="periodo_label"],.splitbar__legenda .num
+){
+  color:transparent !important;
+  border-radius:5px;
+  background-image:linear-gradient(100deg,
+    rgba(255,255,255,.05) 30%, rgba(255,255,255,.13) 50%, rgba(255,255,255,.05) 70%);
+  background-size:220% 100%;
+  background-color:rgba(255,255,255,.05);
+  animation:skel 1.25s ease-in-out infinite;
+}
+/* o chip carrega borda e ícone próprios: no skeleton eles viram ruído */
+#dashboard-root[data-carga="primeira"] .views .chip{border-color:transparent}
+/* barras e miniaturas não têm texto pra apagar: zeram e ficam neutras */
+#dashboard-root[data-carga="primeira"] .views :is(.cmp__bar i,.splitbar__seg){
+  background:rgba(255,255,255,.09) !important;
+}
+#dashboard-root[data-carga="primeira"] .views .crtv__thumb{opacity:.25}
+@keyframes skel{
+  0%{background-position:120% 0}
+  100%{background-position:-120% 0}
+}
+
+/* ── TELA DE CARREGAMENTO ─────────────────────────────────────────────────
+   Era uma pílula pequena no meio da tela. Virou tela cheia: véu escurecendo o
+   painel atrás (o skeleton continua pulsando embaixo, dando a impressão de
+   coisa sendo montada) com a marca em cima e o texto embaixo.
+   Empilhado, não lado a lado: a marca é o que se olha, o texto é legenda.
+   ────────────────────────────────────────────────────────────────────────── */
 .boot{
-  position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:60;
-  display:flex;align-items:center;gap:11px;
-  padding:13px 20px;border-radius:999px;
-  background:var(--surface);border:1px solid var(--line-strong);
-  box-shadow:0 12px 40px rgba(0,0,0,.45);
+  position:fixed;inset:0;z-index:60;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+  /* véu, não bloco opaco: o skeleton atrás precisa continuar aparecendo, é
+     ele que diz "tem coisa vindo" enquanto a marca só ocupa a espera.
+     O MIOLO É QUASE PRETO de propósito: o vídeo da marca foi gerado em fundo
+     preto e <video> ignora mix-blend-mode (o navegador promove vídeo pra
+     camada de composição própria). Em vez de brigar com isso, o fundo da tela
+     encontra o fundo do vídeo — a moldura do retângulo some porque os dois
+     lados da borda têm a mesma cor. Se um dia o vídeo sair, este miolo escuro
+     pode voltar a ser ameixa sem prejuízo. */
+  background:
+    radial-gradient(30% 26% at 50% 44%, rgba(226,2,102,.16), transparent 70%),
+    radial-gradient(42% 38% at 50% 44%, rgba(3,0,3,.96), rgba(22,0,20,.93) 60%, rgba(28,0,25,.93));
+  backdrop-filter:blur(3px) saturate(115%);
   font-size:.8125rem;color:var(--txt-2);
+  text-align:center;padding:24px;
 }
-.boot__spin{
-  width:15px;height:15px;flex:none;border-radius:50%;
-  border:2px solid rgba(255,255,255,.18);border-top-color:var(--acao);
-  animation:boot-spin .7s linear infinite;
+/* o texto some junto com a tela, mas ganha respiro pra não colar na marca */
+.boot__txt{
+  font-family:var(--mono);font-size:.6875rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--txt-3);
 }
-@keyframes boot-spin{to{transform:rotate(360deg)}}
+/* ── MARCA EM MOVIMENTO ───────────────────────────────────────────────────
+   DUAS CAMADAS, e a ordem importa:
+   1. o B em CSS (marca-b.png, 1,3KB) aparece na hora, no primeiro frame.
+   2. o vídeo (carregando-b.mp4, 125KB, gerado na Magnific a partir deste
+      mesmo B) entra por cima quando termina de carregar, com fade.
+   Sem isso a tela de carregamento ficaria vazia esperando o próprio vídeo de
+   carregamento baixar — que seria o painel esperando a animação da espera.
+   Em conexão ruim, ou se o autoplay for bloqueado, fica o B em CSS e ninguém
+   percebe que faltou algo.
+   ────────────────────────────────────────────────────────────────────────── */
+.boot__marca{position:relative;width:132px;height:132px;flex:none}
+.boot__video{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:contain;
+  opacity:0;transition:opacity .45s ease;
+  pointer-events:none;
+  /* O VÍDEO FOI GERADO EM FUNDO PRETO PURO DE PROPÓSITO. Com blend `screen`,
+     preto é o elemento neutro (a + 0 = a): o fundo do vídeo some por completo
+     e sobra só a marca acesa sobre o véu, sem retângulo. Uma primeira versão
+     veio em fundo ameixa e desenhava um quadrado claro no meio da tela.
+     Se um dia alguém trocar o arquivo, o novo TEM que ser em fundo preto. */
+  mix-blend-mode:screen;
+  /* SEGURO CONTRA A QUINA DO RETÂNGULO. O blend acima não é confiável em
+     <video> (Chrome promove vídeo pra camada de composição própria e ignora
+     mix-blend-mode), e o preto do arquivo não é perfeitamente uniforme nas
+     bordas por causa da compressão. A máscara radial dissolve os cantos, que
+     é o que realmente faz o quadrado sumir — o resto é reforço. */
+  -webkit-mask-image:radial-gradient(circle at 50% 50%, #000 46%, transparent 72%);
+          mask-image:radial-gradient(circle at 50% 50%, #000 46%, transparent 72%);
+}
+.boot__video.is-pronto{opacity:1}
+/* com o vídeo no ar o B de CSS sai de cena: dois brilhos sobrepostos sujam */
+.boot__video.is-pronto ~ .boot__b{opacity:0;transition:opacity .45s ease}
+/* ── "B" DA MARCA PULSANDO NO CARREGAMENTO ────────────────────────────────
+   Era um anel girando genérico. Virou o próprio B do logotipo (marca-b.png,
+   1,3KB, recortado do PNG dentro de logo-bateubet.svg — o arquivo é imagem
+   embutida, não tem path vetorial pra isolar).
+
+   O QUE A ANIMAÇÃO FAZ E POR QUÊ:
+   · A marca gira no eixo Y (não roda no plano). Girar no plano transformaria
+     a logo num cata-vento e ninguém reconheceria o B; virar em torno do eixo
+     mantém a leitura da forma nos dois extremos do movimento.
+   · O halo magenta pulsa junto, meio ciclo defasado, pra dar batimento sem
+     mexer no tamanho da caixa (glow é sombra, não ocupa layout).
+   · 1,6s por volta: rápido o bastante pra parecer vivo, lento o bastante pra
+     não parecer erro. Spinner nervoso em painel de parede cansa.
+   · A caixa tem tamanho fixo e a imagem gira DENTRO dela — em perspectiva o
+     elemento não muda de largura, então o texto ao lado não treme.
+   ────────────────────────────────────────────────────────────────────────── */
+.boot__b{
+  position:absolute;inset:0;
+  background:url("marca-b.png") center/68% no-repeat;
+  transform-origin:50% 50%;
+  animation:boot-b 1.6s cubic-bezier(.45,0,.25,1) infinite;
+  filter:drop-shadow(0 0 14px rgba(226,2,102,.85));
+}
+/* FIO DE LUZ varrendo a marca. Nasceu de um estudo de motion gerado na
+   Magnific a partir deste mesmo B: lá o brilho aparecia como uma aresta
+   magenta acesa. Aqui é uma faixa em gradiente RECORTADA PELA SILHUETA do B
+   (mask com o próprio PNG), então a luz só existe dentro da letra e não vira
+   um retângulo brilhando por cima. Custo: zero byte a mais, o PNG já está
+   carregado. */
+.boot__b::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(115deg,
+    transparent 38%, rgba(255,255,255,.95) 47%,
+    rgba(255,200,36,.9) 52%, transparent 61%);
+  background-size:260% 100%;
+  -webkit-mask:url("marca-b.png") center/68% no-repeat;
+          mask:url("marca-b.png") center/68% no-repeat;
+  animation:boot-brilho 1.6s cubic-bezier(.45,0,.25,1) infinite;
+  mix-blend-mode:screen;
+}
+@keyframes boot-brilho{
+  0%,18%  {background-position:170% 0}
+  55%     {background-position:-70% 0}
+  100%    {background-position:-70% 0}
+}
+@keyframes boot-b{
+  0%   {transform:perspective(70px) rotateY(0deg)   scale(1);   filter:drop-shadow(0 0 3px rgba(226,2,102,.45))}
+  45%  {transform:perspective(70px) rotateY(180deg) scale(1.14);filter:drop-shadow(0 0 9px rgba(226,2,102,.95))}
+  55%  {transform:perspective(70px) rotateY(180deg) scale(1.14);filter:drop-shadow(0 0 9px rgba(255,200,36,.75))}
+  100% {transform:perspective(70px) rotateY(360deg) scale(1);   filter:drop-shadow(0 0 3px rgba(226,2,102,.45))}
+}
 @media (prefers-reduced-motion:reduce){
-  .boot__spin{animation-duration:2.4s}
+  /* nem sombra piscando: quem pediu menos movimento não quer estrobo. A marca
+     fica parada e o texto "Carregando…" já diz o que está acontecendo. */
+  .boot__b{animation:none;filter:drop-shadow(0 0 4px rgba(226,2,102,.6))}
+  .boot__b::after{display:none}
 }
 
 /* o intervalo customizado só aparece quando "Período" está escolhido:
@@ -1566,6 +2090,7 @@ h1,h2,h3,h4,p{margin:0}
 
 @media (max-width:759px){
   .rangebar__note{margin-left:0}
+  .status__periodo{font-size:.6875rem}
   .boot{width:calc(100% - 28px);justify-content:center}
 }
 
@@ -1763,11 +2288,37 @@ h1,h2,h3,h4,p{margin:0}
    Cor de marca, não de saúde: é "isto acabou de chegar", não "isto está bom".
    O JS compara o texto renderizado antes e depois, então funciona pra
    qualquer campo, inclusive os que ainda nem existem. */
-.num--tick{animation:tick 1.5s ease-out 1}
+.num--tick{animation:tick 1.1s ease-out 1}
 @keyframes tick{
   0%   {background:var(--acao-soft);box-shadow:0 0 0 4px var(--acao-soft);color:#FF9AC4}
   22%  {background:var(--acao-soft);box-shadow:0 0 0 4px var(--acao-soft);color:#FF9AC4}
   100% {background:transparent;box-shadow:0 0 0 4px transparent}
+}
+
+/* ── 2b. O NÚMERO QUE CHEGA (contagem, v5) ────────────────────────────────
+   Só na PRIMEIRA pintura de cada escopo, e só nos tiles herói e de nível 2 —
+   nunca na linha de dinheiro, nunca nos cards, NUNCA no refresh de 5 min.
+   A regra é a mesma da cascata: num painel de parede, movimento que se repete
+   sozinho de 5 em 5 minutos deixa de ser informação e vira tique nervoso.
+
+   A ORDEM DE OPERAÇÕES IMPORTA e está em contarAte(), no JS:
+     1. escreve o valor FINAL   2. mede e ajusta a fonte (caberNaCaixa)
+     3. só então conta de 0 até ele
+   Se contasse antes de medir, a fonte seria calibrada por um número curto
+   ("R$ 1,23") e o valor final ("R$ 1.019.191,52") entraria estourando.
+   Aqui não tem regra de CSS de propósito: a contagem é troca de textContent,
+   não animação declarativa. O que existe em CSS é só a trava do
+   prefers-reduced-motion, lá no fim (o JS lê a mesma media query). */
+
+/* ── 2c. O RÓTULO QUE EXPLICA (v5) ────────────────────────────────────────
+   Todo rótulo de tile ganhou title= com a definição da métrica (glossário em
+   GLOSSARIO, no JS, alimentado pelo texto do rodapé). O tracejado avisa que
+   existe explicação ali -- title sem affordance é conteúdo que ninguém acha.
+   NADA ESSENCIAL VIVE SÓ NO title: no toque ele não existe, e é por isso que
+   o rodapé com as mesmas definições continua na página. */
+.tcard__lbl[title]{cursor:help;text-decoration:underline dotted rgba(255,255,255,.28);text-underline-offset:3px}
+@media (hover:hover){
+  .tcard__lbl[title]:hover{color:var(--txt-2);text-decoration-color:var(--acao)}
 }
 
 /* ── 3. ENTRADA EM CASCATA ────────────────────────────────────────────────
@@ -1783,11 +2334,25 @@ h1,h2,h3,h4,p{margin:0}
   animation-delay:calc(var(--i,0) * 26ms);
 }
 
-/* troca de aba e de escopo: o conteúdo entra, não aparece. 240ms é o limite
-   de "instantâneo" percebido, então não custa tempo de leitura. */
-@keyframes entraView{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-#v-geral:checked ~ .scope .view--geral,
-#v-experts:checked ~ .scope .view--experts{animation:entraView .24s ease-out both}
+/* troca de aba e de escopo: o conteúdo entra, não aparece. 160ms fica dentro
+   do limite de "instantâneo" percebido, então não custa tempo de leitura.
+
+   POR QUE ISTO NÃO ATRAPALHA O caberNaCaixa(): a medição roda síncrona no
+   handler de 'change' (ver ligarAjusteDeFonte) e lê clientWidth/scrollWidth,
+   que são valores de LAYOUT. opacity e transform não entram no layout -- o
+   elemento já tem a caixa final no primeiro frame, mesmo em opacity:0. Se um
+   dia esta animação passar a mexer em width, padding, font-size ou display,
+   a medição passa a acontecer no meio do movimento e o valor entra cortado.
+   Não troque as propriedades animadas aqui sem mover a medição pro fim. */
+@keyframes entraView{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+#v-geral:checked ~ .wrap .scope .view--geral,
+#v-experts:checked ~ .wrap .scope .view--experts{animation:entraView .16s ease-out both}
+/* troca de ESCOPO tem animação própria e um pouco mais lenta: é troca de
+   universo, não de seção, e o corte seco fazia parecer recarga de página. */
+@keyframes entraScope{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+#e-cl:checked ~ .wrap .scope--cl,
+#e-geral:checked ~ .wrap .scope--geral,
+#e-google:checked ~ .wrap .scope--google{animation:entraScope .18s ease-out both}
 
 /* ── 4. NÚMERO QUE VIRA TAMANHO ───────────────────────────────────────────
    Barra que salta de 12% pra 47% não comunica variação, comunica troca de
@@ -1806,9 +2371,10 @@ h1,h2,h3,h4,p{margin:0}
   /* o criativo NÃO sobe no hover: ele vive dentro de uma faixa com
      overflow-x, e qualquer deslocamento vertical é cortado pela régua. */
   .crtv:hover{border-color:var(--line-strong)}
-  .scopebar label:hover{transform:translateY(-1px)}
+  /* o escopo virou segmented control DENTRO da barra fixa: subir 1px numa
+     pílula encaixada num trilho lê como defeito de alinhamento, não como
+     resposta ao ponteiro. Aqui o feedback é só de cor. */
 }
-.scopebar label{transition:background .16s ease,border-color .16s ease,transform .18s ease}
 
 /* ── 6. O ÚNICO BRILHO DA TELA ────────────────────────────────────────────
    Uma passada de luz, lenta, só no selo dourado de maior investimento e só
@@ -1866,10 +2432,25 @@ h1,h2,h3,h4,p{margin:0}
   .boot::after,
   .entra > .expert,
   .entra > .cmp__row,
-  #v-geral:checked ~ .scope .view--geral,
-  #v-experts:checked ~ .scope .view--experts,
+  #v-geral:checked ~ .wrap .scope .view--geral,
+  #v-experts:checked ~ .wrap .scope .view--experts,
+  #e-cl:checked ~ .wrap .scope--cl,
+  #e-geral:checked ~ .wrap .scope--geral,
+  #e-google:checked ~ .wrap .scope--google,
   .num--tick{animation:none}
-  .splitbar__seg,.cmp__bar i,.expert,.tcard,.crtv,.scopebar label{transition:none}
+  .splitbar__seg,.cmp__bar i,.expert,.tcard,.crtv,.scopebar label,
+  .topbar__in,.brand__logo{transition:none}
+  /* SKELETON: o brilho varrendo é o que diz "trabalhando", e é justamente o
+     tipo de loop que reduced-motion pede pra tirar. A informação não se perde:
+     a barra continua ali, parada e clara, dizendo "aqui vem um número". */
+  #dashboard-root[data-carga="primeira"] .views :is(
+    .tcard__val,.tcard__sub,.m__val,.cmp__num,.cmp__share,.cmp__resline,
+    .sinal__who,.sinal__val,.verdict__txt,.verdict__why,.chip,
+    .hm__val,.crtv__ctr,.gcontas__val,.gcontas__entrega,.tab__badge
+  ){animation:none;background-image:none}
+  /* a CONTAGEM dos números não tem regra de CSS: quem desliga é o JS, lendo a
+     mesma media query em matchMedia (ver contarAte). Só está anotado aqui pra
+     quem vier procurar por que a contagem não roda e não achar seletor. */
   @media (hover:hover){
     .tcard:hover,.crtv:hover,.scopebar label:hover{transform:none}
   }
@@ -1882,10 +2463,11 @@ h1,h2,h3,h4,p{margin:0}
   .contas__row{grid-template-columns:minmax(0,1.5fr) repeat(2,minmax(92px,max-content)) minmax(100px,max-content) 52px;gap:10px}
 }
 @media (max-width:759px){
-  .scopebar{gap:6px}
-  .scopebar label{flex:1 1 46%;min-height:52px;padding:8px 12px}
-  .scopebar__nome{font-size:.875rem}
-  .scopebar__sub{font-size:.5rem;letter-spacing:.08em}
+  /* no celular o escopo ocupa a linha inteira e divide igual entre os três:
+     é o controle que troca o painel, tem que ser alvo de polegar. */
+  .scopebar label{flex:1 1 0;justify-content:center;min-height:38px;padding:0 8px}
+  .scopebar__nome{font-size:.75rem}
+  .scopebar__sub{display:none !important}
   /* no celular sobram conta, total e participação: o recorte que responde
      "como ele está dividindo a verba". Grupo e direto voltam no desktop. */
   .contas__row{grid-template-columns:minmax(0,1fr) minmax(96px,max-content) 52px;gap:9px}
@@ -2185,6 +2767,26 @@ body.pnl-aberto{overflow:hidden}
 <div id="dashboard-root"
      data-refresh-ms="300000">
 
+  <!-- ═══ NAVEGAÇÃO · OS 5 RADIOS ═══════════════════════════════════════════
+       SUBIRAM pra cá na v5 (eram filhos de .views). Precisam ser IRMÃOS
+       ANTERIORES de <header class="topbar"> e de <div class="wrap">, porque:
+         · o seletor de ESCOPO agora mora dentro da barra fixa (.topbar)
+         · o conteúdo dos escopos continua em .wrap
+       Todo seletor ~ do CSS depende dessa ordem. Se isto for movido de novo,
+       a tela some inteira. Nada de JS pra trocar de aba: radio + :checked.
+       Nível 1 · escopo  -> #e-cl | #e-geral | #e-google
+       Nível 2 · sub-aba -> #v-geral | #v-experts  (compartilhada pelos três)
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <input type="radio" name="escopo" id="e-cl" checked>
+  <input type="radio" name="escopo" id="e-geral">
+  <input type="radio" name="escopo" id="e-google">
+  <input type="radio" name="view" id="v-geral" checked>
+  <input type="radio" name="view" id="v-experts">
+
+  <!-- ═══ BARRA DE COMANDO ═══════════════════════════════════════════════════
+       Uma faixa só, na ordem de quem manda: marca · ESCOPO · período ·
+       ordenar (guardado) · estado. Ver o bloco BARRA DE COMANDO no CSS pra
+       por que cada coisa está onde está. -->
   <header class="topbar">
     <div class="topbar__in">
       <div class="brand">
@@ -2192,30 +2794,31 @@ body.pnl-aberto{overflow:hidden}
              provisório exatamente como o designer documentou no CSS. -->
         <img class="brand__logo" src="logo-bateubet.svg" alt="Bateu Bet" width="132" height="28" fetchpriority="high">
         <span class="brand__sep">/</span>
+        <!-- o h1 continua aqui pro leitor de tela; está fora da tela por CSS -->
         <h1 class="brand__name">Operação ao vivo · Meta Ads + TAP</h1>
       </div>
-      <!-- ═══ HORA · REGRA DURA DE FUSO ═══════════════════════════════════
-           TODO horário desta página é America/Sao_Paulo, sempre, não importa
-           onde esteja o navegador de quem olha (o time acessa de lugares
-           diferentes, e um painel financeiro que diz "atualizado às 09:03"
-           pra um e "14:03" pra outro é um painel que ninguém confia).
-           `atualizado_em` chega em UTC (sufixo Z) e a conversão é do front:
-             new Date(iso).toLocaleTimeString('pt-BR', {
-               timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit'
-             })
-           O data-tz abaixo é contrato visível: todo elemento que imprime hora
-           carrega o dele, e o JS lê o atributo em vez de assumir o fuso local.
-           Vale pra qualquer coisa que venha depois (relógio ao vivo, "há X
-           min", carimbo de exportação): passa pelo mesmo carimbo.
-           ═══════════════════════════════════════════════════════════════════ -->
-      <div class="freshness">
-        <span class="status status--live" id="status-pill">
-          <span class="status__dot" aria-hidden="true"></span>
-          Atualizado às <span class="status__time" data-field="atualizado_em" data-tz="America/Sao_Paulo">12:03</span>
-        </span>
-        <span class="freshness__meta">horário de Brasília · atualiza a cada 5 min</span>
-      </div>
-    </div>
+
+      <!-- ═══ ESCOPO · NAVEGAÇÃO PRIMÁRIA ═══
+           Trocar de escopo troca o painel INTEIRO, então fica colado na marca
+           e é o único controle da barra com peso de botão. A contagem
+           (.scopebar__sub, escrita por pintarScopebar) só aparece no escopo
+           ativo: nos outros dois é ruído e cobra largura. -->
+      <nav class="scopebar" aria-label="Escopo da operação">
+        <label for="e-cl">
+          <span class="scopebar__nome">Costa e Lobão</span>
+          <!-- JS: experts.length -->
+          <span class="scopebar__sub" data-derived="experts.length">7 experts</span>
+        </label>
+        <label for="e-geral">
+          <span class="scopebar__nome">Geral</span>
+          <!-- JS: geral.experts.length + soma de geral.experts[].contas.length -->
+          <span class="scopebar__sub" data-derived="geral.experts.length + contas">24 experts · 33 contas</span>
+        </label>
+        <label for="e-google">
+          <span class="scopebar__nome">Google</span>
+          <span class="scopebar__sub" data-derived="google.contas.length">3 contas · MCC</span>
+        </label>
+      </nav>
 
     <!-- ═══ FILTRO DE PERÍODO ═══════════════════════════════════════════════
          CONTRATO PRO `web-designer`:
@@ -2249,25 +2852,27 @@ body.pnl-aberto{overflow:hidden}
              na lista de um período passado, mesmo tendo gasto. É por isso que
              o rótulo muda: em período fechado a soma dos criativos pode ficar
              abaixo do investimento do expert, e isso é esperado, não é bug.
+
+         v5: o rótulo "Período" saiu. Sete botões escritos Hoje / Ontem / 7d
+         não precisam de legenda, e a legenda custava 70px da barra. Os
+         rótulos curtos levam title= com o nome por extenso.
          ═══════════════════════════════════════════════════════════════════ -->
     <form class="rangebar" id="range-filter">
-      <span class="rangebar__lbl">Período</span>
-
       <div class="seg" role="group" aria-label="Período do relatório">
         <input type="radio" name="range" id="r-hoje" value="hoje" checked>
         <label for="r-hoje">Hoje</label>
         <input type="radio" name="range" id="r-ontem" value="ontem">
         <label for="r-ontem">Ontem</label>
         <input type="radio" name="range" id="r-7" value="7d">
-        <label for="r-7">7 dias</label>
+        <label for="r-7" title="Últimos 7 dias">7d</label>
         <input type="radio" name="range" id="r-30" value="30d">
-        <label for="r-30">30 dias</label>
+        <label for="r-30" title="Últimos 30 dias">30d</label>
         <input type="radio" name="range" id="r-mes" value="mes">
-        <label for="r-mes">Mês atual</label>
+        <label for="r-mes" title="Mês atual, do dia 1 até hoje">Mês</label>
         <input type="radio" name="range" id="r-mespassado" value="mes_passado">
-        <label for="r-mespassado">Mês passado</label>
+        <label for="r-mespassado" title="Mês passado, fechado">Mês ant.</label>
         <input type="radio" name="range" id="r-custom" value="custom">
-        <label for="r-custom">Período</label>
+        <label for="r-custom" title="Escolher as datas">Datas</label>
       </div>
 
       <div class="range-custom">
@@ -2277,13 +2882,6 @@ body.pnl-aberto{overflow:hidden}
         <button type="button" class="range-apply" id="range-apply">Aplicar</button>
       </div>
 
-      <!-- O aviso de dependência saiu daqui: o n8n já aceita de/ate nas três
-           buscas (Meta, criativos e TAP) e o filtro está ligado de verdade.
-           No lugar entra o recado de atualização, escrito pelo JS: "ao vivo"
-           em Hoje, "período fechado, atualização pausada" no histórico.
-           A checagem de período divergente segue de pé no #periodo-banner. -->
-      <span class="rangebar__note" id="range-note" hidden></span>
-      <span class="rangebar__note rangebar__applied" id="range-applied" hidden></span>
       <span class="range-msg" id="range-msg" hidden role="alert"></span>
     </form>
 
@@ -2292,25 +2890,70 @@ body.pnl-aberto{overflow:hidden}
          (cadastros, FTD, conversão, depósito, net dep, net PL, volume) ou
          custo por FTD, além do investimento (padrão, igual à API). 100%
          client-side: troca de métrica/direção não busca dado novo, só
-         reordena o que já está na tela. Guardado em localStorage. -->
-    <div class="rangebar sortbar" id="sort-filter">
-      <span class="rangebar__lbl">Ordenar por</span>
-      <select class="sort-select" id="sort-metrica" aria-label="Métrica de ordenação">
-        <option value="investimento">Investimento</option>
-        <option value="custo_ftd">Custo por FTD (CPA)</option>
-        <option value="ftd">FTD</option>
-        <option value="cadastros">Cadastros</option>
-        <option value="conversao">Conversão cadastro→FTD</option>
-        <option value="deposito">Depósito</option>
-        <option value="net_dep">Net depósito</option>
-        <option value="net_pl">Net P&amp;L</option>
-        <option value="volume">Volume</option>
-      </select>
-      <div class="seg" role="group" aria-label="Direção da ordenação">
-        <input type="radio" name="sortdir" id="sd-desc" value="desc" checked>
-        <label for="sd-desc">Decrescente ↓</label>
-        <input type="radio" name="sortdir" id="sd-asc" value="asc">
-        <label for="sd-asc">Crescente ↑</label>
+         reordena o que já está na tela. Guardado em localStorage.
+
+         v5: era uma FAIXA INTEIRA do cabeçalho pra um controle usado uma vez
+         por semana. Virou <details> (popover). O CSS o esconde fora da aba
+         "Por expert" e no escopo Google — nos dois casos não existe card pra
+         ordenar. Mesmo select, mesmos radios, mesmos IDs: o JS não mudou. -->
+    <details class="sortpop" id="sort-filter">
+      <summary class="sortpop__sum" aria-label="Ordenar os cards">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M6 12h12M9 17h6"/></svg>
+        <span class="sortpop__pre">Ordenar:</span>
+        <span class="sortpop__val" id="sort-resumo">Investimento ↓</span>
+      </summary>
+      <div class="sortpop__pop">
+        <span class="rangebar__lbl">Ordenar cards por</span>
+        <select class="sort-select" id="sort-metrica" aria-label="Métrica de ordenação">
+          <option value="investimento">Investimento</option>
+          <option value="custo_ftd">Custo por FTD (CPA)</option>
+          <option value="ftd">FTD</option>
+          <option value="cadastros">Cadastros</option>
+          <option value="conversao">Conversão cadastro→FTD</option>
+          <option value="deposito">Depósito</option>
+          <option value="net_dep">Net depósito</option>
+          <option value="net_pl">Net P&amp;L</option>
+          <option value="volume">Volume</option>
+        </select>
+        <div class="seg" role="group" aria-label="Direção da ordenação">
+          <input type="radio" name="sortdir" id="sd-desc" value="desc" checked>
+          <label for="sd-desc">Maior ↓</label>
+          <input type="radio" name="sortdir" id="sd-asc" value="asc">
+          <label for="sd-asc">Menor ↑</label>
+        </div>
+      </div>
+    </details>
+
+    <!-- ═══ ESTADO · UMA PÍLULA, DUAS LINHAS ═══════════════════════════════
+         Eram três elementos dizendo quase a mesma coisa em dois lugares da
+         tela (pílula de frescor + #range-note + #range-applied). Viraram um.
+           linha 1 (#range-applied) -> O QUE está na tela: "Hoje, 12/08/2026"
+           linha 2                  -> QUANDO chegou + se ainda corre
+
+         HORA · REGRA DURA DE FUSO
+           TODO horário desta página é America/Sao_Paulo, sempre, não importa
+           onde esteja o navegador de quem olha (o time acessa de lugares
+           diferentes, e um painel financeiro que diz "atualizado às 09:03"
+           pra um e "14:03" pra outro é um painel que ninguém confia).
+           `atualizado_em` chega em UTC (sufixo Z) e a conversão é do front:
+             new Date(iso).toLocaleTimeString('pt-BR', {
+               timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit'
+             })
+           O data-tz abaixo é contrato visível: todo elemento que imprime hora
+           carrega o dele, e o JS lê o atributo em vez de assumir o fuso local.
+         ═══════════════════════════════════════════════════════════════════ -->
+      <div class="freshness">
+        <span class="status status--live" id="status-pill">
+          <span class="status__dot" aria-hidden="true"></span>
+          <span class="status__stack">
+            <b class="status__periodo" id="range-applied">Hoje</b>
+            <span class="status__sub">
+              <span class="vh">Atualizado às </span>
+              <span class="status__time" data-field="atualizado_em" data-tz="America/Sao_Paulo">12:03</span>
+              <span class="freshness__meta">ao vivo · 5 min</span>
+            </span>
+          </span>
+        </span>
       </div>
     </div>
   </header>
@@ -2319,7 +2962,13 @@ body.pnl-aberto{overflow:hidden}
 
     <!-- Pílula de primeira carga. O JS mostra enquanto o painel ainda não tem
          nenhum dado real na tela e esconde no primeiro fetch bom. -->
-    <div class="boot" id="boot" hidden><span class="boot__spin" aria-hidden="true"></span>Carregando dados ao vivo…</div>
+    <div class="boot" id="boot" hidden>
+      <span class="boot__marca" aria-hidden="true">
+        <video class="boot__video" src="carregando-b.mp4" muted loop playsinline preload="auto"></video>
+        <span class="boot__b"></span>
+      </span>
+      <span class="boot__txt" id="boot-txt">Carregando dados ao vivo…</span>
+    </div>
 
     <!-- Banner de falha de fetch. Remover [hidden] via JS. O painel mantém o
          último dado bom na tela, só avisa que parou de atualizar. -->
@@ -2340,42 +2989,21 @@ body.pnl-aberto{overflow:hidden}
     </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════════
-       NAVEGAÇÃO EM DOIS NÍVEIS. Os QUATRO <input> precisam continuar sendo
-       IRMÃOS ANTERIORES de .scopebar e de .scope, senão o seletor ~ do CSS
-       quebra e some tudo.
+       NAVEGAÇÃO EM DOIS NÍVEIS. Os CINCO <input> não moram mais aqui: subiram
+       pro topo de #dashboard-root (ver o bloco NAVEGAÇÃO · OS 5 RADIOS), pra
+       o seletor de escopo poder viver dentro da barra fixa. .views virou só o
+       envelope do conteúdo, e é ele que leva o desfoque da primeira carga —
+       por isso a barra de comando fica de fora: controle não pode desfocar
+       junto com o dado.
 
-       Nível 1 · escopo   -> Costa e Lobão (7 experts) | Geral (24 entidades)
-       Nível 2 · sub-aba  -> Visão geral | detalhe   (compartilhado pelos dois)
+       Nível 1 · escopo   -> Costa e Lobão | Geral | Google   (na barra)
+       Nível 2 · sub-aba  -> Visão geral | detalhe            (dentro do escopo)
 
-       Por que dois níveis e não quatro abas soltas: "Costa e Lobão" e "Geral"
-       são duas OPERAÇÕES diferentes, não duas seções da mesma. Quatro abas
-       lado a lado fariam parecer que Geral é um complemento do recorte, e é o
-       contrário. E manter a sub-aba compartilhada evita que a pessoa perca a
-       leitura em que estava ao trocar de escopo.
+       Por que dois níveis e não cinco abas soltas: são OPERAÇÕES diferentes,
+       não seções da mesma. E manter a sub-aba compartilhada evita que a
+       pessoa perca a leitura em que estava ao trocar de escopo.
        ═══════════════════════════════════════════════════════════════════════ -->
   <div class="views">
-    <input type="radio" name="escopo" id="e-cl" checked>
-    <input type="radio" name="escopo" id="e-geral">
-    <input type="radio" name="escopo" id="e-google">
-    <input type="radio" name="view" id="v-geral" checked>
-    <input type="radio" name="view" id="v-experts">
-
-    <nav class="scopebar" aria-label="Escopo da operação">
-      <label for="e-cl">
-        <span class="scopebar__nome">Costa e Lobão</span>
-        <!-- JS: experts.length -->
-        <span class="scopebar__sub" data-derived="experts.length">7 experts</span>
-      </label>
-      <label for="e-geral">
-        <span class="scopebar__nome">Geral</span>
-        <!-- JS: geral.experts.length + soma de geral.experts[].contas.length -->
-        <span class="scopebar__sub" data-derived="geral.experts.length + contas">24 experts · 33 contas</span>
-      </label>
-      <label for="e-google">
-        <span class="scopebar__nome">Google</span>
-        <span class="scopebar__sub" data-derived="google.contas.length">3 contas · MCC</span>
-      </label>
-    </nav>
 
     <!-- ╔═════════════════════════════════════════════════════════════════╗
          ║ ESCOPO 1 · COSTA E LOBÃO · consome  totais  e  experts[]        ║
@@ -2443,33 +3071,33 @@ body.pnl-aberto{overflow:hidden}
       <h2 class="eyebrow">Totais · <span data-field="periodo_label">hoje, 06/08/2026</span><span class="eyebrow__recorte" hidden></span></h2>
     </div>
 
+    <!-- ═══ TRÊS NÍVEIS DE PESO ═══
+         Nenhuma métrica foi removida: as 13 continuam aqui. O que mudou é
+         quem grita primeiro.
+           NÍVEL 1 · herói -> investimento total + custo por FTD
+           NÍVEL 2         -> cadastros · custo/cad · FTD · depósito · canais
+           NÍVEL 3         -> a linha de dinheiro, dentro de .totals__fin
+         Ver o bloco HIERARQUIA DOS NÚMEROS no CSS. -->
     <section class="totals" aria-label="Totais da operação">
 
+      <!-- ── NÍVEL 1 · o par que decide o dia ────────────────────────────── -->
       <div class="tcard tcard--hero">
         <span class="tcard__lbl">Investimento total</span>
         <span class="tcard__val" data-field="totais.investimento_total">R$ 2.749,25</span>
         <span class="tcard__sub" data-derived="totais.investimento_total / totais.ftd">R$ 183,28 por FTD</span>
       </div>
 
-      <div class="tcard tcard--grupo">
-        <span class="tcard__lbl"><i class="dot dot--grupo"></i> Investimento grupo</span>
-        <span class="tcard__val" data-field="totais.investimento_grupo">R$ 2.496,03</span>
-        <span class="tcard__sub" data-derived="grupo / total; soma dos resultados de grupo">90,8% do total · 295 entradas</span>
+      <!-- .tcard--cpa: o JS põe is-good / is-warn / is-bad aqui, pela mesma
+           faixa oficial que colore o número (300/350). O fio do topo vira cor
+           de saúde em vez do magenta da marca — é a única exceção do sistema,
+           e existe porque de longe a cor chega antes do algarismo. -->
+      <div class="tcard tcard--hero tcard--cpa">
+        <span class="tcard__lbl">Custo por FTD</span>
+        <span class="tcard__val" data-field="totais.custo_ftd" data-derived="investimento_total / ftd">R$ 183,28</span>
+        <span class="tcard__sub">dentro da faixa boa (até R$ 300,00)</span>
       </div>
 
-      <div class="tcard tcard--direto">
-        <span class="tcard__lbl"><i class="dot dot--direto"></i> Tráfego pro perfil</span>
-        <span class="tcard__val" data-field="totais.investimento_direto">R$ 253,22</span>
-        <span class="tcard__sub" data-derived="direto / total; soma dos resultados de direto">9,2% do total · 850 cliques no perfil</span>
-      </div>
-
-      <div class="tcard">
-        <span class="tcard__lbl">Depósito</span>
-        <span class="tcard__val" data-field="totais.deposito">R$ 60.007,01</span>
-        <!-- uso 2 de 3 do dourado: retorno sobre o investido -->
-        <span class="tcard__sub tcard__sub--gold" data-derived="deposito / investimento_total">21,8× o investido</span>
-      </div>
-
+      <!-- ── NÍVEL 2 · funil e canal ─────────────────────────────────────── -->
       <div class="tcard">
         <span class="tcard__lbl">Cadastros</span>
         <span class="tcard__val" data-field="totais.cadastros">61</span>
@@ -2489,41 +3117,58 @@ body.pnl-aberto{overflow:hidden}
       </div>
 
       <div class="tcard">
-        <span class="tcard__lbl">Custo por FTD</span>
-        <span class="tcard__val" data-field="totais.custo_ftd" data-derived="investimento_total / ftd">R$ 183,28</span>
-        <span class="tcard__sub">—</span>
+        <span class="tcard__lbl">Depósito</span>
+        <span class="tcard__val" data-field="totais.deposito">R$ 60.007,01</span>
+        <!-- uso 2 de 3 do dourado: retorno sobre o investido -->
+        <span class="tcard__sub tcard__sub--gold" data-derived="deposito / investimento_total">21,8× o investido</span>
       </div>
 
-      <div class="tcard tcard--fifth">
-        <span class="tcard__lbl">Ticket médio do FTD</span>
-        <span class="tcard__val" data-field="totais.ticket_ftd" data-derived="valor_ftd / ftd">R$ 60,00</span>
-        <span class="tcard__sub">valor do 1º depósito</span>
+      <!-- os dois de canal fecham o nível 2 encostados na .splitbar, que é a
+           leitura visual da mesma divisão -->
+      <div class="tcard tcard--grupo">
+        <span class="tcard__lbl"><i class="dot dot--grupo"></i> Investimento grupo</span>
+        <span class="tcard__val" data-field="totais.investimento_grupo">R$ 2.496,03</span>
+        <span class="tcard__sub" data-derived="grupo / total; soma dos resultados de grupo">90,8% do total · 295 entradas</span>
       </div>
 
-      <div class="tcard tcard--fifth">
-        <span class="tcard__lbl">Depósito médio por FTD</span>
-        <span class="tcard__val" data-field="totais.deposito_ftd" data-derived="deposito / ftd">R$ 4.000,47</span>
-        <span class="tcard__sub">—</span>
+      <div class="tcard tcard--direto">
+        <span class="tcard__lbl"><i class="dot dot--direto"></i> Tráfego pro perfil</span>
+        <span class="tcard__val" data-field="totais.investimento_direto">R$ 253,22</span>
+        <span class="tcard__sub" data-derived="direto / total; soma dos resultados de direto">9,2% do total · 850 cliques no perfil</span>
       </div>
 
-      <div class="tcard tcard--fifth">
-        <span class="tcard__lbl">Net dep</span>
-        <span class="tcard__val num--pos" data-field="totais.net_dep">R$ 45.120,88</span>
-        <span class="tcard__sub" data-derived="net_dep / deposito * 100">—</span>
-      </div>
+      <!-- ── NÍVEL 3 · linha de dinheiro ─────────────────────────────────── -->
+      <div class="totals__fin">
+        <div class="tcard tcard--fifth">
+          <span class="tcard__lbl">Ticket médio do FTD</span>
+          <span class="tcard__val" data-field="totais.ticket_ftd" data-derived="valor_ftd / ftd">R$ 60,00</span>
+          <span class="tcard__sub">valor do 1º depósito</span>
+        </div>
 
-      <div class="tcard tcard--fifth">
-        <span class="tcard__lbl">Net PL</span>
-        <span class="tcard__val" data-field="totais.net_pl">R$ 3.026,80</span>
-        <span class="tcard__sub" data-derived="net_pl / volume * 100">—</span>
-      </div>
+        <div class="tcard tcard--fifth">
+          <span class="tcard__lbl">Depósito médio por FTD</span>
+          <span class="tcard__val" data-field="totais.deposito_ftd" data-derived="deposito / ftd">R$ 4.000,47</span>
+          <span class="tcard__sub">—</span>
+        </div>
 
-      <div class="tcard tcard--fifth">
-        <span class="tcard__lbl">Volume</span>
-        <span class="tcard__val" data-field="totais.volume">R$ 20.728,05</span>
-        <span class="tcard__sub" data-derived="volume / deposito">—</span>
-      </div>
+        <div class="tcard tcard--fifth">
+          <span class="tcard__lbl">Net dep</span>
+          <span class="tcard__val num--pos" data-field="totais.net_dep">R$ 45.120,88</span>
+          <span class="tcard__sub" data-derived="net_dep / deposito * 100">—</span>
+        </div>
 
+        <div class="tcard tcard--fifth">
+          <span class="tcard__lbl">Net PL</span>
+          <span class="tcard__val" data-field="totais.net_pl">R$ 3.026,80</span>
+          <span class="tcard__sub" data-derived="net_pl / volume * 100">—</span>
+        </div>
+
+        <div class="tcard tcard--fifth">
+          <span class="tcard__lbl">Volume</span>
+          <span class="tcard__val" data-field="totais.volume">R$ 20.728,05</span>
+          <span class="tcard__sub" data-derived="volume / deposito">—</span>
+        </div>
+      </div>
 
     </section>
 
@@ -3766,32 +4411,25 @@ body.pnl-aberto{overflow:hidden}
       <h2 class="eyebrow">Totais da operação · <span data-field="periodo_label">hoje, 06/08/2026</span><span class="eyebrow__recorte" hidden></span></h2>
     </div>
 
+    <!-- MESMOS TRÊS NÍVEIS do escopo Costa e Lobão. A ordem e as classes têm
+         que bater entre os escopos: quem troca de escopo não pode ter que
+         reaprender onde fica cada número. -->
     <section class="totals" aria-label="Totais da operação geral">
 
+      <!-- ── NÍVEL 1 ─────────────────────────────────────────────────────── -->
       <div class="tcard tcard--hero">
         <span class="tcard__lbl">Investimento total</span>
         <span class="tcard__val" data-field="totais.investimento_total">R$ 2.749,25</span>
         <span class="tcard__sub" data-derived="totais.investimento_total / totais.ftd">R$ 15,45 por FTD</span>
       </div>
 
-      <div class="tcard tcard--grupo">
-        <span class="tcard__lbl"><i class="dot dot--grupo"></i> Investimento grupo</span>
-        <span class="tcard__val" data-field="totais.investimento_grupo">R$ 2.496,03</span>
-        <span class="tcard__sub" data-derived="grupo / total; soma dos resultados de grupo">90,8% do total · 295 entradas</span>
+      <div class="tcard tcard--hero tcard--cpa">
+        <span class="tcard__lbl">Custo por FTD</span>
+        <span class="tcard__val" data-field="totais.custo_ftd" data-derived="investimento_total / ftd">R$ 183,28</span>
+        <span class="tcard__sub">dentro da faixa boa (até R$ 300,00)</span>
       </div>
 
-      <div class="tcard tcard--direto">
-        <span class="tcard__lbl"><i class="dot dot--direto"></i> Tráfego pro perfil</span>
-        <span class="tcard__val" data-field="totais.investimento_direto">R$ 253,22</span>
-        <span class="tcard__sub" data-derived="direto / total; soma dos resultados de direto">9,2% do total · 850 cliques no perfil</span>
-      </div>
-
-      <div class="tcard">
-        <span class="tcard__lbl">Depósito</span>
-        <span class="tcard__val" data-field="totais.deposito">R$ 842.510,96</span>
-        <span class="tcard__sub tcard__sub--gold" data-derived="deposito / investimento_total">306,5× o investido</span>
-      </div>
-
+      <!-- ── NÍVEL 2 ─────────────────────────────────────────────────────── -->
       <div class="tcard">
         <span class="tcard__lbl">Cadastros</span>
         <span class="tcard__val" data-field="totais.cadastros">612</span>
@@ -3811,41 +4449,55 @@ body.pnl-aberto{overflow:hidden}
       </div>
 
       <div class="tcard">
-        <span class="tcard__lbl">Custo por FTD</span>
-        <span class="tcard__val" data-field="totais.custo_ftd" data-derived="investimento_total / ftd">R$ 183,28</span>
-        <span class="tcard__sub">—</span>
+        <span class="tcard__lbl">Depósito</span>
+        <span class="tcard__val" data-field="totais.deposito">R$ 842.510,96</span>
+        <span class="tcard__sub tcard__sub--gold" data-derived="deposito / investimento_total">306,5× o investido</span>
       </div>
 
-      <div class="tcard tcard--fifth">
-        <span class="tcard__lbl">Ticket médio do FTD</span>
-        <span class="tcard__val" data-field="totais.ticket_ftd" data-derived="valor_ftd / ftd">R$ 60,00</span>
-        <span class="tcard__sub">valor do 1º depósito</span>
+      <div class="tcard tcard--grupo">
+        <span class="tcard__lbl"><i class="dot dot--grupo"></i> Investimento grupo</span>
+        <span class="tcard__val" data-field="totais.investimento_grupo">R$ 2.496,03</span>
+        <span class="tcard__sub" data-derived="grupo / total; soma dos resultados de grupo">90,8% do total · 295 entradas</span>
       </div>
 
-      <div class="tcard tcard--fifth">
-        <span class="tcard__lbl">Depósito médio por FTD</span>
-        <span class="tcard__val" data-field="totais.deposito_ftd" data-derived="deposito / ftd">R$ 4.000,47</span>
-        <span class="tcard__sub">—</span>
+      <div class="tcard tcard--direto">
+        <span class="tcard__lbl"><i class="dot dot--direto"></i> Tráfego pro perfil</span>
+        <span class="tcard__val" data-field="totais.investimento_direto">R$ 253,22</span>
+        <span class="tcard__sub" data-derived="direto / total; soma dos resultados de direto">9,2% do total · 850 cliques no perfil</span>
       </div>
 
-      <div class="tcard tcard--fifth">
-        <span class="tcard__lbl">Net dep</span>
-        <span class="tcard__val num--pos" data-field="totais.net_dep">R$ 45.120,88</span>
-        <span class="tcard__sub" data-derived="net_dep / deposito * 100">—</span>
-      </div>
+      <!-- ── NÍVEL 3 ─────────────────────────────────────────────────────── -->
+      <div class="totals__fin">
+        <div class="tcard tcard--fifth">
+          <span class="tcard__lbl">Ticket médio do FTD</span>
+          <span class="tcard__val" data-field="totais.ticket_ftd" data-derived="valor_ftd / ftd">R$ 60,00</span>
+          <span class="tcard__sub">valor do 1º depósito</span>
+        </div>
 
-      <div class="tcard tcard--fifth">
-        <span class="tcard__lbl">Net PL</span>
-        <span class="tcard__val" data-field="totais.net_pl">R$ 3.026,80</span>
-        <span class="tcard__sub" data-derived="net_pl / volume * 100">—</span>
-      </div>
+        <div class="tcard tcard--fifth">
+          <span class="tcard__lbl">Depósito médio por FTD</span>
+          <span class="tcard__val" data-field="totais.deposito_ftd" data-derived="deposito / ftd">R$ 4.000,47</span>
+          <span class="tcard__sub">—</span>
+        </div>
 
-      <div class="tcard tcard--fifth">
-        <span class="tcard__lbl">Volume</span>
-        <span class="tcard__val" data-field="totais.volume">R$ 20.728,05</span>
-        <span class="tcard__sub" data-derived="volume / deposito">—</span>
-      </div>
+        <div class="tcard tcard--fifth">
+          <span class="tcard__lbl">Net dep</span>
+          <span class="tcard__val num--pos" data-field="totais.net_dep">R$ 45.120,88</span>
+          <span class="tcard__sub" data-derived="net_dep / deposito * 100">—</span>
+        </div>
 
+        <div class="tcard tcard--fifth">
+          <span class="tcard__lbl">Net PL</span>
+          <span class="tcard__val" data-field="totais.net_pl">R$ 3.026,80</span>
+          <span class="tcard__sub" data-derived="net_pl / volume * 100">—</span>
+        </div>
+
+        <div class="tcard tcard--fifth">
+          <span class="tcard__lbl">Volume</span>
+          <span class="tcard__val" data-field="totais.volume">R$ 20.728,05</span>
+          <span class="tcard__sub" data-derived="volume / deposito">—</span>
+        </div>
+      </div>
 
     </section>
 
@@ -4549,27 +5201,21 @@ body.pnl-aberto{overflow:hidden}
         <h2 class="eyebrow">Google Ads · <span data-field="periodo_label">hoje</span></h2>
       </div>
 
+      <!-- MESMOS TRÊS NÍVEIS dos outros dois escopos, com as métricas que o
+           Google tem. Sem net dep (a TAP não separa saque por este btag). -->
       <section class="totals" aria-label="Totais do Google">
+        <!-- ── NÍVEL 1 ───────────────────────────────────────────────────── -->
         <div class="tcard tcard--hero">
           <span class="tcard__lbl">Investimento Google</span>
           <span class="tcard__val" data-field="google.investimento_total">—</span>
           <span class="tcard__sub">—</span>
         </div>
-        <div class="tcard">
-          <span class="tcard__lbl">Depósito</span>
-          <span class="tcard__val" data-field="google.deposito">—</span>
+        <div class="tcard tcard--hero tcard--cpa">
+          <span class="tcard__lbl">Custo por FTD</span>
+          <span class="tcard__val" data-field="google.custo_ftd">—</span>
           <span class="tcard__sub">—</span>
         </div>
-        <div class="tcard">
-          <span class="tcard__lbl">Net PL</span>
-          <span class="tcard__val" data-field="google.net_pl">—</span>
-          <span class="tcard__sub">—</span>
-        </div>
-        <div class="tcard">
-          <span class="tcard__lbl">Volume</span>
-          <span class="tcard__val" data-field="google.volume">—</span>
-          <span class="tcard__sub">—</span>
-        </div>
+        <!-- ── NÍVEL 2 ───────────────────────────────────────────────────── -->
         <div class="tcard">
           <span class="tcard__lbl">Cadastros</span>
           <span class="tcard__val" data-field="google.cadastros">—</span>
@@ -4586,18 +5232,8 @@ body.pnl-aberto{overflow:hidden}
           <span class="tcard__sub">—</span>
         </div>
         <div class="tcard">
-          <span class="tcard__lbl">Custo por FTD</span>
-          <span class="tcard__val" data-field="google.custo_ftd">—</span>
-          <span class="tcard__sub">—</span>
-        </div>
-        <div class="tcard">
-          <span class="tcard__lbl">Ticket médio do FTD</span>
-          <span class="tcard__val" data-field="google.ticket_ftd">—</span>
-          <span class="tcard__sub">—</span>
-        </div>
-        <div class="tcard">
-          <span class="tcard__lbl">Depósito médio por FTD</span>
-          <span class="tcard__val" data-field="google.deposito_ftd">—</span>
+          <span class="tcard__lbl">Depósito</span>
+          <span class="tcard__val" data-field="google.deposito">—</span>
           <span class="tcard__sub">—</span>
         </div>
         <div class="tcard">
@@ -4609,6 +5245,29 @@ body.pnl-aberto{overflow:hidden}
           <span class="tcard__lbl">Valor dos FTD</span>
           <span class="tcard__val" data-field="google.valor_ftd">—</span>
           <span class="tcard__sub">—</span>
+        </div>
+        <!-- ── NÍVEL 3 ───────────────────────────────────────────────────── -->
+        <div class="totals__fin">
+          <div class="tcard tcard--fifth">
+            <span class="tcard__lbl">Ticket médio do FTD</span>
+            <span class="tcard__val" data-field="google.ticket_ftd">—</span>
+            <span class="tcard__sub">—</span>
+          </div>
+          <div class="tcard tcard--fifth">
+            <span class="tcard__lbl">Depósito médio por FTD</span>
+            <span class="tcard__val" data-field="google.deposito_ftd">—</span>
+            <span class="tcard__sub">—</span>
+          </div>
+          <div class="tcard tcard--fifth">
+            <span class="tcard__lbl">Net PL</span>
+            <span class="tcard__val" data-field="google.net_pl">—</span>
+            <span class="tcard__sub">—</span>
+          </div>
+          <div class="tcard tcard--fifth">
+            <span class="tcard__lbl">Volume</span>
+            <span class="tcard__val" data-field="google.volume">—</span>
+            <span class="tcard__sub">—</span>
+          </div>
         </div>
       </section>
 
@@ -5190,19 +5849,22 @@ function rotuloPeriodo(p) {
   return dataCurta(p.de) + ' a ' + dataBR(p.ate);
 }
 
-/* rótulo explícito de "o que está sendo mostrado agora", fixado no filtro
-   (não só lá embaixo no eyebrow dos totais) — diz o intervalo completo em
-   datas e se hoje (parcial) entra na conta ou não, pra não ter dúvida se o
-   corte é "de ontem pra trás" ou inclui o dia corrente. */
+/* Rótulo de "o que está na tela agora". Na v5 ele virou a PRIMEIRA LINHA da
+   pílula de estado, então encurtou: o "Mostrando" era palavra de enfeite e o
+   "(em andamento)" / "(período fechado)" já é dito pela linha de baixo da
+   mesma pílula ("ao vivo" × "período fechado"). Dizer duas vezes, a 2mm de
+   distância, era exatamente a duplicação que a v5 veio matar.
+   O que NÃO pode sumir: se o recorte inclui o dia corrente (parcial) ou não. */
 function rotuloAplicado(preset, p) {
   if (!p || !p.de) return '';
-  var hoje = hojeSP();
+  var hoje = hojeSP(), ontem = somaDias(hoje, -1);
   if (p.de === p.ate) {
-    return 'Mostrando ' + dataBR(p.de) + (p.de === hoje ? ' (hoje, em andamento)' : '');
+    if (p.de === hoje)  return 'Hoje, ' + dataBR(p.de);
+    if (p.de === ontem) return 'Ontem, ' + dataBR(p.de);
+    return dataBR(p.de);
   }
-  var incluiHoje = p.ate === hoje;
-  return 'Mostrando ' + dataBR(p.de) + ' a ' + dataBR(p.ate) +
-    (incluiHoje ? ' (inclui hoje, ainda em andamento)' : ' (período fechado)');
+  /* "até hoje" avisa que o último dia do intervalo ainda está recebendo dado */
+  return dataCurta(p.de) + ' a ' + (p.ate === hoje ? 'hoje' : dataBR(p.ate));
 }
 
 /* ── 3. moldes clonados do HTML estático ────────────────────────────────── */
@@ -5284,11 +5946,27 @@ var estado = {
      e o refresh de 5 min recalcula em cima do cache em vez de bater na API
      de novo a cada ciclo. */
   tendencia: {},
+  /* v5 · LOTE DE TENDÊNCIA POR ESCOPO. A rota ?tendencia=*&escopo=… devolve o
+     histórico de TODOS os experts de um escopo numa chamada. Ela ALIMENTA o
+     mesmo estado.tendencia acima, então quem abre o painel de um expert já
+     encontra o cache pronto e não dispara a busca individual.
+     `dia` guarda a data de Brasília em que o lote foi buscado: é o que
+     define quando revalidar. Série de dias FECHADOS não muda no meio do dia,
+     então bater na rota a cada refresh de 5 min seria 288 chamadas por dia
+     pra receber 288 vezes a mesma resposta. A checagem roda junto do refresh
+     (é chamada de dentro do carregar), mas só busca de verdade na virada do
+     dia — que é o único momento em que um dia novo fecha. */
+  tendLote: { cl: { estado: 'idle', dia: null }, geral: { estado: 'idle', dia: null } },
   /* ordenação dos cards: métrica + direção. Padrão é o que a API já manda
      (investimento decrescente) — só reordena de verdade quando a pessoa
      escolhe outra métrica no seletor. */
   ordenar: { metrica: 'investimento', dir: 'desc' }
 };
+
+/* prefers-reduced-motion lido UMA vez e mantido vivo: o JS precisa dele pra
+   contagem de números, que não é regra de CSS. */
+var MQ_CALMO = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+function movimentoOk() { return !(MQ_CALMO && MQ_CALMO.matches); }
 
 /* ── 5c. ordenação dos cards por métrica da TAP / custo por FTD ───────────
    Reordena só no front (mesmo dado já buscado) — trocar de métrica não
@@ -6057,6 +6735,16 @@ function pintarTotais(d, isHoje, raiz, rodape, nSelecionados) {
     elCF.classList.remove('val--good', 'val--warn', 'val--bad');
     if (temFtd) elCF.classList.add(inv / t.ftd <= FAIXA_BOA ? 'val--good'
       : inv / t.ftd < FAIXA_ALTA ? 'val--warn' : 'val--bad');
+    /* HERÓI DE CUSTO POR FTD (v5): a MESMA régua pinta o tile inteiro, não só
+       o algarismo. Numa TV a 4 metros ninguém lê "R$ 318,40", mas todo mundo
+       lê laranja. Uma decisão, dois canais de leitura -- se um dia a faixa
+       mudar, muda em FAIXA_BOA/FAIXA_ALTA e as duas acompanham. */
+    var tileCF = elCF.closest ? elCF.closest('.tcard--cpa') : null;
+    if (tileCF) {
+      tileCF.classList.remove('is-good', 'is-warn', 'is-bad');
+      if (temFtd) tileCF.classList.add(inv / t.ftd <= FAIXA_BOA ? 'is-good'
+        : inv / t.ftd < FAIXA_ALTA ? 'is-warn' : 'is-bad');
+    }
   }
 
   var elCC = campo(raiz, 'totais.custo_cadastro');
@@ -6170,6 +6858,135 @@ function ajustarValores(raiz) {
   }).forEach(function (el) { caberNaCaixa(el); });
 }
 
+/* ── O NÚMERO QUE CHEGA CONTANDO (v5) ─────────────────────────────────────
+   Só na PRIMEIRA pintura de cada escopo, só nos tiles herói e de nível 2.
+   Nunca no refresh: quem muda no refresh já tem o .num--tick, e um painel de
+   parede que reanima sozinho de 5 em 5 minutos vira tique nervoso.
+
+   TRÊS ARMADILHAS QUE ESTA FUNÇÃO EVITA, e nenhuma é hipotética:
+
+   1. MEDIR PELO NÚMERO ERRADO. O texto final é escrito e a fonte é ajustada
+      ANTES de a contagem começar. Contando primeiro, caberNaCaixa mediria
+      "R$ 1,23" e o valor final entraria estourando a caixa.
+
+   2. ABA EM SEGUNDO PLANO. requestAnimationFrame não entrega frame em aba de
+      fundo (o mesmo motivo documentado em ligarAjusteDeFonte). Sem rede de
+      segurança, o painel aberto numa aba escondida ficaria com o número
+      congelado no meio da contagem. Por isso: só começa com a aba visível, e
+      um setTimeout de guarda escreve o valor final de qualquer jeito.
+
+   3. INVENTAR PRECISÃO. A contagem interpola só a PARTE NUMÉRICA do texto já
+      formatado e devolve prefixo/sufixo intactos ("R$ ", "%", "×"). Nada de
+      reformatar por fora: o valor que aparece no fim é exatamente o mesmo
+      textContent que pintarTotais escreveu, byte por byte.
+   ────────────────────────────────────────────────────────────────────────── */
+var DUR_CONTA = 560;
+function contarAte(el) {
+  if (!el) return;
+  var alvo = el.textContent;
+  /* casa o primeiro número pt-BR do texto: 2.749,25 · 61 · 24,6 · -1.200,50 */
+  var m = alvo.match(/-?\d[\d.]*(?:,\d+)?/);
+  if (!m) return;
+  var bruto = m[0];
+  var valor = parseFloat(bruto.replace(/\./g, '').replace(',', '.'));
+  if (!isFinite(valor) || valor === 0) return;
+  var casas = (bruto.split(',')[1] || '').length;
+  var antes = alvo.slice(0, m.index);
+  var depois = alvo.slice(m.index + bruto.length);
+  function escrever(v) {
+    el.textContent = antes + v.toLocaleString('pt-BR', {
+      minimumFractionDigits: casas, maximumFractionDigits: casas
+    }) + depois;
+  }
+  var t0 = 0;
+  var raf = null;
+  /* a rede de segurança da armadilha 2: aconteça o que acontecer, em
+     DUR_CONTA+120ms o campo tem o texto final. */
+  var guarda = setTimeout(function () {
+    if (raf) cancelAnimationFrame(raf);
+    el.textContent = alvo;
+  }, DUR_CONTA + 120);
+  function passo(ts) {
+    if (!t0) t0 = ts;
+    var p = Math.min(1, (ts - t0) / DUR_CONTA);
+    /* ease-out cúbica: rápido no começo, assenta no fim. A mesma sensação da
+       curva usada no resto do painel, sem depender de CSS. */
+    var e = 1 - Math.pow(1 - p, 3);
+    if (p >= 1) { clearTimeout(guarda); el.textContent = alvo; return; }
+    escrever(valor * e);
+    raf = requestAnimationFrame(passo);
+  }
+  escrever(0);
+  raf = requestAnimationFrame(passo);
+}
+
+/* CAMPOS QUE NÃO CONTAM, e o motivo é a regra dura do painel: contar de 0 até
+   o valor faz o campo passar por "R$ 0,00" no primeiro frame. Em campo de
+   CUSTO, R$ 0,00 lê como "saiu de graça" -- é o mesmo defeito que a v5
+   corrigiu na tabela do comparativo, e seria absurdo consertar lá e reintroduzir
+   aqui em forma de animação. Pior ainda no herói de custo por FTD, que já está
+   pintado de verde pela faixa: seria um "R$ 0,00" VERDE piscando na tela.
+   Esses tiles entram direto no valor final. Ninguém sente falta. */
+var SEM_CONTAGEM = { custo_ftd: 1, custo_cadastro: 1, ticket_ftd: 1, deposito_ftd: 1 };
+
+/* roda uma vez por escopo. A chave entra no MESMO estado.pintou da cascata:
+   um só registro de "este escopo já estreou", duas animações que respeitam. */
+function animarTotais(raiz, chave) {
+  /* escopo escondido mede 0 e ninguém está olhando: NÃO gasta a estreia aqui.
+     A flag só é queimada quando o escopo realmente apareceu, então quem abre
+     o Geral pela primeira vez ainda ganha a contagem, no refresh seguinte. */
+  if (!raiz || !raiz.clientWidth) return;
+  if (estado.pintou[chave]) return;
+  estado.pintou[chave] = 1;
+  /* reduced-motion e aba de fundo não animam: nos dois casos o valor final já
+     está escrito na tela e não falta informação nenhuma. */
+  if (!movimentoOk() || document.hidden) return;
+  /* > .tcard exclui de propósito a linha de dinheiro (.totals__fin): nível 3 é
+     conferência, e contar treze números ao mesmo tempo vira ruído. */
+  $$('.totals > .tcard > .tcard__val', raiz).forEach(function (el) {
+    var campo = (el.getAttribute('data-field') || '').split('.').pop();
+    if (SEM_CONTAGEM[campo]) return;
+    contarAte(el);
+  });
+}
+
+/* ── O RÓTULO QUE EXPLICA (v5) ────────────────────────────────────────────
+   As definições saem do mesmo lugar de onde o rodapé tira as dele: são as
+   regras da operação, não invenção do painel. Vão como title= no rótulo do
+   tile, chaveadas pelo [data-field] do valor — assim uma definição vale nos
+   TRÊS escopos sem repetir texto em 37 spans de HTML, e entra sozinha em
+   tile novo que use o mesmo campo.
+   O que está aqui é APOIO, não conteúdo essencial: no toque o title não
+   existe, e é por isso que o rodapé continua explicando tudo por escrito.
+   ────────────────────────────────────────────────────────────────────────── */
+var GLOSSARIO = {
+  investimento_total: 'Tudo o que saiu de mídia no período: campanhas de grupo mais campanhas de tráfego pro perfil.',
+  investimento_grupo: 'Campanhas de WhatsApp e Telegram, em que a pessoa entra num grupo antes de chegar na casa.',
+  investimento_direto: 'Campanhas que levam direto pro perfil: a pessoa vai reto pro link, sem passar por grupo.',
+  cadastros: 'Cadastros novos na casa atribuídos ao btag do expert. O funil da TAP é blend: não separa por campanha.',
+  custo_cadastro: 'Verba dividida pelos cadastros. Sem cadastro no período o campo diz isso, nunca R$ 0,00.',
+  ftd: 'First Time Deposit: o cadastro que fez o primeiro depósito. É a conversão que a operação compra.',
+  custo_ftd: 'Verba dividida pelos FTD. Faixa oficial do cliente: bom até R$ 300, atenção entre R$ 300 e R$ 350, alto de R$ 350 pra cima.',
+  deposito: 'Depósito bruto no período, antes de saque. O múltiplo dourado ao lado é quanto isso dá sobre o investido.',
+  ticket_ftd: 'Valor médio do primeiro depósito: soma dos valores de FTD dividida pelo número de FTD.',
+  deposito_ftd: 'Depósito total dividido pelos FTD: quanto cada FTD depositou no período, não só na entrada.',
+  net_dep: 'Net dep = depósito menos saque. É o dinheiro que de fato ficou na casa.',
+  net_pl: 'Net P&L = o que a casa ganhou depois de pagar os prêmios. É a margem, não o faturamento.',
+  volume: 'Volume total apostado no período. Serve de base pra margem: net P&L dividido por volume.',
+  valor_ftd: 'Soma dos primeiros depósitos do período.',
+  conversao: 'Quanto dos cadastros virou FTD.'
+};
+function ligarGlossario() {
+  $$('.totals .tcard').forEach(function (tile) {
+    var val = $('.tcard__val', tile);
+    var lbl = $('.tcard__lbl', tile);
+    if (!val || !lbl) return;
+    var campo = (val.getAttribute('data-field') || '').split('.').pop();
+    var txt = GLOSSARIO[campo];
+    if (txt) lbl.setAttribute('title', txt);
+  });
+}
+
 /* o ajuste só decide alguma coisa quando o elemento TEM tamanho, e escopo e
    sub-aba escondidos são display:none (medem 0). Então além da pintura ele
    precisa rodar de novo em dois momentos:
@@ -6184,7 +7001,10 @@ function ajustarValores(raiz) {
    então dá pra medir na hora, no próprio handler. */
 function ligarAjusteDeFonte() {
   function refazer() { $$('.view').forEach(ajustarValores); }
-  $$('.views > input').forEach(function (i) { i.addEventListener('change', refazer); });
+  /* v5: os radios de navegação saíram de .views e são filhos diretos de
+     #dashboard-root. Se algum dia voltarem pra dentro, é este seletor (e o
+     gêmeo em ligarAbas) que para de achar os inputs -- silenciosamente. */
+  $$('#dashboard-root > input').forEach(function (i) { i.addEventListener('change', refazer); });
   window.addEventListener('resize', refazer);
 }
 
@@ -6575,6 +7395,86 @@ function fecharTodosOps() {
   $$('.opsfil').forEach(function (cx) { abrirOps(cx, false); });
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   LOTE DE TENDÊNCIA por escopo
+   ══════════════════════════════════════════════════════════════════════════
+   ROTA:  GET /api/dashboard?tendencia=*&escopo=<costa_lobao|geral>
+   VOLTA: { escopo, lote:true, experts:[ { expert_name, dias:[ {data,
+           investimento_total, custo_por_ftd, ftd, ...} ] } ] }
+
+   UMA CHAMADA POR ESCOPO, e ela alimenta o MESMO estado.tendencia que o
+   painel de análise usa. É por isso que abrir o painel de um expert não
+   dispara busca nenhuma: quando a pessoa clica, a série já está em memória.
+
+   Existiu uma coluna de sparkline na tabela do comparativo alimentada por
+   aqui. Foi removida a pedido do operador — numa tabela que já rola na
+   horizontal, a trajetória competia com os valores em vez de ajudar. O lote
+   FICOU porque quem paga a conta dele agora é o painel de análise.
+
+   O QUE ESTA CAMADA ASSUME SOBRE O DADO:
+   · SÓ DIA FECHADO. Hoje nunca vem. A série é do passado; o número grande do
+     card é de hoje. Os dois discordarem é o estado normal.
+   · TETO DE 7, MAS HOJE SÃO 4-5. A coleta começou em 07/08.
+   · custo_por_ftd VEM null EM DIA SEM FTD. null não é zero.
+   · EXPERT PODE NÃO ESTAR NA LISTA (entrou agora, sem histórico). Ausência é
+     estado previsto, não erro.
+   · SE A CHAMADA FALHAR, nada quebra: o painel de análise volta a buscar por
+     expert, como fazia antes. Nada aqui é pré-requisito de nada.
+   ══════════════════════════════════════════════════════════════════════════ */
+function buscarLoteTendencia(esc) {
+  var lote = estado.tendLote[esc];
+  if (!lote) return;                          /* google não tem essa rota */
+  var hoje = hojeSP();
+  /* revalida junto do refresh, mas só busca de verdade na virada do dia: a
+     série é de dias FECHADOS e não pode mudar entre 10h05 e 10h10. */
+  if (lote.estado === 'carregando') return;
+  if (lote.estado === 'ok' && lote.dia === hoje) return;
+
+  lote.estado = 'carregando';
+  var url = ENDPOINT + '?tendencia=*&escopo=' + encodeURIComponent(ESCOPO_API[esc] || 'geral');
+
+  fetch(url, { cache: 'no-store', headers: { accept: 'application/json' } })
+    .then(function (resp) {
+      return resp.text().then(function (txt) {
+        var json = null;
+        try { json = JSON.parse(txt); } catch (err) {}
+        if (!resp.ok) throw new Error((json && (json.detail || json.error)) || ('HTTP ' + resp.status));
+        return json;
+      });
+    })
+    .then(function (json) {
+      if (!json || !Array.isArray(json.experts)) throw new Error('resposta sem experts[]');
+      var vistos = {};
+      json.experts.forEach(function (x) {
+        if (!x || !x.expert_name || !Array.isArray(x.dias)) return;
+        vistos[x.expert_name] = 1;
+        estado.tendencia[chaveTend(x.expert_name, esc)] =
+          x.dias.length ? { estado: 'ok', dias: x.dias.slice(-7) } : { estado: 'vazio' };
+      });
+      /* AUSÊNCIA É RESPOSTA. Expert que está no painel e não veio no lote não
+         tem histórico — marcar 'vazio' evita que o painel de análise dispare
+         uma busca individual pra receber a mesma ausência. Só não sobrescreve
+         quem já tinha série boa: o lote é mais completo, não mais autoritário
+         sobre dado que já foi buscado com sucesso. */
+      var bloco = blocoDoEscopo(esc === 'geral');
+      ((bloco && bloco.experts) || []).forEach(function (e) {
+        var k = chaveTend(e.expert_name, esc);
+        if (vistos[e.expert_name]) return;
+        if (estado.tendencia[k] && estado.tendencia[k].estado === 'ok') return;
+        estado.tendencia[k] = { estado: 'vazio' };
+      });
+      estado.tendLote[esc] = { estado: 'ok', dia: hoje };
+    })
+    .catch(function (err) {
+      /* NÃO contamina estado.tendencia: assim o painel de análise ainda pode
+         tentar a busca individual daquele expert, que é outra rota. */
+      estado.tendLote[esc] = { estado: 'erro', dia: null, msg: String((err && err.message) || err) };
+    })
+    .then(function () {
+      if (estado.painel.aberto && estado.painel.escopo === esc) pintarPainel();
+    });
+}
+
 /* Repinta só o comparativo sem refazer o fetch: o dado da última leitura boa
    já está em memória. */
 function blocoDoEscopo(geral) {
@@ -6732,19 +7632,41 @@ function pintarComparativo(d, isHoje, raiz, geral) {
     });
 
     /* funil da TAP, na ordem em que acontece. Custo por cadastro não vem da
-       API: é verba ÷ cadastros, a mesma conta do tile de totais. Zero em vez
-       de "n/d" nas colunas de custo, por decisão do operador (11/08).
+       API: é verba ÷ cadastros, a mesma conta do tile de totais.
        O custo por FTD mantém a régua OFICIAL do cliente (R$ 300/350) -- é a
        única métrica aqui que tem faixa fechada, e por isso é a única colorida
-       por valor absoluto, não por comparação com a média. */
+       por valor absoluto, não por comparação com a média.
+
+       CORRIGIDO EM 12/08 · DENOMINADOR ZERO NUNCA VIRA "R$ 0,00"
+       A tabela imprimia R$ 0,00 nas duas colunas de custo quando não havia
+       FTD nem cadastro (o caso do Deko: R$ 612,80 gastos, 0 FTD, e a coluna
+       "Custo por FTD" dizendo R$ 0,00). Numa coluna de CUSTO, R$ 0,00 lê como
+       "saiu de graça" -- o oposto do que aconteceu.
+       A regra que os CARDS já usavam desde a v3 (ver chipCusto() e o chip do
+       cabeçalho) agora vale aqui também, com os mesmos três estados:
+         não gastou                 -> "sem verba"
+         gastou e não converteu     -> "sem FTD" / "sem cad."
+         converteu                  -> o valor, colorido pela faixa
+       De propósito NÃO usa "—" nessas duas colunas: o traço já significa
+       outra coisa na coluna do chip ao lado ("gastou e não trouxe nenhum
+       resultado"), e dois significados pro mesmo símbolo na mesma linha é
+       pior que texto por extenso.
+       .cmp__num--soft deixa os dois estados de texto em peso menor: eles não
+       são número, não podem competir na varredura vertical da coluna. */
     var cad = ehNum(tap.cadastros) ? tap.cadastros : 0;
+    var temVerba = ehNum(inv) && inv > 0;
     escreve($('.cmp__cad', linha), inteiro(cad));
-    escreve($('.cmp__custocad', linha), brl(cad > 0 && inv > 0 ? inv / cad : 0));
+
+    var celCad = $('.cmp__custocad', linha);
+    var custoCad = temVerba && cad > 0 ? inv / cad : null;
+    escreve(celCad, custoCad == null ? (temVerba ? 'sem cad.' : 'sem verba') : brl(custoCad));
+    if (celCad) celCad.className = 'cmp__num cmp__custocad' + (custoCad == null ? ' cmp__num--soft' : '');
+
     escreve($('.cmp__ftd', linha), inteiro(ehNum(tap.ftd) ? tap.ftd : 0));
     var cpf = temCusto(e) ? tap.custo_por_ftd : null;
     var celCpf = $('.cmp__custoftd', linha);
-    escreve(celCpf, brl(ehNum(cpf) ? cpf : 0));
-    celCpf.className = 'cmp__num cmp__custoftd' + (cpf == null ? '' :
+    escreve(celCpf, cpf == null ? (temVerba ? 'sem FTD' : 'sem verba') : brl(cpf));
+    celCpf.className = 'cmp__num cmp__custoftd' + (cpf == null ? ' cmp__num--soft' :
       (cpf <= FAIXA_BOA ? ' is-good' : (cpf < FAIXA_ALTA ? ' is-warn' : ' is-bad')));
 
     escreve($('.cmp__dep', linha), brl(tap.deposito));
@@ -6793,7 +7715,15 @@ function pintarComparativo(d, isHoje, raiz, geral) {
       (excecoes.length ? ' (' + excecoes.join('; ') + ')' : '') +
       '. Tráfego pro perfil sai sempre CINZA: ali o resultado é clique no link, ' +
       'custa centavos e não se compara com entrada em grupo. ' +
-      'Traço (—) = gastou e não trouxe nenhum resultado.';
+      'Traço (—) no chip = gastou e não trouxe nenhum resultado. ' +
+      'Nas colunas Custo/cad. e Custo por FTD, "sem verba" = não gastou nada e ' +
+      '"sem cad." / "sem FTD" = gastou e não converteu. Custo nunca é impresso ' +
+      'como R$ 0,00: zero sem denominador leria como "saiu de graça". ' +
+      'A miniatura ao lado do custo por FTD mostra os últimos DIAS FECHADOS ' +
+      '(hoje nunca entra nela, então ela pode discordar do número ao lado, e ' +
+      'isso é o esperado). Cada barra é medida contra o pico do próprio expert, ' +
+      'então o que se compara entre linhas é a FORMA; a grandeza quem diz é a ' +
+      'cor, na mesma régua 300/350. Hachura = dia sem FTD, que não é custo zero.';
     leg.hidden = false;
   }
 
@@ -6855,6 +7785,9 @@ function pintarEscopo(bloco, periodo, isHoje, raiz, geral) {
      Só resolve o que estiver visível agora -- o resto o ResizeObserver pega
      quando a aba aparecer. */
   $$('.view', raiz).forEach(ajustarValores);
+  /* SEMPRE depois do ajuste de fonte: a contagem escreve valores curtos no
+     meio do caminho, e medir a caixa por eles calibraria a fonte errada. */
+  animarTotais(raiz, (geral ? 'g' : 'c') + ':totais');
 }
 
 /* ── ESCOPO GOOGLE ────────────────────────────────────────────────────────
@@ -6928,6 +7861,13 @@ function pintarGoogle(g, periodo) {
     elCfg.classList.remove('val--good', 'val--warn', 'val--bad');
     if (ehNum(g.custo_por_ftd)) elCfg.classList.add(g.custo_por_ftd <= FAIXA_BOA ? 'val--good'
       : g.custo_por_ftd < FAIXA_ALTA ? 'val--warn' : 'val--bad');
+    /* mesmo herói de custo por FTD dos outros dois escopos (v5) */
+    var tileCfg = elCfg.closest ? elCfg.closest('.tcard--cpa') : null;
+    if (tileCfg) {
+      tileCfg.classList.remove('is-good', 'is-warn', 'is-bad');
+      if (ehNum(g.custo_por_ftd)) tileCfg.classList.add(g.custo_por_ftd <= FAIXA_BOA ? 'is-good'
+        : g.custo_por_ftd < FAIXA_ALTA ? 'is-warn' : 'is-bad');
+    }
   }
   pintar('google.ticket_ftd', ehNum(t.ticket_ftd) ? brl(t.ticket_ftd) : null,
          'valor do 1º depósito', 'sem FTD');
@@ -6967,6 +7907,7 @@ function pintarGoogle(g, periodo) {
   var sb = $('.scopebar label[for="e-google"] .scopebar__sub');
   if (sb) sb.textContent = (g.contas || []).length + ' contas · MCC';
   $$('.view, .totals', raiz).forEach(ajustarValores);
+  animarTotais(raiz, 'goog:totais');
 }
 
 /* rótulo dos dois cartões de escopo: contagem real, não número escrito à mão */
@@ -7045,16 +7986,24 @@ function pintarStatus(modo) {
     /* na PRIMEIRA carga não existe leitura anterior pra mostrar: o que está
        atrás do desfoque é o conteúdo de exemplo do HTML. Prometer "leitura
        anterior" aí seria a tela mentindo justamente na hora do erro. */
+    /* textos curtos de propósito: isto agora é a SEGUNDA LINHA de uma pílula
+       de ~190px na barra fixa, não uma frase solta numa faixa própria. O
+       recado completo continua no #erro-banner, que é onde ele cabe. */
     meta.textContent = estado.jaCarregou
-      ? 'falha na última tentativa · mostrando a leitura anterior'
-      : 'falha ao carregar · nenhum dado real na tela ainda';
+      ? 'falhou · leitura anterior'
+      : 'falhou · sem dado real';
     return;
   }
   var velho = estado.ultimoOk && (Date.now() - estado.ultimoOk) > STALE_MS;
   pill.classList.add(!estado.isHoje ? 'status--stale' : (velho ? 'status--stale' : 'status--live'));
   meta.textContent = !estado.isHoje
-    ? 'período fechado · atualização automática pausada'
-    : 'horário de Brasília · atualiza a cada 5 min';
+    ? 'período fechado · sem atualização'
+    : (velho ? 'atraso na atualização' : 'ao vivo · 5 min');
+  /* o title carrega o que não cabe na pílula, inclusive o fuso: o time acessa
+     de lugares diferentes e a hora da tela é SEMPRE Brasília. */
+  pill.title = 'Horário de Brasília (America/Sao_Paulo). ' + (!estado.isHoje
+    ? 'Período fechado: o painel não se atualiza sozinho.'
+    : 'Atualiza sozinho a cada 5 minutos.');
 }
 
 /* barra de ciclo da pílula: enche uma vez por intervalo de refresh e fecha
@@ -7070,8 +8019,12 @@ function reiniciarCiclo() {
   pill.classList.add('is-ciclando');
 }
 
+/* O #range-note saiu do HTML na v5 (a informação virou a segunda linha da
+   pílula de estado, em pintarStatus). A função fica, null-safe: se alguém
+   repuser o elemento, ele volta a ser pintado sem precisar de código novo. */
 function pintarNotaPeriodo() {
   var nota = $('#range-note');
+  if (!nota) return;
   nota.hidden = false;
   nota.classList.toggle('rangebar__note--pausado', !estado.isHoje);
   nota.textContent = estado.isHoje
@@ -7168,10 +8121,33 @@ function restaurarOrdenacao() {
   elSortMetrica.value = estado.ordenar.metrica;
   var alvoDir = $('input[name="sortdir"][value="' + estado.ordenar.dir + '"]');
   if (alvoDir) alvoDir.checked = true;
+  resumirOrdenacao();
 }
+
+/* v5: a ordenação virou popover, então o gatilho fechado tem que dizer o que
+   está valendo. Sem isto o operador precisaria ABRIR o controle pra descobrir
+   por que a lista está naquela ordem -- estado escondido é estado perdido. */
+function resumirOrdenacao() {
+  var alvo = $('#sort-resumo');
+  if (!alvo) return;
+  var op = elSortMetrica.options[elSortMetrica.selectedIndex];
+  var txt = (op ? op.textContent : 'Investimento') +
+    (dirAtual() === 'asc' ? ' ↑' : ' ↓');
+  alvo.textContent = txt;
+  /* no celular o rótulo some (só o ícone cabe em 388px), então o estado tem
+     que existir fora do texto visível -- senão vira controle sem leitura. */
+  var sum = $('.sortpop__sum');
+  if (sum) {
+    var frase = 'Ordenar os cards · ' + txt;
+    sum.setAttribute('title', frase);
+    sum.setAttribute('aria-label', frase);
+  }
+}
+
 function aplicarOrdenacao() {
   estado.ordenar.metrica = elSortMetrica.value;
   estado.ordenar.dir = dirAtual();
+  resumirOrdenacao();
   try { localStorage.setItem(LS_KEY_ORD, JSON.stringify(estado.ordenar)); } catch (e) {}
   /* reordena com o dado já em tela — trocar a métrica não busca de novo */
   if (!estado.dados) return;
@@ -7185,6 +8161,20 @@ elSortMetrica.addEventListener('change', aplicarOrdenacao);
 $$('input[name="sortdir"]').forEach(function (inp) {
   inp.addEventListener('change', aplicarOrdenacao);
 });
+
+/* popover aberto em cima do painel é lixo visual: fecha ao clicar fora e no
+   Esc. Clique DENTRO do popover não fecha (trocar métrica e direção é uma
+   operação só, não duas viagens). */
+(function ligarSortpop() {
+  var pop = $('#sort-filter');
+  if (!pop) return;
+  document.addEventListener('click', function (ev) {
+    if (pop.open && !pop.contains(ev.target)) pop.open = false;
+  });
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape' && pop.open) pop.open = false;
+  });
+})();
 
 /* ── 8c. busca por nome de expert (client-side, sem refetch) ─────────────
    Esconde os cards que não batem -- display:none, não opacidade, senão o
@@ -7244,16 +8234,39 @@ function rotuloPreset(preset, r) {
   return 'o período escolhido';
 }
 
+/* A tela de carregamento é markup FIXO no HTML (véu + marca + texto): aqui só
+   troca o texto e mostra/esconde. Antes ela era remontada a cada chamada, o
+   que reiniciava a animação da marca — e, agora que existe vídeo, recriaria o
+   <video> do zero em toda troca de estado. */
 function pintarBoot(texto) {
   var el = $('#boot');
-  if (texto == null) { el.hidden = true; return; }
-  el.textContent = '';
-  var spin = document.createElement('span');
-  spin.className = 'boot__spin';
-  spin.setAttribute('aria-hidden', 'true');
-  el.appendChild(spin);
-  el.appendChild(document.createTextNode(texto));
+  if (!el) return;
+  if (texto == null) {
+    el.hidden = true;
+    var pausa = $('.boot__video', el);
+    /* pausa ao sair: vídeo escondido continua decodificando frame e gastando
+       bateria à toa numa aba que o time deixa aberta o dia inteiro */
+    if (pausa && !pausa.paused) pausa.pause();
+    return;
+  }
+  var txt = $('#boot-txt', el);
+  if (txt) txt.textContent = texto;
   el.hidden = false;
+
+  var v = $('.boot__video', el);
+  if (!v) return;
+  /* prefers-reduced-motion: fica só o B parado, sem vídeo nenhum */
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  /* só revela quando tem frame de verdade pra mostrar. readyState >= 2 =
+     HAVE_CURRENT_DATA: antes disso o <video> é um retângulo preto por cima
+     do B, que é pior que não ter vídeo. */
+  var revelar = function () { v.classList.add('is-pronto'); };
+  if (v.readyState >= 2) revelar();
+  else v.addEventListener('loadeddata', revelar, { once: true });
+  /* autoplay bloqueado (política do navegador) não é erro: o catch existe pra
+     não estourar promise rejeitada no console, e o B de CSS segue animando */
+  var p = v.play();
+  if (p && p.catch) p.catch(function () {});
 }
 
 function carregar(opts) {
@@ -7282,6 +8295,14 @@ function carregar(opts) {
   var interativo = !!opts.interativo;
   estado.carregando = true;
   ROOT.setAttribute('data-state', (primeira || interativo) ? 'carregando' : 'atualizando');
+  /* DUAS ESPERAS, DOIS TRATAMENTOS (ver o CSS, bloco ESPERA).
+     primeira  -> SKELETON: não existe número real na tela, o que está atrás é
+                  o conteúdo de exemplo. Rótulo fica, valor vira barra pulsando.
+     interativo-> DESFOQUE: os números são reais, só são de OUTRO período.
+                  Continuam ilegíveis de propósito até a resposta chegar.
+     A marca só é posta enquanto nunca houve carga boa; sai pra sempre no
+     primeiro sucesso. */
+  if (primeira) ROOT.setAttribute('data-carga', 'primeira');
   pintarBoot(
     primeira  ? 'Carregando ' + rotuloPreset(preset, r) + '…' :
     interativo ? 'Buscando ' + rotuloPreset(preset, r) + '…' : null
@@ -7371,7 +8392,18 @@ function carregar(opts) {
       $('#erro-banner').hidden = true;
       $('#boot').hidden = true;
       ROOT.setAttribute('data-state', 'pronto');
+      /* a espera acabou: sai o skeleton da primeira carga e NUNCA mais volta.
+         Da segunda leitura em diante existe número real na tela, e o
+         tratamento de espera passa a ser o desfoque (ver o CSS). */
+      ROOT.removeAttribute('data-carga');
       elApply.disabled = false; elApply.textContent = 'Aplicar';
+
+      /* SPARKLINE: uma chamada por escopo, revalidada aqui a cada refresh mas
+         só executada na virada do dia (a série é de dias FECHADOS). Vai depois
+         de tudo de propósito -- é enfeite informativo, e nenhum pixel da tabela
+         depende dela pra existir. */
+      buscarLoteTendencia('cl');
+      if (d.geral && d.geral.experts) buscarLoteTendencia('geral');
 
       /* só o dia corrente se atualiza sozinho */
       agendar(estado.isHoje ? REFRESH_MS : null);
@@ -7973,14 +9005,37 @@ function pintarTendencia() {
 
 /* ── abrir, fechar, foco ────────────────────────────────────────────────── */
 
-/* altura real do topbar -> vira --topbar-h, o fundo do painel para de cobrir
-   essa faixa (ver comentário no CSS de .pnl__fundo). Recalcula toda vez que o
-   painel abre porque o topbar muda de altura (mobile quebra linha, banner de
-   período divergente aparece/some) -- medir de novo é mais barato e mais
-   correto do que tentar prever cada caso. */
+/* altura real do topbar -> vira --topbar-h. Dois consumidores:
+     1. o fundo do painel de análise, que para de cobrir essa faixa
+        (ver comentário no CSS de .pnl__fundo);
+     2. a v5: as .tabs, que grudam LOGO ABAIXO da barra (top:var(--topbar-h)).
+   Por causa do segundo, medir só na abertura do painel não bastava mais: a
+   barra muda de altura sozinha (quebra de linha no celular, o intervalo de
+   datas aparecendo em "Datas", a faixa encolhendo no scroll). ResizeObserver
+   direto no .topbar resolve todos os casos de uma vez -- e aqui ele FUNCIONA,
+   diferente do caso documentado em ligarAjusteDeFonte(), porque o .topbar
+   nunca é display:none. */
 function medirTopbar() {
   var top = $('.topbar');
   if (top) document.documentElement.style.setProperty('--topbar-h', top.offsetHeight + 'px');
+}
+function ligarMedicaoTopbar() {
+  medirTopbar();
+  var top = $('.topbar');
+  if (top && window.ResizeObserver) new ResizeObserver(medirTopbar).observe(top);
+}
+
+/* A FAIXA ENCOLHE AO ROLAR. Passivo, com histerese (liga em 44px, desliga em
+   24px) pra não ficar piscando quem para o scroll bem em cima do limiar. */
+function ligarBarraCompacta() {
+  var raiz = document.documentElement, compacto = false;
+  function ler() {
+    var y = window.pageYOffset || raiz.scrollTop || 0;
+    if (!compacto && y > 44) { compacto = true; raiz.classList.add('rolado'); }
+    else if (compacto && y < 24) { compacto = false; raiz.classList.remove('rolado'); }
+  }
+  window.addEventListener('scroll', ler, { passive: true });
+  ler();
 }
 
 function abrirPainel(nome, esc, origem) {
@@ -8073,13 +9128,18 @@ function ligarPainel() {
                          #experts vira #cl/detalhe
    Link antigo que circulou no grupo do time continua abrindo onde abria.
    ────────────────────────────────────────────────────────────────────────── */
-var ESCOPOS = { cl: 'e-cl', geral: 'e-geral' };
+var ESCOPOS = { cl: 'e-cl', geral: 'e-geral', google: 'e-google' };
 var ABAS    = { visao: 'v-geral', detalhe: 'v-experts' };
 var LEGADO  = { geral: 'cl/visao', experts: 'cl/detalhe' };
+/* id do input -> pedaço de escopo da URL. Tabela em vez de encadear ternário:
+   quando o Google entrou como terceiro escopo, o ternário antigo mandava
+   qualquer coisa que não fosse 'e-geral' pra 'cl' — então o Google escrevia
+   #cl na barra e um link #google/... abria no Costa e Lobão. */
+var ESCOPO_ID_PARA_HASH = { 'e-cl': 'cl', 'e-geral': 'geral', 'e-google': 'google' };
 
 function hashAtual() {
   var esc = $('input[name="escopo"]:checked'), ab = $('input[name="view"]:checked');
-  var e = (esc && esc.id === 'e-geral') ? 'geral' : 'cl';
+  var e = (esc && ESCOPO_ID_PARA_HASH[esc.id]) || 'cl';
   var a = (ab && ab.id === 'v-experts') ? 'detalhe' : 'visao';
   return e + '/' + a;
 }
@@ -8093,7 +9153,7 @@ function aplicarHash() {
   if (idAba) document.getElementById(idAba).checked = true;
 }
 function ligarAbas() {
-  $$('.views > input').forEach(function (inp) {
+  $$('#dashboard-root > input').forEach(function (inp) {
     inp.addEventListener('change', function () {
       var novo = '#' + hashAtual();
       /* replace, não push: trocar de aba não é navegação, e entulhar o
@@ -8110,6 +9170,9 @@ guardarMoldes();
 ligarAbas();
 ligarAjusteDeFonte();
 ligarPainel();
+ligarMedicaoTopbar();
+ligarBarraCompacta();
+ligarGlossario();
 restaurarEscolha();
 restaurarOrdenacao();
 ligarOpsFil();
