@@ -614,7 +614,9 @@ h1,h2,h3,h4,p{margin:0}
 
 .totals{
   display:grid;gap:var(--gap);
-  grid-template-columns:repeat(6,minmax(0,1fr));
+  /* 4 colunas, 3 linhas temáticas: verba · funil (cadastro→custo→FTD→custo) ·
+     dinheiro. Com 6 colunas o par "FTD / custo por FTD" quebrava entre linhas. */
+  grid-template-columns:repeat(4,minmax(0,1fr));
 }
 .tcard{
   position:relative;
@@ -647,6 +649,13 @@ h1,h2,h3,h4,p{margin:0}
   overflow:hidden;text-overflow:clip;
 }
 .tcard--hero .tcard__val{font-size:1.875rem}
+/* só o custo por FTD é colorido: é o único destes tiles com faixa oficial do
+   cliente (R$ 300 bom / R$ 350 alto). Média e volume não têm régua. */
+.tcard__val.val--good{color:var(--good)}
+.tcard__val.val--warn{color:var(--warn)}
+.tcard__val.val--bad{color:var(--bad)}
+/* recorte ativo no cabeçalho dos totais */
+.eyebrow__recorte{color:var(--acao)}
 .tcard__sub{
   display:block;margin-top:6px;
   font-size:.75rem;color:var(--txt-2);
@@ -2337,7 +2346,7 @@ body.pnl-aberto{overflow:hidden}
          [data-field="periodo_label"] muda com o filtro: "hoje, 06/08/2026",
          "ontem, 05/08/2026", "31/07 a 06/08/2026" etc. -->
     <div class="section-head">
-      <h2 class="eyebrow">Totais · <span data-field="periodo_label">hoje, 06/08/2026</span></h2>
+      <h2 class="eyebrow">Totais · <span data-field="periodo_label">hoje, 06/08/2026</span><span class="eyebrow__recorte" hidden></span></h2>
     </div>
 
     <section class="totals" aria-label="Totais da operação">
@@ -2361,9 +2370,22 @@ body.pnl-aberto{overflow:hidden}
       </div>
 
       <div class="tcard">
+        <span class="tcard__lbl">Depósito</span>
+        <span class="tcard__val" data-field="totais.deposito">R$ 60.007,01</span>
+        <!-- uso 2 de 3 do dourado: retorno sobre o investido -->
+        <span class="tcard__sub tcard__sub--gold" data-derived="deposito / investimento_total">21,8× o investido</span>
+      </div>
+
+      <div class="tcard">
         <span class="tcard__lbl">Cadastros</span>
         <span class="tcard__val" data-field="totais.cadastros">61</span>
         <span class="tcard__sub" data-derived="investimento_total / cadastros">R$ 45,07 por cadastro</span>
+      </div>
+
+      <div class="tcard">
+        <span class="tcard__lbl">Custo por cadastro</span>
+        <span class="tcard__val" data-field="totais.custo_cadastro" data-derived="investimento_total / cadastros">R$ 45,07</span>
+        <span class="tcard__sub">—</span>
       </div>
 
       <div class="tcard">
@@ -2373,11 +2395,35 @@ body.pnl-aberto{overflow:hidden}
       </div>
 
       <div class="tcard">
-        <span class="tcard__lbl">Depósito</span>
-        <span class="tcard__val" data-field="totais.deposito">R$ 60.007,01</span>
-        <!-- uso 2 de 3 do dourado: retorno sobre o investido -->
-        <span class="tcard__sub tcard__sub--gold" data-derived="deposito / investimento_total">21,8× o investido</span>
+        <span class="tcard__lbl">Custo por FTD</span>
+        <span class="tcard__val" data-field="totais.custo_ftd" data-derived="investimento_total / ftd">R$ 183,28</span>
+        <span class="tcard__sub">—</span>
       </div>
+
+      <div class="tcard">
+        <span class="tcard__lbl">Ticket médio do FTD</span>
+        <span class="tcard__val" data-field="totais.ticket_ftd" data-derived="valor_ftd / ftd">R$ 60,00</span>
+        <span class="tcard__sub">valor do 1º depósito</span>
+      </div>
+
+      <div class="tcard">
+        <span class="tcard__lbl">Depósito médio por FTD</span>
+        <span class="tcard__val" data-field="totais.deposito_ftd" data-derived="deposito / ftd">R$ 4.000,47</span>
+        <span class="tcard__sub">—</span>
+      </div>
+
+      <div class="tcard">
+        <span class="tcard__lbl">Net PL</span>
+        <span class="tcard__val" data-field="totais.net_pl">R$ 3.026,80</span>
+        <span class="tcard__sub" data-derived="net_pl / volume * 100">—</span>
+      </div>
+
+      <div class="tcard">
+        <span class="tcard__lbl">Volume</span>
+        <span class="tcard__val" data-field="totais.volume">R$ 20.728,05</span>
+        <span class="tcard__sub" data-derived="volume / deposito">—</span>
+      </div>
+
 
     </section>
 
@@ -3605,7 +3651,7 @@ body.pnl-aberto{overflow:hidden}
     <!-- ═══ TOTAIS DA OPERAÇÃO INTEIRA ═══
          Fonte: geral.totais. NÃO somar geral.experts no front. -->
     <div class="section-head">
-      <h2 class="eyebrow">Totais da operação · <span data-field="periodo_label">hoje, 06/08/2026</span></h2>
+      <h2 class="eyebrow">Totais da operação · <span data-field="periodo_label">hoje, 06/08/2026</span><span class="eyebrow__recorte" hidden></span></h2>
     </div>
 
     <section class="totals" aria-label="Totais da operação geral">
@@ -3629,9 +3675,21 @@ body.pnl-aberto{overflow:hidden}
       </div>
 
       <div class="tcard">
+        <span class="tcard__lbl">Depósito</span>
+        <span class="tcard__val" data-field="totais.deposito">R$ 842.510,96</span>
+        <span class="tcard__sub tcard__sub--gold" data-derived="deposito / investimento_total">306,5× o investido</span>
+      </div>
+
+      <div class="tcard">
         <span class="tcard__lbl">Cadastros</span>
         <span class="tcard__val" data-field="totais.cadastros">612</span>
         <span class="tcard__sub" data-derived="investimento_total / cadastros">R$ 4,49 por cadastro</span>
+      </div>
+
+      <div class="tcard">
+        <span class="tcard__lbl">Custo por cadastro</span>
+        <span class="tcard__val" data-field="totais.custo_cadastro" data-derived="investimento_total / cadastros">R$ 45,07</span>
+        <span class="tcard__sub">—</span>
       </div>
 
       <div class="tcard">
@@ -3641,10 +3699,35 @@ body.pnl-aberto{overflow:hidden}
       </div>
 
       <div class="tcard">
-        <span class="tcard__lbl">Depósito</span>
-        <span class="tcard__val" data-field="totais.deposito">R$ 842.510,96</span>
-        <span class="tcard__sub tcard__sub--gold" data-derived="deposito / investimento_total">306,5× o investido</span>
+        <span class="tcard__lbl">Custo por FTD</span>
+        <span class="tcard__val" data-field="totais.custo_ftd" data-derived="investimento_total / ftd">R$ 183,28</span>
+        <span class="tcard__sub">—</span>
       </div>
+
+      <div class="tcard">
+        <span class="tcard__lbl">Ticket médio do FTD</span>
+        <span class="tcard__val" data-field="totais.ticket_ftd" data-derived="valor_ftd / ftd">R$ 60,00</span>
+        <span class="tcard__sub">valor do 1º depósito</span>
+      </div>
+
+      <div class="tcard">
+        <span class="tcard__lbl">Depósito médio por FTD</span>
+        <span class="tcard__val" data-field="totais.deposito_ftd" data-derived="deposito / ftd">R$ 4.000,47</span>
+        <span class="tcard__sub">—</span>
+      </div>
+
+      <div class="tcard">
+        <span class="tcard__lbl">Net PL</span>
+        <span class="tcard__val" data-field="totais.net_pl">R$ 3.026,80</span>
+        <span class="tcard__sub" data-derived="net_pl / volume * 100">—</span>
+      </div>
+
+      <div class="tcard">
+        <span class="tcard__lbl">Volume</span>
+        <span class="tcard__val" data-field="totais.volume">R$ 20.728,05</span>
+        <span class="tcard__sub" data-derived="volume / deposito">—</span>
+      </div>
+
 
     </section>
 
@@ -5624,13 +5707,50 @@ function pintarSinais(d, raiz) {
   }
 }
 
-function pintarTotais(d, isHoje, raiz, rodape) {
+/* Soma os totais a partir de uma lista de experts. Só é usada quando existe
+   recorte no comparativo: sem recorte, quem manda é o `totais` que a API já
+   entrega (é a fonte da verdade e evita divergência de arredondamento). */
+function somarTotais(exps) {
+  var t = {
+    investimento_total: 0, investimento_grupo: 0, investimento_direto: 0,
+    cadastros: 0, ftd: 0, deposito: 0, valor_ftd: 0, net_pl: 0, volume: 0
+  };
+  (exps || []).forEach(function (e) {
+    var g = e.grupo || {}, dir = e.direto || {}, tap = e.tap || {};
+    t.investimento_total  += e.investimento_total || 0;
+    t.investimento_grupo  += g.valor_investido || 0;
+    t.investimento_direto += dir.valor_investido || 0;
+    t.cadastros += tap.cadastros || 0;
+    t.ftd       += tap.ftd || 0;
+    t.deposito  += tap.deposito || 0;
+    t.valor_ftd += tap.valor_ftd || 0;
+    t.net_pl    += tap.net_pl || 0;
+    t.volume    += tap.volume || 0;
+  });
+  return t;
+}
+
+function pintarTotais(d, isHoje, raiz, rodape, nSelecionados) {
   var t = d.totais || {};
   var exps = d.experts || [];
   var inv = ehNum(t.investimento_total) ? t.investimento_total : 0;
 
   var rot = campo(raiz, 'periodo_label');
   if (rot) rot.textContent = rotuloPeriodo(d.periodo);
+
+  /* o cabeçalho precisa dizer DE QUEM são estes números: com recorte ativo,
+     "Totais · hoje" seria mentira — são os totais dos escolhidos. */
+  var recorte = $('.eyebrow__recorte', raiz);
+  if (recorte) {
+    if (nSelecionados) {
+      recorte.textContent = ' · ' + nSelecionados +
+        (nSelecionados === 1 ? ' expert selecionado' : ' experts selecionados');
+      recorte.hidden = false;
+    } else {
+      recorte.textContent = '';
+      recorte.hidden = true;
+    }
+  }
 
   function sub(el) { return el ? el.parentElement.querySelector('.tcard__sub') : null; }
 
@@ -5664,6 +5784,52 @@ function pintarTotais(d, isHoje, raiz, rodape) {
   var elDep = campo(raiz, 'totais.deposito');
   escreve(elDep, brl(t.deposito));
   escreve(sub(elDep), inv > 0 ? vezes((t.deposito || 0) / inv) + ' o investido' : 'sem investimento');
+
+  /* ── médias e resultado financeiro ──────────────────────────────────────
+     Todas com denominador próprio. Coluna de custo NUNCA imprime R$ 0,00 sem
+     denominador: "R$ 0,00 por FTD" se lê como "o FTD saiu de graça". */
+  var temFtd = ehNum(t.ftd) && t.ftd > 0;
+  var temCad = ehNum(t.cadastros) && t.cadastros > 0;
+
+  var elCF = campo(raiz, 'totais.custo_ftd');
+  escreve(elCF, temFtd ? brl(inv / t.ftd) : (inv > 0 ? 'sem FTD' : 'sem verba'));
+  escreve(sub(elCF), temFtd
+    ? (inv / t.ftd <= FAIXA_BOA ? 'dentro da faixa boa (até ' + brl(FAIXA_BOA) + ')'
+      : inv / t.ftd < FAIXA_ALTA ? 'acima do confortável (' + brl(FAIXA_BOA) + ')'
+      : 'alto (teto ' + brl(FAIXA_ALTA) + ')')
+    : (inv > 0 ? brl(inv) + ' investidos, nenhum FTD' : 'nada investido no período'));
+  if (elCF) {
+    elCF.classList.remove('val--good', 'val--warn', 'val--bad');
+    if (temFtd) elCF.classList.add(inv / t.ftd <= FAIXA_BOA ? 'val--good'
+      : inv / t.ftd < FAIXA_ALTA ? 'val--warn' : 'val--bad');
+  }
+
+  var elCC = campo(raiz, 'totais.custo_cadastro');
+  escreve(elCC, temCad ? brl(inv / t.cadastros) : (inv > 0 ? 'sem cadastro' : 'sem verba'));
+  escreve(sub(elCC), temCad ? inteiro(t.cadastros) + ' cadastros no período' : 'sem cadastro no período');
+
+  var elTk = campo(raiz, 'totais.ticket_ftd');
+  escreve(elTk, temFtd ? brl((t.valor_ftd || 0) / t.ftd) : 'sem FTD');
+  escreve(sub(elTk), temFtd ? 'valor do 1º depósito · ' + brl(t.valor_ftd) + ' no total' : 'nenhum FTD no período');
+
+  var elDF = campo(raiz, 'totais.deposito_ftd');
+  escreve(elDF, temFtd ? brl((t.deposito || 0) / t.ftd) : 'sem FTD');
+  escreve(sub(elDF), temFtd
+    ? 'depósito ÷ ' + inteiro(t.ftd) + (t.ftd === 1 ? ' FTD' : ' FTDs')
+    : 'nenhum FTD no período');
+
+  var elNP = campo(raiz, 'totais.net_pl');
+  escreve(elNP, brl(t.net_pl));
+  classeSinal(elNP, t.net_pl);
+  escreve(sub(elNP), ehNum(t.volume) && t.volume > 0
+    ? pct((t.net_pl || 0) / t.volume * 100) + ' do volume'
+    : 'sem volume no período');
+
+  var elVol = campo(raiz, 'totais.volume');
+  escreve(elVol, brl(t.volume));
+  escreve(sub(elVol), ehNum(t.deposito) && t.deposito > 0
+    ? vezes((t.volume || 0) / t.deposito) + ' o depósito'
+    : 'sem depósito no período');
 
   /* a média citada no rodapé é dado, não copy: acompanha o período na tela.
      Sai do escopo Costa e Lobão (rodape === true), que é o recorte que o
@@ -5778,7 +5944,34 @@ function definirOps(geral, sel, raiz) {
      que é o estado que sempre responde alguma coisa. */
   estado.ops[chaveEscopo(geral)] = (sel && sel.length) ? sel : null;
   var b = blocoDoEscopo(geral);
-  if (b) pintarComparativo(b, estado.ehHoje, raiz, geral);
+  if (!b) return;
+  /* os tiles de total seguem a seleção junto com a tabela: são a resposta de
+     "quanto esses experts somam", não teriam sentido descolados dela. */
+  pintarTotaisFiltrados(b, estado.ehHoje, raiz, geral);
+  pintarComparativo(b, estado.ehHoje, raiz, geral);
+  $$('.view', raiz).forEach(ajustarValores);
+}
+
+/* Tiles de total no recorte escolhido. Sem recorte, usa o `totais` da API (é a
+   fonte da verdade); com recorte, soma os experts marcados. */
+function pintarTotaisFiltrados(d, isHoje, raiz, geral) {
+  var todas = d.experts || [];
+  var sel = filtrarOps(todas, geral);
+  var filtrando = sel.length !== todas.length;
+  var bloco = filtrando
+    ? { totais: somarTotais(sel), experts: sel, periodo: d.periodo }
+    : d;
+  /* o rodapé descreve a média do escopo inteiro: recorte não reescreve ele. */
+  pintarTotais(bloco, isHoje, raiz, !geral && !filtrando, filtrando ? sel.length : 0);
+
+  /* Com recorte ativo, o veredito logo acima continua falando da operação
+     inteira e os tiles falam dos marcados — dois números diferentes de custo
+     por FTD na mesma tela. O rótulo do veredito assume isso em voz alta em vez
+     de deixar a pessoa achar que um dos dois está errado. */
+  var lbl = $('.verdict__lbl', raiz);
+  if (lbl) lbl.textContent = filtrando
+    ? (isHoje ? 'Como está o dia · operação inteira' : 'Como está o período · operação inteira')
+    : (isHoje ? 'Como está o dia' : 'Como está o período');
 }
 
 /* Aplica o recorte. Sem seleção, devolve a lista inteira — inclusive quem está
@@ -5877,7 +6070,9 @@ function pintarOpsFil(raiz, todas, geral, mostrados) {
       b.textContent = mostrados + ' de ' + todas.length;
       aviso.appendChild(document.createTextNode('Exibindo '));
       aviso.appendChild(b);
-      aviso.appendChild(document.createTextNode(plural + ' · os totais e a participação na verba continuam sobre a operação inteira · '));
+      /* os tiles acima já somam só os marcados; o que NÃO muda é a participação
+         na verba, que continua medindo a fatia da operação inteira. */
+      aviso.appendChild(document.createTextNode(plural + ' · os totais acima somam só estes · a participação na verba continua sobre a operação inteira · '));
       /* marcar uma linha tira as outras da tabela, então o caminho pra SOMAR
          mais uma tem que estar aqui: é onde a pessoa está olhando quando
          percebe que quer comparar duas. */
@@ -6291,9 +6486,11 @@ function pintarTopCriativos(d, isHoje, raiz) {
 function pintarEscopo(bloco, periodo, isHoje, raiz, geral) {
   if (!raiz || !bloco) return;
   var d = { totais: bloco.totais || {}, experts: bloco.experts || [], periodo: periodo };
+  /* veredito e sinais continuam falando da OPERAÇÃO inteira de propósito: são
+     diagnóstico do escopo, não do recorte que a pessoa está comparando. */
   pintarVeredito(d, isHoje, raiz);
   pintarSinais(d, raiz);
-  pintarTotais(d, isHoje, raiz, !geral);
+  pintarTotaisFiltrados(d, isHoje, raiz, geral);
   pintarComparativo(d, isHoje, raiz, geral);
   pintarTopCriativos(d, isHoje, raiz);
   pintarExperts(d.experts, isHoje, raiz, geral);
