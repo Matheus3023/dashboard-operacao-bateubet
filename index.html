@@ -6003,7 +6003,10 @@ function temCusto(e) {
 function chipCusto(e) {
   var inv = e && e.investimento_total;
   var cpf = e && e.tap ? e.tap.custo_por_ftd : null;
-  if (!ehNum(inv) || inv <= 0) return { classe: 'chip--na', txt: 'Sem verba' };
+  /* 13/08: também imprime R$ 0,00 em vez de "Sem verba", pra bater com as
+     colunas e os tiles de custo. Continua com a classe chip--na (cinza), que
+     é o que separa "não teve conta pra fazer" de um custo real e barato. */
+  if (!ehNum(inv) || inv <= 0) return { classe: 'chip--na', txt: brl(0) };
   if (!ehNum(cpf) || cpf <= 0)  return { classe: 'chip--na', txt: brl(0) };
   return { classe: faixaChip(cpf), txt: brl(cpf) };
 }
@@ -6738,22 +6741,20 @@ function pintarExpert(expert, ehPrimeiro, isHoje, geral) {
   /* Custo por cadastro é DERIVADO (a API não manda): verba do expert ÷
      cadastros, exatamente a conta do tile de totais e da coluna "Custo/cad."
      do comparativo -- se um dia mudar, mudar nos três.
-     Dois estados vazios diferentes de propósito: sem verba não é "custo zero",
-     e com verba mas sem cadastro o custo não é R$ 0,00 (seria ler como "saiu
-     de graça" justo no caso em que a verba não comprou nada). Sem régua de
-     cor: a faixa oficial do cliente (R$ 300/350) é de FTD, não de cadastro. */
+     13/08, decisão do operador: denominador zero imprime R$ 0,00, não texto.
+     A ressalva que existia aqui (R$ 0,00 num custo se lê como "saiu de
+     graça") continua verdadeira, mas a leitura de coluna toda em número
+     ganhou — e o "sem FTD"/"sem verba" segue disponível se um dia voltar
+     a fazer falta. Sem régua de cor: a faixa oficial do cliente (R$ 300/350)
+     é de FTD, não de cadastro. */
   var cadEx = ehNum(tap.cadastros) ? tap.cadastros : 0;
   escreve($('.m--custocad .m__val', boxTap),
-          inv > 0 && cadEx > 0 ? brl(inv / cadEx) : null,
-          inv > 0 ? 'sem cadastro' : 'sem verba');
+          brl(inv > 0 && cadEx > 0 ? inv / cadEx : 0));
   escreve(campo(boxTap, 'tap.ftd'), inteiro(tap.ftd));
   escreve(campo(boxTap, 'tap.conversao_cadastro_ftd'), pct(tap.conversao_cadastro_ftd));
-  /* sem verba não imprime R$ 0,00: imprime "sem verba". Ver chipCusto().
-     E com verba mas sem FTD o texto certo é "sem FTD": dizer "sem verba" ao
-     lado de um custo por cadastro de R$ 90,82 (que só existe porque HÁ verba)
-     era contradição na mesma linha -- caso real do Gregório em 11/08. */
-  escreve(campo(boxTap, 'tap.custo_por_ftd'), inv > 0 ? brl(tap.custo_por_ftd) : null,
-          inv > 0 ? 'sem FTD' : 'sem verba');
+  /* 13/08: sem denominador imprime R$ 0,00 (ver comentário acima). */
+  escreve(campo(boxTap, 'tap.custo_por_ftd'),
+          brl(inv > 0 && ehNum(tap.custo_por_ftd) ? tap.custo_por_ftd : 0));
   escreve(campo(boxTap, 'tap.valor_ftd'), brl(tap.valor_ftd));
   escreve(campo(boxTap, 'tap.deposito'), brl(tap.deposito));
   var nd = campo(boxTap, 'tap.net_dep'), np = campo(boxTap, 'tap.net_pl');
@@ -6979,7 +6980,7 @@ function pintarTotais(d, isHoje, raiz, rodape, nSelecionados) {
   var temCad = ehNum(t.cadastros) && t.cadastros > 0;
 
   var elCF = campo(raiz, 'totais.custo_ftd');
-  escreve(elCF, temFtd ? brl(inv / t.ftd) : (inv > 0 ? 'sem FTD' : 'sem verba'));
+  escreve(elCF, brl(temFtd ? inv / t.ftd : 0));
   escreve(sub(elCF), temFtd
     ? (inv / t.ftd <= FAIXA_BOA ? 'dentro da faixa boa (até ' + brl(FAIXA_BOA) + ')'
       : inv / t.ftd < FAIXA_ALTA ? 'acima do confortável (' + brl(FAIXA_BOA) + ')'
@@ -7002,7 +7003,7 @@ function pintarTotais(d, isHoje, raiz, rodape, nSelecionados) {
   }
 
   var elCC = campo(raiz, 'totais.custo_cadastro');
-  escreve(elCC, temCad ? brl(inv / t.cadastros) : (inv > 0 ? 'sem cadastro' : 'sem verba'));
+  escreve(elCC, brl(temCad ? inv / t.cadastros : 0));
   escreve(sub(elCC), temCad ? inteiro(t.cadastros) + ' cadastros no período' : 'sem cadastro no período');
 
   var elTk = campo(raiz, 'totais.ticket_ftd');
@@ -7981,13 +7982,13 @@ function pintarComparativo(d, isHoje, raiz, geral) {
 
     var celCad = $('.cmp__custocad', linha);
     var custoCad = temVerba && cad > 0 ? inv / cad : null;
-    escreve(celCad, custoCad == null ? (temVerba ? 'sem cad.' : 'sem verba') : brl(custoCad));
+    escreve(celCad, brl(custoCad == null ? 0 : custoCad));
     if (celCad) celCad.className = 'cmp__num cmp__custocad' + (custoCad == null ? ' cmp__num--soft' : '');
 
     escreve($('.cmp__ftd', linha), inteiro(ehNum(tap.ftd) ? tap.ftd : 0));
     var cpf = temCusto(e) ? tap.custo_por_ftd : null;
     var celCpf = $('.cmp__custoftd', linha);
-    escreve(celCpf, cpf == null ? (temVerba ? 'sem FTD' : 'sem verba') : brl(cpf));
+    escreve(celCpf, brl(cpf == null ? 0 : cpf));
     celCpf.className = 'cmp__num cmp__custoftd' + (cpf == null ? ' cmp__num--soft' :
       (cpf <= FAIXA_BOA ? ' is-good' : (cpf < FAIXA_ALTA ? ' is-warn' : ' is-bad')));
 
@@ -8048,9 +8049,9 @@ function pintarComparativo(d, isHoje, raiz, geral) {
       '. Tráfego pro perfil sai sempre CINZA: ali o resultado é clique no link, ' +
       'custa centavos e não se compara com entrada em grupo. ' +
       'Traço (—) no chip = gastou e não trouxe nenhum resultado. ' +
-      'Nas colunas Custo/cad. e Custo por FTD, "sem verba" = não gastou nada e ' +
-      '"sem cad." / "sem FTD" = gastou e não converteu. Custo nunca é impresso ' +
-      'como R$ 0,00: zero sem denominador leria como "saiu de graça". ' +
+      'Nas colunas Custo/cad. e Custo por FTD, R$ 0,00 quer dizer que não houve ' +
+      'conta pra fazer: ou não se gastou nada, ou se gastou e não converteu ' +
+      'nenhum — o valor investido da linha diz qual dos dois é. ' +
       'ROI net dep e ROI net PL são multiplicadores da mídia: 1,00× é o empate ' +
       '(voltou exatamente o que custou), verde acima disso e vermelho abaixo. ' +
       'O ROI de net PL já vem SEM a comissão do afiliado — é a margem real. ' +
