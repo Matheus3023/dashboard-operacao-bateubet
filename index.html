@@ -1951,13 +1951,62 @@ html.rolado .brand__logo{height:19px}
 .mtz__c--turma{
   position:sticky;left:0;z-index:1;text-align:left;
   background:var(--surface-sunk);font-weight:660;color:var(--txt-1);
+  display:flex;flex-direction:column;gap:2px;justify-content:center;
+}
+/* tamanho da turma embaixo do nome: sem ele, "R$ 4.514" de uma turma de 6 mil
+   cadastros lê igual a "R$ 4.514" de uma turma de 40. */
+.mtz__cad{
+  font-family:var(--mono);font-size:.5625rem;font-weight:500;color:var(--txt-3);
+  letter-spacing:.04em;
 }
 .mtz__c--vazio{color:var(--txt-3);font-weight:500}
-/* a foto inicial: um bolo de vários meses, não um mês */
-.mtz__c--bolo{border-left:2px dashed var(--line);color:var(--txt-2)}
+/* CÉLULA DE MÊS: o valor manda, a contagem de ativos é apoio. As duas juntas
+   porque R$ 26 mil de 259 pessoas e R$ 26 mil de 2 mil pessoas são operações
+   diferentes. */
+.mtz__c--mes{display:flex;flex-direction:column;gap:1px;justify-content:center}
+.mtz__ativos{
+  font-family:var(--mono);font-size:.5625rem;font-weight:500;color:var(--txt-3);
+}
+/* CALOR: a intensidade é |valor| sobre o maior valor da matriz daquele expert,
+   em 4 degraus. Verde e vermelho porque é a língua do resto do painel (dinheiro
+   que entrou / que saiu) -- azul aqui seria uma quinta cor sem significado
+   próprio. Os degraus são poucos de propósito: gradiente contínuo vira mancha e
+   ninguém compara duas células de tons vizinhos. */
+.mtz__c--p1{background:rgba(46,212,122,.10)}
+.mtz__c--p2{background:rgba(46,212,122,.20)}
+.mtz__c--p3{background:rgba(46,212,122,.32)}
+.mtz__c--p4{background:rgba(46,212,122,.46)}
+.mtz__c--n1{background:rgba(255,77,77,.10)}
+.mtz__c--n2{background:rgba(255,77,77,.20)}
+.mtz__c--n3{background:rgba(255,77,77,.32)}
+.mtz__c--n4{background:rgba(255,77,77,.46)}
+/* célula que ainda não fechou (mês corrente) e a foto inicial (bolo de vários
+   meses) são as duas que NÃO se comparam com as outras: hachura marca isso sem
+   gastar cor, que aqui já significa valor. */
+.mtz__c--parcial{
+  background-image:repeating-linear-gradient(135deg,
+    rgba(255,255,255,.055) 0 5px, transparent 5px 10px);
+}
+.mtz__c--bolo{border-left:2px dashed var(--line)}
 .mtz__c--total{font-weight:700;border-left:1px solid var(--line-soft)}
+.mtz__alerta{font-size:.5625rem;color:var(--txt-3);margin-left:4px}
 .mtz__nota{
   color:var(--txt-3);font-size:.6875rem;line-height:1.5;margin:8px 0 0;
+}
+/* legenda: a matriz é a única peça do painel em que a COR é o dado, então ela
+   precisa dizer o que cada tom quer dizer. */
+.mtz__leg{
+  display:flex;gap:14px;flex-wrap:wrap;align-items:center;
+  margin:9px 0 0;font-size:.625rem;color:var(--txt-3);
+}
+.mtz__leg span{display:inline-flex;align-items:center;gap:5px}
+.mtz__sw{width:11px;height:11px;border-radius:3px;border:1px solid var(--line)}
+.mtz__sw--pos{background:rgba(46,212,122,.46)}
+.mtz__sw--neg{background:rgba(255,77,77,.46)}
+.mtz__sw--zero{background:var(--surface-sunk)}
+.mtz__sw--parcial{
+  background-image:repeating-linear-gradient(135deg,
+    rgba(255,255,255,.14) 0 4px, transparent 4px 8px);
 }
 
 /* ── RODAPÉ ─────────────────────────────────────────────────────────────── */
@@ -2723,7 +2772,16 @@ html.rolado .brand__logo{height:19px}
    o clique porque um <div> sem pointer-events:none intercepta o próprio
    retângulo inteiro, esteja pintado ali ou não. .pnl__fundo e .pnl__box
    reativam pointer-events, então continuam clicáveis normalmente. */
-.pnl{position:fixed;inset:0;z-index:80;display:flex;justify-content:flex-end;pointer-events:none}
+/* CENTRALIZADO E GRANDE, não gaveta. Nasceu como gaveta de 520px porque o
+   painel era 4 números e uma recomendação. Depois entraram tendência, safra por
+   turma e a matriz mês a mês — tabelas largas, que numa faixa de 520px viravam
+   rolagem horizontal dentro de rolagem vertical. Agora ocupa a tela inteira
+   menos uma margem, como uma janela. */
+.pnl{
+  position:fixed;inset:0;z-index:80;pointer-events:none;
+  display:flex;align-items:stretch;justify-content:center;
+  padding:calc(var(--topbar-h,0px) + 14px) 14px 14px;
+}
 .pnl[hidden]{display:none}
 body.pnl-aberto{overflow:hidden}
 .pnl__fundo{
@@ -2740,11 +2798,22 @@ body.pnl-aberto{overflow:hidden}
 .pnl__box{
   position:relative;z-index:1;pointer-events:auto;
   display:flex;flex-direction:column;
-  width:min(520px,100%);height:100%;
+  width:min(1280px,100%);height:100%;
   background:var(--surface);
-  border-left:1px solid var(--line);
-  box-shadow:-26px 0 64px rgba(0,0,0,.5);
+  border:1px solid var(--line);border-radius:16px;
+  box-shadow:0 30px 90px rgba(0,0,0,.6);
+  overflow:hidden;                       /* o raio corta o cabeçalho junto */
 }
+/* COM ESPAÇO SOBRANDO, DUAS COLUNAS. Numa janela de 1280px uma coluna só
+   deixaria cada cartão com 1200px de largura pra escrever "R$ 75,16" — e
+   empurraria a safra pra baixo da dobra. O que é TABELA (os números de
+   contexto e a safra) continua atravessando a largura toda: é lá que a
+   largura vira leitura. */
+@media (min-width:1000px){
+  .pnl__body{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .pnl-topo,#pnl-safra{grid-column:1/-1}
+}
+
 .pnl__box:focus{outline:none}
 
 .pnl__head{
@@ -2912,15 +2981,19 @@ body.pnl-aberto{overflow:hidden}
 .pnl-link:hover{border-color:var(--acao-line);color:#FF9AC4}
 .pnl-link:focus-visible{outline:2px solid var(--acao);outline-offset:2px}
 
-/* ── movimento: a gaveta entra, não pisca ─────────────────────────────── */
-@keyframes pnlEntra{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
+/* ── movimento: a janela aparece, não pisca ───────────────────────────── */
+/* era translateX: vinha da direita porque era gaveta. Janela centralizada que
+   desliza de lado parece que errou o alvo -- sobe um dedo e cresce. */
+@keyframes pnlEntra{from{transform:translateY(14px) scale(.985);opacity:0}to{transform:none;opacity:1}}
 @keyframes pnlFundo{from{opacity:0}to{opacity:1}}
 .pnl__box{animation:pnlEntra .26s cubic-bezier(.22,1,.36,1) both}
 .pnl__fundo{animation:pnlFundo .2s ease-out both}
 @keyframes pnlSobe{from{transform:translateY(28px);opacity:0}to{transform:none;opacity:1}}
 
 @media (max-width:759px){
-  .pnl{align-items:flex-end}
+  /* no celular ele continua sendo folha de baixo, colada nas bordas: margem
+     lateral só rouba área de leitura numa tela de 360px */
+  .pnl{align-items:flex-end;padding:0}
   .pnl__box{
     width:100%;height:auto;max-height:92vh;
     border-left:0;border-top:1px solid var(--line);
@@ -9462,148 +9535,217 @@ function pintarMatrizSafra(corpo, nome, hoje) {
   var d = estado.safra[estado.painel.escopo];
   var hist = d && d.hist;
 
-  var cx = document.createElement('div');
-  cx.className = 'mtz';
-
   var tit = document.createElement('p');
   tit.className = 'pnl-nota';
   tit.style.margin = '16px 0 0';
-  tit.innerHTML = '<b>Mês a mês</b> — quanto cada turma deixou pra casa em cada mês.';
+  tit.innerHTML = '<b>Mês a mês</b> — quanto cada turma deixou pra casa em ' +
+    'CADA mês, não acumulado. As colunas são a idade da turma: M0 é o mês em ' +
+    'que ela entrou, M1 o mês seguinte.';
   corpo.appendChild(tit);
 
-  /* linhas do expert aberto: mês da safra -> fotos ordenadas */
+  /* linhas do expert aberto: turma -> fotos por mês de foto */
   var linhas = [];
   ((hist && hist.safras) || []).forEach(function (s) {
     (s.experts || []).forEach(function (e) {
       if (e.expert_name !== nome) return;
       if (!e.fotos || !e.fotos.length) return;
-      linhas.push({ mes: s.mes, fotos: e.fotos });
+      var porSnap = {};
+      e.fotos.forEach(function (f) { porSnap[f.snap] = f; });
+      linhas.push({ mes: s.mes, fotos: e.fotos, porSnap: porSnap });
     });
   });
-  linhas.sort(function (a, b) { return a.mes < b.mes ? 1 : (a.mes > b.mes ? -1 : 0); });
+  /* mais VELHA em cima: a turma antiga é a que já tem estrada pra mostrar, e a
+     leitura desce no tempo igual à da tabela de cima. */
+  linhas.sort(function (a, b) { return a.mes < b.mes ? -1 : (a.mes > b.mes ? 1 : 0); });
 
   if (!linhas.length) {
     var vazio = document.createElement('p');
     vazio.className = 'mtz__nota';
     vazio.textContent = hist
-      ? 'A primeira foto das turmas deste expert ainda não foi tirada. A ' +
-        'varredura fotografa uma safra por vez, então em algumas horas ela ' +
-        'aparece aqui.'
+      ? 'Ainda sem foto mensal desta operação. A varredura fotografa uma safra ' +
+        'por vez, então em algumas horas ela aparece aqui.'
       : 'O histórico não veio nesta carga. A tabela de cima continua valendo.';
     corpo.appendChild(vazio);
     return;
   }
 
-  /* colunas = todos os meses fotografados, do mais antigo pro mais novo. União
-     de todas as linhas, porque turma nova entra depois e não pode empurrar a
-     coluna de quem já estava. */
-  var colunas = [];
-  var vistas = {};
-  linhas.forEach(function (l) {
-    l.fotos.forEach(function (f) {
-      if (!vistas[f.snap]) { vistas[f.snap] = true; colunas.push(f.snap); }
+  /* cadastros da turma, pra pôr embaixo do nome dela */
+  var cadPorMes = {};
+  (d.meses || []).forEach(function (m) {
+    (m.experts || []).forEach(function (e) {
+      if (e.expert_name === nome) cadPorMes[m.mes] = e.cadastros;
     });
   });
-  colunas.sort();
 
+  /* ── as células, antes de desenhar ──────────────────────────────────────
+     Cada linha vira uma lista indexada por IDADE (0 = mês de entrada). O valor
+     de um mês é a diferença entre duas fotos; a primeira foto de uma turma que
+     já existia antes da medição é um BOLO (tudo que veio antes), e por isso não
+     entra na escala de cor nem se compara com as vizinhas. */
+  var maxAbs = 0;
+  linhas.forEach(function (l) {
+    l.cel = [];
+    l.primeiroK = null;
+    l.idade = idadeDaSafra(l.mes, hoje) || 1;
+    var anterior = null;
+    for (var k = 0; k < l.idade; k++) {
+      var snap = mesSomando(l.mes, k);
+      var f = l.porSnap[snap];
+      if (!f) { l.cel.push(null); continue; }
+      if (l.primeiroK == null) l.primeiroK = k;
+      if (!anterior) {
+        l.cel.push({ v: f.net_pl, ativos: f.ativos, bolo: k > 0, meses: k + 1,
+                     snap: snap, parcial: snap === hoje });
+      } else {
+        var v = f.net_pl - anterior.net_pl;
+        if (Math.abs(v) > maxAbs) maxAbs = Math.abs(v);
+        l.cel.push({ v: v, ativos: f.ativos, bolo: false,
+                     saiu: anterior.ativos - f.ativos,
+                     snap: snap, parcial: snap === hoje });
+      }
+      anterior = f;
+    }
+    l.total = anterior ? anterior.net_pl : null;
+  });
+
+  var colunas = linhas.reduce(function (m, l) { return Math.max(m, l.idade); }, 0);
+
+  var cx = document.createElement('div');
+  cx.className = 'mtz';
   var grade = document.createElement('div');
   grade.className = 'mtz__grade';
   grade.style.gridTemplateColumns =
-    '78px repeat(' + colunas.length + ', minmax(78px, 1fr)) 100px';
+    '88px repeat(' + colunas + ', minmax(84px, 1fr)) 104px';
 
-  function celula(txt, classes, titulo) {
+  function celula(classes) {
     var c = document.createElement('div');
     c.className = 'mtz__c' + (classes ? ' ' + classes : '');
-    c.textContent = txt;
-    if (titulo) c.title = titulo;
     grade.appendChild(c);
     return c;
   }
+  function texto(txt, classes, titulo) {
+    var c = celula(classes);
+    c.textContent = txt;
+    if (titulo) c.title = titulo;
+    return c;
+  }
 
-  celula('Turma', 'mtz__c--head mtz__c--turma');
-  colunas.forEach(function (s) { celula(mesCurto(s), 'mtz__c--head'); });
-  celula('Total', 'mtz__c--head');
+  texto('Turma', 'mtz__c--head mtz__c--turma');
+  for (var k = 0; k < colunas; k++) {
+    texto('M' + k, 'mtz__c--head',
+          k === 0 ? 'O próprio mês em que a turma entrou'
+                  : k + (k === 1 ? ' mês' : ' meses') + ' depois de entrar');
+  }
+  texto('Total', 'mtz__c--head');
+
+  /* 4 degraus de cor. O maior valor da matriz é o topo da escala: a comparação
+     que interessa é dentro da mesma operação. */
+  function degrau(v) {
+    if (!maxAbs || !ehNum(v) || v === 0) return '';
+    var r = Math.abs(v) / maxAbs;
+    var n = r > 0.6 ? 4 : (r > 0.3 ? 3 : (r > 0.1 ? 2 : 1));
+    return ' mtz__c--' + (v > 0 ? 'p' : 'n') + n;
+  }
 
   linhas.forEach(function (l) {
-    var idade = idadeDaSafra(l.mes, hoje);
-    celula(mesCurto(l.mes) + (idade ? ' · ' + idade + 'm' : ''),
-           'mtz__c--turma',
-           'Turma que se cadastrou em ' + mesCurto(l.mes));
+    var turma = celula('mtz__c--turma');
+    var nomeT = document.createElement('span');
+    nomeT.textContent = mesCurto(l.mes);
+    turma.appendChild(nomeT);
+    if (ehNum(cadPorMes[l.mes])) {
+      var cad = document.createElement('span');
+      cad.className = 'mtz__cad';
+      cad.textContent = inteiro(cadPorMes[l.mes]) + ' cad.';
+      turma.appendChild(cad);
+    }
+    turma.title = 'Turma que se cadastrou em ' + mesCurto(l.mes);
 
-    /* foto por mês, pra achar rápido a anterior */
-    var porSnap = {};
-    l.fotos.forEach(function (f) { porSnap[f.snap] = f; });
-    var primeira = l.fotos[0];
-    var anterior = null;
-
-    colunas.forEach(function (s) {
-      var f = porSnap[s];
-      if (!f) {
-        /* antes da primeira foto: a turma existia mas ninguém tinha medido.
-           Depois dela: a varredura falhou naquele mês e o valor caiu na foto
-           seguinte — em nenhum dos dois casos dá pra inventar um número. */
-        celula('·', 'mtz__c--vazio',
-               s < primeira.snap
-                 ? 'Ainda não media safra neste mês'
-                 : 'Sem foto deste mês — o valor entrou na coluna seguinte');
-        return;
+    for (var k = 0; k < colunas; k++) {
+      var cel = l.cel[k];
+      if (k >= l.idade) { celula(); continue; }      /* turma nem existia ainda */
+      if (!cel) {
+        /* ANTES da primeira foto a célula fica em branco, não com um ponto: a
+           turma de out/25 tem dez meses que ninguém mediu, e dez pontinhos em
+           fila leem como "zero" quando o certo é "não sabemos". Depois da
+           primeira foto, aí sim o ponto marca a falha de uma leitura. */
+        var jaMedia = l.primeiroK != null && k > l.primeiroK;
+        texto(jaMedia ? '·' : '', jaMedia ? 'mtz__c--vazio' : '',
+              jaMedia
+                ? 'Sem foto deste mês — o valor entrou na coluna seguinte'
+                : 'A medição de safra começou depois desta turma: estes meses ' +
+                  'entram somados na primeira célula preenchida da linha');
+        continue;
       }
 
-      if (!anterior) {
-        /* a foto inicial. Se a turma nasceu no mesmo mês da foto, ela é um mês
-           normal; se nasceu antes, é o bolo de tudo que veio antes da medição. */
-        var mesesNoBolo = idadeDaSafra(l.mes, s);
-        var ehBolo = mesesNoBolo > 1;
-        var c0 = celula(brl(f.net_pl), ehBolo ? 'mtz__c--bolo' : '',
-          ehBolo
-            ? 'Primeira foto: os ' + mesesNoBolo + ' primeiros meses desta ' +
-              'turma somados (de ' + mesCurto(l.mes) + ' a ' + mesCurto(s) + '). ' +
-              'Não compare com as colunas do lado — elas são de um mês só.'
-            : mesCurto(s) + ': primeiro mês desta turma.');
-        classeSinal(c0, f.net_pl);
-        anterior = f;
-        return;
+      var classes = 'mtz__c--mes' + (cel.bolo ? ' mtz__c--bolo mtz__c--parcial'
+                                              : degrau(cel.v));
+      if (cel.parcial) classes += ' mtz__c--parcial';
+      var c = celula(classes);
+
+      var val = document.createElement('span');
+      val.textContent = brl(cel.v);
+      c.appendChild(val);
+      classeSinal(val, cel.v);
+
+      var at = document.createElement('span');
+      at.className = 'mtz__ativos';
+      at.textContent = inteiro(cel.ativos) + ' ativos';
+      c.appendChild(at);
+
+      if (cel.bolo) {
+        c.title = 'Primeira foto: os ' + cel.meses + ' primeiros meses desta ' +
+          'turma somados. Não compare com as células do lado — elas são de um ' +
+          'mês só. A casa só entrega o acumulado de vida de cada jogador, então ' +
+          'o que veio antes da primeira foto não tem como ser separado por mês.';
+      } else {
+        c.title = mesCurto(cel.snap) + ': ' + brl(cel.v) + ' neste mês · ' +
+          inteiro(cel.ativos) + ' ainda ativos' +
+          (cel.saiu > 0 ? ', ' + inteiro(cel.saiu) + ' pararam' : '') +
+          (cel.parcial ? ' · mês ainda correndo, o número sobe até o fim dele' : '');
       }
+    }
 
-      var delta = f.net_pl - anterior.net_pl;
-      var saiu = anterior.ativos - f.ativos;
-      var c = celula(brl(delta), '',
-        mesCurto(s) + ': ' + brl(delta) + ' de net PL. ' +
-        inteiro(f.ativos) + ' ainda ativos' +
-        (saiu > 0 ? ', ' + inteiro(saiu) + ' pararam no mês' : ''));
-      classeSinal(c, delta);
-      anterior = f;
-    });
-
-    var ultima = l.fotos[l.fotos.length - 1];
-    var tot = celula(brl(ultima.net_pl), 'mtz__c--total',
-      'Tudo que esta turma já deixou, desde que entrou');
-    classeSinal(tot, ultima.net_pl);
+    var tot = texto(l.total == null ? '—' : brl(l.total), 'mtz__c--total',
+                    'Tudo que esta turma já deixou, desde que entrou');
+    classeSinal(tot, l.total);
   });
 
   cx.appendChild(grade);
   corpo.appendChild(cx);
 
+  var leg = document.createElement('p');
+  leg.className = 'mtz__leg';
+  leg.innerHTML =
+    '<span><i class="mtz__sw mtz__sw--pos"></i> deixou pra casa</span>' +
+    '<span><i class="mtz__sw mtz__sw--neg"></i> a casa pagou</span>' +
+    '<span><i class="mtz__sw mtz__sw--zero"></i> perto de zero</span>' +
+    '<span><i class="mtz__sw mtz__sw--parcial"></i> não fecha o mês (bolo inicial ou mês corrente)</span>' +
+    '<span>tom mais forte = valor maior</span>';
+  corpo.appendChild(leg);
+
   var nota2 = document.createElement('p');
   nota2.className = 'mtz__nota';
-  nota2.textContent = 'A coluna tracejada é a foto inicial: tudo que a turma ' +
-    'deixou antes de a gente começar a medir, num bolo só — ela não se compara ' +
-    'com as outras. Daí pra frente cada coluna é um mês fechado. A API da casa ' +
-    'só entrega o acumulado de vida de cada jogador, então o mês a mês é ' +
-    'construído aqui, uma foto por mês.';
+  nota2.textContent = 'A célula hachurada com borda tracejada é a foto inicial: ' +
+    'tudo que a turma deixou antes de a gente começar a medir, num bolo só. ' +
+    'Daí pra frente cada célula é um mês. A API da casa só entrega o acumulado ' +
+    'de vida de cada jogador — não existe "quanto o cadastro de janeiro ' +
+    'depositou em março" pra buscar —, então o mês a mês é coisa que a gente ' +
+    'PASSA a ter: uma foto por mês, a partir de agosto/26. A esquerda das ' +
+    'turmas antigas vai continuar vazia pra sempre, e é isso mesmo.';
   corpo.appendChild(nota2);
 }
 
-/* ── SAFRA DA OPERAÇÃO (visão geral + coluna do comparativo) ──────────────
-   Mesma fonte da safra do painel, outra pergunta: lá é "a turma que ESTE
-   expert trouxe em junho continua?", aqui é a mesma coisa pra operação toda.
-   Some as operações que estão na comparação — a seleção do comparativo vale
-   pras duas, senão a mesma tela daria duas respostas.
+/* "2026-06" + 2 -> "2026-08". A conta que não pode ser feita somando 2 no
+   número do mês, senão nov + 2 vira o mês 13. */
+function mesSomando(mes, n) {
+  var o = mesOrdinal(mes);
+  if (o == null) return null;
+  var t = o + n;
+  var ano = Math.floor(t / 12);
+  var m = t - ano * 12 + 1;
+  return ano + '-' + String(m).padStart(2, '0');
+}
 
-   Uma ressalva que a tela precisa dizer em voz alta: TODA coluna do
-   comparativo fala do período escolhido lá em cima; a safra não. Ela é
-   carteira acumulada, de todas as turmas, desde sempre. Trocar o período não
-   mexe num número dela. */
 /* A carteira de UM expert, somando todas as turmas dele. É o que a coluna
    "Seguem" do comparativo imprime. */
 function safraPorExpert(escopo, nome) {
