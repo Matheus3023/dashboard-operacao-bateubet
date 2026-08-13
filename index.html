@@ -1432,27 +1432,17 @@ html.rolado .brand__logo{height:19px}
    irmão de .wrap + descendente. */
 .view{display:none}
 #v-geral:checked ~ .wrap .scope .view--geral,
-#v-experts:checked ~ .wrap .scope .view--experts,
-#v-safra:checked ~ .wrap .scope .view--safra{display:block}
-/* a barra de período não vale na aba Safra: ali o recorte é o MÊS DE CADASTRO
-   da turma, escolhido dentro da própria aba. Deixar as duas na tela faria
-   parecer que "Ontem" filtra a safra, e não filtra.
-   `visibility` em vez de `display:none` de propósito: sumir com a barra
-   reflowaria o cabeçalho a cada troca de aba, e o cabeçalho é de altura fixa
-   desde o redesenho de 12/08. */
-#v-safra:checked ~ .topbar .rangebar{visibility:hidden;pointer-events:none}
+#v-experts:checked ~ .wrap .scope .view--experts{display:block}
+
 #v-geral:checked ~ .wrap .scope .tabs label[for="v-geral"],
-#v-safra:checked ~ .wrap .scope .tabs label[for="v-safra"],
 #v-experts:checked ~ .wrap .scope .tabs label[for="v-experts"]{
   color:var(--txt);border-bottom-color:var(--acao);
 }
 #v-geral:checked ~ .wrap .scope .tabs label[for="v-geral"] .tab__badge,
-#v-safra:checked ~ .wrap .scope .tabs label[for="v-safra"] .tab__badge,
 #v-experts:checked ~ .wrap .scope .tabs label[for="v-experts"] .tab__badge{
   background:var(--acao-soft);color:#FF9AC4;
 }
 #v-geral:focus-visible ~ .wrap .scope .tabs label[for="v-geral"],
-#v-safra:focus-visible ~ .wrap .scope .tabs label[for="v-safra"],
 #v-experts:focus-visible ~ .wrap .scope .tabs label[for="v-experts"]{outline:2px solid var(--gold);outline-offset:-3px}
 .tablink{
   display:inline-flex;align-items:center;gap:6px;cursor:pointer;
@@ -1800,70 +1790,43 @@ html.rolado .brand__logo{height:19px}
 }
 
 
-/* ── SAFRA ────────────────────────────────────────────────────────────────
-   A aba responde uma pergunta diferente das outras duas: elas olham o
-   PERÍODO (o que gastei e o que entrou nele), esta olha a TURMA — quem se
-   cadastrou naquele mês e o que essa gente fez DESDE ENTÃO. Por isso o
-   depósito de uma safra de junho continua crescendo em agosto, e por isso a
-   barra de período do topo some quando esta aba está aberta.
-   Fonte: rota ?safra=1 do webhook, alimentada pelo workflow que varre o
-   registro de cada jogador na TAP. */
-.safra__aviso{
-  margin:0 0 16px;padding:11px 15px;border-radius:12px;
-  border:1px solid var(--line);background:var(--surface);
-  color:var(--txt-2);font-size:.8125rem;line-height:1.55;
+/* ── SAFRA (dentro do painel do expert) ───────────────────────────────────
+   Uma linha por MÊS DE CADASTRO, do mais novo pro mais velho. A leitura é
+   vertical: quanto mais fundo na tabela, mais tempo aquela turma teve pra
+   sumir — e a coluna "seguem" mostra quantos não sumiram.
+   Fonte: rota ?safra=1, alimentada pelo workflow que varre o registro de cada
+   jogador na TAP e classifica por churn rank (1-4 = segue, 5 = foi embora). */
+.pnl-safra__estado{color:var(--txt-3);font-size:.8125rem;padding:6px 0}
+.sfr{overflow-x:auto}
+.sfr__row{
+  display:grid;align-items:center;gap:10px;
+  /* 6 colunas, não 7: "perdidos" saiu pro title da linha. O painel tem ~530px
+     úteis e a coluna que MAIS importa é a última ("deixou pra casa") -- com
+     ela atrás da rolagem horizontal, a tabela respondia meia pergunta. */
+  grid-template-columns:62px 62px 46px 58px 62px minmax(96px,1fr);
+  min-width:400px;padding:9px 2px;border-top:1px solid var(--line-soft);
 }
-.safra__aviso b{color:var(--txt-1);font-weight:640}
-/* trilho de meses: min-width:0 no item flex, senão ele trava no tamanho do
-   conteúdo e o overflow-x nunca age (armadilha já paga neste painel). */
-.saframes{display:flex;gap:8px;overflow-x:auto;min-width:0;padding-bottom:4px;margin-bottom:16px}
-.saframes__b{
-  flex:none;padding:9px 15px;border-radius:999px;cursor:pointer;
-  border:1px solid var(--line-strong);background:transparent;color:var(--txt-2);
-  font:inherit;font-size:.8125rem;font-weight:600;white-space:nowrap;
-  transition:border-color .14s ease,color .14s ease,background .14s ease;
+.sfr__row:first-child{border-top:0}
+.sfr__row--head{
+  font-family:var(--mono);font-size:.5rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--txt-3);padding-top:0;
 }
-.saframes__b:hover{color:var(--txt-1);border-color:var(--acao-line)}
-.saframes__b[aria-pressed="true"]{background:var(--acao);border-color:var(--acao);color:#fff}
-.saframes__b:focus-visible{outline:2px solid var(--acao);outline-offset:2px}
-@media (prefers-reduced-motion:reduce){.saframes__b{transition:none}}
-
-/* funil da turma: cada degrau diz quantos sobraram do degrau anterior */
-.safrafunil{
-  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--gap);
-  margin-bottom:var(--gap);
+.sfr__row--head span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sfr__mes{font-size:.75rem;font-weight:660;color:var(--txt-1);white-space:nowrap}
+.sfr__n{
+  font-size:.8125rem;font-weight:600;font-variant-numeric:tabular-nums;
+  white-space:nowrap;min-width:0;overflow:hidden;
 }
-@media (max-width:900px){.safrafunil{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.safrafunil .tcard__val{font-size:1.375rem}
-
-.safratab{overflow-x:auto}
-.safratab__row{
-  display:grid;align-items:center;gap:12px;
-  grid-template-columns:150px 92px 78px 84px 92px 88px 84px 128px 118px 104px;
-  min-width:1090px;padding:11px 16px;border-top:1px solid var(--line-soft);
-}
-.safratab__row:first-child{border-top:0}
-.safratab__row--head{
-  background:var(--surface-2);padding-top:9px;padding-bottom:9px;
-  font-family:var(--mono);font-size:.5625rem;letter-spacing:.12em;
-  text-transform:uppercase;color:var(--txt-3);
-}
-.safratab__row--head span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.safratab__body .safratab__row:hover{background:rgba(255,255,255,.035)}
-.safratab__nome{
-  font-size:.8125rem;font-weight:640;letter-spacing:.02em;text-transform:uppercase;
-  min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-.safratab__num{
-  font-size:.875rem;font-weight:620;font-variant-numeric:tabular-nums;
-  white-space:nowrap;min-width:0;overflow:hidden;text-overflow:clip;
-}
-.safratab__num--soft{font-weight:520;color:var(--txt-2)}
-@media (max-width:1100px){
-  .safratab__row{grid-template-columns:130px 84px 72px 78px 84px 80px;gap:10px;min-width:0}
-  .safratab__dep,.safratab__depftd,.safratab__dias,.safratab__vol{display:none}
-}
-.safra__vazio{margin:0;padding:22px 16px;text-align:center;color:var(--txt-3);font-size:.8125rem}
+.sfr__n--soft{font-weight:500;color:var(--txt-3)}
+/* SEGUEM é a coluna que responde a pergunta da safra, então é a única com cor
+   por valor. Régua sobre quem DEPOSITOU (quem nunca depositou não chegou a ser
+   cliente e diluiria a conta): metade ou mais da turma ainda ativa é verde,
+   menos de um quinto é vermelho. */
+.sfr__seguem.is-good{color:var(--good)}
+.sfr__seguem.is-warn{color:var(--warn)}
+.sfr__seguem.is-bad{color:var(--bad)}
+.sfr__casa{font-weight:640}
+.sfr__vazio{color:var(--txt-3);font-size:.8125rem;padding:8px 0;margin:0}
 
 /* ── RODAPÉ ─────────────────────────────────────────────────────────────── */
 .foot{
@@ -2437,8 +2400,7 @@ html.rolado .brand__logo{height:19px}
    Não troque as propriedades animadas aqui sem mover a medição pro fim. */
 @keyframes entraView{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 #v-geral:checked ~ .wrap .scope .view--geral,
-#v-experts:checked ~ .wrap .scope .view--experts,
-#v-safra:checked ~ .wrap .scope .view--safra{animation:entraView .16s ease-out both}
+#v-experts:checked ~ .wrap .scope .view--experts{animation:entraView .16s ease-out both}
 /* troca de ESCOPO tem animação própria e um pouco mais lenta: é troca de
    universo, não de seção, e o corte seco fazia parecer recarga de página. */
 @keyframes entraScope{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
@@ -2874,11 +2836,6 @@ body.pnl-aberto{overflow:hidden}
   <input type="radio" name="escopo" id="e-google">
   <input type="radio" name="view" id="v-geral" checked>
   <input type="radio" name="view" id="v-experts">
-  <!-- SAFRA (13/08): terceira aba. Responde uma pergunta que as outras duas
-       não respondem — as duas primeiras olham o PERÍODO (o que gastei e o que
-       entrou nele), a safra olha a TURMA (quem entrou naquele mês e o que ela
-       fez desde então). Por isso ela ignora o seletor de período do topo. -->
-  <input type="radio" name="view" id="v-safra">
 
   <!-- ═══ BARRA DE COMANDO ═══════════════════════════════════════════════════
        Uma faixa só, na ordem de quem manda: marca · ESCOPO · período ·
@@ -3116,7 +3073,6 @@ body.pnl-aberto{overflow:hidden}
     <nav class="tabs" aria-label="Seções do painel">
       <label for="v-geral">Visão geral</label>
       <label for="v-experts">Por expert <span class="tab__badge" data-derived="experts.length">7</span></label>
-      <label for="v-safra">Safra</label>
     </nav>
 
     <!-- ══════════════════ ABA 1 · VISÃO GERAL ══════════════════ -->
@@ -4492,80 +4448,6 @@ body.pnl-aberto{overflow:hidden}
     </div><!-- ══════════ /ABA 2 · POR EXPERT ══════════ -->
 
 
-    <!-- ══════════════════ ABA 3 · SAFRA ══════════════════ -->
-    <div class="view view--safra">
-      <p class="safra__aviso">
-        <b>Safra é a turma, não o período.</b> Cada mês aqui é o mês em que a
-        pessoa <b>se cadastrou</b>. Os números mostram o que essa turma fez
-        <b>desde então</b> — por isso a safra de um mês antigo continua
-        crescendo. O seletor de período lá em cima não vale nesta aba.
-        <span class="safra__fonte" data-field="safra.rodape"></span>
-      </p>
-
-      <div class="saframes" role="group" aria-label="Mês de cadastro"></div>
-
-      <div class="section-head"><h2 class="eyebrow">O que a turma fez <span data-field="safra.mes_label">—</span></h2></div>
-      <div class="safrafunil">
-        <div class="tcard">
-          <span class="tcard__lbl">Se cadastraram</span>
-          <span class="tcard__val" data-field="safra.cadastros">—</span>
-          <span class="tcard__sub">—</span>
-        </div>
-        <div class="tcard">
-          <span class="tcard__lbl">Depositaram (FTD)</span>
-          <span class="tcard__val" data-field="safra.ftd">—</span>
-          <span class="tcard__sub">—</span>
-        </div>
-        <div class="tcard">
-          <span class="tcard__lbl">Voltaram a depositar</span>
-          <span class="tcard__val" data-field="safra.recorrentes">—</span>
-          <span class="tcard__sub">—</span>
-        </div>
-        <div class="tcard">
-          <span class="tcard__lbl">Seguem apostando</span>
-          <span class="tcard__val" data-field="safra.ativos">—</span>
-          <span class="tcard__sub">—</span>
-        </div>
-        <div class="tcard">
-          <span class="tcard__lbl">Depósito da turma</span>
-          <span class="tcard__val" data-field="safra.deposito">—</span>
-          <span class="tcard__sub">—</span>
-        </div>
-        <div class="tcard">
-          <span class="tcard__lbl">Depósito por FTD</span>
-          <span class="tcard__val" data-field="safra.deposito_ftd">—</span>
-          <span class="tcard__sub">—</span>
-        </div>
-        <div class="tcard">
-          <span class="tcard__lbl">Net dep da turma</span>
-          <span class="tcard__val" data-field="safra.net_dep">—</span>
-          <span class="tcard__sub">—</span>
-        </div>
-        <div class="tcard">
-          <span class="tcard__lbl">Comissão da turma</span>
-          <span class="tcard__val" data-field="safra.comissao">—</span>
-          <span class="tcard__sub">—</span>
-        </div>
-      </div>
-
-      <div class="section-head"><h2 class="eyebrow">Safra por expert</h2></div>
-      <section class="safratab" aria-label="Safra por expert">
-        <div class="safratab__row safratab__row--head" aria-hidden="true">
-          <span>Expert</span>
-          <span>Cadastros</span>
-          <span>FTD</span>
-          <span>Conversão</span>
-          <span>Voltaram</span>
-          <span>Recompra</span>
-          <span>Apostando</span>
-          <span class="safratab__dep">Depósito</span>
-          <span class="safratab__depftd">Dep. por FTD</span>
-          <span class="safratab__dias">Dias até FTD</span>
-        </div>
-        <div class="safratab__body"></div>
-      </section>
-    </div>
-
     </div><!-- ╚══ /ESCOPO 1 · COSTA E LOBÃO ══╝ -->
 
     <!-- ╔═════════════════════════════════════════════════════════════════╗
@@ -4589,7 +4471,6 @@ body.pnl-aberto{overflow:hidden}
     <nav class="tabs" aria-label="Seções do painel, escopo geral">
       <label for="v-geral">Visão geral</label>
       <label for="v-experts">Por expert <span class="tab__badge" data-derived="geral.experts.length">24</span></label>
-      <label for="v-safra">Safra</label>
     </nav>
 
     <!-- ══════════════════ GERAL · ABA 1 · VISÃO GERAL ══════════════════ -->
@@ -5496,80 +5377,6 @@ body.pnl-aberto{overflow:hidden}
     </div><!-- ══════════ /GERAL · ABA 2 ══════════ -->
 
 
-    <!-- ══════════════════ ABA 3 · SAFRA ══════════════════ -->
-    <div class="view view--safra">
-      <p class="safra__aviso">
-        <b>Safra é a turma, não o período.</b> Cada mês aqui é o mês em que a
-        pessoa <b>se cadastrou</b>. Os números mostram o que essa turma fez
-        <b>desde então</b> — por isso a safra de um mês antigo continua
-        crescendo. O seletor de período lá em cima não vale nesta aba.
-        <span class="safra__fonte" data-field="safra.rodape"></span>
-      </p>
-
-      <div class="saframes" role="group" aria-label="Mês de cadastro"></div>
-
-      <div class="section-head"><h2 class="eyebrow">O que a turma fez <span data-field="safra.mes_label">—</span></h2></div>
-      <div class="safrafunil">
-        <div class="tcard">
-          <span class="tcard__lbl">Se cadastraram</span>
-          <span class="tcard__val" data-field="safra.cadastros">—</span>
-          <span class="tcard__sub">—</span>
-        </div>
-        <div class="tcard">
-          <span class="tcard__lbl">Depositaram (FTD)</span>
-          <span class="tcard__val" data-field="safra.ftd">—</span>
-          <span class="tcard__sub">—</span>
-        </div>
-        <div class="tcard">
-          <span class="tcard__lbl">Voltaram a depositar</span>
-          <span class="tcard__val" data-field="safra.recorrentes">—</span>
-          <span class="tcard__sub">—</span>
-        </div>
-        <div class="tcard">
-          <span class="tcard__lbl">Seguem apostando</span>
-          <span class="tcard__val" data-field="safra.ativos">—</span>
-          <span class="tcard__sub">—</span>
-        </div>
-        <div class="tcard">
-          <span class="tcard__lbl">Depósito da turma</span>
-          <span class="tcard__val" data-field="safra.deposito">—</span>
-          <span class="tcard__sub">—</span>
-        </div>
-        <div class="tcard">
-          <span class="tcard__lbl">Depósito por FTD</span>
-          <span class="tcard__val" data-field="safra.deposito_ftd">—</span>
-          <span class="tcard__sub">—</span>
-        </div>
-        <div class="tcard">
-          <span class="tcard__lbl">Net dep da turma</span>
-          <span class="tcard__val" data-field="safra.net_dep">—</span>
-          <span class="tcard__sub">—</span>
-        </div>
-        <div class="tcard">
-          <span class="tcard__lbl">Comissão da turma</span>
-          <span class="tcard__val" data-field="safra.comissao">—</span>
-          <span class="tcard__sub">—</span>
-        </div>
-      </div>
-
-      <div class="section-head"><h2 class="eyebrow">Safra por expert</h2></div>
-      <section class="safratab" aria-label="Safra por expert">
-        <div class="safratab__row safratab__row--head" aria-hidden="true">
-          <span>Expert</span>
-          <span>Cadastros</span>
-          <span>FTD</span>
-          <span>Conversão</span>
-          <span>Voltaram</span>
-          <span>Recompra</span>
-          <span>Apostando</span>
-          <span class="safratab__dep">Depósito</span>
-          <span class="safratab__depftd">Dep. por FTD</span>
-          <span class="safratab__dias">Dias até FTD</span>
-        </div>
-        <div class="safratab__body"></div>
-      </section>
-    </div>
-
     </div><!-- ╚══ /ESCOPO 2 · GERAL ══╝ -->
 
     <!-- ╔═══════════════════════════════════════════════════════════════════╗
@@ -5866,7 +5673,24 @@ body.pnl-aberto{overflow:hidden}
         <div id="pnl-tend-corpo" hidden></div>
       </section>
 
-      <!-- 4. RECOMENDAÇÃO -->
+      <!-- 4. SAFRA · o que cada turma daquele expert deixou
+           Fica aqui, dentro do expert, e não numa aba global: safra é leitura
+           de UMA operação por vez ("a galera que o Deko trouxe em dezembro
+           ainda está apostando?"). Numa tabela com 28 linhas de expert × 11
+           meses ninguém acha a resposta.
+           A linha do tempo corre pra BAIXO, do mês mais novo pro mais velho:
+           é a leitura de retenção — quanto mais fundo, mais tempo a turma teve
+           pra sumir, e a coluna "seguem" mostra quantos não sumiram. -->
+      <section class="pnl-card" id="pnl-safra">
+        <h3 class="pnl-card__tit">
+          Safra
+          <small>por mês de cadastro · o que cada turma fez até hoje</small>
+        </h3>
+        <div class="pnl-safra__estado" id="pnl-safra-estado">Levantando as safras…</div>
+        <div id="pnl-safra-corpo" hidden></div>
+      </section>
+
+      <!-- 5. RECOMENDAÇÃO -->
       <section class="pnl-card pnl-rec pnl-rec--na" id="pnl-rec">
         <p class="pnl-rec__acao" id="pnl-rec-acao">Recomendação</p>
         <p class="pnl-rec__txt" id="pnl-rec-txt"></p>
@@ -6430,10 +6254,8 @@ var estado = {
      não junto com o painel: é uma rota separada, ninguém abre essa aba toda
      hora, e carregar de cara atrasaria a tela que a operação olha o dia
      inteiro. Uma busca por escopo por sessão basta — o workflow recalcula em
-     rodízio de 15 min, e o número não muda de minuto em minuto.
-     `mes` guarda qual turma está selecionada em cada escopo. */
+     rodízio de 15 min, e o número não muda de minuto em minuto. */
   safra: { cl: null, geral: null },
-  safraMes: { cl: null, geral: null },
   safraBuscando: {},
   /* cache da tendência por expert × escopo. A série só tem dias FECHADOS, ou
      seja, não muda enquanto a página está aberta: uma busca por sessão basta,
@@ -8908,32 +8730,23 @@ function pintarBoot(texto) {
 }
 
 /* ── SAFRA ────────────────────────────────────────────────────────────────
-   Turma por MÊS DE CADASTRO: quem entrou naquele mês e o que fez desde então.
-   Rota própria (?safra=1&escopo=…), contrato próprio ({ escopo, meses[] }) e
-   ciclo próprio — não acompanha o seletor de período, nem o refresh de 5 min.
+   Turma por MÊS DE CADASTRO, dentro do painel de UM expert: "a galera que o
+   Deko trouxe em dezembro ainda está apostando, e quanto ela deixou?"
 
-   Busca SOB DEMANDA, na primeira abertura da aba: é uma chamada a mais, o
-   painel do dia a dia não depende dela, e o dado é recalculado em rodízio de
-   15 min no n8n (não muda de minuto em minuto). Uma busca por escopo por
-   sessão basta. */
+   Mora no painel e não numa aba global de propósito: safra é leitura de uma
+   operação por vez. Numa tabela de 28 experts × 11 meses ninguém acha a
+   resposta.
+
+   Ciclo próprio: busca sob demanda na primeira abertura de um painel daquele
+   escopo, uma vez por sessão. O workflow recalcula em rodízio, o número não
+   muda de minuto em minuto — não faz sentido acompanhar o refresh de 5 min. */
 var SAFRA_ESCOPO_API = { cl: 'costa_lobao', geral: 'geral' };
 
-function safraEscopoAtivo() {
-  var esc = $('input[name="escopo"]:checked');
-  var e = (esc && ESCOPO_ID_PARA_HASH[esc.id]) || 'cl';
-  /* o escopo Google não tem aba de safra (é um btag só, sem expert pra abrir) */
-  return e === 'google' ? null : e;
-}
-
 function carregarSafra(escopo) {
-  if (!escopo || estado.safra[escopo] || estado.safraBuscando[escopo]) {
-    if (estado.safra[escopo]) pintarSafra(escopo);
-    return;
-  }
+  if (!escopo || !SAFRA_ESCOPO_API[escopo]) return;
+  if (estado.safra[escopo]) { pintarSafraDoExpert(); return; }
+  if (estado.safraBuscando[escopo]) return;
   estado.safraBuscando[escopo] = true;
-  var raiz = escopo === 'geral' ? RAIZ_GERAL : RAIZ_CL;
-  var corpo = $('.safratab__body', raiz);
-  if (corpo) corpo.innerHTML = '<p class="safra__vazio">Levantando as safras…</p>';
 
   fetch(ENDPOINT + '?safra=1&escopo=' + encodeURIComponent(SAFRA_ESCOPO_API[escopo]),
         { cache: 'no-store' })
@@ -8943,172 +8756,144 @@ function carregarSafra(escopo) {
     })
     .then(function (d) {
       estado.safra[escopo] = d;
-      /* abre na turma mais recente: é a que ainda dá pra agir em cima */
-      if (!estado.safraMes[escopo] && d.meses && d.meses.length) {
-        estado.safraMes[escopo] = d.meses[0].mes;
-      }
-      pintarSafra(escopo);
+      pintarSafraDoExpert();
     })
     .catch(function () {
-      if (corpo) {
-        corpo.innerHTML = '<p class="safra__vazio">Não deu pra carregar a safra agora. ' +
-          'Trocar de aba e voltar tenta de novo.</p>';
-      }
-      /* limpa a trava: a próxima abertura da aba tenta outra vez */
       estado.safra[escopo] = null;
+      var est = document.getElementById('pnl-safra-estado');
+      if (est) {
+        est.hidden = false;
+        est.textContent = 'Não deu pra carregar a safra agora.';
+      }
     })
     .then(function () { estado.safraBuscando[escopo] = false; });
 }
 
-/* "2026-06" -> "junho de 2026". Mês de cadastro é rótulo de turma, não data de
-   relatório: escrito por extenso ele se lê como nome ("a safra de junho"). */
-var MESES_EXT = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-                 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-function mesPorExtenso(m) {
-  var p = String(m || '').split('-');
-  if (p.length !== 2) return m || '—';
-  var i = Number(p[1]) - 1;
-  return (MESES_EXT[i] || p[1]) + ' de ' + p[0];
-}
+/* "2026-06" -> "jun/26". Nome de turma, não data de relatório: curto, porque a
+   coluna é estreita e a leitura da tabela é vertical. */
+var MESES_CURTO = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun',
+                   'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 function mesCurto(m) {
   var p = String(m || '').split('-');
   if (p.length !== 2) return m || '—';
-  return (MESES_EXT[Number(p[1]) - 1] || p[1]).slice(0, 3) + '/' + p[0].slice(2);
+  return (MESES_CURTO[Number(p[1]) - 1] || p[1]) + '/' + p[0].slice(2);
 }
 
-function pintarSafra(escopo) {
-  var d = estado.safra[escopo];
-  var raiz = escopo === 'geral' ? RAIZ_GERAL : RAIZ_CL;
-  if (!d || !raiz) return;
-  var meses = d.meses || [];
-  var corpo = $('.safratab__body', raiz);
+function pintarSafraDoExpert() {
+  var est = document.getElementById('pnl-safra-estado');
+  var corpo = document.getElementById('pnl-safra-corpo');
+  if (!est || !corpo || !estado.painel.aberto) return;
 
-  /* trilho de meses. Reconstruído a cada pintura: a lista só muda quando o
-     workflow termina de varrer um mês novo, e é barata. */
-  var trilho = $('.saframes', raiz);
-  if (trilho) {
-    trilho.innerHTML = '';
-    meses.forEach(function (m) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'saframes__b';
-      b.textContent = mesCurto(m.mes);
-      b.title = 'Turma que se cadastrou em ' + mesPorExtenso(m.mes);
-      b.setAttribute('aria-pressed', String(m.mes === estado.safraMes[escopo]));
-      b.addEventListener('click', function () {
-        estado.safraMes[escopo] = m.mes;
-        pintarSafra(escopo);
-      });
-      trilho.appendChild(b);
-    });
+  var esc = estado.painel.escopo;
+  if (!SAFRA_ESCOPO_API[esc]) {
+    /* o escopo Google é um btag só, sem expert pra abrir painel */
+    est.hidden = false; est.textContent = 'Safra não se aplica a este escopo.';
+    corpo.hidden = true;
+    return;
   }
-
-  var alvo = null;
-  for (var i = 0; i < meses.length; i++) {
-    if (meses[i].mes === estado.safraMes[escopo]) { alvo = meses[i]; break; }
-  }
-  if (!alvo) alvo = meses[0] || null;
-
-  escreve(campo(raiz, 'safra.mes_label'),
-          alvo ? 'quem entrou em ' + mesPorExtenso(alvo.mes) : '—');
-
-  var rodape = $('.safra__fonte', raiz);
-  if (rodape) {
-    rodape.textContent = meses.length
-      ? ' Levantado a partir do cadastro de cada jogador na TAP; as safras são' +
-        ' recalculadas em rodízio, uma por vez.'
-      : ' A varredura ainda não terminou nenhum mês — ela roda de 15 em 15 min' +
-        ' e preenche um mês por rodada.';
-  }
-
-  if (!alvo) {
-    if (corpo) corpo.innerHTML = '<p class="safra__vazio">Nenhuma safra fechada ainda.</p>';
-    ['cadastros', 'ftd', 'recorrentes', 'ativos', 'deposito', 'deposito_ftd',
-     'net_dep', 'comissao'].forEach(function (c) {
-      escreve(campo(raiz, 'safra.' + c), '—');
-    });
+  var d = estado.safra[esc];
+  if (!d) {
+    est.hidden = false; est.textContent = 'Levantando as safras…';
+    corpo.hidden = true;
     return;
   }
 
-  var t = alvo.totais || {};
-  function sub(el) { return el ? el.parentElement.querySelector('.tcard__sub') : null; }
-  function tile(nome, valor, textoSub) {
-    var el = campo(raiz, 'safra.' + nome);
-    escreve(el, valor);
-    escreve(sub(el), textoSub);
-  }
-
-  /* cada degrau diz quanto sobrou do DEGRAU ANTERIOR, não do topo: é assim que
-     se lê um funil, e é o que responde "onde a turma some". */
-  tile('cadastros', inteiro(t.cadastros), 'entraram em ' + mesPorExtenso(alvo.mes));
-  tile('ftd', inteiro(t.ftd), t.cadastros > 0
-    ? pct(t.ftd / t.cadastros * 100) + ' dos cadastros'
-    : 'sem cadastro nessa turma');
-  tile('recorrentes', inteiro(t.recorrentes), t.ftd > 0
-    ? pct(t.recorrentes / t.ftd * 100) + ' de quem depositou'
-    : 'ninguém depositou');
-  tile('ativos', inteiro(t.ativos), t.cadastros > 0
-    ? pct(t.ativos / t.cadastros * 100) + ' dos cadastros'
-    : 'sem cadastro nessa turma');
-  tile('deposito', brl(t.deposito), 'acumulado desde que a turma entrou');
-  tile('deposito_ftd', t.ftd > 0 ? brl(t.deposito / t.ftd) : brl(0),
-       t.ftd > 0 ? 'depósito ÷ ' + inteiro(t.ftd) + ' FTD' : 'nenhum FTD nessa turma');
-  var elNd = campo(raiz, 'safra.net_dep');
-  escreve(elNd, brl(t.net_dep));
-  classeSinal(elNd, t.net_dep);
-  escreve(sub(elNd), t.deposito > 0
-    ? pct(t.net_dep / t.deposito * 100) + ' do depósito bruto' : 'sem depósito');
-  tile('comissao', brl(t.comissao), t.deposito > 0
-    ? pct(t.comissao / t.deposito * 100) + ' do depósito da turma'
-    : 'nenhuma comissão nessa turma');
-
-  /* tabela por expert */
-  if (!corpo) return;
-  corpo.innerHTML = '';
-  var linhas = (alvo.experts || []).filter(function (e) { return e.cadastros > 0; });
-  if (!linhas.length) {
-    corpo.innerHTML = '<p class="safra__vazio">Ninguém se cadastrou nessa turma.</p>';
-    return;
-  }
-  var frag = document.createDocumentFragment();
-  linhas.forEach(function (e) {
-    var l = document.createElement('div');
-    l.className = 'safratab__row';
-    function cel(txt, classe, soft) {
-      var sp = document.createElement('span');
-      sp.className = 'safratab__num' + (classe ? ' ' + classe : '') +
-                     (soft ? ' safratab__num--soft' : '');
-      sp.textContent = txt;
-      l.appendChild(sp);
-    }
-    var nome = document.createElement('span');
-    nome.className = 'safratab__nome';
-    nome.textContent = nomeExpert(e.expert_name);
-    nome.title = nomeCompleto(e.expert_name);
-    l.appendChild(nome);
-
-    cel(inteiro(e.cadastros));
-    cel(inteiro(e.ftd));
-    cel(e.conversao_ftd == null ? pct(0) : pct(e.conversao_ftd), null, e.conversao_ftd == null);
-    cel(inteiro(e.recorrentes));
-    cel(e.recompra == null ? pct(0) : pct(e.recompra), null, e.recompra == null);
-    cel(inteiro(e.ativos));
-    cel(brl(e.deposito), 'safratab__dep');
-    cel(brl(e.deposito_por_ftd == null ? 0 : e.deposito_por_ftd), 'safratab__depftd',
-        e.deposito_por_ftd == null);
-    /* dias até o FTD é MÉDIA da turma. Menos de um dia é o caso comum (a pessoa
-       deposita na mesma sessão em que se cadastra), então horas comunicam
-       melhor que "0,4 dia". */
-    var dias = Number(e.dias_ate_ftd) || 0;
-    cel(e.ftd > 0
-      ? (dias < 1 ? Math.round(dias * 24) + 'h' : dias.toFixed(1).replace('.', ',') + 'd')
-      : '—', 'safratab__dias', e.ftd === 0);
-    frag.appendChild(l);
+  /* junta as linhas DESTE expert, mês a mês */
+  var nome = estado.painel.nome;
+  var linhas = [];
+  (d.meses || []).forEach(function (m) {
+    (m.experts || []).forEach(function (e) {
+      if (e.expert_name !== nome) return;
+      if (!e.cadastros) return;   /* mês em que este expert não trouxe ninguém */
+      linhas.push({ mes: m.mes, e: e });
+    });
   });
-  corpo.appendChild(frag);
-  /* sem caberNaCaixa aqui: ela encolhe a fonte de UM campo, e esta tabela
-     resolve largura como a do comparativo -- min-width + overflow-x, rolando
-     em vez de cortar. */
+
+  if (!linhas.length) {
+    est.hidden = false;
+    est.textContent = (d.meses || []).length
+      ? 'Nenhuma turma com cadastro deste expert ainda.'
+      : 'A varredura ainda não terminou nenhum mês. Ela roda em rodízio e ' +
+        'preenche um mês por vez.';
+    corpo.hidden = true;
+    return;
+  }
+
+  est.hidden = true;
+  corpo.hidden = false;
+  corpo.innerHTML = '';
+
+  var tab = document.createElement('div');
+  tab.className = 'sfr';
+
+  var cab = document.createElement('div');
+  cab.className = 'sfr__row sfr__row--head';
+  cab.setAttribute('aria-hidden', 'true');
+  ['Entrou em', 'Cadastros', 'FTD', 'Seguem', 'Retenção', 'Deixou pra casa']
+    .forEach(function (t) {
+      var sp = document.createElement('span');
+      sp.textContent = t;
+      cab.appendChild(sp);
+    });
+  tab.appendChild(cab);
+
+  linhas.forEach(function (l) {
+    var e = l.e;
+    var row = document.createElement('div');
+    row.className = 'sfr__row';
+
+    var m = document.createElement('span');
+    m.className = 'sfr__mes';
+    m.textContent = mesCurto(l.mes);
+    row.appendChild(m);
+
+    function num(txt, classe, soft) {
+      var sp = document.createElement('span');
+      sp.className = 'sfr__n' + (classe ? ' ' + classe : '') + (soft ? ' sfr__n--soft' : '');
+      sp.textContent = txt;
+      row.appendChild(sp);
+      return sp;
+    }
+
+    num(inteiro(e.cadastros));
+    num(inteiro(e.ftd), null, e.ftd === 0);
+
+    /* SEGUEM é a coluna que responde a pergunta da safra, e a única com cor por
+       valor. A régua é sobre quem DEPOSITOU: quem nunca depositou não chegou a
+       ser cliente e só diluiria a conta. */
+    var seg = num(inteiro(e.ativos), 'sfr__seguem', e.ativos === 0);
+    if (ehNum(e.retencao)) {
+      seg.classList.add(e.retencao >= 50 ? 'is-good'
+        : (e.retencao >= 20 ? 'is-warn' : 'is-bad'));
+    }
+    num(e.retencao == null ? '—' : pct(e.retencao), null, e.retencao == null);
+
+    /* "deixou pra casa" é o NET PL da turma: o que sobrou depois de pagar os
+       prêmios. Não é depósito — depósito volta em saque. */
+    var casa = num(brl(e.net_pl), 'sfr__casa');
+    classeSinal(casa, e.net_pl);
+
+    var dica = [inteiro(e.cadastros) + ' cadastros, ' + inteiro(e.ftd) + ' depositaram'];
+    if (e.churned) dica.push(inteiro(e.churned) + ' já marcados como churn');
+    if (e.sem_rank) dica.push(inteiro(e.sem_rank) + ' nunca movimentaram');
+    if (ehNum(e.deposito)) dica.push('depositaram ' + brl(e.deposito) + ' no total');
+    if (ehNum(e.net_pl_por_ftd)) dica.push(brl(e.net_pl_por_ftd) + ' de net PL por FTD');
+    row.title = dica.join(' · ');
+
+    tab.appendChild(row);
+  });
+
+  corpo.appendChild(tab);
+
+  var nota = document.createElement('p');
+  nota.className = 'pnl-nota';
+  nota.style.marginTop = '10px';
+  nota.textContent = 'Cada linha é a turma que se CADASTROU naquele mês, e os ' +
+    'números são o que ela fez até hoje — por isso a safra de um mês antigo ' +
+    'continua mudando. "Seguem" é quem a TAP ainda classifica como ativo; ' +
+    '"perdidos" é quem ela marcou como churn. A retenção é sobre quem ' +
+    'depositou, não sobre o total de cadastros.';
+  corpo.appendChild(nota);
 }
 
 function carregar(opts) {
@@ -9637,6 +9422,7 @@ function pintarPainel() {
   pintarKpi('margem',   kpis.margem,   pct(kpis.margem),     kpis.margem >= META_MARGEM);
 
   pintarTendencia();
+  pintarSafraDoExpert();
 
   var rec = recomendar(cpa, kpis, tend, e.investimento_total);
   PNL.rec.className = 'pnl-card pnl-rec pnl-rec--' + rec.tom;
@@ -9882,6 +9668,10 @@ function ligarBarraCompacta() {
 }
 
 function abrirPainel(nome, esc, origem) {
+  /* a safra é de UM expert por vez, então ela só é buscada quando alguém
+     abre um painel — e uma vez por escopo por sessão. carregarSafra é
+     idempotente: com o dado em mãos, só repinta. */
+  carregarSafra(esc);
   estado.painel = { aberto: true, nome: nome, escopo: esc, origem: origem || null };
   medirTopbar();
   PNL.raiz.hidden = false;
@@ -9972,7 +9762,7 @@ function ligarPainel() {
    Link antigo que circulou no grupo do time continua abrindo onde abria.
    ────────────────────────────────────────────────────────────────────────── */
 var ESCOPOS = { cl: 'e-cl', geral: 'e-geral', google: 'e-google' };
-var ABAS    = { visao: 'v-geral', detalhe: 'v-experts', safra: 'v-safra' };
+var ABAS    = { visao: 'v-geral', detalhe: 'v-experts' };
 var LEGADO  = { geral: 'cl/visao', experts: 'cl/detalhe' };
 /* id do input -> pedaço de escopo da URL. Tabela em vez de encadear ternário:
    quando o Google entrou como terceiro escopo, o ternário antigo mandava
@@ -9983,10 +9773,7 @@ var ESCOPO_ID_PARA_HASH = { 'e-cl': 'cl', 'e-geral': 'geral', 'e-google': 'googl
 function hashAtual() {
   var esc = $('input[name="escopo"]:checked'), ab = $('input[name="view"]:checked');
   var e = (esc && ESCOPO_ID_PARA_HASH[esc.id]) || 'cl';
-  /* tabela em vez de ternário encadeado: foi exatamente um ternário assim
-     que, quando o Google entrou, mandava todo escopo desconhecido pro 'cl'. */
-  var ABA_ID_PARA_HASH = { 'v-experts': 'detalhe', 'v-safra': 'safra' };
-  var a = (ab && ABA_ID_PARA_HASH[ab.id]) || 'visao';
+  var a = (ab && ab.id === 'v-experts') ? 'detalhe' : 'visao';
   return e + '/' + a;
 }
 function aplicarHash() {
@@ -10005,22 +9792,10 @@ function ligarAbas() {
       /* replace, não push: trocar de aba não é navegação, e entulhar o
          histórico faria o "voltar" do celular percorrer abas em vez de sair */
       if (location.hash !== novo) history.replaceState(null, '', novo);
-      /* a safra é buscada na PRIMEIRA abertura da aba, e de novo quando se
-         troca de escopo com ela aberta (cada escopo tem a sua). carregarSafra
-         é idempotente: com o dado em mãos ela só repinta. */
-      var abaSafra = document.getElementById('v-safra');
-      if (abaSafra && abaSafra.checked) carregarSafra(safraEscopoAtivo());
     });
   });
-  window.addEventListener('hashchange', function () {
-    aplicarHash();
-    var ab = document.getElementById('v-safra');
-    if (ab && ab.checked) carregarSafra(safraEscopoAtivo());
-  });
+  window.addEventListener('hashchange', aplicarHash);
   aplicarHash();
-  /* link compartilhado abrindo direto em #geral/safra também precisa buscar */
-  var abaInicial = document.getElementById('v-safra');
-  if (abaInicial && abaInicial.checked) carregarSafra(safraEscopoAtivo());
 }
 
 /* ── 11. partida ────────────────────────────────────────────────────────── */
