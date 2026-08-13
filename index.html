@@ -1337,26 +1337,41 @@ html.rolado .brand__logo{height:19px}
    lá em cima. Aqui ficam só os estados dependentes do :checked. */
 #e-cl:checked ~ .topbar .scopebar label[for="e-cl"],
 #e-geral:checked ~ .topbar .scopebar label[for="e-geral"],
-#e-google:checked ~ .topbar .scopebar label[for="e-google"]{
+#e-google:checked ~ .topbar .scopebar label[for="e-google"],
+#e-tiktok:checked ~ .topbar .scopebar label[for="e-tiktok"],
+#e-kwai:checked ~ .topbar .scopebar label[for="e-kwai"],
+#e-taboola:checked ~ .topbar .scopebar label[for="e-taboola"]{
   background:linear-gradient(135deg,var(--acao),var(--acao-2));
   border-color:transparent;
   box-shadow:0 1px 10px rgba(226,2,102,.38);
 }
 #e-cl:checked ~ .topbar .scopebar label[for="e-cl"] .scopebar__nome,
 #e-geral:checked ~ .topbar .scopebar label[for="e-geral"] .scopebar__nome,
-#e-google:checked ~ .topbar .scopebar label[for="e-google"] .scopebar__nome{color:#fff;font-weight:680}
+#e-google:checked ~ .topbar .scopebar label[for="e-google"] .scopebar__nome,
+#e-tiktok:checked ~ .topbar .scopebar label[for="e-tiktok"] .scopebar__nome,
+#e-kwai:checked ~ .topbar .scopebar label[for="e-kwai"] .scopebar__nome,
+#e-taboola:checked ~ .topbar .scopebar label[for="e-taboola"] .scopebar__nome{color:#fff;font-weight:680}
 #e-cl:checked ~ .topbar .scopebar label[for="e-cl"] .scopebar__nome::before,
 #e-geral:checked ~ .topbar .scopebar label[for="e-geral"] .scopebar__nome::before,
-#e-google:checked ~ .topbar .scopebar label[for="e-google"] .scopebar__nome::before{
+#e-google:checked ~ .topbar .scopebar label[for="e-google"] .scopebar__nome::before,
+#e-tiktok:checked ~ .topbar .scopebar label[for="e-tiktok"] .scopebar__nome::before,
+#e-kwai:checked ~ .topbar .scopebar label[for="e-kwai"] .scopebar__nome::before,
+#e-taboola:checked ~ .topbar .scopebar label[for="e-taboola"] .scopebar__nome::before{
   background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.22);
 }
 /* a contagem só existe no escopo ativo: nos outros é ruído e cobra largura */
 #e-cl:checked ~ .topbar .scopebar label[for="e-cl"] .scopebar__sub,
 #e-geral:checked ~ .topbar .scopebar label[for="e-geral"] .scopebar__sub,
-#e-google:checked ~ .topbar .scopebar label[for="e-google"] .scopebar__sub{display:inline-flex}
+#e-google:checked ~ .topbar .scopebar label[for="e-google"] .scopebar__sub,
+#e-tiktok:checked ~ .topbar .scopebar label[for="e-tiktok"] .scopebar__sub,
+#e-kwai:checked ~ .topbar .scopebar label[for="e-kwai"] .scopebar__sub,
+#e-taboola:checked ~ .topbar .scopebar label[for="e-taboola"] .scopebar__sub{display:inline-flex}
 #e-cl:focus-visible ~ .topbar .scopebar label[for="e-cl"],
 #e-geral:focus-visible ~ .topbar .scopebar label[for="e-geral"],
-#e-google:focus-visible ~ .topbar .scopebar label[for="e-google"]{outline:2px solid var(--gold);outline-offset:2px}
+#e-google:focus-visible ~ .topbar .scopebar label[for="e-google"],
+#e-tiktok:focus-visible ~ .topbar .scopebar label[for="e-tiktok"],
+#e-kwai:focus-visible ~ .topbar .scopebar label[for="e-kwai"],
+#e-taboola:focus-visible ~ .topbar .scopebar label[for="e-taboola"]{outline:2px solid var(--gold);outline-offset:2px}
 
 /* ordenação só faz sentido onde existe card pra ordenar: fora da aba
    "Por expert" e no escopo Google, o gatilho some inteiro da barra. */
@@ -1364,9 +1379,30 @@ html.rolado .brand__logo{height:19px}
 #e-google:checked ~ .topbar .sortpop{display:none}
 
 .scope{display:none}
+/* ── ESCOPO EM OBRA ───────────────────────────────────────────────────────
+   Uma caixa só, centrada, dizendo o que falta. Deliberadamente sem tile
+   nenhum: fileira de "—" pareceria painel quebrado, e painel quebrado o time
+   reporta como bug toda semana. */
+.emobra{
+  max-width:56ch;margin:64px auto;padding:26px 28px;text-align:center;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+}
+.emobra__tag{
+  display:inline-block;padding:4px 10px;border-radius:999px;
+  border:1px solid var(--line-strong);background:var(--surface-sunk);
+  font-family:var(--mono);font-size:.5625rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--txt-3);
+}
+.emobra__tit{margin:14px 0 0;font-size:1.375rem;font-weight:680;letter-spacing:.01em}
+.emobra__txt{margin:10px 0 0;color:var(--txt-2);font-size:.875rem;line-height:1.6}
+.emobra__txt b{color:var(--txt-1);font-weight:640}
+.emobra__txt--sec{color:var(--txt-3);font-size:.8125rem}
 #e-cl:checked ~ .wrap .scope--cl,
 #e-geral:checked ~ .wrap .scope--geral,
-#e-google:checked ~ .wrap .scope--google{display:block}
+#e-google:checked ~ .wrap .scope--google,
+#e-tiktok:checked ~ .wrap .scope--tiktok,
+#e-kwai:checked ~ .wrap .scope--kwai,
+#e-taboola:checked ~ .wrap .scope--taboola{display:block}
 
 /* ── ESCOPO GOOGLE ────────────────────────────────────────────────────────
    Estrutura enxuta de propósito: o Google é UMA operação (não N experts),
@@ -2593,7 +2629,10 @@ html.rolado .brand__logo{height:19px}
 @keyframes entraScope{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
 #e-cl:checked ~ .wrap .scope--cl,
 #e-geral:checked ~ .wrap .scope--geral,
-#e-google:checked ~ .wrap .scope--google{animation:entraScope .18s ease-out both}
+#e-google:checked ~ .wrap .scope--google,
+#e-tiktok:checked ~ .wrap .scope--tiktok,
+#e-kwai:checked ~ .wrap .scope--kwai,
+#e-taboola:checked ~ .wrap .scope--taboola{animation:entraScope .18s ease-out both}
 
 /* ── 4. NÚMERO QUE VIRA TAMANHO ───────────────────────────────────────────
    Barra que salta de 12% pra 47% não comunica variação, comunica troca de
@@ -3042,9 +3081,12 @@ body.pnl-aberto{overflow:hidden}
        Nível 1 · escopo  -> #e-cl | #e-geral | #e-google
        Nível 2 · sub-aba -> #v-geral | #v-experts  (compartilhada pelos três)
        ═══════════════════════════════════════════════════════════════════════ -->
-  <input type="radio" name="escopo" id="e-cl" checked>
-  <input type="radio" name="escopo" id="e-geral">
+  <input type="radio" name="escopo" id="e-cl">
+  <input type="radio" name="escopo" id="e-geral" checked>
   <input type="radio" name="escopo" id="e-google">
+  <input type="radio" name="escopo" id="e-tiktok">
+  <input type="radio" name="escopo" id="e-kwai">
+  <input type="radio" name="escopo" id="e-taboola">
   <input type="radio" name="view" id="v-geral" checked>
   <input type="radio" name="view" id="v-experts">
 
@@ -3069,19 +3111,36 @@ body.pnl-aberto{overflow:hidden}
            (.scopebar__sub, escrita por pintarScopebar) só aparece no escopo
            ativo: nos outros dois é ruído e cobra largura. -->
       <nav class="scopebar" aria-label="Escopo da operação">
-        <label for="e-cl">
-          <span class="scopebar__nome">Costa e Lobão</span>
-          <!-- JS: experts.length -->
-          <span class="scopebar__sub" data-derived="experts.length">7 experts</span>
-        </label>
+        <!-- COSTA E LOBÃO SAIU DA BARRA (13/08, pedido do operador): o recorte
+             dos 7 experts virou um caso particular do Geral, que hoje já traz
+             todos eles. O #e-cl e o .scope--cl continuam no arquivo, sem botão
+             que chegue neles: se o recorte voltar a ser pedido, é devolver
+             este label. Enquanto isso a tela nem monta esse escopo. -->
         <label for="e-geral">
-          <span class="scopebar__nome">Geral</span>
+          <span class="scopebar__nome">Geral por Meta</span>
           <!-- JS: geral.experts.length + soma de geral.experts[].contas.length -->
           <span class="scopebar__sub" data-derived="geral.experts.length + contas">24 experts · 33 contas</span>
         </label>
         <label for="e-google">
           <span class="scopebar__nome">Google</span>
           <span class="scopebar__sub" data-derived="google.contas.length">3 contas · MCC</span>
+        </label>
+        <!-- CANAIS EM OBRA. Entram na barra antes de terem dado de propósito:
+             o time pergunta "e o TikTok?" toda semana, e uma aba que diz "em
+             construção" responde isso melhor do que a ausência dela, que
+             parece esquecimento. Cada uma vira escopo de verdade quando a
+             conta e a API do canal estiverem ligadas. -->
+        <label for="e-tiktok">
+          <span class="scopebar__nome">TikTok</span>
+          <span class="scopebar__sub">em construção</span>
+        </label>
+        <label for="e-kwai">
+          <span class="scopebar__nome">Kwai</span>
+          <span class="scopebar__sub">em construção</span>
+        </label>
+        <label for="e-taboola">
+          <span class="scopebar__nome">Taboola</span>
+          <span class="scopebar__sub">em construção</span>
         </label>
       </nav>
 
@@ -5782,14 +5841,71 @@ body.pnl-aberto{overflow:hidden}
       </div>
 
     </div><!-- ╚══ /ESCOPO 3 · GOOGLE ══╝ -->
+
+    <!-- ╔═══════════════════════════════════════════════════════════════════╗
+         ║ ESCOPOS EM OBRA · TikTok · Kwai · Taboola                         ║
+         ╚═══════════════════════════════════════════════════════════════════╝
+         Sem API ligada ainda: a tela diz o que falta, e não inventa R$ 0,00 —
+         zero num painel de verba se lê como "não gastou", não como "não
+         medimos". Mesma regra do investimento do Google enquanto a credencial
+         não subiu. -->
+    <div class="scope scope--tiktok" id="escopo-tiktok" data-escopo="tiktok">
+      <div class="emobra">
+        <span class="emobra__tag">Em construção</span>
+        <h2 class="emobra__tit">TikTok</h2>
+        <p class="emobra__txt">
+          Este escopo ainda não está ligado. Falta conectar a conta da
+          <b>TikTok Ads</b> e a leitura do funil por btag na TAP — sem as duas,
+          qualquer número aqui seria chute.
+        </p>
+        <p class="emobra__txt emobra__txt--sec">
+          Quando ligar, esta aba mostra o mesmo que as outras: investimento do
+          período, cadastros, FTD, custo por FTD, depósito e o que a operação
+          deixou pra casa.
+        </p>
+      </div>
+    </div><!-- ╚══ /ESCOPO TIKTOK ══╝ -->
+    <div class="scope scope--kwai" id="escopo-kwai" data-escopo="kwai">
+      <div class="emobra">
+        <span class="emobra__tag">Em construção</span>
+        <h2 class="emobra__tit">Kwai</h2>
+        <p class="emobra__txt">
+          Este escopo ainda não está ligado. Falta conectar a conta da
+          <b>Kwai for Business</b> e a leitura do funil por btag na TAP — sem as duas,
+          qualquer número aqui seria chute.
+        </p>
+        <p class="emobra__txt emobra__txt--sec">
+          Quando ligar, esta aba mostra o mesmo que as outras: investimento do
+          período, cadastros, FTD, custo por FTD, depósito e o que a operação
+          deixou pra casa.
+        </p>
+      </div>
+    </div><!-- ╚══ /ESCOPO KWAI ══╝ -->
+    <div class="scope scope--taboola" id="escopo-taboola" data-escopo="taboola">
+      <div class="emobra">
+        <span class="emobra__tag">Em construção</span>
+        <h2 class="emobra__tit">Taboola</h2>
+        <p class="emobra__txt">
+          Este escopo ainda não está ligado. Falta conectar a conta da
+          <b>Taboola Ads</b> e a leitura do funil por btag na TAP — sem as duas,
+          qualquer número aqui seria chute.
+        </p>
+        <p class="emobra__txt emobra__txt--sec">
+          Quando ligar, esta aba mostra o mesmo que as outras: investimento do
+          período, cadastros, FTD, custo por FTD, depósito e o que a operação
+          deixou pra casa.
+        </p>
+      </div>
+    </div><!-- ╚══ /ESCOPO TABOOLA ══╝ -->
   </div><!-- /.views -->
 
     <footer class="foot">
       <p>
-        <b>Costa e Lobão</b> é o recorte dos 7 experts da casa. <b>Geral</b> é a
-        operação inteira da BM, 28 experts em 33 contas de anúncio, incluindo
-        os 7 do recorte. Os dois escopos leem a mesma API, em blocos separados:
-        um não é a soma nem o filtro do outro na tela.
+        <b>Geral por Meta</b> é a operação inteira da BM: 28 experts em 33 contas
+        de anúncio, incluindo os 7 do recorte antigo (Costa e Lobão), que deixou
+        de ter aba própria. <b>Google</b> lê o btag da MCC. <b>TikTok</b>,
+        <b>Kwai</b> e <b>Taboola</b> ainda não estão ligados — cada aba diz o que
+        falta em vez de mostrar zero.
       </p>
       <p>
         <b>Expert</b> aqui nem sempre é pessoa: Institucional é a marca anunciando,
@@ -8730,6 +8846,10 @@ function pintarTopCriativos(d, isHoje, raiz) {
    ────────────────────────────────────────────────────────────────────────── */
 function pintarEscopo(bloco, periodo, isHoje, raiz, geral) {
   if (!raiz || !bloco) return;
+  /* escopo sem botão na barra não é montado: o Costa e Lobão continua no
+     arquivo, mas ninguém chega nele — renderizar (e buscar a safra dele) seria
+     trabalho e uma chamada de rede por atualização pra uma tela invisível. */
+  if (!$('.scopebar label[for="' + (geral ? 'e-geral' : 'e-cl') + '"]')) return;
   var d = { totais: bloco.totais || {}, experts: bloco.experts || [], periodo: periodo };
   /* veredito e sinais continuam falando da OPERAÇÃO inteira de propósito: são
      diagnóstico do escopo, não do recorte que a pessoa está comparando. */
@@ -8765,7 +8885,7 @@ function pintarGoogle(g, periodo) {
   if (!g) {
     /* API antiga (sem o bloco): esconde o escopo em vez de mostrar tela vazia */
     if (botao) botao.hidden = true;
-    if (document.getElementById('e-google').checked) document.getElementById('e-cl').checked = true;
+    if (document.getElementById('e-google').checked) document.getElementById('e-geral').checked = true;
     return;
   }
   if (botao) botao.hidden = false;
@@ -10691,18 +10811,24 @@ function ligarPainel() {
                          #experts vira #cl/detalhe
    Link antigo que circulou no grupo do time continua abrindo onde abria.
    ────────────────────────────────────────────────────────────────────────── */
-var ESCOPOS = { cl: 'e-cl', geral: 'e-geral', google: 'e-google' };
+/* 'cl' aponta pro MESMO input do Geral de propósito: o escopo Costa e Lobão
+   saiu da barra, e link antigo (#cl/visao, que circulou no grupo do time)
+   abrindo num escopo sem botão de volta é pior que abrir no lugar novo. */
+var ESCOPOS = { cl: 'e-geral', geral: 'e-geral', google: 'e-google',
+                tiktok: 'e-tiktok', kwai: 'e-kwai', taboola: 'e-taboola' };
 var ABAS    = { visao: 'v-geral', detalhe: 'v-experts' };
-var LEGADO  = { geral: 'cl/visao', experts: 'cl/detalhe' };
+var LEGADO  = { geral: 'geral/visao', experts: 'geral/detalhe' };
 /* id do input -> pedaço de escopo da URL. Tabela em vez de encadear ternário:
    quando o Google entrou como terceiro escopo, o ternário antigo mandava
    qualquer coisa que não fosse 'e-geral' pra 'cl' — então o Google escrevia
    #cl na barra e um link #google/... abria no Costa e Lobão. */
-var ESCOPO_ID_PARA_HASH = { 'e-cl': 'cl', 'e-geral': 'geral', 'e-google': 'google' };
+var ESCOPO_ID_PARA_HASH = { 'e-cl': 'cl', 'e-geral': 'geral', 'e-google': 'google',
+                            'e-tiktok': 'tiktok', 'e-kwai': 'kwai',
+                            'e-taboola': 'taboola' };
 
 function hashAtual() {
   var esc = $('input[name="escopo"]:checked'), ab = $('input[name="view"]:checked');
-  var e = (esc && ESCOPO_ID_PARA_HASH[esc.id]) || 'cl';
+  var e = (esc && ESCOPO_ID_PARA_HASH[esc.id]) || 'geral';
   var a = (ab && ab.id === 'v-experts') ? 'detalhe' : 'visao';
   return e + '/' + a;
 }
