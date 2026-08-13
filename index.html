@@ -1359,6 +1359,17 @@ html.rolado .brand__logo{height:19px}
 #e-taboola:checked ~ .topbar .scopebar label[for="e-taboola"] .scopebar__nome::before{
   background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.22);
 }
+/* BOLINHA VERDE = ESTE CANAL ESTÁ RODANDO AGORA (teve verba no período).
+   O ponto já existia como enfeite de marcador; virou informação: dá pra saber
+   quais canais estão vivos sem entrar em cada aba. Cinza = sem verba no
+   período (ou canal ainda em obra).
+   !important porque a regra do escopo ativo pinta o mesmo ::before com um
+   seletor de id (peso muito maior) — e "está rodando" tem que valer também na
+   aba que está aberta, senão o sinal some justo onde a pessoa está. */
+.scopebar label[data-rodando] .scopebar__nome::before{
+  background:var(--good) !important;
+  box-shadow:0 0 0 3px rgba(46,212,122,.18) !important;
+}
 /* a contagem só existe no escopo ativo: nos outros é ruído e cobra largura */
 #e-cl:checked ~ .topbar .scopebar label[for="e-cl"] .scopebar__sub,
 #e-geral:checked ~ .topbar .scopebar label[for="e-geral"] .scopebar__sub,
@@ -3117,7 +3128,7 @@ body.pnl-aberto{overflow:hidden}
              que chegue neles: se o recorte voltar a ser pedido, é devolver
              este label. Enquanto isso a tela nem monta esse escopo. -->
         <label for="e-geral">
-          <span class="scopebar__nome">Geral por Meta</span>
+          <span class="scopebar__nome">Meta</span>
           <!-- JS: geral.experts.length + soma de geral.experts[].contas.length -->
           <span class="scopebar__sub" data-derived="geral.experts.length + contas">24 experts · 33 contas</span>
         </label>
@@ -5901,7 +5912,7 @@ body.pnl-aberto{overflow:hidden}
 
     <footer class="foot">
       <p>
-        <b>Geral por Meta</b> é a operação inteira da BM: 28 experts em 33 contas
+        <b>Meta</b> é a operação inteira da BM na Meta: 28 experts em 33 contas
         de anúncio, incluindo os 7 do recorte antigo (Costa e Lobão), que deixou
         de ter aba própria. <b>Google</b> lê o btag da MCC. <b>TikTok</b>,
         <b>Kwai</b> e <b>Taboola</b> ainda não estão ligados — cada aba diz o que
@@ -9043,12 +9054,14 @@ function pintarGoogle(g, periodo) {
 
 /* rótulo dos dois cartões de escopo: contagem real, não número escrito à mão */
 function pintarScopebar(d) {
-  var subs = $$('.scopebar__sub');
-  var n7 = (d.experts || []).length;
-  if (subs[0]) subs[0].textContent = n7 + (n7 === 1 ? ' expert' : ' experts');
+  /* por LABEL, nunca por posição: a barra já perdeu uma aba (Costa e Lobão) e
+     ganhou três (TikTok, Kwai, Taboola). Índice fixo aqui escrevia a contagem
+     de experts no rótulo do canal errado. */
+  var sub = $('.scopebar label[for="e-geral"] .scopebar__sub');
 
   var ents = (d.geral && d.geral.experts) || [];
-  if (subs[1]) {
+  if (sub) {
+    var subs = [null, sub];
     if (!ents.length) { subs[1].textContent = 'sem dados'; return; }
     /* a contagem de contas só vai pro rótulo se TODAS as entidades trouxerem
        contas[]. Hoje as 7 do Costa e Lobão vêm sem o campo, e chutar "1 conta"
@@ -9064,6 +9077,26 @@ function pintarScopebar(d) {
 
 /* aviso de verba bloqueada no escopo Geral. Some sozinho no dia em que a
    permissão da Meta liberar e ninguém mais estiver zerado. */
+/* Acende o ponto do canal que teve verba no período. Canal em obra nunca
+   acende: não tem como estar rodando o que não está ligado. */
+function pintarPontosCanais(d) {
+  var vivos = {
+    'e-geral': !!(d.geral && d.geral.totais && d.geral.totais.investimento_total > 0),
+    'e-google': !!(d.google && ehNum(d.google.investimento_total) &&
+                   d.google.investimento_total > 0)
+  };
+  $$('.scopebar label').forEach(function (l) {
+    var alvo = l.getAttribute('for');
+    if (vivos[alvo]) l.setAttribute('data-rodando', '');
+    else l.removeAttribute('data-rodando');
+    l.title = vivos[alvo]
+      ? 'Rodando: teve investimento no período'
+      : (alvo === 'e-geral' || alvo === 'e-google'
+          ? 'Sem investimento no período'
+          : 'Canal ainda não ligado');
+  });
+}
+
 function pintarAvisoGeral(ents) {
   var aviso = $('#geral-aviso');
   if (!aviso) return;
@@ -10046,6 +10079,7 @@ function carregar(opts) {
       }
       pintarGoogle(d.google, d.periodo);
       pintarScopebar(d);
+      pintarPontosCanais(d);
       conferirPeriodo(r, d.periodo);
       pintarStatus('ok');
       pintarNotaPeriodo();
