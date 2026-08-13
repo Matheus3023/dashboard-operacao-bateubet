@@ -1799,12 +1799,16 @@ html.rolado .brand__logo{height:19px}
 .pnl-safra__estado{color:var(--txt-3);font-size:.8125rem;padding:6px 0}
 .sfr{overflow-x:auto}
 .sfr__row{
-  display:grid;align-items:center;gap:10px;
-  /* 6 colunas, não 7: "perdidos" saiu pro title da linha. O painel tem ~530px
-     úteis e a coluna que MAIS importa é a última ("deixou pra casa") -- com
-     ela atrás da rolagem horizontal, a tabela respondia meia pergunta. */
-  grid-template-columns:62px 62px 46px 58px 62px minmax(96px,1fr);
-  min-width:400px;padding:9px 2px;border-top:1px solid var(--line-soft);
+  display:grid;align-items:center;gap:8px;
+  /* 6 colunas. "Perdidos" e "recorrentes" moram no title da linha: o painel tem
+     ~530px úteis e as duas colunas que respondem a pergunta são as últimas
+     (quanto cada cabeça deixou, e quanto a turma deixou no total) -- com elas
+     atrás da rolagem horizontal, a tabela respondia meia pergunta.
+     A idade da turma anda junto do nome dela, não em coluna própria: sem idade
+     do lado, comparar 9% de dez/25 com 87% de ago/26 é comparar corrida de
+     maratona com tiro de 100m. */
+  grid-template-columns:70px 54px 38px 66px 72px minmax(88px,1fr);
+  min-width:436px;padding:9px 2px;border-top:1px solid var(--line-soft);
 }
 .sfr__row:first-child{border-top:0}
 .sfr__row--head{
@@ -1827,6 +1831,47 @@ html.rolado .brand__logo{height:19px}
 .sfr__seguem.is-bad{color:var(--bad)}
 .sfr__casa{font-weight:640}
 .sfr__vazio{color:var(--txt-3);font-size:.8125rem;padding:8px 0;margin:0}
+/* a idade anda colada no nome da turma, em cinza: é contexto, não dado */
+.sfr__idade{font-family:var(--mono);font-size:.5625rem;color:var(--txt-3);font-weight:500}
+/* "seguem" imprime cabeças e retenção juntas — o número sozinho não diz se 12
+   é muito ou pouco, e a % sozinha esconde turma pequena (1 de 2 = 50%) */
+.sfr__ret{font-family:var(--mono);font-size:.5625rem;font-weight:500;opacity:.75}
+
+/* ── MATRIZ MÊS A MÊS ─────────────────────────────────────────────────────
+   A safra do trabalho de escola: linha = turma que se cadastrou naquele mês,
+   coluna = mês do calendário, célula = quanto AQUELA turma deixou pra casa
+   NAQUELE mês. É o que mostra se a turma segurou ou se teve um mês em que ela
+   desandou — coisa que nenhum acumulado conta.
+
+   Como o dado nasce: a varredura fotografa o acumulado de cada turma uma vez
+   por mês; a diferença entre duas fotos é a coluna. A PRIMEIRA célula de cada
+   linha é a foto inicial, ou seja, tudo que a turma deixou ANTES da gente
+   começar a medir — por isso ela é marcada (borda tracejada) e não é
+   comparável com as outras. */
+.mtz{overflow-x:auto;margin-top:6px}
+.mtz__grade{display:grid;min-width:100%;width:max-content}
+.mtz__c{
+  padding:7px 8px;font-size:.75rem;font-weight:600;
+  font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right;
+  border-top:1px solid var(--line-soft);
+}
+.mtz__c--head{
+  font-family:var(--mono);font-size:.5rem;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--txt-3);font-weight:500;border-top:0;
+}
+/* a coluna da turma fica presa: rolando pra direita atrás de dezembro, sem ela
+   você perde de quem é a linha */
+.mtz__c--turma{
+  position:sticky;left:0;z-index:1;text-align:left;
+  background:var(--surface-sunk);font-weight:660;color:var(--txt-1);
+}
+.mtz__c--vazio{color:var(--txt-3);font-weight:500}
+/* a foto inicial: um bolo de vários meses, não um mês */
+.mtz__c--bolo{border-left:2px dashed var(--line);color:var(--txt-2)}
+.mtz__c--total{font-weight:700;border-left:1px solid var(--line-soft)}
+.mtz__nota{
+  color:var(--txt-3);font-size:.6875rem;line-height:1.5;margin:8px 0 0;
+}
 
 /* ── RODAPÉ ─────────────────────────────────────────────────────────────── */
 .foot{
@@ -8779,6 +8824,31 @@ function mesCurto(m) {
   return (MESES_CURTO[Number(p[1]) - 1] || p[1]) + '/' + p[0].slice(2);
 }
 
+/* "2026-06" -> 24318. Número de meses desde o ano zero: serve pra subtrair dois
+   meses sem cair na armadilha de virar o ano (dez/26 -> jan/27 é +1, não -11). */
+function mesOrdinal(m) {
+  var p = String(m || '').split('-');
+  if (p.length !== 2) return null;
+  var a = Number(p[0]), s = Number(p[1]);
+  if (!isFinite(a) || !isFinite(s)) return null;
+  return a * 12 + (s - 1);
+}
+
+/* Quantos meses a turma tem de vida, contando o mês em que ela entrou. A turma
+   de julho, em agosto, tem 2 meses — é essa a régua que deixa comparar uma
+   safra velha com uma nova sem enganação. */
+function idadeDaSafra(mes, ate) {
+  var a = mesOrdinal(mes), b = mesOrdinal(ate);
+  if (a == null || b == null) return null;
+  return Math.max(1, b - a + 1);
+}
+
+/* Mês corrente em São Paulo, no formato das safras. */
+function mesCorrente() {
+  var d = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+
 function pintarSafraDoExpert() {
   var est = document.getElementById('pnl-safra-estado');
   var corpo = document.getElementById('pnl-safra-corpo');
@@ -8829,7 +8899,7 @@ function pintarSafraDoExpert() {
   var cab = document.createElement('div');
   cab.className = 'sfr__row sfr__row--head';
   cab.setAttribute('aria-hidden', 'true');
-  ['Entrou em', 'Cadastros', 'FTD', 'Seguem', 'Retenção', 'Deixou pra casa']
+  ['Entrou em', 'Cadastros', 'FTD', 'Seguem', 'Por FTD', 'Deixou pra casa']
     .forEach(function (t) {
       var sp = document.createElement('span');
       sp.textContent = t;
@@ -8837,14 +8907,26 @@ function pintarSafraDoExpert() {
     });
   tab.appendChild(cab);
 
+  var hoje = mesCorrente();
+
   linhas.forEach(function (l) {
     var e = l.e;
     var row = document.createElement('div');
     row.className = 'sfr__row';
 
+    /* nome da turma + idade dela. A idade não é enfeite: sem ela, "9% seguem"
+       parece desastre e "87% seguem" parece milagre, quando na verdade uma tem
+       9 meses de estrada e a outra tem 10 dias. */
     var m = document.createElement('span');
     m.className = 'sfr__mes';
     m.textContent = mesCurto(l.mes);
+    var idade = idadeDaSafra(l.mes, hoje);
+    if (idade) {
+      var ida = document.createElement('span');
+      ida.className = 'sfr__idade';
+      ida.textContent = ' ' + idade + 'm';
+      m.appendChild(ida);
+    }
     row.appendChild(m);
 
     function num(txt, classe, soft) {
@@ -8865,8 +8947,19 @@ function pintarSafraDoExpert() {
     if (ehNum(e.retencao)) {
       seg.classList.add(e.retencao >= 50 ? 'is-good'
         : (e.retencao >= 20 ? 'is-warn' : 'is-bad'));
+      var ret = document.createElement('span');
+      ret.className = 'sfr__ret';
+      ret.textContent = ' ' + pct(e.retencao);
+      seg.appendChild(ret);
     }
-    num(e.retencao == null ? '—' : pct(e.retencao), null, e.retencao == null);
+
+    /* Quanto cada DEPOSITANTE daquela turma deixou. É a coluna que compara
+       safra com safra de verdade: turma grande sempre deixa mais no total, mas
+       o que diz se a turma é boa é quanto cada cabeça rendeu. */
+    var porCabeca = ehNum(e.net_pl_por_ftd) ? e.net_pl_por_ftd
+      : (e.ftd ? e.net_pl / e.ftd : null);
+    var cab2 = num(porCabeca == null ? '—' : brl(porCabeca), null, porCabeca == null);
+    classeSinal(cab2, porCabeca);
 
     /* "deixou pra casa" é o NET PL da turma: o que sobrou depois de pagar os
        prêmios. Não é depósito — depósito volta em saque. */
@@ -8890,10 +8983,162 @@ function pintarSafraDoExpert() {
   nota.style.marginTop = '10px';
   nota.textContent = 'Cada linha é a turma que se CADASTROU naquele mês, e os ' +
     'números são o que ela fez até hoje — por isso a safra de um mês antigo ' +
-    'continua mudando. "Seguem" é quem a TAP ainda classifica como ativo; ' +
-    '"perdidos" é quem ela marcou como churn. A retenção é sobre quem ' +
-    'depositou, não sobre o total de cadastros.';
+    'continua mudando. "Seguem" é quem a TAP ainda classifica como ativo ' +
+    '(a % é sobre quem depositou, não sobre o total de cadastros). "Por FTD" é ' +
+    'quanto cada depositante daquela turma deixou — é essa a coluna que compara ' +
+    'turma com turma, porque não depende do tamanho da safra.';
   corpo.appendChild(nota);
+
+  pintarMatrizSafra(corpo, nome, hoje);
+}
+
+/* ── MATRIZ: quanto cada turma deixou, MÊS A MÊS ──────────────────────────
+   A pergunta que a tabela de cima não responde: a turma de junho deixou 13 mil,
+   ok — mas ela deixou 13 mil no primeiro mês e nada depois, ou foi deixando o
+   ano inteiro? Uma safra que rende por seis meses e uma que rende uma vez e
+   morre somam igual e valem coisas completamente diferentes.
+
+   De onde sai o número: a varredura fotografa o acumulado de cada turma uma vez
+   por mês e guarda a foto. Diferença entre a foto de setembro e a de agosto =
+   o que a turma deixou em setembro. A API só sabe dizer o acumulado de vida de
+   cada jogador — não existe "quanto o cadastro de janeiro depositou em março"
+   pra buscar —, então mês a mês é coisa que a gente PASSA a ter, não que a
+   gente tinha guardado. A primeira célula de cada linha é a foto inicial: tudo
+   que a turma deixou antes de a gente começar a medir, num bolo só. */
+function pintarMatrizSafra(corpo, nome, hoje) {
+  var d = estado.safra[estado.painel.escopo];
+  var hist = d && d.hist;
+
+  var cx = document.createElement('div');
+  cx.className = 'mtz';
+
+  var tit = document.createElement('p');
+  tit.className = 'pnl-nota';
+  tit.style.margin = '16px 0 0';
+  tit.innerHTML = '<b>Mês a mês</b> — quanto cada turma deixou pra casa em cada mês.';
+  corpo.appendChild(tit);
+
+  /* linhas do expert aberto: mês da safra -> fotos ordenadas */
+  var linhas = [];
+  ((hist && hist.safras) || []).forEach(function (s) {
+    (s.experts || []).forEach(function (e) {
+      if (e.expert_name !== nome) return;
+      if (!e.fotos || !e.fotos.length) return;
+      linhas.push({ mes: s.mes, fotos: e.fotos });
+    });
+  });
+  linhas.sort(function (a, b) { return a.mes < b.mes ? 1 : (a.mes > b.mes ? -1 : 0); });
+
+  if (!linhas.length) {
+    var vazio = document.createElement('p');
+    vazio.className = 'mtz__nota';
+    vazio.textContent = hist
+      ? 'A primeira foto das turmas deste expert ainda não foi tirada. A ' +
+        'varredura fotografa uma safra por vez, então em algumas horas ela ' +
+        'aparece aqui.'
+      : 'O histórico não veio nesta carga. A tabela de cima continua valendo.';
+    corpo.appendChild(vazio);
+    return;
+  }
+
+  /* colunas = todos os meses fotografados, do mais antigo pro mais novo. União
+     de todas as linhas, porque turma nova entra depois e não pode empurrar a
+     coluna de quem já estava. */
+  var colunas = [];
+  var vistas = {};
+  linhas.forEach(function (l) {
+    l.fotos.forEach(function (f) {
+      if (!vistas[f.snap]) { vistas[f.snap] = true; colunas.push(f.snap); }
+    });
+  });
+  colunas.sort();
+
+  var grade = document.createElement('div');
+  grade.className = 'mtz__grade';
+  grade.style.gridTemplateColumns =
+    '78px repeat(' + colunas.length + ', minmax(78px, 1fr)) 100px';
+
+  function celula(txt, classes, titulo) {
+    var c = document.createElement('div');
+    c.className = 'mtz__c' + (classes ? ' ' + classes : '');
+    c.textContent = txt;
+    if (titulo) c.title = titulo;
+    grade.appendChild(c);
+    return c;
+  }
+
+  celula('Turma', 'mtz__c--head mtz__c--turma');
+  colunas.forEach(function (s) { celula(mesCurto(s), 'mtz__c--head'); });
+  celula('Total', 'mtz__c--head');
+
+  linhas.forEach(function (l) {
+    var idade = idadeDaSafra(l.mes, hoje);
+    celula(mesCurto(l.mes) + (idade ? ' · ' + idade + 'm' : ''),
+           'mtz__c--turma',
+           'Turma que se cadastrou em ' + mesCurto(l.mes));
+
+    /* foto por mês, pra achar rápido a anterior */
+    var porSnap = {};
+    l.fotos.forEach(function (f) { porSnap[f.snap] = f; });
+    var primeira = l.fotos[0];
+    var anterior = null;
+
+    colunas.forEach(function (s) {
+      var f = porSnap[s];
+      if (!f) {
+        /* antes da primeira foto: a turma existia mas ninguém tinha medido.
+           Depois dela: a varredura falhou naquele mês e o valor caiu na foto
+           seguinte — em nenhum dos dois casos dá pra inventar um número. */
+        celula('·', 'mtz__c--vazio',
+               s < primeira.snap
+                 ? 'Ainda não media safra neste mês'
+                 : 'Sem foto deste mês — o valor entrou na coluna seguinte');
+        return;
+      }
+
+      if (!anterior) {
+        /* a foto inicial. Se a turma nasceu no mesmo mês da foto, ela é um mês
+           normal; se nasceu antes, é o bolo de tudo que veio antes da medição. */
+        var mesesNoBolo = idadeDaSafra(l.mes, s);
+        var ehBolo = mesesNoBolo > 1;
+        var c0 = celula(brl(f.net_pl), ehBolo ? 'mtz__c--bolo' : '',
+          ehBolo
+            ? 'Primeira foto: os ' + mesesNoBolo + ' primeiros meses desta ' +
+              'turma somados (de ' + mesCurto(l.mes) + ' a ' + mesCurto(s) + '). ' +
+              'Não compare com as colunas do lado — elas são de um mês só.'
+            : mesCurto(s) + ': primeiro mês desta turma.');
+        classeSinal(c0, f.net_pl);
+        anterior = f;
+        return;
+      }
+
+      var delta = f.net_pl - anterior.net_pl;
+      var saiu = anterior.ativos - f.ativos;
+      var c = celula(brl(delta), '',
+        mesCurto(s) + ': ' + brl(delta) + ' de net PL. ' +
+        inteiro(f.ativos) + ' ainda ativos' +
+        (saiu > 0 ? ', ' + inteiro(saiu) + ' pararam no mês' : ''));
+      classeSinal(c, delta);
+      anterior = f;
+    });
+
+    var ultima = l.fotos[l.fotos.length - 1];
+    var tot = celula(brl(ultima.net_pl), 'mtz__c--total',
+      'Tudo que esta turma já deixou, desde que entrou');
+    classeSinal(tot, ultima.net_pl);
+  });
+
+  cx.appendChild(grade);
+  corpo.appendChild(cx);
+
+  var nota2 = document.createElement('p');
+  nota2.className = 'mtz__nota';
+  nota2.textContent = 'A coluna tracejada é a foto inicial: tudo que a turma ' +
+    'deixou antes de a gente começar a medir, num bolo só — ela não se compara ' +
+    'com as outras. Daí pra frente cada coluna é um mês fechado. A API da casa ' +
+    'só entrega o acumulado de vida de cada jogador, então o mês a mês é ' +
+    'construído aqui, uma foto por mês.';
+  corpo.appendChild(nota2);
 }
 
 function carregar(opts) {

@@ -15,6 +15,16 @@
 
 const UPSTREAM = 'https://n8n.srv1865704.hstgr.cloud/webhook/dashboard-operacao';
 
+/* Rota separada, workflow separado: o histórico da safra (uma FOTO do acumulado
+   de cada turma por mês) nasceu depois e mora sozinho de propósito — se ele
+   quebrar, a safra do jeito antigo e o painel inteiro continuam de pé. O painel
+   pede tudo numa chamada só; quem faz as duas pontas é esta função. */
+const UPSTREAM_HIST = 'https://n8n.srv1865704.hstgr.cloud/webhook/dashboard-safra-hist';
+/* Leitura de data table é rápida (é só ler linhas). Se passar disso, é sinal de
+   n8n ruim — e aí é melhor devolver a safra sem histórico do que não devolver
+   nada: a tela sabe se virar sem a matriz. */
+const HIST_TIMEOUT_MS = 12000;
+
 /* Orçamento TOTAL desta função, tentativas somadas. A função tem maxDuration de
    60s (vercel.json): abortar em 52s garante que quem responde é este código,
    com JSON explicando o que houve, e não a plataforma com uma página de 504.
@@ -59,6 +69,37 @@ function validarPeriodo(de, ate) {
   if (de > ate) return 'A data inicial não pode ser depois da final.';
   if (diasEntre(de, ate) > MAX_RANGE_DIAS) return 'Período máximo de ' + MAX_RANGE_DIAS + ' dias.';
   return null;
+}
+
+/**
+ * Histórico da safra: uma foto do acumulado de cada turma, por mês.
+ * Devolve null (nunca lança) — histórico é enriquecimento, não requisito.
+ */
+async function buscarHist(escopo) {
+  const token = process.env.N8N_SAFRA_HIST_TOKEN;
+  if (!token) return null;
+
+  const url = new URL(UPSTREAM_HIST);
+  url.searchParams.set('token', token);
+  url.searchParams.set('escopo', escopo);
+
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), HIST_TIMEOUT_MS);
+  try {
+    const r = await fetch(url.toString(), {
+      signal: ctrl.signal,
+      headers: { accept: 'application/json' }
+    });
+    if (!r.ok) return null;
+    const texto = await r.text();
+    if (!texto || !texto.trim()) return null;
+    const d = JSON.parse(texto);
+    return d && Array.isArray(d.safras) ? d : null;
+  } catch (e) {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 module.exports = async function handler(req, res) {
@@ -260,6 +301,13 @@ module.exports = async function handler(req, res) {
           detail: 'A resposta do n8n veio sem os campos escopo/meses.'
         });
       }
+      /* O histórico vem junto, na mesma resposta: a matriz mês a mês e a tabela
+         da turma são a MESMA tela, e duas chamadas do navegador só serviriam
+         pra ela desenhar em dois tempos. Falha aqui não derruba a safra —
+         `hist` ausente é um estado que a tela trata (ela mostra o acumulado e
+         explica que a matriz ainda está se formando). */
+      dados.hist = await buscarHist(escopo);
+
       /* A safra é recalculada em rodízio (um mês a cada 15 min), então o número
          não muda de minuto em minuto: 10 min de cache na borda economiza n8n
          sem atrasar nada perceptível. */
