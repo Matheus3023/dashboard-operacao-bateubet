@@ -1566,8 +1566,12 @@ html.rolado .brand__logo{height:19px}
      pergunta que se faz varrendo a coluna da esquerda ("esta operação se paga?")
      e ficariam invisíveis no fim de uma tabela que rola 1,8 mil pixels. 84px
      cabem o pior caso real ("sem verba", "-12,4×"). */
-  grid-template-columns:122px 84px 84px 116px minmax(138px,1fr) 134px 100px 68px 84px 48px 92px 118px 118px 108px 118px 122px;
-  min-width:1866px;
+  /* SEGUEM entra por último, depois do net PL, e não no meio do funil: todas as
+     outras colunas falam do PERÍODO escolhido lá em cima, e esta fala da
+     carteira acumulada (todas as turmas, desde sempre). Colocada entre FTD e
+     depósito, ela seria lida como "FTD do dia que continuam" e é outra coisa. */
+  grid-template-columns:122px 84px 84px 116px minmax(138px,1fr) 134px 100px 68px 84px 48px 92px 118px 118px 108px 118px 122px 118px;
+  min-width:1984px;
   padding:11px 16px;
   border-top:1px solid var(--line-soft);
 }
@@ -1618,6 +1622,12 @@ html.rolado .brand__logo{height:19px}
    verde e vermelho separam duas situações opostas). */
 .cmp__roi.is-good{color:var(--good)}
 .cmp__roi.is-bad{color:var(--bad)}
+/* mesma régua da safra do painel (≥50% verde, ≥20% amarelo, abaixo vermelho):
+   é a mesma pergunta, tem que ter a mesma cor nas duas telas. */
+.cmp__seguem.is-good{color:var(--good)}
+.cmp__seguem.is-warn{color:var(--warn)}
+.cmp__seguem.is-bad{color:var(--bad)}
+.cmp__seguem .sfr__ret{margin-left:5px}
 
 .cmp__bar{display:block;position:relative;height:7px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden}
 .cmp__bar i{
@@ -1770,7 +1780,7 @@ html.rolado .brand__logo{height:19px}
      o dinheiro da TAP -- quem quer depósito/volume/net PL abre o card. */
   .cmp__row{grid-template-columns:114px 78px 78px 110px minmax(76px,1fr) 110px 96px 64px 48px 92px;gap:10px;min-width:0}
   .cmp__dep,.cmp__netdep,.cmp__valorftd,.cmp__volume,.cmp__netpl,
-  .cmp__custocad{display:none}
+  .cmp__custocad,.cmp__seguem{display:none}
 }
 @media (max-width:759px){
   /* sobram nome, investido e os dois custos: o que decide ação */
@@ -1836,6 +1846,41 @@ html.rolado .brand__logo{height:19px}
 /* "seguem" imprime cabeças e retenção juntas — o número sozinho não diz se 12
    é muito ou pouco, e a % sozinha esconde turma pequena (1 de 2 = 50%) */
 .sfr__ret{font-family:var(--mono);font-size:.5625rem;font-weight:500;opacity:.75}
+
+/* ── SAFRA DA OPERAÇÃO (visão geral) ──────────────────────────────────────
+   A mesma tabela do painel do expert, só que somando as operações que estão
+   na comparação. A do painel responde "a turma que o Deko trouxe em junho
+   ainda está aí?"; esta responde a mesma coisa pra operação inteira, que é a
+   pergunta que se faz ANTES de abrir expert nenhum.
+   Segue a seleção do comparativo de propósito: tirar uma operação da
+   comparação e ela continuar somando na safra logo abaixo seria duas
+   respostas diferentes pra mesma pergunta na mesma tela. */
+.sfrop{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  overflow:hidden;
+  padding:4px 16px 14px;
+}
+.sfrop__estado{color:var(--txt-3);font-size:.8125rem;padding:12px 0;margin:0}
+/* aqui sobra largura (a seção ocupa a tela toda, não os ~530px do painel), então
+   as colunas que no painel viviam no title da linha entram como coluna de
+   verdade: perdidos e depósito da turma. */
+.sfr--op .sfr__row{
+  grid-template-columns:96px 84px 66px 108px 84px 100px 116px minmax(120px,1fr);
+  min-width:774px;padding:11px 2px;
+}
+.sfr--op .sfr__mes{font-size:.8125rem}
+.sfr--op .sfr__n{font-size:.875rem}
+.sfrop__nota{
+  margin:12px 0 0;color:var(--txt-3);font-size:.75rem;line-height:1.5;
+}
+@media (max-width:759px){
+  .sfrop{padding:4px 14px 12px}
+  /* no celular a tabela já rola na horizontal; o que não pode é a página
+     inteira rolar junto */
+  .sfr--op .sfr__row{grid-template-columns:80px 72px 56px 96px 76px 92px 104px minmax(110px,1fr)}
+}
 
 /* ── MATRIZ MÊS A MÊS ─────────────────────────────────────────────────────
    A safra do trabalho de escola: linha = turma que se cadastrou naquele mês,
@@ -3401,6 +3446,7 @@ body.pnl-aberto{overflow:hidden}
         <span class="cmp__valorftd">Valor FTD</span>
         <span class="cmp__volume">Volume</span>
         <span class="cmp__netpl">Net PL</span>
+        <span class="cmp__seguem">Seguem · carteira</span>
       </div>
 
       <div class="cmp__body">
@@ -3539,6 +3585,8 @@ body.pnl-aberto{overflow:hidden}
 
       <p class="cmp__foot">
         Barra proporcional ao maior investimento do dia.
+        "Seguem" é carteira: todas as turmas daquela operação somadas, não o
+        período escolhido — a tabela de safra logo abaixo abre mês a mês.
         <br>
         <!-- label, não link: troca de aba sem JS -->
         <label class="tablink" for="v-experts">
@@ -3546,6 +3594,24 @@ body.pnl-aberto{overflow:hidden}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
         </label>
       </p>
+    </section>
+
+
+    <!-- ═══ SAFRA DA OPERAÇÃO ═══
+         A mesma leitura de retenção que mora no painel de cada expert, só que
+         somando as operações que estão na comparação. Fica AQUI, na visão
+         geral, porque "as turmas que a gente traz continuam apostando?" é
+         pergunta de operação, não de expert: quem quer o detalhe de um abre o
+         card. Segue a seleção do comparativo logo acima.
+         Fonte: rota ?safra=1&escopo=, carregada uma vez por sessão (o cálculo
+         roda em rodízio no n8n, não muda de minuto em minuto). -->
+    <div class="section-head">
+      <h2 class="eyebrow">Safra · a turma de cada mês ainda está aí?</h2>
+    </div>
+
+    <section class="sfrop" aria-label="Safra por mês de cadastro">
+      <p class="sfrop__estado">Levantando as safras…</p>
+      <div class="sfrop__corpo" hidden></div>
     </section>
 
     <!-- ═══ CRIATIVOS DA OPERAÇÃO ═══
@@ -4790,6 +4856,7 @@ body.pnl-aberto{overflow:hidden}
         <span class="cmp__valorftd">Valor FTD</span>
         <span class="cmp__volume">Volume</span>
         <span class="cmp__netpl">Net PL</span>
+        <span class="cmp__seguem">Seguem · carteira</span>
       </div>
 
       <div class="cmp__body">
@@ -4888,13 +4955,33 @@ body.pnl-aberto{overflow:hidden}
 
       <p class="cmp__foot">
         Barra proporcional ao maior investimento do dia. Expert sem verba no
-        período aparece com barra vazia.
+        período aparece com barra vazia. "Seguem" é carteira: todas as turmas
+        daquela operação somadas, não o período escolhido — a tabela de safra
+        logo abaixo abre mês a mês.
         <br>
         <label class="tablink" for="v-experts">
           Abrir o detalhe por expert
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
         </label>
       </p>
+    </section>
+
+
+    <!-- ═══ SAFRA DA OPERAÇÃO ═══
+         A mesma leitura de retenção que mora no painel de cada expert, só que
+         somando as operações que estão na comparação. Fica AQUI, na visão
+         geral, porque "as turmas que a gente traz continuam apostando?" é
+         pergunta de operação, não de expert: quem quer o detalhe de um abre o
+         card. Segue a seleção do comparativo logo acima.
+         Fonte: rota ?safra=1&escopo=, carregada uma vez por sessão (o cálculo
+         roda em rodízio no n8n, não muda de minuto em minuto). -->
+    <div class="section-head">
+      <h2 class="eyebrow">Safra · a turma de cada mês ainda está aí?</h2>
+    </div>
+
+    <section class="sfrop" aria-label="Safra por mês de cadastro">
+      <p class="sfrop__estado">Levantando as safras…</p>
+      <div class="sfrop__corpo" hidden></div>
     </section>
 
     <!-- ═══ CRIATIVOS DA OPERAÇÃO INTEIRA ═══
@@ -6302,6 +6389,9 @@ var estado = {
      rodízio de 15 min, e o número não muda de minuto em minuto. */
   safra: { cl: null, geral: null },
   safraBuscando: {},
+  /* "ainda não chegou" e "tentou e não deu" mostram textos diferentes: o
+     primeiro é pra esperar, o segundo é pra recarregar a página. */
+  safraFalhou: {},
   /* cache da tendência por expert × escopo. A série só tem dias FECHADOS, ou
      seja, não muda enquanto a página está aberta: uma busca por sessão basta,
      e o refresh de 5 min recalcula em cima do cache em vez de bater na API
@@ -7492,6 +7582,8 @@ function definirOps(geral, sel, raiz) {
      "quanto esses experts somam", não teriam sentido descolados dela. */
   pintarTotaisFiltrados(b, estado.ehHoje, raiz, geral);
   pintarComparativo(b, estado.ehHoje, raiz, geral);
+  /* a safra soma as mesmas operações que a tabela mostra */
+  pintarSafraOperacao(raiz, geral);
   $$('.view', raiz).forEach(ajustarValores);
 }
 
@@ -8133,6 +8225,9 @@ function pintarComparativo(d, isHoje, raiz, geral) {
   });
   corpo.innerHTML = '';
   corpo.appendChild(frag);
+  /* SEMPRE depois de reconstruir as linhas: a coluna da carteira é criada em
+     cima da linha pronta, e as linhas acabaram de ser trocadas. */
+  preencherSeguemCmp(raiz, geral);
   if (!exps.length) {
     var vazio = document.createElement('p');
     vazio.className = 'cmp__vazio';
@@ -8230,6 +8325,10 @@ function pintarEscopo(bloco, periodo, isHoje, raiz, geral) {
   pintarComparativo(d, isHoje, raiz, geral);
   pintarTopCriativos(d, isHoje, raiz);
   pintarExperts(d.experts, isHoje, raiz, geral);
+  /* a safra não depende do período (é carteira acumulada), então basta uma
+     busca por escopo na sessão inteira; se já chegou, isto só repinta. */
+  pintarSafraOperacao(raiz, geral);
+  carregarSafra(chaveEscopo(geral));
   /* números novos, larguras velhas: refaz o ajuste de fonte deste escopo.
      Só resolve o que estiver visível agora -- o resto o ResizeObserver pega
      quando a aba aparecer. */
@@ -8801,17 +8900,32 @@ function carregarSafra(escopo) {
     })
     .then(function (d) {
       estado.safra[escopo] = d;
+      estado.safraFalhou[escopo] = false;
       pintarSafraDoExpert();
+      pintarSafraOndeCabe(escopo);
     })
     .catch(function () {
       estado.safra[escopo] = null;
+      estado.safraFalhou[escopo] = true;
       var est = document.getElementById('pnl-safra-estado');
       if (est) {
         est.hidden = false;
         est.textContent = 'Não deu pra carregar a safra agora.';
       }
+      pintarSafraOndeCabe(escopo);
     })
     .then(function () { estado.safraBuscando[escopo] = false; });
+}
+
+/* A safra aparece em três lugares que vivem em ciclos diferentes: o painel do
+   expert (abre sob demanda), a tabela da visão geral e a coluna do
+   comparativo. A chamada é uma só — quando ela chega, quem estiver na tela se
+   atualiza. */
+function pintarSafraOndeCabe(escopo) {
+  var geral = escopo === 'geral';
+  var raiz = geral ? RAIZ_GERAL : RAIZ_CL;
+  pintarSafraOperacao(raiz, geral);
+  preencherSeguemCmp(raiz, geral);
 }
 
 /* "2026-06" -> "jun/26". Nome de turma, não data de relatório: curto, porque a
@@ -9139,6 +9253,244 @@ function pintarMatrizSafra(corpo, nome, hoje) {
     'só entrega o acumulado de vida de cada jogador, então o mês a mês é ' +
     'construído aqui, uma foto por mês.';
   corpo.appendChild(nota2);
+}
+
+/* ── SAFRA DA OPERAÇÃO (visão geral + coluna do comparativo) ──────────────
+   Mesma fonte da safra do painel, outra pergunta: lá é "a turma que ESTE
+   expert trouxe em junho continua?", aqui é a mesma coisa pra operação toda.
+   Some as operações que estão na comparação — a seleção do comparativo vale
+   pras duas, senão a mesma tela daria duas respostas.
+
+   Uma ressalva que a tela precisa dizer em voz alta: TODA coluna do
+   comparativo fala do período escolhido lá em cima; a safra não. Ela é
+   carteira acumulada, de todas as turmas, desde sempre. Trocar o período não
+   mexe num número dela. */
+function safraAgregada(escopo, nomes) {
+  var d = estado.safra[escopo];
+  if (!d || !d.meses) return null;
+  var filtra = nomes && nomes.length ? nomes : null;
+  var linhas = [];
+  d.meses.forEach(function (m) {
+    var t = { mes: m.mes, cadastros: 0, ftd: 0, ativos: 0, churned: 0,
+              sem_rank: 0, deposito: 0, net_dep: 0, net_pl: 0 };
+    (m.experts || []).forEach(function (e) {
+      if (filtra && filtra.indexOf(e.expert_name) === -1) return;
+      t.cadastros += e.cadastros || 0;
+      t.ftd       += e.ftd || 0;
+      t.ativos    += e.ativos || 0;
+      t.churned   += e.churned || 0;
+      t.sem_rank  += e.sem_rank || 0;
+      t.deposito  += e.deposito || 0;
+      t.net_dep   += e.net_dep || 0;
+      t.net_pl    += e.net_pl || 0;
+    });
+    /* mês sem ninguém cadastrado não é linha: seria uma fileira de zeros
+       empurrando as turmas que interessam pra baixo. */
+    if (!t.cadastros) return;
+    t.retencao = t.ftd ? (t.ativos / t.ftd) * 100 : null;
+    t.net_pl_por_ftd = t.ftd ? t.net_pl / t.ftd : null;
+    linhas.push(t);
+  });
+  return linhas;
+}
+
+/* A carteira de UM expert, somando todas as turmas dele. É o que a coluna
+   "Seguem" do comparativo imprime. */
+function safraPorExpert(escopo, nome) {
+  var d = estado.safra[escopo];
+  if (!d || !d.meses) return null;
+  var t = { ativos: 0, ftd: 0, cadastros: 0, net_pl: 0, achou: false };
+  d.meses.forEach(function (m) {
+    (m.experts || []).forEach(function (e) {
+      if (e.expert_name !== nome) return;
+      t.achou = true;
+      t.ativos    += e.ativos || 0;
+      t.ftd       += e.ftd || 0;
+      t.cadastros += e.cadastros || 0;
+      t.net_pl    += e.net_pl || 0;
+    });
+  });
+  if (!t.achou) return null;
+  t.retencao = t.ftd ? (t.ativos / t.ftd) * 100 : null;
+  return t;
+}
+
+/* Régua única de retenção — a mesma no painel, na visão geral e na tabela.
+   Metade da turma ainda ativa é verde; menos de um quinto, vermelho. */
+function classeRetencao(el, ret) {
+  el.classList.remove('is-good', 'is-warn', 'is-bad');
+  if (!ehNum(ret)) return;
+  el.classList.add(ret >= 50 ? 'is-good' : (ret >= 20 ? 'is-warn' : 'is-bad'));
+}
+
+function pintarSafraOperacao(raiz, geral) {
+  if (!raiz) return;
+  var caixa = $('.sfrop', raiz);
+  if (!caixa) return;
+  var est = $('.sfrop__estado', caixa);
+  var corpo = $('.sfrop__corpo', caixa);
+  var escopo = chaveEscopo(geral);
+
+  var bloco = blocoDoEscopo(geral);
+  var todas = (bloco && bloco.experts) || [];
+  var visiveis = filtrarOps(todas, geral).map(function (e) { return e.expert_name; });
+
+  var linhas = safraAgregada(escopo, visiveis);
+  if (!linhas) {
+    est.hidden = false;
+    est.textContent = estado.safraFalhou[escopo]
+      ? 'Não deu pra carregar a safra agora.'
+      : 'Levantando as safras…';
+    corpo.hidden = true;
+    return;
+  }
+  if (!linhas.length) {
+    est.hidden = false;
+    est.textContent = 'Nenhuma turma com cadastro nas operações selecionadas.';
+    corpo.hidden = true;
+    return;
+  }
+
+  est.hidden = true;
+  corpo.hidden = false;
+  corpo.innerHTML = '';
+
+  var hoje = mesCorrente();
+  var tab = document.createElement('div');
+  tab.className = 'sfr sfr--op';
+
+  var cab = document.createElement('div');
+  cab.className = 'sfr__row sfr__row--head';
+  cab.setAttribute('aria-hidden', 'true');
+  ['Entrou em', 'Cadastros', 'FTD', 'Seguem', 'Perderam', 'Por FTD',
+   'Depositaram', 'Deixou pra casa'].forEach(function (t) {
+    var sp = document.createElement('span');
+    sp.textContent = t;
+    cab.appendChild(sp);
+  });
+  tab.appendChild(cab);
+
+  linhas.forEach(function (l) {
+    var row = document.createElement('div');
+    row.className = 'sfr__row';
+
+    var m = document.createElement('span');
+    m.className = 'sfr__mes';
+    m.textContent = mesCurto(l.mes);
+    var idade = idadeDaSafra(l.mes, hoje);
+    if (idade) {
+      var ida = document.createElement('span');
+      ida.className = 'sfr__idade';
+      ida.textContent = ' ' + idade + 'm';
+      m.appendChild(ida);
+    }
+    row.appendChild(m);
+
+    function num(txt, classe, soft) {
+      var sp = document.createElement('span');
+      sp.className = 'sfr__n' + (classe ? ' ' + classe : '') + (soft ? ' sfr__n--soft' : '');
+      sp.textContent = txt;
+      row.appendChild(sp);
+      return sp;
+    }
+
+    num(inteiro(l.cadastros));
+    num(inteiro(l.ftd), null, l.ftd === 0);
+
+    var seg = num(inteiro(l.ativos), 'sfr__seguem', l.ativos === 0);
+    classeRetencao(seg, l.retencao);
+    if (ehNum(l.retencao)) {
+      var ret = document.createElement('span');
+      ret.className = 'sfr__ret';
+      ret.textContent = ' ' + pct(l.retencao);
+      seg.appendChild(ret);
+    }
+
+    /* "perderam" é o churn declarado pela casa (rank 5). Não é o complemento de
+       "seguem": entre os dois mora quem nunca movimentou depois do cadastro. */
+    num(inteiro(l.churned), null, l.churned === 0);
+
+    var porCabeca = num(l.net_pl_por_ftd == null ? '—' : brl(l.net_pl_por_ftd),
+                        null, l.net_pl_por_ftd == null);
+    classeSinal(porCabeca, l.net_pl_por_ftd);
+
+    num(brl(l.deposito), null, !l.deposito);
+
+    var casa = num(brl(l.net_pl), 'sfr__casa');
+    classeSinal(casa, l.net_pl);
+
+    var dica = [inteiro(l.cadastros) + ' cadastros, ' + inteiro(l.ftd) + ' depositaram'];
+    if (l.sem_rank) dica.push(inteiro(l.sem_rank) + ' nunca movimentaram');
+    if (ehNum(l.net_dep)) dica.push('net dep de ' + brl(l.net_dep));
+    row.title = dica.join(' · ');
+
+    tab.appendChild(row);
+  });
+
+  corpo.appendChild(tab);
+
+  var nota = document.createElement('p');
+  nota.className = 'sfrop__nota';
+  nota.textContent = 'Cada linha é a turma que se CADASTROU naquele mês, e os ' +
+    'números são tudo que ela fez até hoje — não do período escolhido lá em ' +
+    'cima. Por isso a safra de um mês antigo continua mudando, e trocar o ' +
+    'período não mexe nesta tabela. "Seguem" é quem a casa ainda classifica ' +
+    'como ativo (a % é sobre quem depositou). A idade ao lado do mês é o que ' +
+    'deixa comparar turma nova com turma velha sem enganação: a deste mês ' +
+    'ainda não teve tempo de sumir. Quer a de um expert só? Clique no card ' +
+    'dele.';
+  corpo.appendChild(nota);
+}
+
+/* A coluna "Seguem" da tabela do comparativo. Célula criada aqui e não no HTML
+   de molde de propósito: a safra chega numa segunda chamada, depois da tabela
+   já estar na tela, então esta função tem que saber preencher linha que já
+   existe — e ela é a mesma nos dois caminhos. */
+function preencherSeguemCmp(raiz, geral) {
+  if (!raiz) return;
+  var escopo = chaveEscopo(geral);
+  var temSafra = !!estado.safra[escopo];
+  $$('.cmp__body .cmp__row', raiz).forEach(function (linha) {
+    var nome = linha.getAttribute('data-expert');
+    if (!nome) return;
+    var cel = $('.cmp__seguem', linha);
+    if (!cel) {
+      cel = document.createElement('span');
+      cel.className = 'cmp__num cmp__seguem';
+      linha.appendChild(cel);
+    }
+    cel.textContent = '';
+    cel.classList.remove('is-good', 'is-warn', 'is-bad', 'cmp__num--soft');
+
+    if (!temSafra) {
+      cel.textContent = estado.safraFalhou[escopo] ? '—' : '…';
+      cel.classList.add('cmp__num--soft');
+      cel.title = estado.safraFalhou[escopo]
+        ? 'A safra não carregou nesta sessão'
+        : 'Carregando a carteira desta operação';
+      return;
+    }
+    var s = safraPorExpert(escopo, nome);
+    if (!s || !s.ftd) {
+      cel.textContent = '—';
+      cel.classList.add('cmp__num--soft');
+      cel.title = s
+        ? 'Esta operação nunca teve depositante — sem base pra medir retenção'
+        : 'A varredura de safra ainda não passou por esta operação';
+      return;
+    }
+    cel.textContent = inteiro(s.ativos);
+    classeRetencao(cel, s.retencao);
+    if (ehNum(s.retencao)) {
+      var ret = document.createElement('span');
+      ret.className = 'sfr__ret';
+      ret.textContent = pct(s.retencao);
+      cel.appendChild(ret);
+    }
+    cel.title = inteiro(s.ativos) + ' de ' + inteiro(s.ftd) + ' depositantes ' +
+      'ainda ativos, somando todas as turmas · ' + brl(s.net_pl) + ' deixados ' +
+      'pra casa · número de carteira, não do período escolhido';
+  });
 }
 
 function carregar(opts) {
