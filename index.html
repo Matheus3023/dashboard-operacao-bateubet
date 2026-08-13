@@ -6049,15 +6049,19 @@ function temFunilTap(e) {
   return !!(e && e.tap && e.tap.fonte !== 'meta_pixel' && !e.sem_btag);
 }
 
-/* Escreve uma célula de ROI do comparativo com os mesmos três estados das
-   colunas de custo — nenhum deles é o algarismo zero. */
+/* Escreve uma célula de ROI do comparativo.
+   Quem não gerou nada imprime 0,0× — decisão do operador em 13/08, no lugar
+   do "sem verba"/"sem funil" que estava aqui antes. A distinção não sumiu de
+   todo: sem denominador o número fica CINZA (peso menor), enquanto um ROI
+   calculado abaixo de 1,00× fica vermelho. Mesma leitura de longe, sem exigir
+   que ninguém decore a diferença. */
 function escreveRoi(cel, v, inv, temFunil) {
   if (!cel) return;
-  var vazio = !(ehNum(inv) && inv > 0) ? 'sem verba' : (!temFunil ? 'sem funil' : null);
-  escreve(cel, vazio || vezes(v));
+  var semBase = !(ehNum(inv) && inv > 0) || !temFunil || !ehNum(v);
+  escreve(cel, semBase ? '0,0×' : vezes(v));
   cel.className = 'cmp__num cmp__roi ' +
     (cel.classList.contains('cmp__roind') ? 'cmp__roind' : 'cmp__roinp') +
-    (vazio || !ehNum(v) ? ' cmp__num--soft' : (v >= 1 ? ' is-good' : ' is-bad'));
+    (semBase ? ' cmp__num--soft' : (v >= 1 ? ' is-good' : ' is-bad'));
 }
 
 /* ── 2. datas (sempre no fuso de Brasília, não no do navegador) ─────────── */
@@ -7048,7 +7052,10 @@ function pintarTotais(d, isHoje, raiz, rodape, nSelecionados) {
 
   var elRF = campo(raiz, 'totais.roas_ftd');
   var roasFtd = roi(t.valor_ftd, inv);
-  escreve(elRF, temVerba ? vezes(roasFtd) : 'sem verba');
+  /* sem verba imprime 0,0x (13/08, pedido do operador) -- antes era
+     "sem verba". corRetorno() nao pinta o que nao tem base, entao o zero
+     de quem nao investiu fica neutro em vez de vermelho. */
+  escreve(elRF, temVerba && ehNum(roasFtd) ? vezes(roasFtd) : '0,0×');
   corRetorno(elRF, roasFtd);
   escreve(sub(elRF), temVerba
     ? brl(t.valor_ftd) + ' de 1º depósito sobre ' + brl(inv) + ' de mídia'
@@ -7056,7 +7063,7 @@ function pintarTotais(d, isHoje, raiz, rodape, nSelecionados) {
 
   var elRD = campo(raiz, 'totais.roas_netdep');
   var roasNd = roi(netDep, inv);
-  escreve(elRD, temVerba ? vezes(roasNd) : 'sem verba');
+  escreve(elRD, temVerba && ehNum(roasNd) ? vezes(roasNd) : '0,0×');
   corRetorno(elRD, roasNd);
   escreve(sub(elRD), temVerba
     ? brl(netDep) + ' de depósito já líquido de saque'
@@ -7067,7 +7074,7 @@ function pintarTotais(d, isHoje, raiz, rodape, nSelecionados) {
      precisar refazer a conta na mão. */
   var elRP = campo(raiz, 'totais.roi_netpl');
   var roiNp = roi(netPl - comissao, inv);
-  escreve(elRP, temVerba ? vezes(roiNp) : 'sem verba');
+  escreve(elRP, temVerba && ehNum(roiNp) ? vezes(roiNp) : '0,0×');
   corRetorno(elRP, roiNp);
   escreve(sub(elRP), temVerba
     ? (comissao !== 0
@@ -8221,7 +8228,10 @@ function pintarGoogle(g, periodo) {
   function pintarRetorno(nome, valor, textoSub) {
     var el = campo(raiz, nome);
     var v = temInvG ? roi(valor, inv) : null;
-    escreve(el, temInvG ? vezes(v) : (pend ? 'aguardando API' : 'sem verba'));
+    /* 'aguardando API' continua sendo dito quando a leitura do Google FALHOU:
+       ali zero seria afirmacao sobre um gasto que ninguem mediu. Sem verba de
+       verdade, imprime 0,0x como nos outros escopos. */
+    escreve(el, temInvG && ehNum(v) ? vezes(v) : (pend ? 'aguardando API' : '0,0×'));
     corRetorno(el, v);
     escreve(sub(el), temInvG ? textoSub : (pend ? 'investimento do Google não foi lido' : 'nada investido no período'));
   }
