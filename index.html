@@ -9465,11 +9465,16 @@ function carregarSafra(escopo) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
     })
+    /* GUARDAR O DADO E DESENHAR SÃO ETAPAS SEPARADAS, de propósito. Estavam
+       juntos e custaram caro: um erro DE DESENHO caía no .catch da busca, que
+       jogava fora o dado que já tinha chegado inteiro (estado.safra = null) e
+       ainda escrevia "não deu pra carregar" numa tela que tinha carregado. O
+       sintoma era a safra sumir sem erro nenhum no console. Agora o catch só
+       responde por falha de REDE, e o desenho acontece depois, fora dele —
+       se ele quebrar, o erro aparece como erro. */
     .then(function (d) {
       estado.safra[escopo] = d;
       estado.safraFalhou[escopo] = false;
-      pintarSafraDoExpert();
-      pintarSafraOndeCabe(escopo);
     })
     .catch(function () {
       estado.safra[escopo] = null;
@@ -9479,9 +9484,12 @@ function carregarSafra(escopo) {
         est.hidden = false;
         est.textContent = 'Não deu pra carregar a safra agora.';
       }
-      pintarSafraOndeCabe(escopo);
     })
-    .then(function () { estado.safraBuscando[escopo] = false; });
+    .then(function () {
+      estado.safraBuscando[escopo] = false;
+      pintarSafraDoExpert();
+      pintarSafraOndeCabe(escopo);
+    });
 }
 
 /* A safra aparece em três lugares que vivem em ciclos diferentes: o painel do
@@ -9816,17 +9824,41 @@ function pintarMatrizSafra(corpo, nome, hoje) {
     for (var k = 0; k < colunas; k++) {
       var cel = l.cel[k];
       if (k >= l.idade) { celula(); continue; }      /* turma nem existia ainda */
+
+      /* BOLO ATRAVESSANDO M0..Mk. A primeira foto de uma turma que já existia
+         antes da medição não é o valor DAQUELE mês: é a soma de todos os meses
+         até ali. Desenhar ela só na coluna da idade em que a foto caiu fazia a
+         linha começar no meio da tabela e o número ser lido como "o que a
+         turma rendeu no 11º mês" — R$ 42 mil de out/25 apareciam em M10.
+         Agora a célula ATRAVESSA as colunas que ela resume, começando em M0:
+         a linha nasce na esquerda, igual às outras, e o tamanho da célula diz
+         quantos meses estão ali dentro. */
+      if (cel && cel.bolo) {
+        var c = celula('mtz__c--mes mtz__c--bolo mtz__c--parcial');
+        c.style.gridColumn = 'span ' + (k + 1);
+        var vb = document.createElement('span');
+        vb.textContent = brl(cel.v);
+        c.appendChild(vb);
+        classeSinal(vb, cel.v);
+        var lb = document.createElement('span');
+        lb.className = 'mtz__ativos';
+        lb.textContent = 'M0–M' + k + ' somados · ' + inteiro(cel.ativos) + ' ativos';
+        c.appendChild(lb);
+        c.title = 'Os ' + cel.meses + ' primeiros meses desta turma, num bolo ' +
+          'só: a medição mensal começou em ' + mesCurto(cel.snap) + ', e a casa ' +
+          'só entrega o acumulado de vida de cada jogador — não tem como abrir ' +
+          'esse período mês a mês. Daqui pra direita, cada célula é um mês.';
+        k = k;                                        /* a célula já cobriu 0..k */
+        continue;
+      }
+
       if (!cel) {
-        /* ANTES da primeira foto a célula fica em branco, não com um ponto: a
-           turma de out/25 tem dez meses que ninguém mediu, e dez pontinhos em
-           fila leem como "zero" quando o certo é "não sabemos". Depois da
-           primeira foto, aí sim o ponto marca a falha de uma leitura. */
-        var jaMedia = l.primeiroK != null && k > l.primeiroK;
-        texto(jaMedia ? '·' : '', jaMedia ? 'mtz__c--vazio' : '',
-              jaMedia
-                ? 'Sem foto deste mês — o valor entrou na coluna seguinte'
-                : 'A medição de safra começou depois desta turma: estes meses ' +
-                  'entram somados na primeira célula preenchida da linha');
+        /* antes do bolo não se desenha nada: aquelas colunas são o próprio
+           bolo, que atravessa. Depois dele, o ponto marca leitura que falhou
+           num mês — o valor cai na coluna seguinte. */
+        if (l.primeiroK != null && k < l.primeiroK) continue;
+        texto('·', 'mtz__c--vazio',
+              'Sem foto deste mês — o valor entrou na coluna seguinte');
         continue;
       }
 
