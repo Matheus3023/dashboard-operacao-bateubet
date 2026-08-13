@@ -914,21 +914,28 @@ html.rolado .brand__logo{height:19px}
    ────────────────────────────────────────────────────────────────────────── */
 .totals{
   display:grid;gap:var(--gap);
-  grid-template-columns:repeat(12,minmax(0,1fr));
+  /* 60 trilhos, não 12: 60 é divisível por 1,2,3,4,5,6,10 e 12, então
+     qualquer número de tiles que sobre no seletor de métricas fecha a linha
+     com todos do MESMO tamanho. Com 12 trilhos, 5 tiles davam 3+3+2+2+2 —
+     linha cheia, mas dois tiles maiores que os outros sem motivo. */
+  grid-template-columns:repeat(60,minmax(0,1fr));
 }
 /* NÍVEL 2 SÃO SEMPRE 6 TILES, nos três escopos. Os únicos spans que fecham
    linha sem deixar buraco numa grade de 12 são 2 (6/linha), 4 (3/linha) e
    6 (2/linha) -- span 3 daria 4+2 e abriria um vão de dois tiles no meio dos
    totais. Por isso o responsivo pula de 6 direto pra 3 por linha. */
-.totals > .tcard{grid-column:span 2}          /* nível 2: 6 por linha        */
-.totals > .tcard--hero{grid-column:span 6}    /* nível 1: 2 por linha        */
-.totals__fin{
-  grid-column:1/-1;
-  display:grid;gap:var(--gap);
-  /* auto-fit resolve 4 (Google) e 5 (Meta) tiles sem media query própria e
-     ainda dobra sozinho no celular */
-  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-}
+.totals > .tcard{grid-column:span 10}         /* nível 2: 6 por linha        */
+.totals > .tcard--hero{grid-column:span 30}   /* nível 1: 2 por linha        */
+/* NÍVEL 3 ENTRA NA GRADE DO PAI (display:contents), não numa grade própria.
+   Enquanto os tiles eram fixos, duas grades separadas fechavam certinho: 5
+   de dinheiro numa linha, 2 de ROI na outra. Com o seletor de métricas o
+   número de tiles virou variável, e grade separada com 2 tiles sobrando
+   esticava cada um pra meia tela — o mesmo componente aparecia em três
+   larguras diferentes na mesma faixa. Numa grade só, todos os tiles de
+   dinheiro têm a MESMA largura e as linhas fecham. O tamanho de fonte menor
+   do nível 3 continua vindo por descendente (.totals__fin .tcard__val), que
+   display:contents não afeta. */
+.totals__fin{display:contents}
 .tcard{
   position:relative;
   background:var(--surface);
@@ -2012,7 +2019,7 @@ html.rolado .brand__logo{height:19px}
 @media (max-width:1399px){
   .scopebar__sub{display:none !important}
   .sortpop__pre{display:none}
-  .totals > .tcard{grid-column:span 4}
+  .totals > .tcard{grid-column:span 20}
 }
 @media (max-width:1179px){
   /* barra de comando de tablet: a faixa aguenta marca + escopo + estado, o
@@ -2054,8 +2061,9 @@ html.rolado .brand__logo{height:19px}
   .range-apply{min-height:44px;flex:1 1 100%}
   .rangebar__warn{margin-left:0}
   .totals{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-  .totals > .tcard{grid-column:auto}
-  .totals__fin{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  /* pega os tiles de dinheiro também: com display:contents eles são itens
+     desta grade, e o span calculado pro desktop não vale aqui. */
+  .totals .tcard{grid-column:auto}
   .tcard__val{font-size:1.125rem}
   /* no celular os dois heróis ficam um por linha: são os dois números que a
      pessoa abre o painel pra ver, e meia largura mataria o tamanho deles. */
@@ -8045,6 +8053,8 @@ function aplicarMetricas() {
     m.tiles.forEach(function (t) { t.classList.toggle('tcard--off', off); });
   });
 
+  arrumarGradeTotais();
+
   $$('.metfil').forEach(function (cx) {
     var val = $('.metfil__val', cx);
     /* o botão diz o que ESTÁ na tela, não o que está fora: "12 de 18" é a
@@ -8053,6 +8063,73 @@ function aplicarMetricas() {
     $$('.metfil__lista input[value]', cx).forEach(function (cb) {
       cb.checked = ocultas.indexOf(cb.value) === -1;
     });
+  });
+}
+
+/* ── A GRADE DOS TOTAIS SE AJUSTA AO QUE SOBROU ───────────────────────────
+   Com tiles fixos dava pra escrever o span na folha de estilo (6 por linha,
+   2 heróis por linha). Com o seletor de métricas o número de tiles mudou de
+   fixo pra variável, e span fixo passou a deixar meia linha vazia (3 tiles
+   ocupando 6 das 12 colunas) enquanto outra linha esticava 2 tiles pra meia
+   tela cada. As duas coisas juntas é que fazem a faixa parecer desmontada.
+
+   Aqui a linha é dividida pelo que ESTÁ visível: os 60 trilhos são
+   repartidos entre os tiles da linha, com o resto indo pros primeiros. Nada
+   sobra e nada estica sozinho.
+
+   Só acima de 760px: no celular a folha manda (2 colunas, span automático) e
+   inline style ganharia da media query. */
+var TOTAIS_MAX_POR_LINHA = 6;   /* nível 2 e 3 em tela cheia */
+
+function distribuirSpans(tiles, colunas, maxPorLinha) {
+  var n = tiles.length;
+  if (!n) return;
+  /* quantos por linha: o maior que não deixa órfão. 4 tiles em linhas de 3
+     dariam 3 + 1; em linhas de 2, 2 + 2. */
+  var porLinha = Math.min(n, maxPorLinha);
+  while (porLinha > 2 && n % porLinha !== 0) { porLinha -= 1; }
+
+  var i = 0;
+  while (i < n) {
+    var nesta = Math.min(porLinha, n - i);
+    var base = Math.floor(colunas / nesta);
+    var resto = colunas - base * nesta;
+    for (var k = 0; k < nesta; k++) {
+      var span = base + (k < resto ? 1 : 0);
+      var t = tiles[i + k];
+      /* uma atribuição só, sempre pelo atalho: `grid-column: span N` escreve
+         grid-column-START, então mexer no start depois (ou removê-lo) apagava
+         o span e o tile voltava pra uma coluna. Foi assim que a linha do
+         funil saiu 1+2+2 em vez de 20+20+20. */
+      var abreLinha = (i === 0 && k === 0);
+      /* o primeiro tile do grupo abre linha nova: sem isso um tile de
+         dinheiro subiria pro buraco que sobrou na linha do funil, e os três
+         níveis de peso viram um amontoado só. */
+      t.style.gridColumn = (abreLinha ? '1 / ' : '') + 'span ' + span;
+    }
+    i += nesta;
+  }
+}
+
+function arrumarGradeTotais() {
+  var solto = window.matchMedia('(max-width: 759px)').matches;
+  var estreito = window.matchMedia('(max-width: 1399px)').matches;
+
+  $$('.totals').forEach(function (grade) {
+    var visivel = function (t) { return !t.classList.contains('tcard--off'); };
+    var n2 = $$(':scope > .tcard:not(.tcard--hero)', grade).filter(visivel);
+    var n3 = $$('.totals__fin > .tcard', grade).filter(visivel);
+
+    if (solto) {
+      n2.concat(n3).forEach(function (t) {
+        t.style.removeProperty('grid-column');
+        t.style.removeProperty('grid-column-start');
+      });
+      return;
+    }
+    var max = estreito ? 3 : TOTAIS_MAX_POR_LINHA;
+    distribuirSpans(n2, 60, max);
+    distribuirSpans(n3, 60, max);
   });
 }
 
@@ -8131,6 +8208,10 @@ function ligarMetricas() {
       });
     });
   });
+
+  /* a grade é dividida por número de tiles VISÍVEIS, e quantos cabem por
+     linha muda com a largura: refaz ao redimensionar (e ao girar o celular). */
+  window.addEventListener('resize', arrumarGradeTotais);
 
   document.addEventListener('click', fecharTodosMet);
   document.addEventListener('keydown', function (ev) {
