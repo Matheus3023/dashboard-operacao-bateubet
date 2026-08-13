@@ -96,8 +96,16 @@ module.exports = async function handler(req, res) {
     ? q.tendencia.trim()
     : null;
 
+  /* Modo safra: terceiro contrato de resposta ({ escopo, meses[] }). É a turma
+     por MÊS DE CADASTRO — quem entrou naquele mês e o que fez desde então —,
+     então, como no modo tendência, `de`/`ate` não se aplicam e são ignorados.
+     O valor do parâmetro não importa (só a presença), igual ao n8n faz. */
+  const safra = !tendencia && typeof q.safra === 'string' && q.safra.trim()
+    ? '1'
+    : null;
+
   let escopo = ESCOPO_PADRAO;
-  if (tendencia) {
+  if (tendencia || safra) {
     const escopoBruto = typeof q.escopo === 'string' ? q.escopo.trim().toLowerCase() : '';
     escopo = escopoBruto || ESCOPO_PADRAO;
     if (!ESCOPOS.includes(escopo)) {
@@ -119,6 +127,9 @@ module.exports = async function handler(req, res) {
   url.searchParams.set('token', token);
   if (tendencia) {
     url.searchParams.set('tendencia', tendencia);
+    url.searchParams.set('escopo', escopo);
+  } else if (safra) {
+    url.searchParams.set('safra', safra);
     url.searchParams.set('escopo', escopo);
   } else if (de && ate) {
     url.searchParams.set('de', de);
@@ -233,6 +244,28 @@ module.exports = async function handler(req, res) {
       res.setHeader(
         'Cache-Control',
         'public, max-age=0, s-maxage=1800, stale-while-revalidate=3600'
+      );
+      return res.status(200).json(dados);
+    }
+
+    /* Safra também tem contrato próprio ({ escopo, meses[] }) e sai antes da
+       checagem de totais/experts. `meses: []` é resposta legítima: o workflow
+       da safra preenche um mês por rodada, então logo depois de subir ainda
+       não há nada gravado. Só a ausência do array é erro. */
+    if (safra) {
+      if (!dados || typeof dados.escopo !== 'string' || !Array.isArray(dados.meses)) {
+        res.setHeader('Cache-Control', 'no-store');
+        return res.status(502).json({
+          error: 'upstream_incompleto',
+          detail: 'A resposta do n8n veio sem os campos escopo/meses.'
+        });
+      }
+      /* A safra é recalculada em rodízio (um mês a cada 15 min), então o número
+         não muda de minuto em minuto: 10 min de cache na borda economiza n8n
+         sem atrasar nada perceptível. */
+      res.setHeader(
+        'Cache-Control',
+        'public, max-age=0, s-maxage=600, stale-while-revalidate=1800'
       );
       return res.status(200).json(dados);
     }
