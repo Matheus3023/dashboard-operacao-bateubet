@@ -1775,6 +1775,76 @@ html.rolado .brand__logo{height:19px}
 .cmp__vazio{margin:0;padding:18px 16px;text-align:center;color:var(--txt-3);font-size:.8125rem}
 @media (prefers-reduced-motion:reduce){.opsfil__btn,.opsfil__chev,.opsfil__acao{transition:none}}
 
+/* ── SELETOR DE MÉTRICAS ──────────────────────────────────────────────────
+   A faixa de totais tinha 17 números. Número demais numa faixa só vira
+   parede: quem olha rápido não acha o que decide o dia. Então seis saem de
+   fábrica (canal, custo por cadastro, ROAS no FTD, comissão e lucro) e quem
+   quiser liga de volta aqui — a escolha fica salva no navegador de quem
+   escolheu, vale pros três escopos e não mexe no que os outros veem.
+   Mesma linguagem visual do seletor de operações, classe própria de
+   propósito: `$('.opsfil', raiz)` pega o PRIMEIRO do escopo, e este controle
+   mora acima daquele no DOM. */
+/* order:1 põe o controle DEPOIS do fio decorativo do .section-head
+   (o ::after com flex:1), ou seja, encostado na direita — mesmo truque do
+   seletor de operações. */
+.metfil{order:1;flex:none;position:relative}
+.metfil__btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:var(--surface-sunk);
+  color:var(--txt-2);font:inherit;font-size:.6875rem;
+  transition:border-color .14s ease,color .14s ease;
+}
+.metfil__btn:hover{border-color:var(--line-strong);color:var(--txt-1)}
+.metfil__btn:focus-visible{outline:2px solid var(--acao);outline-offset:2px}
+.metfil__lbl{letter-spacing:.08em;text-transform:uppercase;font-size:.5625rem;color:var(--txt-3)}
+.metfil__val{color:var(--txt-1);font-weight:600}
+.metfil__chev{
+  width:0;height:0;flex:none;
+  border-left:4px solid transparent;border-right:4px solid transparent;
+  border-top:5px solid currentColor;opacity:.75;
+  transition:transform .14s ease;
+}
+.metfil[data-aberto] .metfil__btn{border-color:var(--acao);color:var(--txt-1)}
+.metfil[data-aberto] .metfil__chev{transform:rotate(180deg)}
+.metfil__pop{
+  position:absolute;z-index:50;top:calc(100% + 7px);right:0;
+  width:250px;max-width:calc(100vw - 32px);
+  display:flex;flex-direction:column;
+  border-radius:12px;border:1px solid var(--line-strong);
+  background:var(--surface);box-shadow:0 16px 44px rgba(0,0,0,.5);
+  overflow:hidden;
+}
+.metfil__lista{max-height:300px;overflow-y:auto;padding:5px 0}
+.metfil__item{
+  display:flex;align-items:center;gap:9px;
+  padding:7px 12px;cursor:pointer;color:var(--txt-2);font-size:.75rem;
+  user-select:none;
+}
+.metfil__item:hover{background:rgba(255,255,255,.045);color:var(--txt-1)}
+.metfil__item input{width:14px;height:14px;flex:none;margin:0;accent-color:var(--acao);cursor:pointer}
+.metfil__nome{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.metfil__acoes{
+  flex:none;display:flex;gap:6px;padding:8px;
+  border-top:1px solid var(--line-soft);background:var(--surface-sunk);
+}
+.metfil__acao{
+  flex:1;padding:6px 8px;border-radius:8px;cursor:pointer;
+  border:1px solid var(--line);background:transparent;
+  color:var(--txt-2);font:inherit;font-size:.6875rem;
+  transition:border-color .14s ease,color .14s ease;
+}
+.metfil__acao:hover{border-color:var(--line-strong);color:var(--txt-1)}
+.metfil__acao:focus-visible{outline:2px solid var(--acao);outline-offset:1px}
+/* classe, não [hidden]: .tcard tem display próprio e ganharia do UA. */
+.tcard--off{display:none !important}
+@media (max-width:759px){
+  .metfil{order:2;width:100%}
+  .metfil__btn{width:100%;justify-content:center}
+  .metfil__pop{width:auto;left:0;right:0}
+}
+@media (prefers-reduced-motion:reduce){.metfil__btn,.metfil__chev,.metfil__acao{transition:none}}
+
 @media (max-width:1179px){
   /* tela média: cabe o funil (resultado, cadastro, FTD e os dois custos), some
      o dinheiro da TAP -- quem quer depósito/volume/net PL abre o card. */
@@ -2460,6 +2530,11 @@ html.rolado .brand__logo{height:19px}
    existe explicação ali -- title sem affordance é conteúdo que ninguém acha.
    NADA ESSENCIAL VIVE SÓ NO title: no toque ele não existe, e é por isso que
    o rodapé com as mesmas definições continua na página. */
+/* o sub do FTD carrega o custo por FTD e usa a MESMA faixa oficial que pintava
+   o tile de CPA: verde ate 300, laranja ate 350, vermelho acima. */
+.tcard__sub.is-good{color:var(--good)}
+.tcard__sub.is-warn{color:var(--warn)}
+.tcard__sub.is-bad{color:var(--bad)}
 .tcard__lbl[title]{cursor:help;text-decoration:underline dotted rgba(255,255,255,.28);text-underline-offset:3px}
 @media (hover:hover){
   .tcard__lbl[title]:hover{color:var(--txt-2);text-decoration-color:var(--acao)}
@@ -3217,7 +3292,24 @@ body.pnl-aberto{overflow:hidden}
          "ontem, 05/08/2026", "31/07 a 06/08/2026" etc. -->
     <div class="section-head">
       <h2 class="eyebrow">Totais · <span data-field="periodo_label">hoje, 06/08/2026</span><span class="eyebrow__recorte" hidden></span></h2>
-    </div>
+    
+      <!-- Liga de volta as métricas que saem escondidas. A escolha é de quem
+           está olhando (fica no navegador dele), vale pros três escopos. -->
+      <div class="metfil" data-met>
+        <button type="button" class="metfil__btn" aria-expanded="false" aria-haspopup="dialog">
+          <span class="metfil__lbl">Métricas</span>
+          <span class="metfil__val">—</span>
+          <span class="metfil__chev" aria-hidden="true"></span>
+        </button>
+        <div class="metfil__pop" hidden role="dialog" aria-label="Escolher métricas">
+          <div class="metfil__lista"></div>
+          <div class="metfil__acoes">
+            <button type="button" class="metfil__acao" data-acao="todas">Mostrar todas</button>
+            <button type="button" class="metfil__acao" data-acao="padrao">Voltar ao padrão</button>
+          </div>
+        </div>
+      </div>
+      </div>
 
     <!-- ═══ TRÊS NÍVEIS DE PESO ═══
          Nenhuma métrica foi removida: as 13 continuam aqui. O que mudou é
@@ -4648,6 +4740,22 @@ body.pnl-aberto{overflow:hidden}
          Fonte: geral.totais. NÃO somar geral.experts no front. -->
     <div class="section-head">
       <h2 class="eyebrow">Totais da operação · <span data-field="periodo_label">hoje, 06/08/2026</span><span class="eyebrow__recorte" hidden></span></h2>
+      <!-- Liga de volta as métricas que saem escondidas. A escolha é de quem
+           está olhando (fica no navegador dele), vale pros três escopos. -->
+      <div class="metfil" data-met>
+        <button type="button" class="metfil__btn" aria-expanded="false" aria-haspopup="dialog">
+          <span class="metfil__lbl">Métricas</span>
+          <span class="metfil__val">—</span>
+          <span class="metfil__chev" aria-hidden="true"></span>
+        </button>
+        <div class="metfil__pop" hidden role="dialog" aria-label="Escolher métricas">
+          <div class="metfil__lista"></div>
+          <div class="metfil__acoes">
+            <button type="button" class="metfil__acao" data-acao="todas">Mostrar todas</button>
+            <button type="button" class="metfil__acao" data-acao="padrao">Voltar ao padrão</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- MESMOS TRÊS NÍVEIS do escopo Costa e Lobão. A ordem e as classes têm
@@ -5525,7 +5633,24 @@ body.pnl-aberto{overflow:hidden}
 
       <div class="section-head">
         <h2 class="eyebrow">Google Ads · <span data-field="periodo_label">hoje</span></h2>
-      </div>
+      
+        <!-- Liga de volta as métricas que saem escondidas. A escolha é de quem
+             está olhando (fica no navegador dele), vale pros três escopos. -->
+        <div class="metfil" data-met>
+          <button type="button" class="metfil__btn" aria-expanded="false" aria-haspopup="dialog">
+            <span class="metfil__lbl">Métricas</span>
+            <span class="metfil__val">—</span>
+            <span class="metfil__chev" aria-hidden="true"></span>
+          </button>
+          <div class="metfil__pop" hidden role="dialog" aria-label="Escolher métricas">
+            <div class="metfil__lista"></div>
+            <div class="metfil__acoes">
+              <button type="button" class="metfil__acao" data-acao="todas">Mostrar todas</button>
+              <button type="button" class="metfil__acao" data-acao="padrao">Voltar ao padrão</button>
+            </div>
+          </div>
+        </div>
+        </div>
 
       <!-- MESMOS TRÊS NÍVEIS dos outros dois escopos, com as métricas que o
            Google tem. Sem net dep (a TAP não separa saque por este btag). -->
@@ -6389,6 +6514,8 @@ var estado = {
      rodízio de 15 min, e o número não muda de minuto em minuto. */
   safra: { cl: null, geral: null },
   safraBuscando: {},
+  /* métricas escondidas da faixa de totais (preferência de quem está olhando) */
+  metOcultas: null,
   /* "ainda não chegou" e "tentou e não deu" mostram textos diferentes: o
      primeiro é pra esperar, o segundo é pra recarregar a página. */
   safraFalhou: {},
@@ -7150,7 +7277,12 @@ function pintarTotais(d, isHoje, raiz, rodape, nSelecionados) {
 
   var elInv = campo(raiz, 'totais.investimento_total');
   escreve(elInv, brl(inv));
-  escreve(sub(elInv), ehNum(t.ftd) && t.ftd > 0 ? brl(inv / t.ftd) + ' por FTD' : 'nenhum FTD ainda');
+  /* o custo por FTD saiu daqui em 13/08: ele desceu pro tile de FTD, colado no
+     numero que ele explica. O heroi ficou com o custo do topo do funil, que
+     era a outra ponta que so existia num tile separado. Cada numero mora em
+     UM lugar -- repetir o mesmo valor em dois tiles da mesma faixa e o que
+     fazia a faixa parecer maior do que e. */
+  escreve(sub(elInv), t.cadastros > 0 ? brl(inv / t.cadastros) + ' por cadastro' : 'sem cadastro ainda');
 
   var somaGrupo = exps.reduce(function (s, e) { return s + ((e.grupo && e.grupo.ativo && e.grupo.resultado) || 0); }, 0);
   var somaDireto = exps.reduce(function (s, e) { return s + ((e.direto && e.direto.ativo && e.direto.resultado) || 0); }, 0);
@@ -7169,11 +7301,35 @@ function pintarTotais(d, isHoje, raiz, rodape, nSelecionados) {
 
   var elC = campo(raiz, 'totais.cadastros');
   escreve(elC, inteiro(t.cadastros));
-  escreve(sub(elC), t.cadastros > 0 ? brl(inv / t.cadastros) + ' por cadastro' : 'sem cadastro ainda');
+  escreve(sub(elC), t.cadastros > 0
+    ? pct(t.ftd / t.cadastros * 100) + ' viraram FTD'
+    : 'sem cadastro ainda');
 
+  /* CUSTO POR FTD EMBAIXO DO FTD (13/08, pedido do operador). O tile separado
+     de custo por FTD virou repeticao: o numero que decide o dia e o custo, e
+     ele so faz sentido ao lado de QUANTOS FTD sairam por esse preco. A cor e a
+     mesma faixa oficial (300/350) que pintava o tile antigo -- a regua nao
+     mudou de lugar junto com o numero. O tile antigo continua existindo, so
+     que escondido por padrao: quem quiser liga de volta no seletor de
+     metricas. */
   var elF = campo(raiz, 'totais.ftd');
   escreve(elF, inteiro(t.ftd));
-  escreve(sub(elF), t.cadastros > 0 ? pct(t.ftd / t.cadastros * 100) + ' dos cadastros' : 'sem cadastro ainda');
+  var subF = sub(elF);
+  var cpaF = (ehNum(t.ftd) && t.ftd > 0) ? inv / t.ftd : null;
+  escreve(subF, cpaF == null
+    ? (inv > 0 ? brl(inv) + ' investidos, nenhum FTD' : 'sem FTD no periodo')
+    : brl(cpaF) + ' por FTD');
+  if (subF) {
+    subF.classList.remove('is-good', 'is-warn', 'is-bad');
+    if (cpaF != null) {
+      subF.classList.add(cpaF <= FAIXA_BOA ? 'is-good'
+        : (cpaF < FAIXA_ALTA ? 'is-warn' : 'is-bad'));
+    }
+    subF.title = cpaF == null ? ''
+      : (cpaF <= FAIXA_BOA ? 'dentro da faixa boa (ate ' + brl(FAIXA_BOA) + ')'
+        : (cpaF < FAIXA_ALTA ? 'acima do confortavel (' + brl(FAIXA_BOA) + ')'
+          : 'alto (teto ' + brl(FAIXA_ALTA) + ')'));
+  }
 
   var elDep = campo(raiz, 'totais.deposito');
   escreve(elDep, brl(t.deposito));
@@ -7809,6 +7965,179 @@ function filtrarListaOps(cx, termo) {
     $('.opsfil__lista', cx).appendChild(vazio);
   }
   vazio.hidden = visiveis > 0;
+}
+
+/* ── SELETOR DE MÉTRICAS ──────────────────────────────────────────────────
+   A faixa de totais chegou a 17 números, e número demais vira parede: quem
+   abre o painel de manhã quer ver quanto entrou e quanto isso custou, não
+   dezessete coisas ao mesmo tempo. Seis saem escondidas de fábrica e quem
+   precisar liga de volta.
+
+   Fica no navegador de quem escolheu (localStorage), não na API: é
+   preferência de leitura, não configuração da operação — o Lobão esconder
+   comissão não pode sumir com ela da tela do Costa.
+
+   O slug sai do RÓTULO da métrica, não de um data- no HTML: são 17 tiles ×
+   3 escopos, e etiquetar um por um daria 51 lugares pra esquecer de mexer
+   quando um rótulo mudasse. O preço é que renomear um rótulo reseta a
+   escolha daquela métrica — barato perto de manter 51 âncoras à mão. */
+var MET_CHAVE = 'bateu.painel.metricas.v1';
+
+/* O que sai escondido de fábrica (pedido do operador em 13/08): os dois de
+   canal (a splitbar logo abaixo já conta essa divisão), custo por cadastro
+   (o que decide é o custo por FTD), ROAS no FTD, e as duas pontas de
+   comissão/lucro, que são leitura de fechamento e não de acompanhamento. */
+var MET_OCULTAS_PADRAO = ['investimento-grupo', 'trafego-pro-perfil',
+                          'custo-por-cadastro', 'roas-no-ftd',
+                          'pago-a-afiliados', 'lucro-da-operacao',
+                          /* o numero agora vive embaixo do FTD, com a mesma
+                             cor de faixa -- o tile virava repeticao */
+                          'custo-por-ftd'];
+
+function metSlug(txt) {
+  return String(txt || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function metLerOcultas() {
+  try {
+    var cru = localStorage.getItem(MET_CHAVE);
+    if (cru === null) return MET_OCULTAS_PADRAO.slice();   /* primeira visita */
+    var v = JSON.parse(cru);
+    return Array.isArray(v) ? v : [];
+  } catch (e) { return MET_OCULTAS_PADRAO.slice(); }
+}
+
+function metSalvarOcultas(lista) {
+  estado.metOcultas = lista.slice();
+  try { localStorage.setItem(MET_CHAVE, JSON.stringify(lista)); } catch (e) {}
+}
+
+/* Todos os tiles da tela, com slug e rótulo. Um mesmo slug aparece nos três
+   escopos (é a mesma métrica), por isso o retorno agrupa por slug. */
+function metCatalogo() {
+  var porSlug = {};
+  $$('.tcard').forEach(function (tile) {
+    var lbl = $('.tcard__lbl', tile);
+    if (!lbl) return;
+    var nome = (lbl.textContent || '').trim();
+    var slug = metSlug(nome);
+    if (!slug) return;
+    tile.setAttribute('data-metrica', slug);
+    if (!porSlug[slug]) porSlug[slug] = { slug: slug, nome: nome, tiles: [] };
+    porSlug[slug].tiles.push(tile);
+  });
+  var out = [];
+  for (var k in porSlug) { if (porSlug.hasOwnProperty(k)) out.push(porSlug[k]); }
+  return out;
+}
+
+function aplicarMetricas() {
+  var ocultas = estado.metOcultas || [];
+  var cat = metCatalogo();
+  var escondidas = 0;
+  cat.forEach(function (m) {
+    var off = ocultas.indexOf(m.slug) !== -1;
+    if (off) escondidas += 1;
+    m.tiles.forEach(function (t) { t.classList.toggle('tcard--off', off); });
+  });
+
+  $$('.metfil').forEach(function (cx) {
+    var val = $('.metfil__val', cx);
+    /* o botão diz o que ESTÁ na tela, não o que está fora: "12 de 18" é a
+       leitura de quem está olhando a faixa. */
+    if (val) val.textContent = (cat.length - escondidas) + ' de ' + cat.length;
+    $$('.metfil__lista input[value]', cx).forEach(function (cb) {
+      cb.checked = ocultas.indexOf(cb.value) === -1;
+    });
+  });
+}
+
+function metMontarLista(cx) {
+  var lista = $('.metfil__lista', cx);
+  if (!lista) return;
+  lista.innerHTML = '';
+  metCatalogo().forEach(function (m) {
+    var it = document.createElement('label');
+    it.className = 'metfil__item';
+    var cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.value = m.slug;
+    var nm = document.createElement('span');
+    nm.className = 'metfil__nome';
+    nm.textContent = m.nome;
+    it.appendChild(cb);
+    it.appendChild(nm);
+    lista.appendChild(it);
+  });
+}
+
+function fecharTodosMet() {
+  $$('.metfil').forEach(function (cx) {
+    var pop = $('.metfil__pop', cx);
+    var btn = $('.metfil__btn', cx);
+    if (pop) pop.hidden = true;
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+    cx.removeAttribute('data-aberto');
+  });
+}
+
+function ligarMetricas() {
+  estado.metOcultas = metLerOcultas();
+
+  $$('.metfil').forEach(function (cx) {
+    metMontarLista(cx);
+
+    $('.metfil__btn', cx).addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      var abrindo = $('.metfil__pop', cx).hidden;
+      fecharTodosMet();
+      if (abrindo) {
+        /* remonta ao abrir: o escopo Google tem métricas que os outros não
+           têm, e a lista é a da tela inteira. */
+        metMontarLista(cx);
+        aplicarMetricas();
+        $('.metfil__pop', cx).hidden = false;
+        $('.metfil__btn', cx).setAttribute('aria-expanded', 'true');
+        cx.setAttribute('data-aberto', '');
+      }
+    });
+
+    $('.metfil__pop', cx).addEventListener('click', function (ev) { ev.stopPropagation(); });
+
+    /* marcar = MOSTRAR. A lista fala de quem aparece, não de quem some:
+       "desmarque pra esconder" é uma negação a mais na cabeça de quem lê. */
+    $('.metfil__lista', cx).addEventListener('change', function (ev) {
+      var alvo = ev.target;
+      if (!alvo || alvo.tagName !== 'INPUT') return;
+      var ocultas = (estado.metOcultas || []).filter(function (s) { return s !== alvo.value; });
+      if (!alvo.checked) ocultas.push(alvo.value);
+      metSalvarOcultas(ocultas);
+      aplicarMetricas();
+      /* tile some ou volta = a caixa mudou de tamanho; a fonte dos valores é
+         calibrada pela largura da caixa. */
+      $$('.view').forEach(ajustarValores);
+    });
+
+    $$('.metfil__acao', cx).forEach(function (b) {
+      b.addEventListener('click', function () {
+        metSalvarOcultas(b.getAttribute('data-acao') === 'todas'
+          ? [] : MET_OCULTAS_PADRAO.slice());
+        aplicarMetricas();
+        $$('.view').forEach(ajustarValores);
+      });
+    });
+  });
+
+  document.addEventListener('click', fecharTodosMet);
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape' || ev.key === 'Esc') fecharTodosMet();
+  });
+
+  aplicarMetricas();
 }
 
 function ligarOpsFil() {
@@ -10406,6 +10735,7 @@ ligarGlossario();
 restaurarEscolha();
 restaurarOrdenacao();
 ligarOpsFil();
+ligarMetricas();
 pintarNotaPeriodo();
 
 $$('input[name="range"]').forEach(function (inp) {
