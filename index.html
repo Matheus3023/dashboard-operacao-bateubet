@@ -1624,8 +1624,11 @@ html.rolado .brand__logo{height:19px}
      outras colunas falam do PERÍODO escolhido lá em cima, e esta fala da
      carteira acumulada (todas as turmas, desde sempre). Colocada entre FTD e
      depósito, ela seria lida como "FTD do dia que continuam" e é outra coisa. */
-  grid-template-columns:122px 84px 84px 116px minmax(138px,1fr) 134px 100px 68px 84px 48px 92px 118px 118px 108px 118px 122px 118px;
-  min-width:1984px;
+  /* +4px em CUSTO POR FTD e SEGUEM, +12px em PARTICIPAÇÃO: os três rótulos
+     cabiam raspando e passaram a truncar quando a coluna vira a ordenada e
+     a seta entra ao lado do texto. */
+  grid-template-columns:122px 84px 84px 116px minmax(150px,1fr) 134px 100px 68px 84px 48px 96px 118px 118px 108px 118px 122px 122px;
+  min-width:2004px;
   padding:11px 16px;
   border-top:1px solid var(--line-soft);
 }
@@ -1636,7 +1639,34 @@ html.rolado .brand__logo{height:19px}
   font-family:var(--mono);font-size:.5625rem;letter-spacing:.12em;
   text-transform:uppercase;color:var(--txt-3);
 }
-.cmp__row--head span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* ── CABEÇALHO CLICÁVEL: ORDENAR PELA COLUNA ──────────────────────────────
+   Todo rótulo da linha de cabeçalho é um botão. Três cliques fecham o ciclo:
+     1º -> ordena pelo que interessa naquela coluna (maior primeiro em número,
+           A→Z no nome), 2º -> inverte, 3º -> devolve a ordem padrão da API
+           (verba decrescente).
+   O botão é resetado pra continuar PARECENDO texto: a linha de cabeçalho tem
+   9px de fonte e 17 colunas, e desenhar 17 botões com cara de botão comeria a
+   tabela. A pista de que dá pra clicar é o cursor, o hover e a seta da coluna
+   ativa. */
+.cmp__row--head > *{
+  font:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit;
+  background:none;border:0;padding:0;margin:0;text-align:left;
+  display:flex;align-items:center;min-width:0;cursor:pointer;
+  transition:color .14s ease;
+}
+/* o texto trunca DENTRO do botão: com display:flex no botão, o ellipsis não
+   pega no texto solto -- precisa de um bloco próprio pra encolher. */
+.cmp__th__t{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmp__row--head > *:hover{color:var(--txt-1)}
+.cmp__row--head > *:focus-visible{outline:2px solid var(--acao);outline-offset:2px;border-radius:3px}
+/* seta só na coluna ativa: 17 setas acesas ao mesmo tempo não dizem qual está
+   valendo, e ainda roubam largura de rótulo que já está no limite. */
+/* fora da coluna ativa a seta nem ocupa espaço (display:none, não opacity):
+   com gap ou item vazio ela comia 4px de "Participação na verba", que já cabia
+   raspando na coluna. */
+.cmp__th__s{flex:none;font-size:.95em;line-height:1;margin-left:4px;display:none}
+.cmp__th.is-ord{color:var(--txt-1)}
+.cmp__th.is-ord .cmp__th__s{display:inline}
 .cmp__body .cmp__row{transition:background .14s ease}
 .cmp__body .cmp__row:hover{background:rgba(255,255,255,.035)}
 .cmp__name{
@@ -1649,7 +1679,7 @@ html.rolado .brand__logo{height:19px}
 .cmp__pick:focus-visible{outline:2px solid var(--acao);outline-offset:2px}
 .cmp__nomewrap{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* alinha o rótulo da coluna com o nome, já que agora a linha começa na caixinha */
-.cmp__row--head span:first-child{padding-left:23px}
+.cmp__row--head > *:first-child{padding-left:23px}
 .cmp__num{
   font-size:.875rem;font-weight:620;font-variant-numeric:tabular-nums;letter-spacing:-.01em;white-space:nowrap;
   /* item de grid sem min-width:0 não deixa a coluna encolher abaixo do
@@ -3637,24 +3667,26 @@ body.pnl-aberto{overflow:hidden}
     </div>
 
     <section class="cmp" aria-label="Comparativo por expert">
-      <div class="cmp__row cmp__row--head" aria-hidden="true">
-        <span>Expert</span>
-        <span class="cmp__roind">ROI net dep</span>
-        <span class="cmp__roinp">ROI net PL</span>
-        <span>Investido</span>
-        <span class="cmp__bar-cell">Participação na verba</span>
-        <span class="cmp__res">Result. por canal</span>
-        <span>Custo/result.</span>
-        <span class="cmp__cad">Cadastros</span>
-        <span class="cmp__custocad">Custo/cad.</span>
-        <span class="cmp__ftd">FTD</span>
-        <span class="cmp__custoftd">Custo por FTD</span>
-        <span class="cmp__dep">Depósito</span>
-        <span class="cmp__netdep">Net dep</span>
-        <span class="cmp__valorftd">Valor FTD</span>
-        <span class="cmp__volume">Volume</span>
-        <span class="cmp__netpl">Net PL</span>
-        <span class="cmp__seguem">Seguem · carteira</span>
+      <!-- CABEÇALHO CLICÁVEL: cada rótulo ordena a tabela pela sua coluna.
+           Deixou de ser aria-hidden porque agora é controle, não enfeite. -->
+      <div class="cmp__row cmp__row--head">
+        <button type="button" class="cmp__th" data-ord="nome"><span class="cmp__th__t">Expert</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__roind" data-ord="roind"><span class="cmp__th__t">ROI net dep</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__roinp" data-ord="roinp"><span class="cmp__th__t">ROI net PL</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th" data-ord="inv"><span class="cmp__th__t">Investido</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__bar-cell" data-ord="share"><span class="cmp__th__t">Participação na verba</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__res" data-ord="res"><span class="cmp__th__t">Result. por canal</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th" data-ord="custores"><span class="cmp__th__t">Custo/result.</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__cad" data-ord="cad"><span class="cmp__th__t">Cadastros</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__custocad" data-ord="custocad"><span class="cmp__th__t">Custo/cad.</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__ftd" data-ord="ftd"><span class="cmp__th__t">FTD</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__custoftd" data-ord="custoftd"><span class="cmp__th__t">Custo por FTD</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__dep" data-ord="dep"><span class="cmp__th__t">Depósito</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__netdep" data-ord="netdep"><span class="cmp__th__t">Net dep</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__valorftd" data-ord="valorftd"><span class="cmp__th__t">Valor FTD</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__volume" data-ord="volume"><span class="cmp__th__t">Volume</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__netpl" data-ord="netpl"><span class="cmp__th__t">Net PL</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__seguem" data-ord="seguem"><span class="cmp__th__t">Seguem · carteira</span><i class="cmp__th__s" aria-hidden="true"></i></button>
       </div>
 
       <div class="cmp__body">
@@ -5047,24 +5079,26 @@ body.pnl-aberto{overflow:hidden}
     </div>
 
     <section class="cmp" aria-label="Comparativo por expert">
-      <div class="cmp__row cmp__row--head" aria-hidden="true">
-        <span>Expert</span>
-        <span class="cmp__roind">ROI net dep</span>
-        <span class="cmp__roinp">ROI net PL</span>
-        <span>Investido</span>
-        <span class="cmp__bar-cell">Participação na verba</span>
-        <span class="cmp__res">Result. por canal</span>
-        <span>Custo/result.</span>
-        <span class="cmp__cad">Cadastros</span>
-        <span class="cmp__custocad">Custo/cad.</span>
-        <span class="cmp__ftd">FTD</span>
-        <span class="cmp__custoftd">Custo por FTD</span>
-        <span class="cmp__dep">Depósito</span>
-        <span class="cmp__netdep">Net dep</span>
-        <span class="cmp__valorftd">Valor FTD</span>
-        <span class="cmp__volume">Volume</span>
-        <span class="cmp__netpl">Net PL</span>
-        <span class="cmp__seguem">Seguem · carteira</span>
+      <!-- CABEÇALHO CLICÁVEL: cada rótulo ordena a tabela pela sua coluna.
+           Deixou de ser aria-hidden porque agora é controle, não enfeite. -->
+      <div class="cmp__row cmp__row--head">
+        <button type="button" class="cmp__th" data-ord="nome"><span class="cmp__th__t">Expert</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__roind" data-ord="roind"><span class="cmp__th__t">ROI net dep</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__roinp" data-ord="roinp"><span class="cmp__th__t">ROI net PL</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th" data-ord="inv"><span class="cmp__th__t">Investido</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__bar-cell" data-ord="share"><span class="cmp__th__t">Participação na verba</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__res" data-ord="res"><span class="cmp__th__t">Result. por canal</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th" data-ord="custores"><span class="cmp__th__t">Custo/result.</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__cad" data-ord="cad"><span class="cmp__th__t">Cadastros</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__custocad" data-ord="custocad"><span class="cmp__th__t">Custo/cad.</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__ftd" data-ord="ftd"><span class="cmp__th__t">FTD</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__custoftd" data-ord="custoftd"><span class="cmp__th__t">Custo por FTD</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__dep" data-ord="dep"><span class="cmp__th__t">Depósito</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__netdep" data-ord="netdep"><span class="cmp__th__t">Net dep</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__valorftd" data-ord="valorftd"><span class="cmp__th__t">Valor FTD</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__volume" data-ord="volume"><span class="cmp__th__t">Volume</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__netpl" data-ord="netpl"><span class="cmp__th__t">Net PL</span><i class="cmp__th__s" aria-hidden="true"></i></button>
+        <button type="button" class="cmp__th cmp__seguem" data-ord="seguem"><span class="cmp__th__t">Seguem · carteira</span><i class="cmp__th__s" aria-hidden="true"></i></button>
       </div>
 
       <div class="cmp__body">
@@ -7951,6 +7985,167 @@ function filtrarOps(todas, geral) {
   return todas.filter(function (e) { return sel.indexOf(e.expert_name) !== -1; });
 }
 
+/* ── ORDENAR A TABELA PELA COLUNA CLICADA ─────────────────────────────────
+   A ordem padrão continua sendo a da API (verba decrescente) -- é a leitura
+   de quem abre o painel pra saber onde o dinheiro está. Clicar num rótulo
+   troca a pergunta: "quem tem o pior ROI", "quem tem mais FTD", "cadê o
+   fulano" (nome A→Z).
+
+   O valor de cada coluna sai DAQUI, não do texto da célula: a célula está
+   formatada ("R$ 1.204,80", "1,8×", "sem FTD") e ordenar por texto colocaria
+   R$ 900 mil acima de R$ 1 milhão. Cada entrada devolve o número cru, ou
+   `null` quando não existe conta pra fazer.
+
+   Um cuidado herdado do fix de 11/08: CUSTO/RESULT. ordena só pelo custo do
+   canal GRUPO. Somar entrada em grupo (reais) com clique no perfil (centavos)
+   e dividir a verba pelo total inventa um custo que não existe em canal
+   nenhum -- foi exatamente isso que já pintou de verde quem não converteu
+   nada. Linha que só tem perfil sai como "sem base" e vai pro fim. */
+function tapDe(e) { return (e && e.tap) || {}; }
+
+var ORD_COLS = {
+  nome:     { rot: 'nome',                tipo: 'texto',
+              v: function (e) { return nomeExpert(e.expert_name); } },
+  roind:    { rot: 'ROI de net dep',
+              v: function (e) { return temFunilTap(e) ? roi(tapDe(e).net_dep, e.investimento_total) : null; } },
+  roinp:    { rot: 'ROI de net PL',
+              v: function (e) { return temFunilTap(e) ? roi(netPlLiquido(tapDe(e)), e.investimento_total) : null; } },
+  inv:      { rot: 'investimento',
+              v: function (e) { return ehNum(e.investimento_total) ? e.investimento_total : 0; } },
+  /* participação é a mesma ordem do investido (é ele sobre o total do
+     período), mas ganha chave própria pra seta acender onde a pessoa clicou. */
+  share:    { rot: 'participação na verba',
+              v: function (e) { return ehNum(e.investimento_total) ? e.investimento_total : 0; } },
+  res:      { rot: 'resultado do Meta',
+              v: function (e) { return metaResultado(e); } },
+  custores: { rot: 'custo por resultado de grupo',
+              v: function (e) {
+                var g = canaisResultado(e).filter(function (c) { return c.canal === 'grupo'; })[0];
+                return g && ehNum(g.custo) ? g.custo : null;
+              } },
+  cad:      { rot: 'cadastros',
+              v: function (e) { return ehNum(tapDe(e).cadastros) ? tapDe(e).cadastros : 0; } },
+  custocad: { rot: 'custo por cadastro',
+              v: function (e) {
+                var inv = e.investimento_total, cad = tapDe(e).cadastros;
+                return (ehNum(inv) && inv > 0 && ehNum(cad) && cad > 0) ? inv / cad : null;
+              } },
+  ftd:      { rot: 'FTD',
+              v: function (e) { return ehNum(tapDe(e).ftd) ? tapDe(e).ftd : 0; } },
+  custoftd: { rot: 'custo por FTD',
+              v: function (e) { return temCusto(e) ? tapDe(e).custo_por_ftd : null; } },
+  dep:      { rot: 'depósito',   v: function (e) { return ehNum(tapDe(e).deposito) ? tapDe(e).deposito : null; } },
+  netdep:   { rot: 'net dep',    v: function (e) { return ehNum(tapDe(e).net_dep) ? tapDe(e).net_dep : null; } },
+  valorftd: { rot: 'valor do FTD', v: function (e) { return ehNum(tapDe(e).valor_ftd) ? tapDe(e).valor_ftd : null; } },
+  volume:   { rot: 'volume',     v: function (e) { return ehNum(tapDe(e).volume) ? tapDe(e).volume : null; } },
+  netpl:    { rot: 'net PL',     v: function (e) { return ehNum(tapDe(e).net_pl) ? tapDe(e).net_pl : null; } },
+  /* a carteira não vem no mesmo pacote da tabela: chega da rota de safra,
+     depois. Enquanto não chegar, todo mundo é "sem base" e a ordem não muda --
+     pintarSafraOndeCabe() redesenha quando o dado cai. */
+  seguem:   { rot: 'quem segue na carteira',
+              v: function (e, escopo) {
+                var s = safraPorExpert(escopo, e.expert_name);
+                return s && s.ftd ? s.ativos : null;
+              } }
+};
+
+estado.ordem = { cl: null, geral: null };
+
+function ordemAtual(geral) { return estado.ordem[chaveEscopo(geral)]; }
+
+/* número negativo é valor legítimo (net dep negativo = devolveu dinheiro), por
+   isso "sem base" é `null`, nunca zero. */
+function ordenarOps(lista, geral) {
+  var o = ordemAtual(geral);
+  var col = o && ORD_COLS[o.col];
+  if (!col) return lista;
+  var escopo = chaveEscopo(geral);
+  var itens = lista.map(function (e, i) {
+    var v;
+    try { v = col.v(e, escopo); } catch (err) { v = null; }
+    return { e: e, i: i, v: v };
+  });
+  itens.sort(function (a, b) {
+    var na = (a.v == null || a.v !== a.v), nb = (b.v == null || b.v !== b.v);
+    /* SEM BASE VAI SEMPRE PRO FIM, nas duas direções: "sem funil" não é o
+       menor número da coluna, é ausência de medição -- e no crescente ela
+       ocuparia o topo, que é justamente onde se olha primeiro. */
+    if (na || nb) return (na && nb) ? a.i - b.i : (na ? 1 : -1);
+    var c = col.tipo === 'texto'
+      ? String(a.v).localeCompare(String(b.v), 'pt-BR')
+      : (a.v - b.v);
+    /* empate mantém a ordem que veio da API (verba decrescente) */
+    return c ? c * o.dir : a.i - b.i;
+  });
+  return itens.map(function (x) { return x.e; });
+}
+
+/* Ciclo de 3 estados. O 3º clique existe pra ter volta: sem ele, quem ordenou
+   por nome só recupera a ordem de verba trocando de período ou de escopo. */
+function alternarOrdem(geral, chave, raiz) {
+  var col = ORD_COLS[chave];
+  if (!col) return;
+  var padrao = padraoDe(col);
+  var o = ordemAtual(geral);
+  var novo;
+  if (!o || o.col !== chave)   novo = { col: chave, dir: padrao };
+  else if (o.dir === padrao)   novo = { col: chave, dir: -padrao };
+  else                         novo = null;
+  estado.ordem[chaveEscopo(geral)] = novo;
+
+  var b = blocoDoEscopo(geral);
+  if (!b) { pintarCabecalhoOrd(raiz, geral); return; }
+  pintarComparativo(b, estado.ehHoje, raiz, geral);
+  $$('.view', raiz).forEach(ajustarValores);
+}
+
+/* Escreve o estado no cabeçalho. Roda a cada repintura do comparativo (o
+   refresh de 5 min passa por lá), então a seta nunca fica falando de uma
+   ordem que já mudou. */
+function pintarCabecalhoOrd(raiz, geral) {
+  var o = ordemAtual(geral);
+  $$('.cmp__row--head .cmp__th', raiz).forEach(function (bt) {
+    var chave = bt.getAttribute('data-ord');
+    var col = ORD_COLS[chave];
+    if (!col) return;
+    var ativa = !!(o && o.col === chave);
+    var seta = $('.cmp__th__s', bt);
+    bt.classList.toggle('is-ord', ativa);
+    if (seta) seta.textContent = ativa ? (o.dir === 1 ? '↑' : '↓') : '';
+    var sentido = o && o.dir === 1
+      ? (col.tipo === 'texto' ? 'de A a Z' : 'do menor pro maior')
+      : (col.tipo === 'texto' ? 'de Z a A' : 'do maior pro menor');
+    var proximo = ativa && o.dir === padraoDe(col) ? 'inverter' : 'voltar à ordem por verba';
+    var estadoTxt = ativa
+      ? ('ordenado ' + sentido + ', clique de novo pra ' + proximo)
+      : ('clique pra ordenar por ' + col.rot);
+    bt.title = ativa
+      ? ('Ordenado por ' + col.rot + ', ' + sentido + ' · clique de novo pra ' + proximo)
+      : ('Ordenar por ' + col.rot);
+    /* aria-sort só é válido em role=columnheader, e esta tabela é um grid de
+       divs, não uma tabela ARIA -- forçar o atributo aqui seria mentira pro
+       leitor de tela. O estado vai no nome acessível, começando pelo rótulo
+       visível pra não quebrar o "label in name". */
+    var rotulo = $('.cmp__th__t', bt);
+    bt.setAttribute('aria-label', (rotulo ? rotulo.textContent : col.rot) + ' · ' + estadoTxt);
+  });
+}
+
+function padraoDe(col) { return col.tipo === 'texto' ? 1 : -1; }
+
+function ligarOrdenacao() {
+  [[RAIZ_CL, false], [RAIZ_GERAL, true]].forEach(function (par) {
+    var raiz = par[0], geral = par[1];
+    var cab = $('.cmp__row--head', raiz);
+    if (!cab) return;
+    cab.addEventListener('click', function (ev) {
+      var bt = ev.target && ev.target.closest ? ev.target.closest('.cmp__th') : null;
+      if (!bt) return;
+      alternarOrdem(geral, bt.getAttribute('data-ord'), raiz);
+    });
+  });
+}
+
 function rotuloOps(sel, todas) {
   if (!sel || sel.length === todas.length) return 'Todas';
   if (sel.length === 1) return nomeExpert(sel[0]);
@@ -8561,7 +8756,9 @@ function pintarComparativo(d, isHoje, raiz, geral) {
      seletor. `exps` é o que a tabela mostra. Ter ou não investimento no período
      nunca decide isso: quem escolhe é a pessoa, no seletor. */
   var todas = d.experts || [];
-  var exps = filtrarOps(todas, geral);
+  /* filtra, DEPOIS ordena: a ordem escolhida no cabeçalho vale pra tabela que
+     está em tela, não pro conjunto todo. */
+  var exps = ordenarOps(filtrarOps(todas, geral), geral);
   pintarOpsFil(raiz, todas, geral, exps.length);
   /* O denominador da participação é o total do período INTEIRO, com filtro ou
      sem: "25% da verba" tem que continuar querendo dizer a mesma coisa nas duas
@@ -8808,7 +9005,11 @@ function pintarComparativo(d, isHoje, raiz, geral) {
       '(voltou exatamente o que custou), verde acima disso e vermelho abaixo. ' +
       'O ROI de net PL já vem SEM a comissão do afiliado — é a margem real. ' +
       '"Sem funil" nessas duas colunas = operação sem btag na TAP, que não tem ' +
-      'net dep nem net PL pra medir.';
+      'net dep nem net PL pra medir. ' +
+      'Clique no nome de qualquer coluna pra ordenar a tabela por ela (de novo ' +
+      'inverte, a terceira vez volta pra ordem por verba). Quem não tem base ' +
+      'pra aquela coluna cai sempre no fim, nas duas direções. Custo/result. ' +
+      'ordena pelo canal de GRUPO, o único com régua comparável.';
     leg.hidden = false;
   }
 
@@ -8816,6 +9017,8 @@ function pintarComparativo(d, isHoje, raiz, geral) {
   /* as linhas foram redesenhadas: repõe as marcas do rascunho e o estado da
      barra de confirmar (o refresh de 5 min passa por aqui). */
   sincronizarOps(raiz, geral);
+  /* e a seta do cabeçalho, pelo mesmo motivo */
+  pintarCabecalhoOrd(raiz, geral);
 }
 
 function pintarTopCriativos(d, isHoje, raiz) {
@@ -9498,7 +9701,17 @@ function carregarSafra(escopo) {
    atualiza. */
 function pintarSafraOndeCabe(escopo) {
   var geral = escopo === 'geral';
-  preencherSeguemCmp(geral ? RAIZ_GERAL : RAIZ_CL, geral);
+  var raiz = geral ? RAIZ_GERAL : RAIZ_CL;
+  /* a coluna da carteira só ganha valor quando a safra chega, DEPOIS da tabela
+     desenhada. Se a ordem em vigor for justamente por ela, preencher célula
+     por célula não basta: as linhas ainda estão na ordem de quando todo mundo
+     era "sem base". Aí é repintura inteira, não preenchimento. */
+  var o = ordemAtual(geral);
+  if (o && o.col === 'seguem') {
+    var b = blocoDoEscopo(geral);
+    if (b) { pintarComparativo(b, estado.ehHoje, raiz, geral); return; }
+  }
+  preencherSeguemCmp(raiz, geral);
 }
 
 /* "2026-06" -> "jun/26". Nome de turma, não data de relatório: curto, porque a
@@ -10931,6 +11144,7 @@ ligarGlossario();
 restaurarEscolha();
 restaurarOrdenacao();
 ligarOpsFil();
+ligarOrdenacao();
 ligarMetricas();
 pintarNotaPeriodo();
 
