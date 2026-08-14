@@ -385,6 +385,11 @@ CLASSES DE ESTADO (já estilizadas, o JS só aplica)
                         prateleira de criativos). Renderizar SÓ com 2+ contas.
   .contas__row--tot  -> última linha da tabela, fecha a soma das contas. Tem que
                         bater exatamente com investimento_total da entidade.
+  .contas__row--zero -> conta sem gasto no período. Continua na tabela (a soma
+                        precisa fechar), com TOTAL R$ 0,00 e PART. 0,0% -- nunca
+                        "n/d", que leria como falha de API. As colunas Grupo /
+                        Tráf. perfil ficam com traço quando o canal não existe
+                        naquela conta.
   .status--live / .status--stale / .status--error -> pílula de frescor no header
       live  = fetch OK há menos de 6 min (2 ciclos de refresh)
       stale = último fetch OK há mais de 6 min (dado envelhecendo)
@@ -2526,10 +2531,18 @@ html.rolado .brand__logo{height:19px}
 .contas__row--tot .contas__num{font-size:.875rem;font-weight:660}
 .contas__row--tot .contas__share{color:var(--txt-2)}
 
-/* conta sem entrega no período: some o zero, entra o "n/d" leve. Zero em
-   tabela financeira lê como "gastou nada de propósito"; n/d lê como
-   "não teve entrega", que é o que aconteceu. */
+/* canal sem campanha na conta: traço leve, não "n/d". Aqui a coluna é custo,
+   e o custo é conhecido -- é zero. O traço diz "não existe esse canal nessa
+   conta"; o TOTAL da linha continua imprimindo R$ 0,00, que é o que fecha a
+   soma do cabeçalho. */
 .contas__num.val--na{font-weight:400;color:var(--txt-3)}
+
+/* linha de conta parada: fica na tabela (a soma tem que bater e o gestor
+   precisa ver que a conta existe), mas recuada, pra não competir com quem
+   está de fato queimando verba. */
+.contas__row--zero .contas__nome b,
+.contas__row--zero .contas__num,
+.contas__row--zero .contas__share{color:var(--txt-3);font-weight:480}
 
 /* marcador de multi-conta / marca na linha do comparativo. Segunda linha
    dentro da célula de nome: some no celular junto com a coluna estreita?
@@ -6477,6 +6490,7 @@ var CONTAS = {
   '1375513147862272':  'CA 05 · Institucional',
   '1689900502296830':  'CA 06 · Institucional',
   '1364418892488854':  'CA 07 · Institucional',
+  '2474915826342866':  'CA 08 · Institucional',
   '3841440682664482':  'CA 09 · Institucional',
   '1007454048772455':  'CA 10 · Institucional'
 };
@@ -7026,12 +7040,18 @@ function pintarContas(art, ent, isHoje) {
     var idEl = $('.contas__id', linha);
     if (idEl) idEl.textContent = c.conta_id;
 
+    /* conta sem campanha naquele canal não é dado faltando -- o custo dela é
+       zero, e é isso que a coluna tem que dizer. "n/d" numa tabela de custo
+       lê como "a API falhou", e não falhou: a conta gastou R$ 0,00 mesmo.
+       Canal a canal fica o traço (não existe campanha ali pra comparar),
+       mas TOTAL e PART. sempre fecham em número -- é a soma do cabeçalho. */
     var nums = $$('.contas__num', linha);
-    escreve(nums[0], brl(vg));            /* grupo  */
-    escreve(nums[1], brl(vd));            /* direto */
-    escreve(nums[2], brl(tot));           /* total da conta */
+    escreve(nums[0], brl(vg), '—');       /* grupo  */
+    escreve(nums[1], brl(vd), '—');       /* direto */
+    escreve(nums[2], brl(tot || 0));      /* total da conta */
     escreve($('.contas__share', linha),
-      (totalEnt > 0 && tot != null) ? pct(tot / totalEnt * 100) : null);
+      totalEnt > 0 ? pct((tot || 0) / totalEnt * 100) : null);
+    if (!tot) linha.classList.add('contas__row--zero');
     tbl.appendChild(linha);
   });
 
