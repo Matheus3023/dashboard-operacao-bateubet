@@ -2496,6 +2496,12 @@ html.rolado .brand__logo{height:19px}
   border-top:1px solid var(--line-soft);
 }
 .contas__row > *:not(:first-child){text-align:right}
+/* linha de conta é clicável (abre o detalhe da conta). A linha de cabeçalho e
+   a de fechamento não são: elas não representam uma conta. */
+.contas__row[role="button"]{cursor:pointer;transition:background .14s ease}
+.contas__row[role="button"]:hover{background:var(--acao-soft)}
+.contas__row[role="button"]:focus-visible{outline:2px solid var(--acao);outline-offset:-2px}
+@media (prefers-reduced-motion:reduce){.contas__row[role="button"]{transition:none}}
 .contas__row--head{
   border-top:0;padding:0 0 7px;
   font-family:var(--mono);font-size:.5625rem;letter-spacing:.12em;
@@ -3111,6 +3117,164 @@ body.pnl-aberto{overflow:hidden}
   .pnl__box,.pnl__fundo{animation:none}
   .expert__abrir,.pnl__x{transition:none}
 }
+
+/* ══ DETALHE DA CONTA (14/08) ═════════════════════════════════════════════
+   Segunda janela, mesma casca do painel de expert (.pnl*), conteúdo próprio.
+   Ela existe porque o breakdown "Investimento conta a conta" respondia só
+   METADE da pergunta: mostra quanto a conta gastou e cala sobre a única coisa
+   que decide a mexida do dia — se dá pra escalar. Isso mora em orçamento,
+   entrega, frequência e custo por resultado, campanha a campanha, e até aqui
+   era garimpo manual no Gerenciador.
+   A casca é reaproveitada de propósito: duas janelas com regras de fechar,
+   foco e fundo diferentes seriam dois bugs esperando acontecer.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* o corpo do painel de expert vira 2 colunas em telas grandes; aqui NÃO:
+   é tabela larga, e tabela partida ao meio perde a comparação linha a linha.
+   Seletor com id de propósito, pra vencer a media query sem !important. */
+#pnlc .pnl__body{grid-template-columns:minmax(0,1fr)}
+
+/* ── faixa de resumo: o número da conta inteira antes do detalhe ────────── */
+.cta-topo{
+  display:flex;align-items:flex-start;gap:26px;flex-wrap:wrap;
+  padding:12px 14px;
+  background:var(--surface-sunk);
+  border:1px solid var(--line-soft);border-radius:var(--r);
+}
+.cta-kpi{display:flex;flex-direction:column;gap:3px;min-width:0}
+.cta-kpi__lbl{
+  font-family:var(--mono);font-size:.5625rem;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--txt-3);white-space:nowrap;
+}
+.cta-kpi__val{
+  font-size:1.0625rem;font-weight:660;font-variant-numeric:tabular-nums;
+  letter-spacing:-.01em;white-space:nowrap;
+}
+
+/* CPA alvo: sem ele o painel não tem direito de dizer "pode escalar", porque
+   custo bom e custo ruim dependem do que a casa paga por FTD — número que
+   mora no contrato, não na API. Fica guardado no navegador de quem usa. */
+.cta-alvo{margin-left:auto;display:flex;flex-direction:column;gap:3px}
+.cta-alvo input{
+  width:118px;padding:6px 9px;
+  background:var(--surface);border:1px solid var(--line);border-radius:8px;
+  color:var(--txt);font:inherit;font-size:.8125rem;font-weight:600;
+  font-variant-numeric:tabular-nums;
+}
+.cta-alvo input:focus-visible{outline:2px solid var(--acao);outline-offset:1px}
+
+/* ── veredito da conta: a frase, em tamanho de frase ────────────────────── */
+.cta-vered{
+  padding:13px 14px;border-radius:var(--r);
+  background:var(--surface-sunk);border:1px solid var(--line-soft);
+  border-left:3px solid var(--line-strong);
+}
+.cta-vered--bom{border-left-color:var(--good)}
+.cta-vered--atencao{border-left-color:var(--warn)}
+.cta-vered--ruim{border-left-color:var(--bad)}
+.cta-vered__acao{
+  margin:0;font-family:var(--mono);font-size:.625rem;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--txt-3);
+}
+.cta-vered__txt{margin:5px 0 0;font-size:.9375rem;line-height:1.5;color:var(--txt)}
+
+/* ── tabela de campanhas ────────────────────────────────────────────────── */
+.cta-tbl{
+  border:1px solid var(--line-soft);border-radius:var(--r);
+  background:var(--surface-sunk);overflow:hidden;
+}
+/* a tabela tem 9 colunas de número; em tela estreita ela rola SOZINHA, dentro
+   da própria moldura -- o corpo do painel nunca rola pro lado. */
+.cta-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.cta-row{
+  display:grid;align-items:center;gap:10px;
+  grid-template-columns:
+    minmax(210px,2.2fr)                    /* campanha            */
+    minmax(96px,max-content)               /* orçamento/dia       */
+    minmax(96px,max-content)               /* gasto               */
+    minmax(104px,max-content)              /* entrega             */
+    minmax(58px,max-content)               /* resultado           */
+    minmax(96px,max-content)               /* custo por resultado */
+    minmax(58px,max-content)               /* ctr                 */
+    minmax(58px,max-content)               /* frequência          */
+    minmax(124px,max-content);             /* veredito            */
+  min-width:940px;
+  padding:10px 14px;
+  border-top:1px solid var(--line-soft);
+}
+.cta-row > *:not(:first-child){text-align:right}
+.cta-row--head{
+  border-top:0;padding:9px 14px;
+  background:var(--surface-2);
+  font-family:var(--mono);font-size:.5625rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--txt-3);
+}
+.cta-nome{display:flex;flex-direction:column;gap:2px;min-width:0}
+/* o <b> é a linha (seta + nome), então é flex; quem corta com reticências é o
+   span de dentro — ellipsis não funciona no próprio container flex. */
+.cta-nome b{
+  display:flex;align-items:center;min-width:0;
+  font-size:.8125rem;font-weight:620;color:var(--txt);
+}
+.cta-nome b > span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cta-meta{
+  font-family:var(--mono);font-size:.5rem;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--txt-3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.cta-num{
+  font-size:.8125rem;font-weight:600;font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+.cta-num--soft{font-weight:500;color:var(--txt-2)}
+
+/* ENTREGA É A COLUNA QUE DECIDE, então é a única com desenho, não só número:
+   a barra mostra de relance quem está deixando verba na mesa. Vermelha embaixo
+   de 85% -- ali orçamento a mais não vira gasto a mais. */
+.cta-entrega{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.cta-bar{
+  position:relative;width:52px;height:5px;flex:none;
+  background:var(--line-soft);border-radius:3px;overflow:hidden;
+}
+.cta-bar i{position:absolute;inset:0 auto 0 0;border-radius:3px;background:var(--good)}
+.cta-bar--baixa i{background:var(--bad)}
+.cta-bar--media i{background:var(--warn)}
+
+.cta-tag{
+  display:inline-block;padding:3px 8px;border-radius:5px;
+  font-family:var(--mono);font-size:.5625rem;letter-spacing:.09em;
+  text-transform:uppercase;font-weight:600;white-space:nowrap;
+}
+.cta-tag--bom{background:var(--good-soft,rgba(52,199,123,.14));color:var(--good)}
+.cta-tag--atencao{background:var(--warn-soft,rgba(240,175,60,.14));color:var(--warn)}
+.cta-tag--ruim{background:var(--bad-soft,rgba(255,90,110,.14));color:var(--bad)}
+.cta-tag--neutro{background:var(--surface-2);color:var(--txt-3)}
+
+/* ── conjuntos: a segunda camada, dentro da linha da campanha ───────────── */
+.cta-camp{border-top:1px solid var(--line-soft)}
+.cta-camp:first-of-type{border-top:0}
+.cta-camp > summary{list-style:none;cursor:pointer}
+.cta-camp > summary::-webkit-details-marker{display:none}
+.cta-camp > summary .cta-row{border-top:0}
+.cta-camp > summary:hover{background:var(--surface-2)}
+.cta-camp > summary:focus-visible{outline:2px solid var(--acao);outline-offset:-2px}
+.cta-chev{
+  width:10px;height:10px;flex:none;margin-right:6px;
+  color:var(--txt-3);transition:transform .18s ease;
+}
+.cta-camp[open] .cta-chev{transform:rotate(180deg)}
+.cta-sets{background:rgba(0,0,0,.16);padding:2px 0 6px}
+.cta-sets .cta-row{padding-left:34px;border-top:1px solid var(--line-soft)}
+.cta-sets .cta-nome b{font-size:.75rem;font-weight:540;color:var(--txt-2)}
+
+.cta-vazio,.cta-erro{
+  padding:22px 14px;text-align:center;font-size:.8125rem;color:var(--txt-3);
+}
+.cta-erro{color:var(--bad)}
+.cta-nota{
+  margin:0;font-size:.6875rem;line-height:1.6;color:var(--txt-3);
+}
+@media (prefers-reduced-motion:reduce){.cta-chev{transition:none}}
 </style>
 </head>
 
@@ -6152,6 +6316,36 @@ body.pnl-aberto{overflow:hidden}
   </aside>
 </div>
 
+<!-- ═══ DETALHE DA CONTA ═══════════════════════════════════════════════════
+     Abre clicando numa linha do breakdown "Investimento conta a conta".
+     Casca igual à do painel de expert; conteúdo montado em JS a partir de
+     /api/conta (Graph API direto, ver api/conta.js) porque o payload do n8n
+     não carrega orçamento nem estratégia de lance — e é exatamente esse par
+     que responde "dá pra escalar".
+     ═══════════════════════════════════════════════════════════════════════ -->
+<div class="pnl" id="pnlc" hidden>
+  <div class="pnl__fundo" data-pnlc-fechar></div>
+
+  <aside class="pnl__box" role="dialog" aria-modal="true" aria-labelledby="pnlc-nome" tabindex="-1">
+
+    <header class="pnl__head">
+      <div class="pnl__id">
+        <span class="pnl__escopo">Conta de anúncio</span>
+        <h2 class="pnl__nome" id="pnlc-nome">Conta</h2>
+        <span class="pnl__per" id="pnlc-periodo"></span>
+      </div>
+      <button class="pnl__x" type="button" data-pnlc-fechar id="pnlc-x" aria-label="Fechar detalhe da conta">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </header>
+
+    <div class="pnl__body" id="pnlc-body">
+      <p class="cta-vazio" id="pnlc-espera">Puxando campanha por campanha no Gerenciador…</p>
+    </div>
+
+  </aside>
+</div>
+
 <script>
 (function () {
 'use strict';
@@ -6700,6 +6894,15 @@ var estado = {
      foco no fechamento. */
   painel: { aberto: false, nome: null, escopo: 'cl', origem: null },
 
+  /* DETALHE DA CONTA (14/08). Segunda janela, aberta pela linha do breakdown
+     por conta. `contaCache` guarda por conta+recorte: reabrir a mesma conta na
+     mesma leitura não pode custar outra ida à Graph, e a pessoa costuma abrir
+     e fechar várias contas em sequência comparando. Zera junto com o CPA alvo,
+     que muda o veredito calculado no servidor. */
+  conta: { aberto: false, id: null, origem: null },
+  contaCache: {},
+  contaReqId: 0,
+
   /* SAFRA (13/08). Buscada SOB DEMANDA, na primeira vez que a aba é aberta, e
      não junto com o painel: é uma rota separada, ninguém abre essa aba toda
      hora, e carregar de cara atrasaria a tela que a operação olha o dia
@@ -7014,6 +7217,10 @@ function pintarContas(art, ent, isHoje) {
     ? 'Investimento conta a conta'
     : 'Investimento conta a conta no período';
   $('.contas__count', det).textContent = String(contas.length);
+  /* a dica velha ("o total do cabeçalho é a soma destas") já foi lida por todo
+     mundo que usa o painel; o que ninguém sabe ainda é que a linha abre. */
+  var dica = $('.contas__hint', det);
+  if (dica) dica.textContent = 'clique numa conta pra ver campanha a campanha →';
 
   var tbl = $('.contas__tbl', det);
   var cabeca = $('.contas__row--head', tbl);
@@ -7036,6 +7243,13 @@ function pintarContas(art, ent, isHoje) {
 
     var linha = MOLDE.contaLinha.cloneNode(true);
     linha.setAttribute('data-conta', c.conta_id);
+    /* a linha virou porta (14/08): abre o detalhe da conta — campanha a
+       campanha, com orçamento, entrega e custo. Precisa anunciar isso pro
+       teclado e pro leitor de tela, não só pro mouse. */
+    linha.setAttribute('role', 'button');
+    linha.setAttribute('tabindex', '0');
+    linha.setAttribute('title', 'Abrir ' + apelidoConta(c.conta_id) +
+      ' campanha a campanha — orçamento, entrega e custo');
     $('.contas__nome b', linha).textContent = apelidoConta(c.conta_id);
     var idEl = $('.contas__id', linha);
     if (idEl) idEl.textContent = c.conta_id;
@@ -11041,15 +11255,21 @@ function fecharPainel() {
   var volta = estado.painel.origem;
   estado.painel = { aberto: false, nome: null, escopo: 'cl', origem: null };
   PNL.raiz.hidden = true;
-  document.body.classList.remove('pnl-aberto');
+  /* a trava de rolagem é do BODY e as duas janelas usam a mesma: só solta se
+     o detalhe da conta também estiver fechado */
+  if (!estado.conta.aberto) document.body.classList.remove('pnl-aberto');
   /* devolve o foco pro card que abriu, se ele ainda existir (o refresh de 5
      min recria os cards, então nem sempre existe) */
   if (volta && document.body.contains(volta) && volta.focus) volta.focus();
 }
 
-function prenderFoco(ev) {
-  if (ev.key !== 'Tab') return;
-  var focaveis = $$('button, [href], input, select, textarea, summary, [tabindex]:not([tabindex="-1"])', PNL.caixa)
+function prenderFoco(ev) { prenderFocoEm(ev, PNL.caixa); }
+
+/* A trava de foco vale pras DUAS janelas (expert e detalhe da conta), então
+   recebe a caixa como parâmetro em vez de olhar direto pro painel de expert. */
+function prenderFocoEm(ev, caixa) {
+  if (ev.key !== 'Tab' || !caixa) return;
+  var focaveis = $$('button, [href], input, select, textarea, summary, [tabindex]:not([tabindex="-1"])', caixa)
     .filter(function (el) { return !el.disabled && !el.hidden && el.offsetParent !== null; });
   if (!focaveis.length) return;
   var pri = focaveis[0], ult = focaveis[focaveis.length - 1];
@@ -11157,11 +11377,433 @@ function ligarAbas() {
   aplicarHash();
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   10b. DETALHE DA CONTA · "dá pra escalar esta conta?"
+   ──────────────────────────────────────────────────────────────────────────
+   O breakdown por conta responde QUANTO cada conta gastou. Sozinho, isso não
+   decide nada: a mesma verba pode estar numa campanha entregando cheia com
+   público novo (escalar) ou numa presa em teto de lance (subir orçamento não
+   move um real). Esta janela traz a segunda metade — orçamento, entrega,
+   frequência e custo por resultado, campanha a campanha e conjunto a conjunto.
+
+   Vem de /api/conta, NÃO do payload do n8n, por um motivo de contrato:
+   daily_budget e bid_strategy não existem no endpoint de insights que o n8n
+   usa. Ver o cabeçalho de api/conta.js.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+var PNLC = {
+  raiz:  $('#pnlc'),
+  caixa: $('#pnlc .pnl__box'),
+  nome:  $('#pnlc-nome'),
+  per:   $('#pnlc-periodo'),
+  body:  $('#pnlc-body'),
+  x:     $('#pnlc-x')
+};
+
+/* CPA alvo do operador. Sem ele o painel se recusa a dizer "pode escalar":
+   custo bom e custo ruim dependem do que a casa paga por FTD, e isso mora no
+   contrato, não na API. Fica no navegador de quem usa — é preferência de
+   leitura, não dado da operação. */
+var LS_KEY_ALVO = 'bb-dash-cpa-alvo';
+
+function alvoSalvo() {
+  try {
+    var v = parseFloat(localStorage.getItem(LS_KEY_ALVO));
+    return isFinite(v) && v > 0 ? v : null;
+  } catch (e) { return null; }
+}
+function salvarAlvo(v) {
+  try {
+    if (v == null) localStorage.removeItem(LS_KEY_ALVO);
+    else localStorage.setItem(LS_KEY_ALVO, String(v));
+  } catch (e) { /* modo privado: o painel funciona, só não lembra */ }
+}
+
+/* A chave do cache junta conta + recorte: a mesma conta em "hoje" e em "7 dias"
+   são duas respostas diferentes, e trocar o período com o painel fechado não
+   pode deixar o número velho pendurado. */
+function chaveConta(id, r) {
+  /* o alvo entra na chave porque o veredito é calculado no SERVIDOR: mudar o
+     CPA alvo é uma resposta diferente, não a mesma resposta repintada */
+  return id + '|' + (r.de || 'hoje') + '|' + (r.ate || 'hoje') + '|' + (alvoSalvo() || '');
+}
+
+function abrirConta(id, origem) {
+  estado.conta = { aberto: true, id: id, origem: origem || null };
+  medirTopbar();
+  PNLC.raiz.hidden = false;
+  document.body.classList.add('pnl-aberto');
+  PNLC.body.scrollTop = 0;
+
+  PNLC.nome.textContent = apelidoConta(id);
+  var r = intervaloDe(presetAtual());
+  PNLC.per.textContent = id + ' · ' + (rotuloPeriodo({ de: r.de || hojeSP(), ate: r.ate || hojeSP() }) || 'hoje');
+
+  PNLC.x.focus();
+  buscarConta(id, r);
+}
+
+function fecharConta() {
+  if (!estado.conta.aberto) return;
+  var volta = estado.conta.origem;
+  estado.conta = { aberto: false, id: null, origem: null };
+  PNLC.raiz.hidden = true;
+  /* só tira a trava do body se o OUTRO painel também estiver fechado, senão
+     fechar este por cima do painel de expert devolve a rolagem no meio dele */
+  if (!estado.painel.aberto) document.body.classList.remove('pnl-aberto');
+  if (volta && document.body.contains(volta) && volta.focus) volta.focus();
+}
+
+function buscarConta(id, r) {
+  var chave = chaveConta(id, r);
+  var cache = estado.contaCache[chave];
+  if (cache) { pintarConta(cache); return; }
+
+  PNLC.body.innerHTML = '';
+  var espera = document.createElement('p');
+  espera.className = 'cta-vazio';
+  espera.textContent = 'Puxando campanha por campanha no Gerenciador…';
+  PNLC.body.appendChild(espera);
+
+  var url = '/api/conta?conta_id=' + encodeURIComponent(id);
+  if (r.de && r.ate) url += '&de=' + encodeURIComponent(r.de) + '&ate=' + encodeURIComponent(r.ate);
+  /* sem alvo o servidor não julga custo — e é assim que tem que ser: o painel
+     não inventa a meta que o contrato com a casa define */
+  var alvo = alvoSalvo();
+  if (alvo != null) url += '&alvo=' + encodeURIComponent(alvo);
+
+  var pedido = ++estado.contaReqId;
+
+  fetch(url, { cache: 'no-store', headers: { accept: 'application/json' } })
+    .then(function (resp) {
+      return resp.text().then(function (txt) {
+        var json = null;
+        try { json = JSON.parse(txt); } catch (e) {}
+        if (!resp.ok) throw new Error((json && (json.detail || json.error)) || ('HTTP ' + resp.status));
+        if (!json || !Array.isArray(json.campanhas)) throw new Error('resposta sem campanhas');
+        return json;
+      });
+    })
+    .then(function (d) {
+      if (pedido !== estado.contaReqId) return;   /* chegou fora de ordem */
+      estado.contaCache[chave] = d;
+      pintarConta(d);
+    })
+    .catch(function (e) {
+      if (pedido !== estado.contaReqId) return;
+      PNLC.body.innerHTML = '';
+      var p = document.createElement('p');
+      p.className = 'cta-erro';
+      p.textContent = 'Não deu pra ler esta conta: ' + (e && e.message ? e.message : 'falha de rede');
+      PNLC.body.appendChild(p);
+    });
+}
+
+/* ── desenho ────────────────────────────────────────────────────────────── */
+
+function kpi(lbl, val) {
+  var d = document.createElement('div');
+  d.className = 'cta-kpi';
+  var a = document.createElement('span'); a.className = 'cta-kpi__lbl'; a.textContent = lbl;
+  var b = document.createElement('span'); b.className = 'cta-kpi__val';
+  escreve(b, val);
+  d.appendChild(a); d.appendChild(b);
+  return d;
+}
+
+function celNum(txt, soft) {
+  var s = document.createElement('span');
+  s.className = 'cta-num' + (soft ? ' cta-num--soft' : '');
+  escreve(s, txt, '—');
+  return s;
+}
+
+/* A coluna de entrega é a única com desenho: é ela que separa "está limitada
+   por verba" de "está limitada por lance", e essa diferença é o erro mais caro
+   da operação — sobe orçamento, o gasto não sobe, e parece que escalou. */
+function celEntrega(v) {
+  var wrap = document.createElement('span');
+  wrap.className = 'cta-entrega';
+  if (!ehNum(v)) {
+    wrap.appendChild(celNum(null));
+    return wrap;
+  }
+  var bar = document.createElement('span');
+  bar.className = 'cta-bar' + (v < 0.85 ? ' cta-bar--baixa' : (v < 0.95 ? ' cta-bar--media' : ''));
+  var i = document.createElement('i');
+  i.style.width = Math.max(3, Math.min(100, v * 100)) + '%';
+  bar.appendChild(i);
+  wrap.appendChild(bar);
+  wrap.appendChild(celNum(pct(v * 100, 0)));
+  return wrap;
+}
+
+function celTag(vered) {
+  var s = document.createElement('span');
+  s.className = 'cta-tag cta-tag--' + ((vered && vered.tom) || 'neutro');
+  s.textContent = (vered && vered.acao) || '—';
+  if (vered && vered.txt) s.title = vered.txt;
+  return s;
+}
+
+/* Estratégia de lance em português. O nome cru da API ("LOWEST_COST_WITH_BID_CAP")
+   é justamente o que a linha precisa dizer em duas palavras, porque é ele que
+   explica a entrega travada logo ao lado. */
+var LANCE = {
+  LOWEST_COST_WITHOUT_CAP: 'Maior volume',
+  LOWEST_COST_WITH_BID_CAP: 'Teto de lance',
+  LOWEST_COST_WITH_MIN_ROAS: 'ROAS mínimo',
+  COST_CAP: 'Custo máximo'
+};
+
+function linhaEntidade(l, ehSet) {
+  var row = document.createElement('div');
+  row.className = 'cta-row';
+
+  var nome = document.createElement('span');
+  nome.className = 'cta-nome';
+  var b = document.createElement('b');
+  if (!ehSet) {
+    b.innerHTML = '<svg class="cta-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<path d="m6 9 6 6 6-6"/></svg>';
+  }
+  var txt = document.createElement('span');
+  txt.textContent = l.nome;
+  b.appendChild(txt);
+  b.title = l.nome;
+  nome.appendChild(b);
+
+  var meta = document.createElement('span');
+  meta.className = 'cta-meta';
+  var partes = [];
+  if (l.estrategia) partes.push(LANCE[l.estrategia] || l.estrategia);
+  if (ehNum(l.lance)) partes.push('lance ' + brl(l.lance));
+  if (l.status && l.status !== 'ACTIVE') partes.push(l.status === 'PAUSED' ? 'pausada' : l.status.toLowerCase());
+  if (!ehSet && l.conjuntos && l.conjuntos.length) partes.push(l.conjuntos.length + ' conj.');
+  meta.textContent = partes.join(' · ');
+  if (partes.length) nome.appendChild(meta);
+
+  row.appendChild(nome);
+  row.appendChild(celNum(ehNum(l.orcamento_dia) ? brl(l.orcamento_dia) : null, true));
+  row.appendChild(celNum(brl(l.gasto)));
+  row.appendChild(celEntrega(l.entrega));
+  row.appendChild(celNum(l.resultado ? inteiro(l.resultado) : null));
+  row.appendChild(celNum(ehNum(l.custo_por_resultado) ? brl(l.custo_por_resultado) : null));
+  row.appendChild(celNum(pct(l.ctr), true));
+  row.appendChild(celNum(vezes(l.frequencia), true));
+  row.appendChild(ehSet ? celNum(null, true) : celTag(l.veredito));
+  return row;
+}
+
+function pintarConta(d) {
+  var alvo = alvoSalvo();
+  var res = d.resumo || {};
+  PNLC.body.innerHTML = '';
+
+  /* ── faixa de números da conta inteira ── */
+  var topo = document.createElement('div');
+  topo.className = 'cta-topo';
+  topo.appendChild(kpi('Gasto no período', brl(res.gasto)));
+  topo.appendChild(kpi('Orçamento / dia', ehNum(res.orcamento_dia) ? brl(res.orcamento_dia) : null));
+  topo.appendChild(kpi('Resultado', res.resultado ? inteiro(res.resultado) : null));
+  topo.appendChild(kpi('Custo / resultado', ehNum(res.custo_por_resultado) ? brl(res.custo_por_resultado) : null));
+  topo.appendChild(kpi('Campanhas ativas', inteiro(res.campanhas_ativas)));
+
+  var cxAlvo = document.createElement('label');
+  cxAlvo.className = 'cta-alvo';
+  var lblAlvo = document.createElement('span');
+  lblAlvo.className = 'cta-kpi__lbl';
+  lblAlvo.textContent = 'CPA alvo (R$)';
+  var inp = document.createElement('input');
+  inp.type = 'number'; inp.min = '0'; inp.step = '10';
+  inp.placeholder = 'quanto vale 1';
+  inp.value = alvo == null ? '' : String(alvo);
+  inp.title = 'O que a casa paga por FTD. Sem esse número o painel não afirma ' +
+    'se o custo está bom — só se a campanha está entregando.';
+  inp.addEventListener('change', function () {
+    var v = parseFloat(inp.value);
+    salvarAlvo(isFinite(v) && v > 0 ? v : null);
+    /* o veredito de custo é calculado no servidor, então mudar o alvo é uma
+       pergunta nova: limpa o cache desta conta e busca de novo */
+    estado.contaCache = {};
+    var r = intervaloDe(presetAtual());
+    buscarConta(estado.conta.id, r);
+  });
+  cxAlvo.appendChild(lblAlvo); cxAlvo.appendChild(inp);
+  topo.appendChild(cxAlvo);
+  PNLC.body.appendChild(topo);
+
+  /* ── a frase ── */
+  var v = vereditoDaConta(d, alvo);
+  var card = document.createElement('div');
+  card.className = 'cta-vered cta-vered--' + v.tom;
+  var pa = document.createElement('p'); pa.className = 'cta-vered__acao'; pa.textContent = v.acao;
+  var pt = document.createElement('p'); pt.className = 'cta-vered__txt'; pt.textContent = v.txt;
+  card.appendChild(pa); card.appendChild(pt);
+  PNLC.body.appendChild(card);
+
+  /* ── tabela ── */
+  if (!d.campanhas.length) {
+    var vazio = document.createElement('p');
+    vazio.className = 'cta-vazio';
+    vazio.textContent = 'Nenhuma campanha gastou nesta conta no período.';
+    PNLC.body.appendChild(vazio);
+  } else {
+    var tbl = document.createElement('div'); tbl.className = 'cta-tbl';
+    var scroll = document.createElement('div'); scroll.className = 'cta-scroll';
+
+    var head = document.createElement('div');
+    head.className = 'cta-row cta-row--head';
+    ['Campanha', 'Orç./dia', 'Gasto', 'Entrega', 'Result.', 'Custo', 'CTR', 'Freq.', 'Leitura']
+      .forEach(function (t) {
+        var s = document.createElement('span'); s.textContent = t; head.appendChild(s);
+      });
+    scroll.appendChild(head);
+
+    d.campanhas.forEach(function (c) {
+      var det = document.createElement('details');
+      det.className = 'cta-camp';
+      var sum = document.createElement('summary');
+      sum.appendChild(linhaEntidade(c, false));
+      det.appendChild(sum);
+
+      var sets = document.createElement('div');
+      sets.className = 'cta-sets';
+      if (c.conjuntos && c.conjuntos.length) {
+        c.conjuntos.forEach(function (s) { sets.appendChild(linhaEntidade(s, true)); });
+      } else {
+        var p = document.createElement('p');
+        p.className = 'cta-vazio';
+        p.textContent = 'Nenhum conjunto desta campanha gastou no período.';
+        sets.appendChild(p);
+      }
+      det.appendChild(sets);
+      scroll.appendChild(det);
+    });
+
+    tbl.appendChild(scroll);
+    PNLC.body.appendChild(tbl);
+  }
+
+  /* A NOTA TEM QUE DIZER O DENOMINADOR. Entrega é a coluna que manda na
+     decisão, e ela muda de significado no meio do dia: às 11h nenhuma campanha
+     entregou o orçamento inteiro porque faltam 12 horas, não porque está
+     travada. O servidor já desconta isso (o dia corrente entra pela fração
+     vivida); a nota explica, senão o número parece errado pra quem confere no
+     Gerenciador. */
+  var p = d.periodo || {};
+  var texto;
+  if (p.dias_entrega == null) {
+    texto = 'O dia mal começou: cedo demais pra medir entrega, então a coluna ' +
+      'fica vazia em vez de mostrar um número que não quer dizer nada. ';
+  } else if (p.is_hoje) {
+    texto = 'Entrega = gasto ÷ orçamento diário, com o dia de hoje contado só ' +
+      'pela parte já vivida (' + pct(p.fracao_dia * 100, 0) + ' do dia) — senão ' +
+      'toda campanha pareceria travada às 9h da manhã. ';
+  } else {
+    texto = 'Entrega = gasto ÷ (orçamento diário × ' + (p.dias || 1) +
+      ' dia(s) do recorte). ';
+  }
+  var nota = document.createElement('p');
+  nota.className = 'cta-nota';
+  nota.textContent = texto +
+    'Campanha que só ligou no meio do período aparece entregando menos do que ' +
+    'entregou — por isso a leitura só sai com gasto relevante. Orçamento de ' +
+    'campanha ABO é a soma dos conjuntos ativos. Números direto do ' +
+    'Gerenciador, não passam pelo funil da TAP.';
+  PNLC.body.appendChild(nota);
+}
+
+/* Veredito da CONTA. Não é a média dos vereditos das campanhas: é a leitura do
+   dinheiro parado. "Tem R$ 4.150/dia de orçamento que ninguém consegue gastar"
+   é o que muda a decisão do dia, e nenhuma linha da tabela diz isso sozinha. */
+function vereditoDaConta(d, alvo) {
+  var r = d.resumo || {};
+  if (!d.campanhas.length) {
+    return { tom: 'neutro', acao: 'Sem movimento',
+      txt: 'Nenhuma campanha gastou nesta conta no período escolhido.' };
+  }
+  var ocio = ehNum(r.orcamento_dia) && ehNum(r.gasto) && d.periodo
+    ? (r.orcamento_dia * d.periodo.dias) - r.gasto
+    : null;
+
+  if (r.campanhas_limitadas > 0) {
+    return {
+      tom: 'atencao',
+      acao: 'O gargalo não é orçamento',
+      txt: r.campanhas_limitadas + ' de ' + r.campanhas_ativas + ' campanhas ativas não ' +
+        'entregaram nem 85% do que já têm de verba' +
+        (ehNum(ocio) && ocio > 0 ? ', deixando ' + brl(ocio) + ' na mesa no período' : '') +
+        '. Antes de subir orçamento, destrave o lance — subir verba aqui não vira gasto.'
+    };
+  }
+  if (r.pode_escalar > 0) {
+    return {
+      tom: 'bom',
+      acao: 'Dá pra escalar',
+      txt: r.pode_escalar + ' de ' + r.campanhas_ativas + ' campanhas estão com entrega cheia' +
+        (alvo == null ? '' : ' e custo dentro do alvo de ' + brl(alvo)) +
+        '. Abra a linha pra ver por qual conjunto começar' +
+        (alvo == null ? ' — e preencha o CPA alvo pra o painel também julgar o custo.' : '.')
+    };
+  }
+  return {
+    tom: 'ruim',
+    acao: 'Não escalar agora',
+    txt: 'Nenhuma campanha ativa passa nos critérios de escala no período. ' +
+      'Abra as linhas: a coluna Leitura diz o que está travando cada uma.'
+  };
+}
+
+function ligarDetalheConta() {
+  if (!PNLC.raiz) return;
+
+  /* delegação no documento, mesma razão do painel de expert: as linhas do
+     breakdown são recriadas a cada leitura de 5 min. */
+  document.addEventListener('click', function (ev) {
+    var alvo = ev.target;
+    if (!alvo || !alvo.closest) return;
+
+    if (alvo.closest('[data-pnlc-fechar]')) { fecharConta(); return; }
+    if (alvo.closest('#pnlc .pnl__box')) return;    /* clique dentro da janela */
+
+    var linha = alvo.closest('.contas__row[data-conta]');
+    if (!linha) return;
+    if (linha.classList.contains('contas__row--head')) return;
+    if (linha.classList.contains('contas__row--tot')) return;
+    /* quem está selecionando texto não está clicando na linha */
+    var sel = window.getSelection && window.getSelection().toString();
+    if (sel && sel.length > 2) return;
+
+    ev.preventDefault();
+    abrirConta(linha.getAttribute('data-conta'), linha);
+  });
+
+  document.addEventListener('keydown', function (ev) {
+    if (estado.conta.aberto) {
+      if (ev.key === 'Escape' || ev.key === 'Esc') {
+        /* Esc com as duas janelas abertas fecha a de cima primeiro */
+        ev.preventDefault(); ev.stopPropagation(); fecharConta(); return;
+      }
+      if (ev.key === 'Tab') prenderFocoEm(ev, PNLC.caixa);
+      return;
+    }
+    if (ev.key !== 'Enter' && ev.key !== ' ' && ev.key !== 'Spacebar') return;
+    var at = document.activeElement;
+    if (!at || !at.classList || !at.classList.contains('contas__row')) return;
+    if (!at.getAttribute('data-conta')) return;
+    ev.preventDefault();
+    abrirConta(at.getAttribute('data-conta'), at);
+  }, true);
+}
+
 /* ── 11. partida ────────────────────────────────────────────────────────── */
 guardarMoldes();
 ligarAbas();
 ligarAjusteDeFonte();
 ligarPainel();
+ligarDetalheConta();
 ligarMedicaoTopbar();
 ligarBarraCompacta();
 ligarGlossario();

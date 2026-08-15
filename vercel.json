@@ -3,6 +3,9 @@
   "functions": {
     "api/dashboard.js": {
       "maxDuration": 60
+    },
+    "api/conta.js": {
+      "maxDuration": 30
     }
   },
   "headers": [
