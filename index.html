@@ -3132,7 +3132,17 @@ body.pnl-aberto{overflow:hidden}
 /* o corpo do painel de expert vira 2 colunas em telas grandes; aqui NÃO:
    é tabela larga, e tabela partida ao meio perde a comparação linha a linha.
    Seletor com id de propósito, pra vencer a media query sem !important. */
-#pnlc .pnl__body{grid-template-columns:minmax(0,1fr)}
+/* ESTA JANELA NÃO É GRID — É PILHA. Parece detalhe e não é: a tabela de
+   campanhas vive dentro de `.cta-scroll`, que é container de rolagem
+   (`overflow-x:auto` liga rolagem nos DOIS eixos). Container de rolagem não
+   tem altura intrínseca, então o grid sorteava uma altura pra aquela linha e
+   o `overflow:hidden` da moldura comia o resto: aparecia UMA campanha e as
+   outras três sumiam sem aviso — o pior tipo de bug de painel, porque a tela
+   continua bonita e a leitura vira mentira.
+   Em fluxo de bloco cada filho ocupa a própria altura e o corpo rola inteiro.
+   `grid-template-columns` fica aqui só de herança: sem grid, ninguém lê. */
+#pnlc .pnl__body{display:block}
+#pnlc .pnl__body > * + *{margin-top:12px}
 
 /* ── faixa de resumo: o número da conta inteira antes do detalhe ────────── */
 .cta-topo{
@@ -3263,6 +3273,38 @@ body.pnl-aberto{overflow:hidden}
   color:var(--txt-3);transition:transform .18s ease;
 }
 .cta-camp[open] .cta-chev{transform:rotate(180deg)}
+/* ── funil da casa (TAP), casado por utm_campaign ────────────────────────
+   O Gerenciador conta o que o pixel viu; a casa conta o que o jogador fez.
+   Este bloco é sempre o segundo número, nunca o primeiro: ele existe pra
+   contradizer o CPA do pixel quando os dois discordam — e discordam sempre.
+   Fundo próprio de propósito, pra ninguém confundir com dado de Meta. */
+.cta-casa{
+  padding:11px 14px;border-radius:var(--r);
+  background:var(--surface-sunk);border:1px solid var(--line-soft);
+  border-left:3px solid var(--acao);
+}
+.cta-casa__cap{
+  margin:0 0 9px;font-family:var(--mono);font-size:.5625rem;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--txt-3);
+}
+.cta-casa__kpis{display:flex;align-items:flex-start;gap:24px;flex-wrap:wrap}
+.cta-casa__nota{
+  margin:9px 0 0;font-size:.75rem;line-height:1.5;color:var(--txt-3);
+}
+.cta-casa__nota b{color:var(--txt-2);font-weight:620}
+/* o custo REAL é o número que decide: entra com o peso de número-herói */
+.cta-kpi--forte .cta-kpi__val{font-size:1.25rem}
+.cta-kpi--boa .cta-kpi__val{color:var(--good)}
+.cta-kpi--alta .cta-kpi__val{color:var(--bad)}
+
+/* dentro da campanha aberta o mesmo bloco vem menor: ali ele é detalhe de
+   uma linha, não o resumo da conta */
+.cta-sets .cta-casa{
+  margin:8px 12px;border-radius:10px;background:var(--surface);
+}
+.cta-sets .cta-casa .cta-kpi__val{font-size:.9375rem}
+.cta-sets .cta-casa .cta-kpi--forte .cta-kpi__val{font-size:1.0625rem}
+
 .cta-sets{background:rgba(0,0,0,.16);padding:2px 0 6px}
 .cta-sets .cta-row{padding-left:34px;border-top:1px solid var(--line-soft)}
 .cta-sets .cta-nome b{font-size:.75rem;font-weight:540;color:var(--txt-2)}
@@ -11501,9 +11543,9 @@ function buscarConta(id, r) {
 
 /* ── desenho ────────────────────────────────────────────────────────────── */
 
-function kpi(lbl, val) {
+function kpi(lbl, val, extra) {
   var d = document.createElement('div');
-  d.className = 'cta-kpi';
+  d.className = 'cta-kpi' + (extra ? ' ' + extra : '');
   var a = document.createElement('span'); a.className = 'cta-kpi__lbl'; a.textContent = lbl;
   var b = document.createElement('span'); b.className = 'cta-kpi__val';
   escreve(b, val);
@@ -11596,6 +11638,92 @@ function linhaEntidade(l, ehSet) {
   return row;
 }
 
+/* ── funil da casa ────────────────────────────────────────────────────────
+   O bloco que responde "quanto custou um FTD DE VERDADE". Vem da TAP
+   (af2_media_report_op agrupado por utm_campaign) e é casado com a campanha
+   pelo nome — a UTM do link é `{{campaign.name}}`, então o nome da campanha
+   no Gerenciador É a chave.
+
+   Duas leituras nunca podem se misturar aqui:
+   · "0 FTD" = a casa olhou e não achou depósito nenhum. É veredito.
+   · "sem dado" = a TAP não respondeu, ou esta campanha não tem UTM casada.
+     NÃO é veredito, e por isso nunca desenha 0.
+   O custo real usa a MESMA faixa oficial do painel (FAIXA_BOA/FAIXA_ALTA),
+   senão a janela julgaria custo por um critério e a tela por outro.
+   ────────────────────────────────────────────────────────────────────────── */
+function classeCusto(v) {
+  if (!ehNum(v)) return '';
+  if (v <= FAIXA_BOA) return ' cta-kpi--boa';
+  if (v >= FAIXA_ALTA) return ' cta-kpi--alta';
+  return '';
+}
+
+function blocoCasa(f, titulo, metaResultado) {
+  var box = document.createElement('div');
+  box.className = 'cta-casa';
+
+  var cap = document.createElement('p');
+  cap.className = 'cta-casa__cap';
+  cap.textContent = titulo;
+  box.appendChild(cap);
+
+  var kpis = document.createElement('div');
+  kpis.className = 'cta-casa__kpis';
+  kpis.appendChild(kpi('Cadastros', f.cadastros ? inteiro(f.cadastros) : '0'));
+  kpis.appendChild(kpi('FTD na casa', f.ftd ? inteiro(f.ftd) : '0'));
+  kpis.appendChild(kpi('Custo real / FTD',
+    ehNum(f.custo_por_ftd) ? brl(f.custo_por_ftd) : null,
+    'cta-kpi--forte' + classeCusto(f.custo_por_ftd)));
+  kpis.appendChild(kpi('Cadastro → FTD', ehNum(f.conversao) ? pct(f.conversao, 0) : null));
+  kpis.appendChild(kpi('Custo / cadastro', ehNum(f.custo_por_cadastro) ? brl(f.custo_por_cadastro) : null));
+  kpis.appendChild(kpi('Depósito', brl(f.deposito || 0)));
+  kpis.appendChild(kpi('Net dep', brl(f.net_dep || 0)));
+  box.appendChild(kpis);
+
+  /* A discordância entre pixel e casa é o motivo do bloco existir — escrever
+     ela por extenso evita a pergunta "por que o número não bate?". */
+  if (ehNum(metaResultado)) {
+    var nota = document.createElement('p');
+    nota.className = 'cta-casa__nota';
+    if (metaResultado === f.ftd) {
+      nota.textContent = 'Pixel e casa contam o mesmo: ' + inteiro(f.ftd) + '.';
+    } else {
+      nota.innerHTML = 'O pixel contou <b>' + inteiro(metaResultado) + '</b> e a casa registrou <b>' +
+        inteiro(f.ftd) + '</b> FTD no período. Quem paga é a casa.';
+    }
+    box.appendChild(nota);
+  }
+  return box;
+}
+
+/* Aviso do que a TAP viu mas nenhuma campanha reivindicou. Não é firula:
+   `{{campaign.name}}` cru é link com a macro não substituída — tráfego pago
+   que chega órfão de campanha e some da leitura de custo. */
+function blocoOrfaos(fonte) {
+  var na = fonte && fonte.nao_atribuido;
+  if (!na) return null;
+  var partes = [];
+  if (na.macro_crua && na.macro_crua.visitas > 0) {
+    partes.push('<b>' + inteiro(na.macro_crua.visitas) + ' visitas</b> chegaram com a macro ' +
+      '<b>{{campaign.name}}</b> literal — o link não substituiu o nome da campanha, ' +
+      'e esse tráfego (' + inteiro(na.macro_crua.cadastros) + ' cadastros, ' +
+      inteiro(na.macro_crua.ftd) + ' FTD) não entra em campanha nenhuma');
+  }
+  if (na.sem_utm && na.sem_utm.cadastros > 0) {
+    partes.push(inteiro(na.sem_utm.cadastros) + ' cadastros e ' + inteiro(na.sem_utm.ftd) +
+      ' FTD entraram no btag <b>sem utm_campaign</b> (link fora do Meta, orgânico ou grupo)');
+  }
+  if (na.outras && na.outras.ftd > 0) {
+    partes.push(inteiro(na.outras.ftd) + ' FTD e ' + brl(na.outras.deposito) +
+      ' de depósito vieram de <b>campanhas antigas</b> deste btag — jogador que voltou por link velho');
+  }
+  if (!partes.length) return null;
+  var p = document.createElement('p');
+  p.className = 'cta-nota';
+  p.innerHTML = 'Fora das campanhas acima, no mesmo btag: ' + partes.join('; ') + '.';
+  return p;
+}
+
 function pintarConta(d) {
   var alvo = alvoSalvo();
   var res = d.resumo || {};
@@ -11634,6 +11762,25 @@ function pintarConta(d) {
   topo.appendChild(cxAlvo);
   PNLC.body.appendChild(topo);
 
+  /* ── funil da casa, conta inteira ── */
+  var fonte = d.funil_fonte || {};
+  if (res.funil) {
+    PNLC.body.appendChild(blocoCasa(
+      res.funil,
+      'Funil da casa · btag ' + (fonte.btags || []).join(' + ') +
+        ' · só as campanhas casadas por UTM',
+      res.resultado));
+  } else {
+    var semFunil = document.createElement('p');
+    semFunil.className = 'cta-nota';
+    semFunil.textContent = fonte.motivo === 'sem_btag'
+      ? 'Esta conta não tem btag no BO da afiliação, então não dá pra ler o ' +
+        'funil da casa por campanha — o que aparece abaixo é só o que o pixel viu.'
+      : 'O BO da afiliação não respondeu agora, então o funil real por campanha ' +
+        'ficou de fora desta leitura (isso é falta de resposta, não zero FTD).';
+    PNLC.body.appendChild(semFunil);
+  }
+
   /* ── a frase ── */
   var v = vereditoDaConta(d, alvo);
   var card = document.createElement('div');
@@ -11670,6 +11817,20 @@ function pintarConta(d) {
 
       var sets = document.createElement('div');
       sets.className = 'cta-sets';
+
+      /* O QUE ABRE PRIMEIRO É O FUNIL, não os conjuntos: quem clica na
+         campanha está perguntando "escalo ou não?", e a resposta é o custo
+         real por FTD. Os conjuntos vêm depois, pra dizer POR ONDE escalar. */
+      if (c.funil) {
+        sets.appendChild(blocoCasa(c.funil, 'Funil da casa · esta campanha', c.resultado));
+      } else if (fonte.ok) {
+        var semUtm = document.createElement('p');
+        semUtm.className = 'cta-vazio';
+        semUtm.textContent = 'Nenhum clique desta campanha chegou na casa com a UTM dela no ' +
+          'período — ou o link não carrega utm_campaign, ou o nome da campanha mudou depois.';
+        sets.appendChild(semUtm);
+      }
+
       if (c.conjuntos && c.conjuntos.length) {
         c.conjuntos.forEach(function (s) { sets.appendChild(linhaEntidade(s, true)); });
       } else {
@@ -11710,9 +11871,15 @@ function pintarConta(d) {
   nota.textContent = texto +
     'Campanha que só ligou no meio do período aparece entregando menos do que ' +
     'entregou — por isso a leitura só sai com gasto relevante. Orçamento de ' +
-    'campanha ABO é a soma dos conjuntos ativos. Números direto do ' +
-    'Gerenciador, não passam pelo funil da TAP.';
+    'campanha ABO é a soma dos conjuntos ativos. Orçamento, entrega, CTR e ' +
+    'frequência vêm direto do Gerenciador; cadastro, FTD e depósito vêm do BO ' +
+    'da afiliação, casados pela utm_campaign (que é o nome da campanha). ' +
+    'O FTD da casa é contado na data do depósito: pode ser de jogador que se ' +
+    'cadastrou antes do recorte.';
   PNLC.body.appendChild(nota);
+
+  var orfaos = blocoOrfaos(fonte);
+  if (orfaos) PNLC.body.appendChild(orfaos);
 }
 
 /* Veredito da CONTA. Não é a média dos vereditos das campanhas: é a leitura do
@@ -11724,15 +11891,33 @@ function vereditoDaConta(d, alvo) {
     return { tom: 'neutro', acao: 'Sem movimento',
       txt: 'Nenhuma campanha gastou nesta conta no período escolhido.' };
   }
+
+  /* Custo real acima do alvo passa na frente de qualquer leitura de entrega:
+     destravar lance numa conta que já paga caro demais por FTD é acelerar no
+     sentido errado. */
+  var fc = r.funil;
+  if (alvo != null && fc && ehNum(fc.custo_por_ftd) && fc.custo_por_ftd > alvo) {
+    return {
+      tom: 'ruim',
+      acao: 'Custo real acima do alvo',
+      txt: 'A casa registrou ' + inteiro(fc.ftd) + ' FTD com ' + brl(fc.gasto_atribuido) +
+        ' de verba: ' + brl(fc.custo_por_ftd) + ' por FTD, contra o alvo de ' + brl(alvo) +
+        '. Abra as campanhas — a barata banca a cara nesta média.'
+    };
+  }
   var ocio = ehNum(r.orcamento_dia) && ehNum(r.gasto) && d.periodo
     ? (r.orcamento_dia * d.periodo.dias) - r.gasto
     : null;
+
+  /* denominador é quem GASTOU, não quem está ativa: campanha pausada no meio
+     do período gastou e entra na conta de entrega, mas não é "ativa" */
+  var base = ehNum(r.campanhas_com_gasto) ? r.campanhas_com_gasto : r.campanhas_ativas;
 
   if (r.campanhas_limitadas > 0) {
     return {
       tom: 'atencao',
       acao: 'O gargalo não é orçamento',
-      txt: r.campanhas_limitadas + ' de ' + r.campanhas_ativas + ' campanhas ativas não ' +
+      txt: r.campanhas_limitadas + ' de ' + base + ' campanhas com gasto não ' +
         'entregaram nem 85% do que já têm de verba' +
         (ehNum(ocio) && ocio > 0 ? ', deixando ' + brl(ocio) + ' na mesa no período' : '') +
         '. Antes de subir orçamento, destrave o lance — subir verba aqui não vira gasto.'
@@ -11742,7 +11927,7 @@ function vereditoDaConta(d, alvo) {
     return {
       tom: 'bom',
       acao: 'Dá pra escalar',
-      txt: r.pode_escalar + ' de ' + r.campanhas_ativas + ' campanhas estão com entrega cheia' +
+      txt: r.pode_escalar + ' de ' + base + ' campanhas estão com entrega cheia' +
         (alvo == null ? '' : ' e custo dentro do alvo de ' + brl(alvo)) +
         '. Abra a linha pra ver por qual conjunto começar' +
         (alvo == null ? ' — e preencha o CPA alvo pra o painel também julgar o custo.' : '.')

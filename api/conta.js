@@ -16,8 +16,17 @@
  *     busca insights, então o dado que decide escala nem passa por lá;
  *   · se esta rota quebrar, o painel inteiro continua de pé.
  *
- * Variável de ambiente obrigatória no projeto Vercel:
+ * ── O FUNIL REAL, CAMPANHA A CAMPANHA (15/08) ────────────────────────────
+ * O Gerenciador conta o que o PIXEL viu; a casa conta o que o jogador fez.
+ * Os dois discordam sempre, e é o segundo que paga. Esta rota agora puxa
+ * também o relatório da TAP agrupado por `utm_campaign` e casa linha a linha
+ * com a campanha do Meta — daí saem cadastro, FTD de verdade, depósito, net
+ * dep e o CUSTO REAL por FTD (verba do Meta ÷ FTD da casa). É esse número que
+ * decide escala, não o CPA do pixel.
+ *
+ * Variáveis de ambiente obrigatórias no projeto Vercel:
  *   META_ACCESS_TOKEN   (mesmo token de sistema que o n8n usa)
+ *   TAP_API_KEY         (mesma chave do BO da afiliação que o n8n guarda)
  *
  * CommonJS de propósito: sem package.json, o runtime Node da Vercel trata
  * api/*.js como CJS. `fetch` é global no Node 18+.
@@ -148,6 +157,229 @@ function acharCadastros(acoes) {
   return null;
 }
 
+/* ── FUNIL DA CASA (TAP / Smartico) ───────────────────────────────────────
+   O relatório `af2_media_report_op` com `group_by=utm_campaign` devolve, por
+   valor de UTM, o funil inteiro: visita, cadastro, FTD, depósito, net dep e
+   comissão. É o mesmo endpoint que o n8n usa pro funil do expert — a
+   diferença é que aqui ele vem QUEBRADO por campanha, e é isso que permite
+   dizer "esta campanha custa R$ 183 por FTD de verdade e aquela R$ 426".
+
+   Três armadilhas medidas na API, todas silenciosas:
+
+   1. DATA INVÁLIDA NÃO DÁ ERRO — devolve o relatório da vida inteira, do
+      operador inteiro (22 mil cadastros). O período aqui já vem validado pelo
+      handler; se um dia alguém afrouxar aquela validação, esta rota passa a
+      mentir sem avisar.
+   2. `date_to` é EXCLUSIVO (é o que o n8n faz: `date_ate_exclusive`). Passar
+      o último dia do recorte perde o dia inteiro.
+   3. ESTOURO DE CHAMADA VEM COM HTTP 200, corpo `{"errCode":3}`. Por isso
+      toda resposta é conferida como array antes de somar — e conta com 5
+      btags (a compartilhada do Gabriel) vai em lote de 3.
+   ────────────────────────────────────────────────────────────────────────── */
+
+const TAP_URL = 'https://boapi3.smartico.ai/api/af2_media_report_op';
+const TAP_LOTE = 3;
+
+/* Conta de anúncio → btag(s) do BO. A FONTE DE VERDADE é o nó `Montar
+   entidades Geral` / `Montar experts` dos workflows do painel; esta cópia
+   existe porque o payload do n8n não carrega btag e esta rota não passa por
+   ele. Conta fora do mapa não fica quebrada: ela cai no padrão de nome
+   ("CA - NOME - 12345", o mesmo que o n8n usa pra descobrir conta nova
+   sozinho) e, se nem isso, a janela abre sem o bloco de funil.
+
+   A 989562184047728 é COMPARTILHADA (Ederson, Deko, Charles, QZL) e por isso
+   tem 5 btags: o casamento é por UTM da campanha, então juntar os relatórios
+   dos 5 não mistura nada — cada campanha só aparece no btag dela. */
+const BTAG_POR_CONTA = {
+  '897476669429623':   ['537615'],   /* COSTA E LOBAO   */
+  '1997624391048176':  ['539199'],   /* PEDRO FOOTBALL  */
+  '1517002369929477':  ['505716'],   /* FELIPE BORGES   */
+  '965568832979022':   ['505716'],   /* FELIPE BORGES 2 */
+  '1350047622999139':  ['543714'],   /* PR TIPSTER      */
+  '1608680367486969':  ['545056'],   /* LEO FREITAS     */
+  '1504234301191468':  ['505209'],   /* CAIO TIPS       */
+  '809590885250558':   ['532538'],   /* ZECA            */
+  '1538558644947601':  ['543378'],   /* NATHAN ROSENO   */
+  '2020228565251138':  ['508799'],   /* SHELGUIMA       */
+  '3602839156558626':  ['542954'],   /* DIEGO LUGO      */
+  '1318099683822304':  ['544076'],   /* JOTA PE         */
+  '1677889643448352':  ['544076'],   /* JOTA PE         */
+  '3432194193613959':  ['544076'],   /* JOTA PE         */
+  '27620008490951770': ['544076'],   /* JOTA PE         */
+  '1375513147862272':  ['537874'],   /* INSTITUCIONAL   */
+  '4369472913294852':  ['537874'],
+  '566433646393570':   ['537874'],
+  '4491460707782665':  ['537874'],   /* CA 04           */
+  '1007454048772455':  ['537874'],
+  '1364418892488854':  ['537874'],
+  '1689900502296830':  ['537874'],
+  '3841440682664482':  ['537874'],
+  '1662336521647121':  ['537874'],
+  '2474915826342866':  ['537874'],
+  '1344546561194352':  ['537680'],   /* REINAN TIPS     */
+  '2124508238097600':  ['548109'],   /* ICARO           */
+  '1047677338184825':  ['548110'],   /* GIOVANNI ROLETA */
+  '1362893448699965':  ['548058'],   /* HENRIQUE 500K   */
+  '1036518365963855':  ['548592'],   /* GEGE ROLETA     */
+  '1044864454792358':  ['547573'],   /* TALYSON         */
+  '1690283185195699':  ['544991'],   /* TANOS           */
+  '1018864441147274':  ['544991'],   /* TANOS roleta    */
+  '1970560716829162':  ['541420', '474243'],  /* DEKO roleta */
+  '898597209986158':   ['546470'],   /* GREGORIO BIG    */
+  '989562184047728':   ['541420', '474243', '538384', '546473', '542346']
+};
+
+/* Mesmo padrão do n8n: conta nova da BM nasce com o btag no próprio nome. */
+const PADRAO_NOME_BTAG = /^CA\s*-\s*[^[\]]+?\s*-\s*(?:ID\s*)?(\d{4,})\s*$/i;
+
+function btagsDaConta(id, nomeConta) {
+  if (BTAG_POR_CONTA[id]) return BTAG_POR_CONTA[id];
+  const m = PADRAO_NOME_BTAG.exec(String(nomeConta || '').trim());
+  return m ? [m[1]] : [];
+}
+
+function maisUmDia(iso) {
+  const d = new Date(iso + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
+/* Chave de casamento entre a UTM da TAP e o nome da campanha no Meta.
+   Três coisas separam as duas pontas e todas apareceram no dado real:
+   · a MESMA campanha chega em duas linhas, uma decodificada e outra ainda
+     form-encoded (`FB+-+AQ+-+12.08...`, `%2C` no lugar da vírgula) — sem
+     juntar as duas, a visita fica partida ao meio;
+   · o nome carrega ESPAÇO DUPLO ("12.08  - AQUISICAO") que o HTML engole na
+     tela, então o que se vê nunca bate caractere a caractere;
+   · maiúscula/minúscula varia.
+   O `+` só vira espaço quando a string não tem nenhum espaço de verdade —
+   senão um nome de campanha com "+" literal seria mutilado. */
+function normUtm(s) {
+  let t = String(s == null ? '' : s);
+  if (t.indexOf('+') >= 0 && !/\s/.test(t)) t = t.replace(/\+/g, ' ');
+  if (t.indexOf('%') >= 0) { try { t = decodeURIComponent(t); } catch (e) { /* fica como veio */ } }
+  return t.replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+const CAMPOS_FUNIL = [
+  ['visitas', 'visit_count'],
+  ['cadastros', 'registration_count'],
+  ['ftd', 'ftd_count'],
+  ['valor_ftd', 'ftd_total'],
+  ['depositos', 'deposit_count'],
+  ['deposito', 'deposit_total'],
+  ['net_dep', 'net_deposits'],
+  ['net_pl', 'net_pl'],
+  ['comissao', 'commissions_total'],
+  ['volume', 'volume']
+];
+
+function funilZero() {
+  const f = Object.create(null);
+  CAMPOS_FUNIL.forEach((c) => { f[c[0]] = 0; });
+  return f;
+}
+
+function somarFunil(dest, linha) {
+  CAMPOS_FUNIL.forEach((c) => { dest[c[0]] += num(linha[c[1]]) || 0; });
+  return dest;
+}
+
+/* Devolve { linhas: {utmNormalizada: funil}, erro: null } ou { erro: '...' }.
+   Nunca lança: funil é enriquecimento — se a TAP cair, a janela continua
+   respondendo o que o Gerenciador diz. */
+async function tapPorUtm(btags, de, ate, signal) {
+  if (!btags.length) return { linhas: null, erro: 'sem_btag' };
+  const chave = process.env.TAP_API_KEY;
+  if (!chave) return { linhas: null, erro: 'sem_chave' };
+
+  const ateExclusivo = maisUmDia(ate);
+  const linhas = Object.create(null);
+  let leu = 0;
+
+  for (let i = 0; i < btags.length; i += TAP_LOTE) {
+    const lote = btags.slice(i, i + TAP_LOTE);
+    const respostas = await Promise.all(lote.map(async (btag) => {
+      const url = new URL(TAP_URL);
+      url.searchParams.set('date_from', de);
+      url.searchParams.set('date_to', ateExclusivo);
+      url.searchParams.set('affiliate_id', btag);
+      url.searchParams.set('group_by', 'utm_campaign');
+      const r = await fetch(url.toString(), {
+        signal,
+        headers: { accept: 'application/json', authorization: chave }
+      });
+      const j = await r.json().catch(() => null);
+      /* HTTP 200 com errCode é o jeito da TAP dizer "chega de chamada". Ler
+         isso como resposta vazia é o bug que já zerou funil de expert. */
+      if (!j || !Array.isArray(j.data)) return null;
+      return j.data;
+    }));
+
+    respostas.forEach((data) => {
+      if (!data) return;
+      leu++;
+      data.forEach((r) => {
+        const k = normUtm(r && r.utm_campaign);
+        if (!linhas[k]) linhas[k] = funilZero();
+        somarFunil(linhas[k], r);
+      });
+    });
+  }
+
+  if (!leu) return { linhas: null, erro: 'tap_indisponivel' };
+  return { linhas: linhas, erro: null };
+}
+
+/* Casa cada linha da TAP com UMA campanha do Meta. Exato primeiro; depois
+   prefixo, que é o que pega as variantes que a Meta cria sozinha (" — Cópia",
+   " 001"). Prefixo mais longo ganha, senão uma campanha nova cujo nome começa
+   igual ao de outra roubaria o funil da irmã.
+   O que sobra é tão informativo quanto o que casa, e por isso volta separado:
+   · `sem_utm`   — visita que chegou sem utm_campaign nenhuma (link fora do Meta);
+   · `macro_crua`— chegou com `{{campaign.name}}` literal: a macro não foi
+                   substituída, e esse tráfego está órfão de campanha;
+   · `outras`    — UTM de campanha que não está mais rodando (o jogador voltou
+                   por um link antigo). Não é erro: é depósito de safra velha. */
+function casarFunil(campanhas, linhas) {
+  const porChave = [];
+  campanhas.forEach((c) => {
+    const k = normUtm(c.nome);
+    if (k) porChave.push({ chave: k, camp: c });
+  });
+  porChave.sort((a, b) => b.chave.length - a.chave.length);
+
+  const naoAtribuido = { sem_utm: funilZero(), macro_crua: funilZero(), outras: funilZero() };
+  const total = funilZero();
+
+  Object.keys(linhas).forEach((k) => {
+    const f = linhas[k];
+    let dono = null;
+    for (let i = 0; i < porChave.length; i++) {
+      if (k === porChave[i].chave || k.indexOf(porChave[i].chave) === 0) { dono = porChave[i].camp; break; }
+    }
+    if (dono) {
+      if (!dono.funil) { dono.funil = funilZero(); dono.funil.utms = []; }
+      CAMPOS_FUNIL.forEach((c) => { dono.funil[c[0]] += f[c[0]]; });
+      CAMPOS_FUNIL.forEach((c) => { total[c[0]] += f[c[0]]; });
+      dono.funil.utms.push(k);
+      return;
+    }
+    const balde = k === '' ? 'sem_utm' : (k.indexOf('{{') === 0 ? 'macro_crua' : 'outras');
+    CAMPOS_FUNIL.forEach((c) => { naoAtribuido[balde][c[0]] += f[c[0]]; });
+  });
+
+  campanhas.forEach((c) => {
+    if (!c.funil) return;
+    c.funil.custo_por_ftd = c.funil.ftd > 0 ? c.gasto / c.funil.ftd : null;
+    c.funil.custo_por_cadastro = c.funil.cadastros > 0 ? c.gasto / c.funil.cadastros : null;
+    c.funil.conversao = c.funil.cadastros > 0 ? (c.funil.ftd / c.funil.cadastros) * 100 : null;
+    c.funil.ticket_ftd = c.funil.ftd > 0 ? c.funil.valor_ftd / c.funil.ftd : null;
+  });
+
+  return { total: total, nao_atribuido: naoAtribuido };
+}
+
 /* ── GRAPH ────────────────────────────────────────────────────────────────── */
 
 /* Teto de páginas. Uma conta madura passa de 200 campanhas históricas e a
@@ -182,6 +414,21 @@ async function graph(caminho, params, token, signal) {
     proxima = (j && j.paging && j.paging.next) || null;
   }
   return tudo;
+}
+
+/* Leitura de UM nó (não de uma coleção): a Graph devolve o objeto direto, sem
+   `data`, então não dá pra reaproveitar graph() acima. Nunca lança — serve só
+   pra descobrir o btag pelo nome da conta, e nome faltando não pode derrubar
+   a janela inteira. */
+async function graphUm(caminho, params, token, signal) {
+  try {
+    const url = new URL(GRAPH + caminho);
+    Object.keys(params).forEach((k) => url.searchParams.set(k, params[k]));
+    url.searchParams.set('access_token', token);
+    const r = await fetch(url.toString(), { signal, headers: { accept: 'application/json' } });
+    const j = await r.json().catch(() => null);
+    return j && !j.error ? j : null;
+  } catch (e) { return null; }
 }
 
 /* ── MONTAGEM ─────────────────────────────────────────────────────────────
@@ -256,11 +503,28 @@ function montarLinha(ent, ins, dias) {
    veredito não fala de custo: painel não inventa meta que o negócio não deu.
    ────────────────────────────────────────────────────────────────────────── */
 function vereditoLinha(l, alvo) {
+  /* Campanha ligada que não gastou um real é informação, não ruído: ou o
+     conjunto está sem entrega, ou ficou sem público, ou o lance não paga o
+     leilão. Antes ela nem aparecia na tabela. */
+  if (l.gasto === 0) {
+    return { tom: 'neutro', acao: 'Não gastou',
+      txt: 'Está ativa e não gastou nada no período — confira entrega do ' +
+        'conjunto, público e lance.' };
+  }
   if (l.gasto < GASTO_MIN_VEREDITO) {
     return { tom: 'neutro', acao: 'Sem amostra',
       txt: 'Gasto baixo demais no período pra afirmar qualquer coisa.' };
   }
-  if (l.resultado === 0) {
+  /* Quando a casa respondeu, é ELA que manda: o pixel pode contar 6 compras
+     que a TAP não reconhece como FTD. Zero FTD com verba relevante é o
+     veredito mais caro da tela, e o pixel não tem direito de suavizá-lo. */
+  if (l.funil && l.funil.ftd === 0) {
+    return { tom: 'ruim', acao: 'Não escalar',
+      txt: 'Queimou R$ ' + l.gasto.toFixed(2).replace('.', ',') +
+        ' e a casa não registrou nenhum FTD no período' +
+        (l.resultado > 0 ? ' (o pixel conta ' + l.resultado + ').' : '.') };
+  }
+  if (!l.funil && l.resultado === 0) {
     return { tom: 'ruim', acao: 'Não escalar',
       txt: 'Queimou R$ ' + l.gasto.toFixed(2).replace('.', ',') +
         ' sem nenhum resultado no período.' };
@@ -277,34 +541,62 @@ function vereditoLinha(l, alvo) {
       txt: 'Frequência em ' + l.frequencia.toFixed(1) + '×. Escalar aqui sobe o custo — ' +
         'renove criativo ou abra público antes.' };
   }
-  if (alvo != null && l.custo_por_resultado != null && l.custo_por_resultado > alvo) {
+  /* Custo que vale é o REAL (verba ÷ FTD da casa). O do pixel entra só quando
+     não existe funil pra esta campanha — e aí a frase diz de onde veio. */
+  const real = l.funil && l.funil.custo_por_ftd != null;
+  const custo = real ? l.funil.custo_por_ftd : l.custo_por_resultado;
+  if (alvo != null && custo != null && custo > alvo) {
     return { tom: 'ruim', acao: 'Não escalar',
-      txt: 'Custo por resultado acima do alvo de ' + alvo.toFixed(0) + '.' };
+      txt: (real ? 'Custo real por FTD (R$ ' + custo.toFixed(2).replace('.', ',') + ', ' +
+                   l.funil.ftd + ' FTD na casa)' : 'Custo por resultado do pixel') +
+        ' acima do alvo de ' + alvo.toFixed(0) + '.' };
   }
   const folga = l.frequencia != null && l.frequencia < FREQ_FOLGA;
   return { tom: 'bom', acao: 'Pode escalar',
     txt: 'Entrega cheia' + (folga ? ' e público longe de saturar' : '') +
-      (alvo != null ? ', custo dentro do alvo' : '') + '.' };
+      (alvo != null
+        ? ', custo ' + (real ? 'real' : 'do pixel') + ' dentro do alvo'
+        : '') + '.' };
 }
 
 /* Veredito da CONTA: não é a soma dos vereditos, é a leitura do dinheiro
    parado. "Tem R$ 4.150/dia de orçamento que ninguém está conseguindo gastar"
    é a informação que muda a decisão do dia. */
-function vereditoConta(campanhas, alvo) {
-  const ativas = campanhas.filter((c) => c.gasto > 0);
-  const gasto = ativas.reduce((s, c) => s + c.gasto, 0);
+function vereditoConta(campanhas, alvo, funilTotal) {
+  const comGasto = campanhas.filter((c) => c.gasto > 0);
+  /* "Ativa" passou a ser o STATUS, não "gastou alguma coisa". A conta dizia
+     "4 campanhas ativas" contando uma pausada que tinha gasto no começo do
+     período — e a frase do gargalo saía com denominador errado. */
+  const ativas = campanhas.filter((c) => c.status === 'ACTIVE');
+  const gasto = comGasto.reduce((s, c) => s + c.gasto, 0);
   const capacidade = ativas.reduce((s, c) => s + (c.orcamento_dia || 0), 0);
-  const resultado = ativas.reduce((s, c) => s + (c.resultado || 0), 0);
-  const ociosas = ativas.filter((c) => c.entrega != null && c.entrega < ENTREGA_LIMITADA);
+  const resultado = comGasto.reduce((s, c) => s + (c.resultado || 0), 0);
+  const ociosas = comGasto.filter((c) => c.entrega != null && c.entrega < ENTREGA_LIMITADA);
 
+  const f = funilTotal || null;
+  const gastoAtribuido = campanhas.reduce((s, c) => s + (c.funil ? c.gasto : 0), 0);
   return {
     gasto: gasto,
     orcamento_dia: capacidade || null,
     resultado: resultado,
     custo_por_resultado: resultado > 0 ? gasto / resultado : null,
     campanhas_ativas: ativas.length,
+    campanhas_com_gasto: comGasto.length,
+    campanhas_paradas: ativas.filter((c) => c.gasto === 0).length,
     campanhas_limitadas: ociosas.length,
-    pode_escalar: ativas.filter((c) => vereditoLinha(c, alvo).tom === 'bom').length
+    pode_escalar: comGasto.filter((c) => vereditoLinha(c, alvo).tom === 'bom').length,
+    /* Funil só das campanhas que casaram por UTM — e o custo real divide a
+       verba DESSAS campanhas, não a da conta inteira. Misturar o gasto de uma
+       campanha sem UTM no numerador barateia o FTD de graça. */
+    funil: f ? {
+      cadastros: f.cadastros, ftd: f.ftd, valor_ftd: f.valor_ftd,
+      deposito: f.deposito, net_dep: f.net_dep, comissao: f.comissao,
+      visitas: f.visitas,
+      gasto_atribuido: gastoAtribuido,
+      custo_por_ftd: f.ftd > 0 ? gastoAtribuido / f.ftd : null,
+      custo_por_cadastro: f.cadastros > 0 ? gastoAtribuido / f.cadastros : null,
+      conversao: f.cadastros > 0 ? (f.ftd / f.cadastros) * 100 : null
+    } : null
   };
 }
 
@@ -385,10 +677,19 @@ module.exports = async function handler(req, res) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
 
+  /* A TAP sai JUNTO com a Graph quando a conta está no mapa — que é o caso de
+     todas as 36 hoje. Só quem depende do nome da conta pra descobrir o btag
+     precisa esperar a Graph responder primeiro. */
+  const btagsMapa = BTAG_POR_CONTA[conta] || null;
+  const tapCedo = btagsMapa
+    ? tapPorUtm(btagsMapa, de, ate, ctrl.signal).catch(() => ({ linhas: null, erro: 'tap_falhou' }))
+    : null;
+
   try {
-    /* Quatro chamadas em paralelo. Sequencial seria ~4× mais lento e a pessoa
-       está esperando um modal abrir — não é uma tela de fundo. */
-    const [campEnt, campIns, setEnt, setIns] = await Promise.all([
+    /* Cinco chamadas em paralelo (quatro na Graph + o nome da conta, que é o
+       que descobre o btag de conta nova sem mexer no mapa). Sequencial seria
+       vezes mais lento e a pessoa está esperando um modal abrir. */
+    const [campEnt, campIns, setEnt, setIns, contaEnt] = await Promise.all([
       graph(act + '/campaigns', {
         fields: 'id,name,status,effective_status,daily_budget,lifetime_budget,bid_strategy,bid_amount',
         limit: '300'
@@ -408,7 +709,8 @@ module.exports = async function handler(req, res) {
         fields: 'adset_id,adset_name,campaign_id,spend,impressions,clicks,ctr,cpm,frequency,actions',
         time_range: janela,
         limit: '500'
-      }, token, ctrl.signal)
+      }, token, ctrl.signal),
+      graphUm(act, { fields: 'name' }, token, ctrl.signal)
     ]);
 
     const porCamp = indexar(campEnt, 'id');
@@ -438,8 +740,26 @@ module.exports = async function handler(req, res) {
 
     const campanhas = campIns
       .map((i) => montarLinha(porCamp[i.campaign_id], i, diasEntrega))
-      .filter((l) => l.gasto > 0)
-      .sort((a, b) => b.gasto - a.gasto);
+      .filter((l) => l.gasto > 0);
+
+    /* Campanha ATIVA que não gastou nada no período também entra. Antes ela
+       simplesmente não existia na tela — e "ligada há três dias sem gastar um
+       real" é justamente o que ninguém percebe olhando só quem gastou. */
+    const jaTem = Object.create(null);
+    campanhas.forEach((c) => { if (c.id) jaTem[c.id] = true; });
+    campEnt.forEach((e) => {
+      if (!e || e.effective_status !== 'ACTIVE' || jaTem[e.id]) return;
+      campanhas.push(montarLinha(e, null, diasEntrega));
+    });
+
+    campanhas.sort((a, b) => b.gasto - a.gasto);
+
+    /* O funil da casa entra ANTES do veredito: é o custo real por FTD que
+       decide escala, e o veredito lê `c.funil`. */
+    const btags = btagsMapa || btagsDaConta(conta, contaEnt && contaEnt.name);
+    const tap = await (tapCedo ||
+      tapPorUtm(btags, de, ate, ctrl.signal).catch(() => ({ linhas: null, erro: 'tap_falhou' })));
+    const casamento = tap.linhas ? casarFunil(campanhas, tap.linhas) : null;
 
     campanhas.forEach((c) => {
       c.veredito = vereditoLinha(c, alvo);
@@ -467,7 +787,16 @@ module.exports = async function handler(req, res) {
         dias_entrega: diasEntrega,
         fracao_dia: ehHoje ? fracHoje : 1
       },
-      resumo: vereditoConta(campanhas, alvo),
+      resumo: vereditoConta(campanhas, alvo, casamento && casamento.total),
+      /* De onde veio (ou por que não veio) o funil. A tela precisa saber a
+         diferença entre "zero FTD" e "não consegui perguntar" — são leituras
+         opostas e o painel não pode desenhar as duas do mesmo jeito. */
+      funil_fonte: {
+        ok: !!casamento,
+        btags: btags,
+        motivo: tap.erro || null,
+        nao_atribuido: casamento ? casamento.nao_atribuido : null
+      },
       campanhas: campanhas
     });
   } catch (e) {
