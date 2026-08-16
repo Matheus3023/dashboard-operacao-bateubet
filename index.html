@@ -11658,7 +11658,8 @@ function classeCusto(v) {
   return '';
 }
 
-function blocoCasa(f, titulo, metaResultado) {
+function blocoCasa(f, titulo, metaResultado, ctx) {
+  ctx = ctx || {};
   var box = document.createElement('div');
   box.className = 'cta-casa';
 
@@ -11667,8 +11668,15 @@ function blocoCasa(f, titulo, metaResultado) {
   cap.textContent = titulo;
   box.appendChild(cap);
 
+  var ticket = f.ftd > 0 ? f.valor_ftd / f.ftd : null;
+  /* Retorno = depósito bruto ÷ verba. Não é lucro (a casa fica com a margem,
+     a comissão vem depois), mas é a única leitura de "o dinheiro voltou?" que
+     dá pra fazer no mesmo recorte. */
+  var retorno = (ehNum(ctx.gasto) && ctx.gasto > 0 && f.deposito) ? f.deposito / ctx.gasto : null;
+
   var kpis = document.createElement('div');
   kpis.className = 'cta-casa__kpis';
+  kpis.appendChild(kpi('Visitas', f.visitas ? inteiro(f.visitas) : '0'));
   kpis.appendChild(kpi('Cadastros', f.cadastros ? inteiro(f.cadastros) : '0'));
   kpis.appendChild(kpi('FTD na casa', f.ftd ? inteiro(f.ftd) : '0'));
   kpis.appendChild(kpi('Custo real / FTD',
@@ -11676,9 +11684,26 @@ function blocoCasa(f, titulo, metaResultado) {
     'cta-kpi--forte' + classeCusto(f.custo_por_ftd)));
   kpis.appendChild(kpi('Cadastro → FTD', ehNum(f.conversao) ? pct(f.conversao, 0) : null));
   kpis.appendChild(kpi('Custo / cadastro', ehNum(f.custo_por_cadastro) ? brl(f.custo_por_cadastro) : null));
+  kpis.appendChild(kpi('Ticket do FTD', ehNum(ticket) ? brl(ticket) : null));
   kpis.appendChild(kpi('Depósito', brl(f.deposito || 0)));
   kpis.appendChild(kpi('Net dep', brl(f.net_dep || 0)));
+  kpis.appendChild(kpi('Depósito / verba', ehNum(retorno) ? vezes(retorno) : null));
   box.appendChild(kpis);
+
+  /* A VERBA PARADA VALE FTD. Enquanto o custo real está dentro do alvo, cada
+     real que a campanha não conseguiu gastar é FTD barato que não foi
+     comprado — e essa conta é o que separa "alerta de entrega" de "vai lá e
+     destrava". */
+  if (ehNum(ctx.verba_ociosa) && ctx.verba_ociosa > 0 && ehNum(f.custo_por_ftd) && f.custo_por_ftd > 0) {
+    var nMesa = Math.floor(ctx.verba_ociosa / f.custo_por_ftd);
+    if (nMesa > 0) {
+      var mesa = document.createElement('p');
+      mesa.className = 'cta-casa__nota';
+      mesa.innerHTML = 'Sobraram <b>' + brl(ctx.verba_ociosa) + '</b> de orçamento sem gastar no ' +
+        'período — nesse custo, mais <b>~' + nMesa + ' FTD</b> que ficaram na mesa.';
+      box.appendChild(mesa);
+    }
+  }
 
   /* A discordância entre pixel e casa é o motivo do bloco existir — escrever
      ela por extenso evita a pergunta "por que o número não bate?". */
@@ -11769,7 +11794,8 @@ function pintarConta(d) {
       res.funil,
       'Funil da casa · btag ' + (fonte.btags || []).join(' + ') +
         ' · só as campanhas casadas por UTM',
-      res.resultado));
+      res.resultado,
+      { gasto: res.funil.gasto_atribuido, verba_ociosa: res.verba_ociosa_barata }));
   } else {
     var semFunil = document.createElement('p');
     semFunil.className = 'cta-nota';
@@ -11822,7 +11848,8 @@ function pintarConta(d) {
          campanha está perguntando "escalo ou não?", e a resposta é o custo
          real por FTD. Os conjuntos vêm depois, pra dizer POR ONDE escalar. */
       if (c.funil) {
-        sets.appendChild(blocoCasa(c.funil, 'Funil da casa · esta campanha', c.resultado));
+        sets.appendChild(blocoCasa(c.funil, 'Funil da casa · esta campanha', c.resultado,
+          { gasto: c.gasto, verba_ociosa: c.verba_ociosa }));
       } else if (fonte.ok) {
         var semUtm = document.createElement('p');
         semUtm.className = 'cta-vazio';
@@ -11903,6 +11930,25 @@ function vereditoDaConta(d, alvo) {
       txt: 'A casa registrou ' + inteiro(fc.ftd) + ' FTD com ' + brl(fc.gasto_atribuido) +
         ' de verba: ' + brl(fc.custo_por_ftd) + ' por FTD, contra o alvo de ' + brl(alvo) +
         '. Abra as campanhas — a barata banca a cara nesta média.'
+    };
+  }
+
+  /* DINHEIRO FÁCIL PRIMEIRO. Campanha travada com custo real BOM não é
+     alerta: é fila de FTD barato esperando lance. Isso passa na frente de
+     qualquer outra frase, inclusive do "gargalo não é orçamento" — que era
+     exatamente o que fazia o painel gritar "destravar antes" numa campanha
+     entregando FTD abaixo do alvo. */
+  if (r.destravar_barato > 0) {
+    var ftdMesa = (alvo && r.verba_ociosa_barata) ? Math.floor(r.verba_ociosa_barata /
+      (fc && ehNum(fc.custo_por_ftd) ? fc.custo_por_ftd : alvo)) : 0;
+    return {
+      tom: 'bom',
+      acao: 'Destrave: tem FTD barato na mesa',
+      txt: r.destravar_barato + (r.destravar_barato > 1 ? ' campanhas estão' : ' campanha está') +
+        ' entregando FTD dentro do alvo e mesmo assim não gastou o que já tem: ' +
+        brl(r.verba_ociosa_barata) + ' parados no período' +
+        (ftdMesa > 0 ? ', que nesse custo dariam ~' + ftdMesa + ' FTD' : '') +
+        '. O gargalo é lance/leilão, não verba — suba o lance antes do orçamento.'
     };
   }
   var ocio = ehNum(r.orcamento_dia) && ehNum(r.gasto) && d.periodo

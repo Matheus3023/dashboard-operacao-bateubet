@@ -481,6 +481,11 @@ function montarLinha(ent, ins, dias) {
     orcamento_vida: orcVida,
     gasto: gasto,
     entrega: entrega,
+    /* capacidade = o que ela PODERIA ter gasto no recorte; ociosa = o que
+       sobrou. Com custo real bom, essa sobra é a conta mais importante da
+       tela: é FTD barato que deixou de ser comprado. */
+    capacidade: capacidade,
+    verba_ociosa: (capacidade != null && capacidade > gasto) ? capacidade - gasto : 0,
     impressoes: num(ins && ins.impressions),
     cliques: num(ins && ins.clicks),
     ctr: num(ins && ins.ctr),
@@ -495,13 +500,32 @@ function montarLinha(ent, ins, dias) {
 }
 
 /* ── VEREDITO ─────────────────────────────────────────────────────────────
-   O painel não pode devolver só uma tabela: quem abre está com a mão no botão
-   de orçamento e precisa da frase. São quatro estados, nesta ordem de
-   prioridade — o gargalo de entrega vem ANTES do custo de propósito, porque
-   com entrega travada o custo não responde a mexida nenhuma de verba.
+   Quem abre esta janela está com a mão no botão de orçamento. A tabela sozinha
+   não decide nada — a frase decide.
+
+   A REGRA MUDOU EM 15/08, e a razão vale mais que a regra: entrega travada
+   NÃO é problema, é sintoma. Se o custo real está bom, entrega baixa é a
+   melhor notícia da tela — é FTD barato que ficou na mesa por falta de lance,
+   e a ação é DESTRAVAR pra comprar mais. Se o custo real está ruim, entrega
+   travada é o que está segurando o prejuízo, e destravar é acelerar no
+   sentido errado. A mesma barra vermelha, dois vereditos opostos.
+
+   Antes o painel lia só a entrega e mandava "destravar antes" numa campanha
+   que entregava FTD a R$ 179 com alvo de R$ 300 — leitura que fazia o gestor
+   duvidar do painel, com razão.
+
+   Então o cruzamento é CUSTO REAL × ENTREGA, nesta ordem:
+     custo bom  + entrega cheia   → escala por orçamento
+     custo bom  + entrega travada → DESTRAVA (e a sobra vira FTD estimado)
+     custo ruim + entrega travada → não destrava; arruma criativo/oferta antes
+     custo ruim + entrega cheia   → não escala
    `alvo` é o CPA que o gestor definiu na tela (localStorage). Sem alvo o
-   veredito não fala de custo: painel não inventa meta que o negócio não deu.
+   painel não fala de custo: não inventa meta que o negócio não deu.
    ────────────────────────────────────────────────────────────────────────── */
+function moeda(v) {
+  return 'R$ ' + (Math.round(v * 100) / 100).toFixed(2).replace('.', ',')
+    .replace(/\B(?=(\d{3})+(?!\d)(?=,))/g, '.');
+}
 function vereditoLinha(l, alvo) {
   /* Campanha ligada que não gastou um real é informação, não ruído: ou o
      conjunto está sem entrega, ou ficou sem público, ou o lance não paga o
@@ -529,34 +553,65 @@ function vereditoLinha(l, alvo) {
       txt: 'Queimou R$ ' + l.gasto.toFixed(2).replace('.', ',') +
         ' sem nenhum resultado no período.' };
   }
-  if (l.entrega != null && l.entrega < ENTREGA_LIMITADA) {
-    return { tom: 'atencao', acao: 'Destravar antes',
-      txt: 'Entregou só ' + Math.round(l.entrega * 100) + '% do orçamento. ' +
-        (l.estrategia === 'LOWEST_COST_WITH_BID_CAP'
-          ? 'O teto de lance é o gargalo — subir verba não muda o gasto.'
-          : 'Está limitada por leilão, não por verba.') };
+  /* Custo que vale é o REAL (verba ÷ FTD da casa). O do pixel entra só quando
+     não existe funil pra esta campanha — e aí a frase diz de onde veio. */
+  const real = !!(l.funil && l.funil.custo_por_ftd != null);
+  const custo = real ? l.funil.custo_por_ftd : l.custo_por_resultado;
+  const travada = l.entrega != null && l.entrega < ENTREGA_LIMITADA;
+  const pctEntrega = travada ? Math.round(l.entrega * 100) + '%' : null;
+  const porQue = l.estrategia === 'LOWEST_COST_WITH_BID_CAP'
+    ? 'o teto de lance é o gargalo'
+    : 'está limitada por leilão, não por verba';
+  const rotuloCusto = real
+    ? 'FTD real a ' + moeda(custo)
+    : 'CPA de pixel de ' + moeda(custo);
+
+  /* Quanto a sobra viraria, no custo que ESTA campanha já pratica. É a conta
+     que transforma "entregou 41%" em decisão: não é um alerta, é uma fila de
+     FTD esperando lance. */
+  const sobra = l.verba_ociosa || 0;
+  const ftdNaMesa = (custo != null && custo > 0 && sobra > 0) ? Math.floor(sobra / custo) : 0;
+
+  const custoBom = alvo != null && custo != null && custo <= alvo;
+  const custoRuim = alvo != null && custo != null && custo > alvo;
+
+  if (custoRuim) {
+    return travada
+      ? { tom: 'atencao', acao: 'Não destravar',
+          txt: 'Entregou ' + pctEntrega + ' e o ' + rotuloCusto + ' já está acima do alvo de ' +
+            moeda(alvo) + '. A trava está segurando prejuízo — destravar aqui compra ' +
+            'FTD caro. Mexa em criativo, público ou oferta primeiro.' }
+      : { tom: 'ruim', acao: 'Não escalar',
+          txt: rotuloCusto + ', acima do alvo de ' + moeda(alvo) +
+            (real ? ' (' + l.funil.ftd + ' FTD na casa).' : '.') };
   }
+
+  if (travada) {
+    /* Custo bom e entrega travada: o melhor negócio da tela. */
+    if (custoBom) {
+      return { tom: 'bom', acao: 'Destrave e escale',
+        txt: rotuloCusto + ', dentro do alvo de ' + moeda(alvo) + ' — e mesmo assim entregou só ' +
+          pctEntrega + ' do orçamento: ' + porQue + '. Sobraram ' + moeda(sobra) +
+          (ftdNaMesa > 0 ? ', que nesse custo dariam ~' + ftdNaMesa + ' FTD' : '') +
+          '. Suba o lance (ou tire o teto) antes de mexer no orçamento — verba nova aqui não vira gasto.' };
+    }
+    return { tom: 'atencao', acao: 'Destravar antes',
+      txt: 'Entregou só ' + pctEntrega + ' do orçamento: ' + porQue +
+        '. Subir verba não muda o gasto' +
+        (alvo == null ? ' — e sem CPA alvo o painel não julga se vale a pena destravar.' : '.') };
+  }
+
   if (l.frequencia != null && l.frequencia >= FREQ_SATURADA) {
     return { tom: 'atencao', acao: 'Público cansado',
       txt: 'Frequência em ' + l.frequencia.toFixed(1) + '×. Escalar aqui sobe o custo — ' +
         'renove criativo ou abra público antes.' };
   }
-  /* Custo que vale é o REAL (verba ÷ FTD da casa). O do pixel entra só quando
-     não existe funil pra esta campanha — e aí a frase diz de onde veio. */
-  const real = l.funil && l.funil.custo_por_ftd != null;
-  const custo = real ? l.funil.custo_por_ftd : l.custo_por_resultado;
-  if (alvo != null && custo != null && custo > alvo) {
-    return { tom: 'ruim', acao: 'Não escalar',
-      txt: (real ? 'Custo real por FTD (R$ ' + custo.toFixed(2).replace('.', ',') + ', ' +
-                   l.funil.ftd + ' FTD na casa)' : 'Custo por resultado do pixel') +
-        ' acima do alvo de ' + alvo.toFixed(0) + '.' };
-  }
+
   const folga = l.frequencia != null && l.frequencia < FREQ_FOLGA;
   return { tom: 'bom', acao: 'Pode escalar',
-    txt: 'Entrega cheia' + (folga ? ' e público longe de saturar' : '') +
-      (alvo != null
-        ? ', custo ' + (real ? 'real' : 'do pixel') + ' dentro do alvo'
-        : '') + '.' };
+    txt: 'Entrega cheia' + (folga ? ', público longe de saturar' : '') +
+      (custoBom ? ' e ' + rotuloCusto + ' dentro do alvo' : '') +
+      '. Aqui o orçamento é o limite: pode subir.' };
 }
 
 /* Veredito da CONTA: não é a soma dos vereditos, é a leitura do dinheiro
@@ -585,6 +640,12 @@ function vereditoConta(campanhas, alvo, funilTotal) {
     campanhas_paradas: ativas.filter((c) => c.gasto === 0).length,
     campanhas_limitadas: ociosas.length,
     pode_escalar: comGasto.filter((c) => vereditoLinha(c, alvo).tom === 'bom').length,
+    /* As travadas que estão BARATAS: é aqui que mora o dinheiro fácil da
+       conta, e a frase do topo tem que começar por elas. */
+    destravar_barato: comGasto.filter((c) => vereditoLinha(c, alvo).acao === 'Destrave e escale').length,
+    verba_ociosa: ociosas.reduce((s, c) => s + (c.verba_ociosa || 0), 0),
+    verba_ociosa_barata: comGasto.reduce((s, c) =>
+      s + (vereditoLinha(c, alvo).acao === 'Destrave e escale' ? (c.verba_ociosa || 0) : 0), 0),
     /* Funil só das campanhas que casaram por UTM — e o custo real divide a
        verba DESSAS campanhas, não a da conta inteira. Misturar o gasto de uma
        campanha sem UTM no numerador barateia o FTD de graça. */
