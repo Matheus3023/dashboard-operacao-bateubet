@@ -11651,6 +11651,33 @@ function linhaEntidade(l, ehSet) {
    O custo real usa a MESMA faixa oficial do painel (FAIXA_BOA/FAIXA_ALTA),
    senão a janela julgaria custo por um critério e a tela por outro.
    ────────────────────────────────────────────────────────────────────────── */
+/* "FB - AQ - 12.08  - AQUISICAO - 60K MENSAL - C04" não cabe numa frase. O
+   que identifica a campanha pra quem trabalha nela é o final do nome — o
+   prefixo é convenção repetida em todas. */
+function nomeCurto(n) {
+  var s = String(n || '');
+  var i = s.toUpperCase().lastIndexOf(' - AQUISICAO - ');
+  if (i >= 0) s = s.slice(i + 15);
+  else {
+    var p = s.split(' - ');
+    if (p.length > 2) s = p.slice(-2).join(' - ');
+  }
+  return s.replace(/\s+/g, ' ').trim();
+}
+function listaNomes(cs) {
+  var ns = cs.map(function (c) { return nomeCurto(c.nome); });
+  if (ns.length <= 1) return ns[0] || '';
+  return ns.slice(0, -1).join(', ') + ' e ' + ns[ns.length - 1];
+}
+function listaCustos(cs) {
+  var vs = cs.map(function (c) {
+    return c.funil && ehNum(c.funil.custo_por_ftd) ? brl(c.funil.custo_por_ftd)
+                                                   : brl(c.custo_por_resultado);
+  });
+  if (vs.length <= 1) return vs[0] || '';
+  return vs.slice(0, -1).join(', ') + ' e ' + vs[vs.length - 1];
+}
+
 function classeCusto(v) {
   if (!ehNum(v)) return '';
   if (v <= FAIXA_BOA) return ' cta-kpi--boa';
@@ -11933,22 +11960,48 @@ function vereditoDaConta(d, alvo) {
     };
   }
 
-  /* DINHEIRO FÁCIL PRIMEIRO. Campanha travada com custo real BOM não é
-     alerta: é fila de FTD barato esperando lance. Isso passa na frente de
-     qualquer outra frase, inclusive do "gargalo não é orçamento" — que era
-     exatamente o que fazia o painel gritar "destravar antes" numa campanha
-     entregando FTD abaixo do alvo. */
-  if (r.destravar_barato > 0) {
-    var ftdMesa = (alvo && r.verba_ociosa_barata) ? Math.floor(r.verba_ociosa_barata /
-      (fc && ehNum(fc.custo_por_ftd) ? fc.custo_por_ftd : alvo)) : 0;
+  /* A FRASE TEM QUE DIZER O NOME. "1 campanha está entregendo FTD dentro do
+     alvo" é verdade e é inútil: quem lê está com a mão no botão de UMA
+     campanha. Sem nome, a frase boa de uma vira permissão pra pôr dinheiro na
+     outra — que foi exatamente o que aconteceu com a GRAFITE. */
+  var acoesDe = function (lista) {
+    return d.campanhas.filter(function (c) {
+      return c.veredito && lista.indexOf(c.veredito.acao) >= 0;
+    });
+  };
+  var subirVerba  = acoesDe(['Sobe a verba']);
+  var destravar   = acoesDe(['Sobe o lance', 'Abre público']);
+  var cortar      = acoesDe(['Não escalar']).filter(function (c) { return c.gasto > 0; });
+
+  var alerta = cortar.length
+    ? ' Já ' + (cortar.length > 1 ? 'as ' : 'a ') + listaNomes(cortar) +
+      (cortar.length > 1 ? ' estão' : ' está') + ' custando ' +
+      listaCustos(cortar) + ' por FTD: aí não entra mais um real hoje.'
+    : '';
+
+  if (subirVerba.length) {
     return {
       tom: 'bom',
-      acao: 'Destrave: tem FTD barato na mesa',
-      txt: r.destravar_barato + (r.destravar_barato > 1 ? ' campanhas estão' : ' campanha está') +
-        ' entregando FTD dentro do alvo e mesmo assim não gastou o que já tem: ' +
-        brl(r.verba_ociosa_barata) + ' parados no período' +
-        (ftdMesa > 0 ? ', que nesse custo dariam ~' + ftdMesa + ' FTD' : '') +
-        '. O gargalo é lance/leilão, não verba — suba o lance antes do orçamento.'
+      acao: 'Sobe a verba: ' + listaNomes(subirVerba),
+      txt: (subirVerba.length > 1 ? 'Elas gastaram' : 'Ela gastou') + ' o orçamento inteiro com ' +
+        'FTD dentro do alvo — aqui subir verba vira gasto de verdade.' + alerta
+    };
+  }
+
+  if (destravar.length) {
+    var comoDestravar = destravar.every(function (c) {
+      return c.veredito.acao === 'Sobe o lance';
+    }) ? 'Suba o teto de lance' : 'Abra o público / entre com criativo novo';
+    return {
+      tom: 'bom',
+      acao: comoDestravar.split(' ')[0] === 'Suba' ? 'Sobe o lance: ' + listaNomes(destravar)
+                                                   : 'Destrava a entrega: ' + listaNomes(destravar),
+      txt: (destravar.length > 1 ? 'Elas entregam' : 'Ela entrega') + ' FTD dentro do alvo e ' +
+        'mesmo assim não gastou o que já tem: ' + brl(r.verba_ociosa_barata) + ' parados' +
+        (alvo && r.verba_ociosa_barata && fc && ehNum(fc.custo_por_ftd)
+          ? ', que nesse custo dariam ~' + Math.floor(r.verba_ociosa_barata / fc.custo_por_ftd) + ' FTD'
+          : '') + '. ' + comoDestravar + ' — NÃO aumente o orçamento, ' +
+        'ela já não gasta o que tem.' + alerta
     };
   }
   var ocio = ehNum(r.orcamento_dia) && ehNum(r.gasto) && d.periodo

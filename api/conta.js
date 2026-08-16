@@ -559,9 +559,19 @@ function vereditoLinha(l, alvo) {
   const custo = real ? l.funil.custo_por_ftd : l.custo_por_resultado;
   const travada = l.entrega != null && l.entrega < ENTREGA_LIMITADA;
   const pctEntrega = travada ? Math.round(l.entrega * 100) + '%' : null;
-  const porQue = l.estrategia === 'LOWEST_COST_WITH_BID_CAP'
-    ? 'o teto de lance é o gargalo'
-    : 'está limitada por leilão, não por verba';
+
+  /* TEM LANCE PRA SUBIR? Campanha em "Maior volume" (LOWEST_COST_WITHOUT_CAP)
+     NÃO tem — o painel mandar "suba o lance" ali é mandar mexer num campo que
+     não existe. Quando não há teto, entrega baixa é público/criativo/leilão,
+     e a saída é abrir público ou trocar criativo. Confundir os dois é o tipo
+     de conselho que faz o gestor perder a noite procurando um controle que a
+     Meta nem mostra pra aquela estratégia. */
+  const temTeto = l.estrategia === 'LOWEST_COST_WITH_BID_CAP' || l.estrategia === 'COST_CAP';
+  const nomeTeto = l.estrategia === 'COST_CAP' ? 'custo máximo' : 'teto de lance';
+  const porQue = temTeto
+    ? 'o ' + nomeTeto + ' é o gargalo'
+    : 'não tem teto de lance pra segurar (é Maior volume): o gargalo é público, ' +
+      'criativo ou leilão';
   const rotuloCusto = real
     ? 'FTD real a ' + moeda(custo)
     : 'CPA de pixel de ' + moeda(custo);
@@ -587,17 +597,22 @@ function vereditoLinha(l, alvo) {
   }
 
   if (travada) {
-    /* Custo bom e entrega travada: o melhor negócio da tela. */
+    /* Custo bom e entrega travada: o melhor negócio da tela. O rótulo é o
+       VERBO do que fazer — "não mexa na verba" é a metade que o gestor mais
+       precisa ouvir aqui, porque é o botão em que a mão vai primeiro. */
     if (custoBom) {
-      return { tom: 'bom', acao: 'Destrave e escale',
-        txt: rotuloCusto + ', dentro do alvo de ' + moeda(alvo) + ' — e mesmo assim entregou só ' +
-          pctEntrega + ' do orçamento: ' + porQue + '. Sobraram ' + moeda(sobra) +
-          (ftdNaMesa > 0 ? ', que nesse custo dariam ~' + ftdNaMesa + ' FTD' : '') +
-          '. Suba o lance (ou tire o teto) antes de mexer no orçamento — verba nova aqui não vira gasto.' };
+      return { tom: 'bom', acao: temTeto ? 'Sobe o lance' : 'Abre público',
+        txt: rotuloCusto + ', dentro do alvo de ' + moeda(alvo) + ' — e mesmo assim gastou só ' +
+          pctEntrega + ' do orçamento que já tem: ' + porQue + '. Sobraram ' + moeda(sobra) +
+          (ftdNaMesa > 0 ? ', que nesse custo dariam ~' + ftdNaMesa + ' FTD' : '') + '. ' +
+          (temTeto
+            ? 'Suba o ' + nomeTeto + ' (ou tire).'
+            : 'Abra o público, entre com criativo novo ou duplique o conjunto.') +
+          ' NÃO aumente a verba: ela já não está gastando a que tem.' };
     }
-    return { tom: 'atencao', acao: 'Destravar antes',
-      txt: 'Entregou só ' + pctEntrega + ' do orçamento: ' + porQue +
-        '. Subir verba não muda o gasto' +
+    return { tom: 'atencao', acao: 'Não mexer ainda',
+      txt: 'Gastou só ' + pctEntrega + ' do orçamento: ' + porQue +
+        '. Aumentar verba não vira gasto' +
         (alvo == null ? ' — e sem CPA alvo o painel não julga se vale a pena destravar.' : '.') };
   }
 
@@ -608,15 +623,23 @@ function vereditoLinha(l, alvo) {
   }
 
   const folga = l.frequencia != null && l.frequencia < FREQ_FOLGA;
-  return { tom: 'bom', acao: 'Pode escalar',
-    txt: 'Entrega cheia' + (folga ? ', público longe de saturar' : '') +
+  return { tom: 'bom', acao: custoBom ? 'Sobe a verba' : 'Pode escalar',
+    txt: 'Gastou o orçamento inteiro' + (folga ? ', público longe de saturar' : '') +
       (custoBom ? ' e ' + rotuloCusto + ' dentro do alvo' : '') +
-      '. Aqui o orçamento é o limite: pode subir.' };
+      '. Aqui o limite É a verba: subir orçamento vira gasto de verdade.' +
+      (custoBom ? '' : ' Sem CPA alvo o painel não confirma se o custo compensa.') };
 }
 
 /* Veredito da CONTA: não é a soma dos vereditos, é a leitura do dinheiro
    parado. "Tem R$ 4.150/dia de orçamento que ninguém está conseguindo gastar"
    é a informação que muda a decisão do dia. */
+/* Travada E barata: entrega abaixo do piso com veredito bom. É a única
+   combinação em que o painel manda MEXER sem mandar aumentar verba. */
+function ehDestravarBarato(c, alvo) {
+  return c.entrega != null && c.entrega < ENTREGA_LIMITADA &&
+    vereditoLinha(c, alvo).tom === 'bom';
+}
+
 function vereditoConta(campanhas, alvo, funilTotal) {
   const comGasto = campanhas.filter((c) => c.gasto > 0);
   /* "Ativa" passou a ser o STATUS, não "gastou alguma coisa". A conta dizia
@@ -641,11 +664,14 @@ function vereditoConta(campanhas, alvo, funilTotal) {
     campanhas_limitadas: ociosas.length,
     pode_escalar: comGasto.filter((c) => vereditoLinha(c, alvo).tom === 'bom').length,
     /* As travadas que estão BARATAS: é aqui que mora o dinheiro fácil da
-       conta, e a frase do topo tem que começar por elas. */
-    destravar_barato: comGasto.filter((c) => vereditoLinha(c, alvo).acao === 'Destrave e escale').length,
+       conta, e a frase do topo tem que começar por elas.
+       O teste é pelo TOM, não pelo texto do rótulo: rótulo é copy e muda
+       (já mudou de "Destrave e escale" pra "Sobe o lance"/"Abre público"),
+       e comparar string de copy fez a verba parada aparecer como R$ 0,00. */
+    destravar_barato: comGasto.filter((c) => ehDestravarBarato(c, alvo)).length,
     verba_ociosa: ociosas.reduce((s, c) => s + (c.verba_ociosa || 0), 0),
     verba_ociosa_barata: comGasto.reduce((s, c) =>
-      s + (vereditoLinha(c, alvo).acao === 'Destrave e escale' ? (c.verba_ociosa || 0) : 0), 0),
+      s + (ehDestravarBarato(c, alvo) ? (c.verba_ociosa || 0) : 0), 0),
     /* Funil só das campanhas que casaram por UTM — e o custo real divide a
        verba DESSAS campanhas, não a da conta inteira. Misturar o gasto de uma
        campanha sem UTM no numerador barateia o FTD de graça. */
