@@ -1491,10 +1491,17 @@ html.rolado .brand__logo{height:19px}
    irmão de .wrap + descendente. */
 .view{display:none}
 #v-geral:checked ~ .wrap .scope .view--geral,
-#v-experts:checked ~ .wrap .scope .view--experts{display:block}
+#v-experts:checked ~ .wrap .scope .view--experts,
+#v-metas:checked ~ .wrap .scope .view--metas{display:block}
+/* a aba Metas só existe no recorte. Se ela ficar marcada e a pessoa trocar
+   pro Meta (ou pro Google), aquele escopo não tem .view--metas e a tela
+   ficaria VAZIA — o JS devolve pra "Visão geral" nessa hora, mas esta regra
+   segura o frame entre o clique e o script. */
+#v-metas:checked ~ .wrap .scope:not(.scope--cl) .view--geral{display:block}
 
 #v-geral:checked ~ .wrap .scope .tabs label[for="v-geral"],
-#v-experts:checked ~ .wrap .scope .tabs label[for="v-experts"]{
+#v-experts:checked ~ .wrap .scope .tabs label[for="v-experts"],
+#v-metas:checked ~ .wrap .scope .tabs label[for="v-metas"]{
   color:var(--txt);border-bottom-color:var(--acao);
 }
 #v-geral:checked ~ .wrap .scope .tabs label[for="v-geral"] .tab__badge,
@@ -1502,7 +1509,73 @@ html.rolado .brand__logo{height:19px}
   background:var(--acao-soft);color:#FF9AC4;
 }
 #v-geral:focus-visible ~ .wrap .scope .tabs label[for="v-geral"],
-#v-experts:focus-visible ~ .wrap .scope .tabs label[for="v-experts"]{outline:2px solid var(--gold);outline-offset:-3px}
+#v-experts:focus-visible ~ .wrap .scope .tabs label[for="v-experts"],
+#v-metas:focus-visible ~ .wrap .scope .tabs label[for="v-metas"]{outline:2px solid var(--gold);outline-offset:-3px}
+
+/* ── TELA DE METAS (plano de carreira) ────────────────────────────────────
+   Segue a régua do resto do painel: veredito em texto primeiro, número
+   depois, e cada linha diz o que fazer — não só o quanto deu. */
+.metas{display:block;padding-top:2px}
+.metas__topo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,260px);gap:12px;margin-bottom:18px}
+.metas__h{display:flex;align-items:baseline;gap:8px;margin:22px 0 9px}
+.metas__hsub{font-family:var(--sans);font-size:.75rem;font-weight:500;letter-spacing:0;text-transform:none;color:var(--txt-3)}
+.metas__rodape{margin:22px 0 0;font-size:.75rem;line-height:1.6;color:var(--txt-3);max-width:74ch}
+
+.mt-nivel{
+  display:flex;flex-direction:column;gap:6px;justify-content:center;
+  padding:14px 16px;border-radius:14px;
+  background:var(--card);border:1px solid var(--line);
+}
+.mt-nivel__lbl{font-family:var(--mono);font-size:.5625rem;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-3)}
+.mt-nivel__sel{
+  width:100%;padding:8px 10px;border-radius:9px;cursor:pointer;
+  border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--txt);
+  font-family:var(--sans);font-size:.875rem;font-weight:620;
+}
+.mt-nivel__nota{margin:0;font-size:.75rem;color:var(--txt-2);line-height:1.45}
+
+.mt-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.mt-card{padding:14px 16px;border-radius:14px;background:var(--card);border:1px solid var(--line)}
+.mt-card__k{font-family:var(--mono);font-size:.5625rem;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-3)}
+.mt-card__v{
+  margin:5px 0 3px;font-size:1.375rem;font-weight:680;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;
+}
+.mt-card__o{margin:0;font-size:.75rem;color:var(--txt-2);line-height:1.45}
+
+/* tabela leve: mesma linguagem do comparativo, sem o peso dele */
+.mt-tbl{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--card)}
+.mt-row{
+  display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,1.6fr) minmax(0,110px);
+  gap:10px;align-items:center;padding:11px 16px;border-top:1px solid var(--line);
+}
+.mt-row:first-child{border-top:0}
+.mt-row--head{
+  background:rgba(255,255,255,.03);
+  font-family:var(--mono);font-size:.5625rem;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-3);
+}
+.mt-row--tot{background:rgba(255,255,255,.05);font-weight:680}
+.mt-c1{font-weight:620;font-size:.875rem;min-width:0}
+.mt-c1 small{display:block;font-weight:500;font-size:.75rem;color:var(--txt-3);margin-top:2px}
+.mt-c2,.mt-c3{font-size:.8125rem;color:var(--txt-2);font-variant-numeric:tabular-nums;min-width:0}
+.mt-c4{text-align:right;font-weight:680;font-size:.9375rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mt-ok{color:var(--good)}
+.mt-nao{color:var(--bad)}
+.mt-meio{color:var(--warn)}
+.mt-pill{
+  display:inline-block;padding:2px 7px;border-radius:999px;
+  font-family:var(--mono);font-size:.5625rem;letter-spacing:.06em;
+}
+.mt-pill--ok{background:rgba(46,212,122,.14);color:#7BE8AC}
+.mt-pill--nao{background:rgba(255,90,120,.14);color:#FF9AB0}
+.mt-pill--meio{background:rgba(255,200,36,.14);color:#FFD966}
+@media (max-width:900px){
+  .metas__topo{grid-template-columns:minmax(0,1fr)}
+  .mt-row{grid-template-columns:minmax(0,1fr) minmax(0,110px);row-gap:4px}
+  .mt-row--head{display:none}
+  .mt-c2,.mt-c3{grid-column:1 / -1}
+}
+
 /* ── RECORTE DENTRO DO META ───────────────────────────────────────────────
    Par de pílulas na ponta direita da faixa de abas. Some da faixa das abas em
    peso de propósito: aba é navegação (sublinhado, texto grande), recorte é
@@ -3444,6 +3517,8 @@ body.pnl-aberto{overflow:hidden}
   <input type="radio" name="escopo" id="e-taboola">
   <input type="radio" name="view" id="v-geral" checked>
   <input type="radio" name="view" id="v-experts">
+  <!-- terceira aba, só do recorte Costa e Lobão (ver .view--metas) -->
+  <input type="radio" name="view" id="v-metas">
 
   <!-- ═══ BARRA DE COMANDO ═══════════════════════════════════════════════════
        Uma faixa só, na ordem de quem manda: marca · ESCOPO · período ·
@@ -3698,6 +3773,8 @@ body.pnl-aberto{overflow:hidden}
     <nav class="tabs" aria-label="Seções do painel, recorte Costa e Lobão">
       <label for="v-geral">Visão geral</label>
       <label for="v-experts">Por expert <span class="tab__badge" data-derived="experts.length">7</span></label>
+      <!-- aba só do recorte: o plano de carreira mede o que a dupla gerencia -->
+      <label for="v-metas">Metas</label>
       <!-- o MESMO par da tela de cima: é por aqui que se volta pra operação
            inteira sem passar pela barra de canais. -->
       <div class="recorte" role="group" aria-label="Recorte da operação">
@@ -5101,6 +5178,69 @@ body.pnl-aberto{overflow:hidden}
     </section>
 
     </div><!-- ══════════ /ABA 2 · POR EXPERT ══════════ -->
+
+    <!-- ══════════════════ ABA 3 · METAS (PLANO DE CARREIRA) ══════════════════
+         Só existe no recorte da dupla, e é de propósito: o plano mede o que
+         COSTA E LOBÃO gerencia, não a BM inteira. Todo número aqui sai do
+         mesmo payload das outras abas — nada é digitado, exceto o nível
+         vigente (que é contrato, não dado) e o mês de casa.
+         As réguas vêm da planilha Plano_de_Carreira_Performance.xlsx:
+           · fixo/teto por nível        (aba Plano de Níveis)
+           · steps de volume            (aba Plano de Níveis)
+           · faixas de variável         (aba Variável e Bônus)
+           · KPIs obrigatórios          (aba KPIs e Definições)
+         Mudou a planilha? mexer em PLANO, no <script>. -->
+    <div class="view view--metas">
+
+      <section class="metas" aria-label="Metas e comissão do mês">
+
+        <!-- veredito: a resposta antes da conta -->
+        <div class="metas__topo">
+          <div class="verdict" id="mt-verdict">
+            <span class="verdict__lbl">Comissão do mês</span>
+            <p class="verdict__txt" id="mt-verdict-txt">—</p>
+            <p class="verdict__why" id="mt-verdict-why">—</p>
+          </div>
+
+          <div class="mt-nivel">
+            <label class="mt-nivel__lbl" for="mt-nivel-sel">Nível vigente</label>
+            <select class="mt-nivel__sel" id="mt-nivel-sel">
+              <option value="1">N1 — Pleno I</option>
+              <option value="2">N2 — Pleno II</option>
+              <option value="3">N3 — Pleno III</option>
+              <option value="4">N4 — Sênior I</option>
+              <option value="5">N5 — Sênior II</option>
+              <option value="6">N6 — Sênior III</option>
+            </select>
+            <p class="mt-nivel__nota" id="mt-nivel-nota">—</p>
+          </div>
+        </div>
+
+        <!-- 1. gate de volume -->
+        <h3 class="eyebrow metas__h">1 · Gate de volume <span class="metas__hsub">investimento do que a dupla gerencia</span></h3>
+        <div class="mt-cards" id="mt-volume"></div>
+
+        <!-- 2. variável por frente -->
+        <h3 class="eyebrow metas__h">2 · Variável por frente <span class="metas__hsub">margem = Net PL ÷ investimento</span></h3>
+        <div class="mt-tbl" id="mt-frentes"></div>
+
+        <!-- 3. KPIs obrigatórios -->
+        <h3 class="eyebrow metas__h">3 · KPIs obrigatórios <span class="metas__hsub">quebra em um já derruba o mês</span></h3>
+        <div class="mt-tbl" id="mt-kpis"></div>
+
+        <!-- 4. promoção -->
+        <h3 class="eyebrow metas__h">4 · Promoção</h3>
+        <div class="mt-cards" id="mt-promo"></div>
+
+        <p class="metas__rodape">
+          Apuração no fechamento da safra — enquanto o mês corre, tudo aqui é
+          parcial. A margem usada é a do PERÍODO por btag; o plano fala em Net
+          PL da safra do 1º mês, que é outra conta (a aba de safra tem essa).
+          Relatórios entregues no prazo o painel não tem como medir.
+        </p>
+      </section>
+
+    </div><!-- ══════════ /ABA 3 · METAS ══════════ -->
 
 
     </div><!-- ╚══ /ESCOPO 1 · COSTA E LOBÃO ══╝ -->
@@ -10667,12 +10807,14 @@ function carregar(opts) {
 
   var url = ENDPOINT;
   if (r.de && r.ate) url += '?de=' + encodeURIComponent(r.de) + '&ate=' + encodeURIComponent(r.ate);
-  /* PORTA ABERTA PEDE URL PRÓPRIA. O servidor já separa as duas versões por
-     `Vary: Cookie`, mas a borda pode ter uma resposta pública ainda válida
-     gravada antes — e ela voltaria SEM o recorte logo depois de digitar a
-     senha, que é justamente a hora em que isso mais confunde. Um parâmetro a
-     mais (ignorado pela função) garante endereço separado. */
-  if (!CL_TRANCADO) url += (url.indexOf('?') === -1 ? '?' : '&') + 'cl=1';
+  /* PORTA ABERTA PEDE URL PRÓPRIA. O servidor separa as duas versões por
+     `Vary: Cookie`, mas na prática a borda ainda serviu resposta pública pra
+     quem tinha sessão (a primeira leitura depois de abrir a página voltava
+     trancada, e só um refresh destravava). Quem tem sessão passa a pedir um
+     endereço que muda de minuto em minuto: garante execução da função, e
+     como a resposta liberada é `no-store`, não suja o cache de ninguém.
+     `_r` é ignorado pela função — serve só de chave. */
+  if (CL_SESSAO) url += (url.indexOf('?') === -1 ? '?' : '&') + '_r=' + Math.floor(Date.now() / 60000);
 
   var id = ++estado.reqId;
   var primeira = !estado.jaCarregou;
@@ -10758,6 +10900,8 @@ function carregar(opts) {
       if (d.experts) {
         pintarEscopo({ totais: d.totais, experts: d.experts },
                      d.periodo, estado.ehHoje, RAIZ_CL, false);
+        /* a aba Metas lê o MESMO payload — nenhuma chamada a mais */
+        pintarMetas(d);
       }
 
       /* escopo 2: a operação inteira. Só entra se a API mandou o bloco. */
@@ -11535,6 +11679,298 @@ function ligarPainel() {
   });
 }
 
+/* ── 9c-bis. METAS — PLANO DE CARREIRA DA DUPLA ───────────────────────────
+   Traduz o Plano_de_Carreira_Performance.xlsx para cima do MESMO payload do
+   recorte. Nada é digitado aqui além do nível vigente (contrato, não dado).
+
+   O QUE ESTA TELA MEDE: só o que Costa e Lobão gerencia. É por isso que ela
+   vive dentro do recorte e não no escopo Meta — no Meta inteiro entram 21
+   contas que não são da dupla, e tanto o volume quanto a margem mudam de
+   tamanho.
+
+   UMA ARMADILHA QUE VALE LEMBRAR: expert que entrou no meio do período (o
+   TALYSON entrou 15/08) tem o INVESTIMENTO cortado na data de entrada, mas o
+   funil da TAP vem do btag inteiro. A margem dele sai absurda e contamina a
+   frente. Por isso a linha marca "entrou no meio" e a tela mostra a conta
+   COM e SEM ele.
+   ────────────────────────────────────────────────────────────────────────── */
+var PLANO = {
+  /* aba Plano de Níveis */
+  niveis: [
+    { n: 1, nome: 'N1 — Pleno I',    fixo: 8000,  teto: 6000 },
+    { n: 2, nome: 'N2 — Pleno II',   fixo: 10000, teto: 8000 },
+    { n: 3, nome: 'N3 — Pleno III',  fixo: 12500, teto: 10000 },
+    { n: 4, nome: 'N4 — Sênior I',   fixo: 15000, teto: 12000 },
+    { n: 5, nome: 'N5 — Sênior II',  fixo: 18000, teto: 15000 },
+    { n: 6, nome: 'N6 — Sênior III', fixo: 22000, teto: 18000 }
+  ],
+  /* gatilhos de promoção por investimento mensal em Meta Ads */
+  steps: [
+    { nome: 'Step 1', min: 500000,  max: 1000000, meses: 1, promove: 'N2 — Pleno II' },
+    { nome: 'Step 2', min: 1000000, max: 2000000, meses: 2, promove: 'N3 — Pleno III' },
+    { nome: 'Step 3', min: 2000000, max: Infinity, meses: 3, promove: 'N4 — Sênior I' }
+  ],
+  /* aba Variável e Bônus. Experts tem régua própria (gate de 100%). */
+  faixaPadrao: [ { min: 75, v: 6000 }, { min: 65, v: 4500 }, { min: 55, v: 3000 }, { min: 45, v: 1500 }, { min: -Infinity, v: 0 } ],
+  faixaExperts: [ { min: 175, v: 6000 }, { min: 150, v: 4500 }, { min: 125, v: 3000 }, { min: 100, v: 1500 }, { min: -Infinity, v: 0 } ],
+  roasFtdMin: 0.75,
+  margemMin: 45,
+  roiExpertMin: 100,
+  quebraGrave: 30
+};
+var LS_NIVEL = 'bb.plano.nivel';
+
+function nivelAtual() {
+  var n = 1;
+  try { n = parseInt(localStorage.getItem(LS_NIVEL), 10) || 1; } catch (e) {}
+  return PLANO.niveis[Math.min(Math.max(n, 1), 6) - 1];
+}
+function variavelDaFaixa(margem, faixa) {
+  for (var i = 0; i < faixa.length; i++) if (margem >= faixa[i].min) return faixa[i].v;
+  return 0;
+}
+function mtPct(v) { return (v == null || !isFinite(v)) ? '—' : v.toFixed(1).replace('.', ',') + '%'; }
+
+/* separa o payload do recorte nas frentes do plano */
+function frentesDoRecorte(experts) {
+  var inst = [], exp = [];
+  (experts || []).forEach(function (e) {
+    (/INSTITUCIONAL/i.test(e.expert_name) ? inst : exp).push(e);
+  });
+  function somar(lista) {
+    return lista.reduce(function (s, e) {
+      var t = e.tap || {};
+      return {
+        inv: s.inv + (e.investimento_total || 0),
+        npl: s.npl + (t.net_pl || 0),
+        ftd: s.ftd + (t.ftd || 0),
+        vftd: s.vftd + (t.valor_ftd || 0)
+      };
+    }, { inv: 0, npl: 0, ftd: 0, vftd: 0 });
+  }
+  return { inst: inst, exp: exp, sInst: somar(inst), sExp: somar(exp), somar: somar };
+}
+
+/* expert cujo investimento começa depois do início do período: a margem dele
+   não é comparável (ver o comentário do topo). Detectado pelo tamanho do
+   disparate, que é a única pista que o payload dá. */
+function entrouNoMeio(e) {
+  var t = e.tap || {};
+  return (e.investimento_total || 0) > 0 && (t.net_pl || 0) / e.investimento_total > 30;
+}
+
+function pintarMetas(d) {
+  var raiz = RAIZ_CL;
+  if (!raiz || !$('.view--metas', raiz) || !d || !d.experts) return;
+
+  var nivel = nivelAtual();
+  var sel = $('#mt-nivel-sel');
+  if (sel) sel.value = String(nivel.n);
+
+  var f = frentesDoRecorte(d.experts);
+  var distorcidos = f.exp.filter(entrouNoMeio);
+  var expLimpos = f.exp.filter(function (e) { return !entrouNoMeio(e); });
+  var sExpLimpo = f.somar(expLimpos);
+
+  var mInst = f.sInst.inv > 0 ? f.sInst.npl / f.sInst.inv * 100 : null;
+  var mExp = sExpLimpo.inv > 0 ? sExpLimpo.npl / sExpLimpo.inv * 100 : null;
+  var mExpBruta = f.sExp.inv > 0 ? f.sExp.npl / f.sExp.inv * 100 : null;
+
+  var t = d.totais || {};
+  var invTotal = t.investimento_total || 0;
+
+  /* ROAS no FTD = ticket médio do FTD ÷ CAC. Sem os distorcidos, pelo mesmo
+     motivo da margem. */
+  var limpos = f.inst.concat(expLimpos);
+  var sLimpo = f.somar(limpos);
+  var ticket = sLimpo.ftd > 0 ? sLimpo.vftd / sLimpo.ftd : null;
+  var cac = sLimpo.ftd > 0 ? sLimpo.inv / sLimpo.ftd : null;
+  var roasFtd = (ticket != null && cac) ? ticket / cac : null;
+  /* margem da operação pelo mesmo critério das frentes (sem quem entrou no
+     meio do período). Duas réguas na mesma tela confundiriam mais do que o
+     número a mais informaria. */
+  var margemOp = sLimpo.inv > 0 ? sLimpo.npl / sLimpo.inv * 100 : null;
+
+  /* ── 1 · GATE DE VOLUME ── */
+  var per = d.periodo || {};
+  var proj = mtProjetar(invTotal, per);
+  var step = proj.foraDoMes ? null
+    : PLANO.steps.find(function (s) { return proj.valor >= s.min && proj.valor < s.max; });
+  var volumeOk = !!step;
+  $('#mt-volume').innerHTML =
+    mtCard('Investido no período', mtMoeda(invTotal), rotuloPeriodo(per)) +
+    (proj.foraDoMes
+      ? mtCard('Projeção do mês cheio', 'não se aplica',
+               'o gate do plano é MENSAL — escolha "Mês" no filtro pra esta tela valer', 'mt-meio')
+      : mtCard('Projeção do mês cheio', mtMoeda(proj.valor),
+               proj.parcial ? 'no ritmo de ' + mtMoeda(proj.porDia) + '/dia · ' + proj.diasCorridos + ' de ' + proj.diasMes + ' dias'
+                            : 'mês fechado')) +
+    (proj.foraDoMes
+      ? mtCard('Step alcançado', 'não medido', 'período não é um mês', 'mt-meio')
+      : mtCard('Step alcançado', step ? step.nome : 'nenhum',
+               step ? 'faixa de ' + mtMoeda(step.min) + ' a ' + (step.max === Infinity ? 'sem teto' : mtMoeda(step.max))
+                    : 'o Step 1 começa em ' + mtMoeda(PLANO.steps[0].min) + ' — faltam ' + mtMoeda(PLANO.steps[0].min - proj.valor),
+               step ? 'mt-ok' : 'mt-nao'));
+
+  /* ── 2 · VARIÁVEL POR FRENTE ── */
+  var vInst = volumeOk ? variavelDaFaixa(mInst == null ? -1 : mInst, PLANO.faixaPadrao) : 0;
+  var vExp = volumeOk ? variavelDaFaixa(mExp == null ? -1 : mExp, PLANO.faixaExperts) : 0;
+  var vTik = 0;
+  var soma = vInst + vExp + vTik;
+  var variavel = Math.min(soma, nivel.teto);
+  var grave = margemOp != null && margemOp < PLANO.quebraGrave;
+  if (grave) variavel = 0;
+
+  $('#mt-frentes').innerHTML =
+    mtLinha('Frente', 'Margem', 'Régua aplicada', 'Variável', 'mt-row--head') +
+    mtLinha('Institucional' + mtSub(f.inst.length + (f.inst.length === 1 ? ' conta' : ' contas')),
+          mtPct(mInst), mtRegua(mInst, PLANO.faixaPadrao, 45, volumeOk), mtMoeda(vInst)) +
+    mtLinha('Experts' + mtSub(expLimpos.length + ' no período' +
+            (distorcidos.length ? ' · ' + distorcidos.length + ' fora da conta' : '')),
+          mtPct(mExp), mtRegua(mExp, PLANO.faixaExperts, 100, volumeOk), mtMoeda(vExp)) +
+    mtLinha('TikTok' + mtSub('canal ainda não ligado'), '—', 'gate de 45% · sem operação', mtMoeda(0)) +
+    mtLinha('Soma das frentes', '', soma > nivel.teto ? 'acima do teto do ' + nivel.nome.split(' ')[0] + ', corta em ' + mtMoeda(nivel.teto) : 'dentro do teto', mtMoeda(soma), 'mt-row--tot') +
+    mtLinha('Variável do mês', '', grave ? 'ZERADO: margem da operação abaixo de 30%' : 'teto do nível: ' + mtMoeda(nivel.teto), mtMoeda(variavel), 'mt-row--tot');
+
+  /* ── 3 · KPIs ── */
+  var quebrados = f.exp.filter(function (e) {
+    if (entrouNoMeio(e)) return false;
+    if (!(e.investimento_total > 0)) return false;
+    return ((e.tap || {}).net_pl || 0) / e.investimento_total * 100 < PLANO.roiExpertMin;
+  }).sort(function (a, b) { return b.investimento_total - a.investimento_total; });
+
+  $('#mt-kpis').innerHTML =
+    mtLinha('KPI', 'Real', 'Meta', 'Status', 'mt-row--head') +
+    mtKpi('ROAS no FTD' + mtSub('ticket médio do FTD ÷ CAC'),
+        roasFtd == null ? '—' : roasFtd.toFixed(2).replace('.', ','),
+        '≥ 0,75', roasFtd != null && roasFtd >= PLANO.roasFtdMin) +
+    mtKpi('Margem da operação' + mtSub('Net PL ÷ investimento'),
+        mtPct(margemOp), '≥ 45%', margemOp != null && margemOp >= PLANO.margemMin) +
+    mtKpi('ROI por expert' + mtSub(quebrados.length
+          ? 'abaixo de 100%: ' + quebrados.slice(0, 4).map(function (e) {
+              return mtNome(e.expert_name) + ' ' + mtPct(((e.tap || {}).net_pl || 0) / e.investimento_total * 100);
+            }).join(' · ') + (quebrados.length > 4 ? ' e mais ' + (quebrados.length - 4) : '')
+          : 'todos no alvo'),
+        quebrados.length ? quebrados.length + ' fora' : 'todos',
+        '≥ 100% cada', quebrados.length === 0) +
+    mtKpi('TikTok Ads' + mtSub('marco de implantação'), 'não ligado', 'no ar até o mês 3', null) +
+    mtKpi('Relatórios' + mtSub('o painel não mede isso'), '—', '100% no prazo', null);
+
+  /* ── 4 · PROMOÇÃO ── */
+  var kpisNoAlvo = quebrados.length === 0 &&
+    roasFtd != null && roasFtd >= PLANO.roasFtdMin &&
+    margemOp != null && margemOp >= PLANO.margemMin;
+  var promoveAlvo = step ? step.promove : PLANO.steps[0].promove;
+  $('#mt-promo').innerHTML =
+    mtCard('Volume', volumeOk ? step.nome + ' ✓' : 'abaixo do Step 1',
+         volumeOk ? 'no ritmo atual' : 'faltam ' + mtMoeda(PLANO.steps[0].min - proj.valor) + ' no mês',
+         volumeOk ? 'mt-ok' : 'mt-nao') +
+    mtCard('KPIs no alvo', kpisNoAlvo ? 'sim' : 'não',
+         kpisNoAlvo ? 'este mês conta pra progressão' : 'mês não conta enquanto houver KPI quebrado',
+         kpisNoAlvo ? 'mt-ok' : 'mt-nao') +
+    mtCard('Consistência', '2 dos últimos 3 meses',
+         'regra do plano — pico isolado não promove', 'mt-meio') +
+    mtCard('Próximo nível', promoveAlvo,
+         volumeOk && kpisNoAlvo ? 'condições do mês atendidas' : 'ainda não',
+         volumeOk && kpisNoAlvo ? 'mt-ok' : '');
+
+  /* ── VEREDITO ── */
+  var vd = $('#mt-verdict');
+  var total = nivel.fixo + variavel;
+  vd.className = 'verdict ' + (variavel >= nivel.teto ? 'verdict--good' : (variavel > 0 ? 'verdict--warn' : 'verdict--bad'));
+  $('#mt-verdict-txt').textContent = variavel >= nivel.teto
+    ? 'Variável cheio: ' + mtMoeda(variavel)
+    : (variavel > 0 ? 'Variável parcial: ' + mtMoeda(variavel) + ' de ' + mtMoeda(nivel.teto)
+                    : 'Sem variável nesta leitura');
+  $('#mt-verdict-why').textContent =
+    'Fixo ' + mtMoeda(nivel.fixo) + ' + variável ' + mtMoeda(variavel) + ' = ' + mtMoeda(total) + ' no mês. ' +
+    (proj.foraDoMes
+      ? 'ATENÇÃO: o período escolhido não é um mês, e o plano mede por mês — troque o filtro pra "Mês" pra esta leitura valer. '
+      : (volumeOk ? '' : 'O gate de volume não está batido: sem ele, nenhuma frente paga. ')) +
+    (distorcidos.length
+      ? distorcidos.map(function (e) { return mtNome(e.expert_name); }).join(', ') +
+        ' ficou fora da conta das frentes: entrou no meio do período, então tem investimento de poucos dias contra o funil do btag inteiro' +
+        (mExpBruta != null ? ' (com ele, a margem de Experts iria a ' + mtPct(mExpBruta) + ')' : '') + '. '
+      : '') +
+    'Apuração no fechamento.';
+
+  $('#mt-nivel-nota').textContent =
+    'Fixo ' + mtMoeda(nivel.fixo) + ' · teto do variável ' + mtMoeda(nivel.teto) +
+    ' · total possível ' + mtMoeda(nivel.fixo + nivel.teto);
+}
+
+/* projeta o mês cheio a partir do que já correu — só faz sentido em período
+   que TERMINA hoje; período fechado já é o número final. */
+function mtProjetar(valor, per) {
+  var hoje = hojeSP();
+  var ate = per.ate || hoje;
+  var de = per.de || ate;
+  var mesmoMes = de.slice(0, 7) === ate.slice(0, 7);
+  var diasMes = new Date(parseInt(ate.slice(0, 4), 10), parseInt(ate.slice(5, 7), 10), 0).getDate();
+  var comecaNo1 = de.slice(8) === '01';
+
+  /* mês corrente, do dia 1 até hoje: dá pra projetar o mês cheio */
+  if (mesmoMes && comecaNo1 && ate === hoje) {
+    var dias = parseInt(ate.slice(8), 10);
+    return { valor: valor / dias * diasMes, parcial: true, foraDoMes: false,
+             porDia: valor / dias, diasCorridos: dias, diasMes: diasMes };
+  }
+  /* mês inteiro e fechado: o número já é o do mês */
+  if (mesmoMes && comecaNo1 && parseInt(ate.slice(8), 10) === diasMes) {
+    return { valor: valor, parcial: false, foraDoMes: false, porDia: 0, diasCorridos: diasMes, diasMes: diasMes };
+  }
+  /* qualquer outro recorte (hoje, ontem, 7d, datas soltas) NÃO é um mês, e o
+     gate do plano é mensal: melhor dizer isso do que fingir uma projeção */
+  return { valor: valor, parcial: false, foraDoMes: true, porDia: 0, diasCorridos: 0, diasMes: diasMes };
+}
+
+function mtCard(k, v, o, cls) {
+  return '<div class="mt-card"><div class="mt-card__k">' + mtEsc(k) + '</div>' +
+    '<p class="mt-card__v ' + (cls || '') + '">' + mtEsc(v) + '</p>' +
+    '<p class="mt-card__o">' + mtEsc(o || '') + '</p></div>';
+}
+function mtLinha(c1, c2, c3, c4, cls) {
+  return '<div class="mt-row ' + (cls || '') + '">' +
+    '<div class="mt-c1">' + c1 + '</div><div class="mt-c2">' + mtEsc(c2) + '</div>' +
+    '<div class="mt-c3">' + mtEsc(c3) + '</div><div class="mt-c4">' + mtEsc(c4) + '</div></div>';
+}
+function mtKpi(nome, real, meta, ok) {
+  var pill = ok === null
+    ? '<span class="mt-pill mt-pill--meio">manual</span>'
+    : (ok ? '<span class="mt-pill mt-pill--ok">no alvo</span>'
+          : '<span class="mt-pill mt-pill--nao">fora</span>');
+  return '<div class="mt-row"><div class="mt-c1">' + nome + '</div>' +
+    '<div class="mt-c2">' + mtEsc(real) + '</div><div class="mt-c3">' + mtEsc(meta) + '</div>' +
+    '<div class="mt-c4">' + pill + '</div></div>';
+}
+function mtSub(txt) { return '<small>' + mtEsc(txt) + '</small>'; }
+function mtRegua(m, faixa, gate, volumeOk) {
+  if (!volumeOk) return 'gate de volume não batido';
+  if (m == null) return 'sem base';
+  if (m < gate) return 'abaixo do gate de ' + gate + '% — não paga';
+  for (var i = 0; i < faixa.length; i++) {
+    if (m >= faixa[i].min && faixa[i].v > 0) return 'faixa de ' + faixa[i].min + '% ou mais';
+  }
+  return '—';
+}
+function mtMoeda(v) { return brl(v) || 'R$ 0,00'; }
+/* nome do expert como o resto do painel escreve (CA04 INSTITUCIONAL -> CA04 Institucional) */
+function mtNome(n) { return nomeExpert(n); }
+function mtEsc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/* o nível é contrato: fica no navegador de quem olha, não na API */
+(function ligarNivel() {
+  var sel = $('#mt-nivel-sel');
+  if (!sel) return;
+  sel.addEventListener('change', function () {
+    try { localStorage.setItem(LS_NIVEL, sel.value); } catch (e) {}
+    if (estado.dados) pintarMetas(estado.dados);
+  });
+})();
+
 /* ── 9d. PORTA DO RECORTE COSTA E LOBÃO ───────────────────────────────────
    Quem manda é o SERVIDOR: se a resposta vem com `cl_bloqueado`, o payload
    veio sem os blocos da dupla e não existe número nenhum pra mostrar aqui.
@@ -11543,6 +11979,24 @@ function ligarPainel() {
    sozinho, e é de propósito: proteção que mora no navegador não é proteção.
    ────────────────────────────────────────────────────────────────────────── */
 var CL_TRANCADO = false;
+/* o que o SERVIDOR diz sobre a sessão (não o que a tela mostra). Fica null
+   até a primeira resposta de /api/cl-auth. */
+var CL_SESSAO = false;
+
+/* pergunta uma vez, no boot: quem já tem sessão aberta não pode receber a
+   resposta pública por engano na primeira leitura. */
+(function conferirSessaoCl() {
+  fetch('/api/cl-auth', { headers: { accept: 'application/json' } })
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      var tinha = CL_SESSAO;
+      CL_SESSAO = !!(j && j.ok);
+      /* se a sessão existe e a tela já leu como trancada, lê de novo — agora
+         com o endereço que escapa do cache */
+      if (CL_SESSAO && !tinha && CL_TRANCADO && estado.jaCarregou) carregar({});
+    })
+    .catch(function () {});
+})();
 
 function trancaCl(trancado) {
   CL_TRANCADO = !!trancado;
@@ -11580,6 +12034,17 @@ function ligarPortaCl() {
     abrirPortaCl();
   });
 
+  /* a aba METAS só existe no recorte: sair dele com ela marcada deixaria a
+     tela sem view nenhuma visível. Volta pra "Visão geral" na saída. */
+  $$('input[name="escopo"]').forEach(function (inp) {
+    if (inp.id === 'e-cl') return;
+    inp.addEventListener('change', function () {
+      if (inp.checked && document.getElementById('v-metas').checked) {
+        document.getElementById('v-geral').checked = true;
+      }
+    });
+  });
+
   $('#cl-form').addEventListener('submit', function (ev) {
     ev.preventDefault();
     var btn = $('#cl-enviar');
@@ -11600,6 +12065,7 @@ function ligarPortaCl() {
           return;
         }
         if (dlg.close) dlg.close(); else dlg.removeAttribute('open');
+        CL_SESSAO = true;
         trancaCl(false);
         document.getElementById('e-cl').checked = true;
         /* o payload que está na tela veio SEM o recorte: só uma leitura nova
@@ -11628,7 +12094,7 @@ ligarPortaCl();
    salvou a tela da operação inteira. */
 var ESCOPOS = { cl: 'e-cl', geral: 'e-geral', google: 'e-google',
                 tiktok: 'e-tiktok', kwai: 'e-kwai', taboola: 'e-taboola' };
-var ABAS    = { visao: 'v-geral', detalhe: 'v-experts' };
+var ABAS    = { visao: 'v-geral', detalhe: 'v-experts', metas: 'v-metas' };
 var LEGADO  = { geral: 'geral/visao', experts: 'geral/detalhe' };
 /* id do input -> pedaço de escopo da URL. Tabela em vez de encadear ternário:
    quando o Google entrou como terceiro escopo, o ternário antigo mandava
@@ -11641,7 +12107,8 @@ var ESCOPO_ID_PARA_HASH = { 'e-cl': 'cl', 'e-geral': 'geral', 'e-google': 'googl
 function hashAtual() {
   var esc = $('input[name="escopo"]:checked'), ab = $('input[name="view"]:checked');
   var e = (esc && ESCOPO_ID_PARA_HASH[esc.id]) || 'geral';
-  var a = (ab && ab.id === 'v-experts') ? 'detalhe' : 'visao';
+  var a = ab && ab.id === 'v-experts' ? 'detalhe'
+        : (ab && ab.id === 'v-metas' ? 'metas' : 'visao');
   return e + '/' + a;
 }
 function aplicarHash() {

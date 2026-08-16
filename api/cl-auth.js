@@ -17,6 +17,13 @@
  * do HMAC é a própria senha do servidor. Trocar PAINEL_CL_SENHA invalida
  * todas as sessões abertas de uma vez, que é o comportamento certo.
  *
+ * SameSite=Lax, não Strict: com Strict, o painel aberto por link de fora
+ * (WhatsApp, ClickUp) fazia a PRIMEIRA leitura sem mandar o cookie e o
+ * recorte voltava trancado mesmo com sessão válida — bastava recarregar pra
+ * destravar, o que é exatamente o tipo de fantasma que ninguém consegue
+ * reportar direito. Lax mantém a proteção que importa aqui (POST de outro
+ * site não vem com o cookie) e a porta abre de primeira.
+ *
  * Variável de ambiente obrigatória no projeto Vercel:
  *   PAINEL_CL_SENHA
  */
@@ -51,12 +58,12 @@ function sessaoValida(req, segredo) {
 
 function cookieDeSessao(expiraEm, segredo) {
   return COOKIE + '=' + expiraEm + '.' + assinar(expiraEm, segredo) +
-    '; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=' +
+    '; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=' +
     Math.floor(VALIDADE_MS / 1000);
 }
 
 function cookieVazio() {
-  return COOKIE + '=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0';
+  return COOKIE + '=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0';
 }
 
 /** Comparação de senha em tempo constante, com hash pra igualar o tamanho. */
