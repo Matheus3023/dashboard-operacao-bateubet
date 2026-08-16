@@ -10028,18 +10028,24 @@ function validar(r) {
 function salvarEscolha(preset, r) {
   try { localStorage.setItem(LS_KEY, JSON.stringify({ preset: preset, de: r.de, ate: r.ate })); } catch (e) {}
 }
+/* TODA carga de página começa em "Hoje" — pedido do operador (16/08). Antes o
+   preset ficava guardado no localStorage e voltava sozinho: quem tinha deixado
+   "Mês" selecionado abria o painel e esperava a leitura do mês inteiro (dezenas
+   de dias × contas × TAP) só pra ver o dia corrente. "Hoje" é a leitura mais
+   barata e é o que se olha ao abrir; mês/7d/custom continuam a um clique.
+   O que sobrou do localStorage: só as DATAS do custom, pra não reescrever o
+   intervalo à mão. O preset salvo é ignorado de propósito — não apagar a
+   escrita em salvarEscolha(), é ela que alimenta esse preenchimento. */
 function restaurarEscolha() {
   var hoje = hojeSP();
   elDe.max = hoje; elAte.max = hoje;
   if (!elDe.value || elDe.value > hoje) elDe.value = hoje;
   if (!elAte.value || elAte.value > hoje) elAte.value = hoje;
+  var alvoHoje = $('input[name="range"][value="hoje"]');
+  if (alvoHoje) alvoHoje.checked = true;
   var salvo = null;
   try { salvo = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch (e) {}
-  if (!salvo || !salvo.preset) return;
-  var alvo = $('input[name="range"][value="' + salvo.preset + '"]');
-  if (!alvo) return;
-  alvo.checked = true;
-  if (salvo.preset === 'custom' && salvo.de && salvo.ate && salvo.ate <= hoje) {
+  if (salvo && salvo.preset === 'custom' && salvo.de && salvo.ate && salvo.ate <= hoje) {
     elDe.value = salvo.de; elAte.value = salvo.ate;
   }
   sincronizarCustom();
