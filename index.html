@@ -10793,8 +10793,17 @@ function preencherSeguemCmp(raiz, geral) {
   });
 }
 
+var CL_CONSULTADO = false;
 function carregar(opts) {
   opts = opts || {};
+  /* PRIMEIRA LEITURA ESPERA A PORTA RESPONDER. São milissegundos, e é o que
+     impede o F5 de quem tem sessão de receber a versão pública (que voltaria
+     pedindo senha de novo). Da segunda leitura em diante não custa nada. */
+  if (!CL_CONSULTADO) {
+    CL_CONSULTADO = true;
+    CL_PRONTO.then(function () { trancaCl(!CL_SESSAO); carregar(opts); });
+    return;
+  }
   var preset = presetAtual();
   var r = intervaloDe(preset);
 
@@ -11983,20 +11992,15 @@ var CL_TRANCADO = false;
    até a primeira resposta de /api/cl-auth. */
 var CL_SESSAO = false;
 
-/* pergunta uma vez, no boot: quem já tem sessão aberta não pode receber a
-   resposta pública por engano na primeira leitura. */
-(function conferirSessaoCl() {
-  fetch('/api/cl-auth', { headers: { accept: 'application/json' } })
-    .then(function (r) { return r.json(); })
-    .then(function (j) {
-      var tinha = CL_SESSAO;
-      CL_SESSAO = !!(j && j.ok);
-      /* se a sessão existe e a tela já leu como trancada, lê de novo — agora
-         com o endereço que escapa do cache */
-      if (CL_SESSAO && !tinha && CL_TRANCADO && estado.jaCarregou) carregar({});
-    })
-    .catch(function () {});
-})();
+/* PERGUNTA A PORTA ANTES DA PRIMEIRA LEITURA. Sem isto, o F5 de quem já tem
+   sessão pedia a versão pública (CL_SESSAO ainda era false), a borda devolvia
+   o payload sem o recorte e a tela voltava a pedir senha a cada refresh —
+   sessão válida e tudo. Uma chamada de milissegundos resolve; `carregar()`
+   espera por ela na primeira vez. */
+var CL_PRONTO = fetch('/api/cl-auth', { headers: { accept: 'application/json' } })
+  .then(function (r) { return r.json(); })
+  .then(function (j) { CL_SESSAO = !!(j && j.ok); return CL_SESSAO; })
+  .catch(function () { return false; });
 
 function trancaCl(trancado) {
   CL_TRANCADO = !!trancado;
