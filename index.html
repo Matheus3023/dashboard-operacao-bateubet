@@ -1540,6 +1540,54 @@ html.rolado .brand__logo{height:19px}
   .recorte label{flex:1 1 0;justify-content:center;text-align:center}
 }
 
+/* cadeado no recorte fechado: o botão continua clicável (é ele que abre o
+   diálogo), só avisa antes que vai pedir senha */
+.recorte__lock::before{
+  content:"";width:9px;height:11px;flex:0 0 auto;margin-right:2px;
+  background:currentColor;opacity:.75;
+  -webkit-mask:var(--cad) center/contain no-repeat;mask:var(--cad) center/contain no-repeat;
+}
+:root{
+  --cad:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 22'%3E%3Cpath d='M4 9V6a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2h1Zm2 0h6V6a3 3 0 1 0-6 0v3Z'/%3E%3C/svg%3E");
+}
+
+/* ── DIÁLOGO DA SENHA DO RECORTE ──────────────────────────────────────────
+   Caixa pequena e centrada, no tom do painel. Sem ::backdrop escuro demais:
+   o número do Meta continua legível atrás, porque não é ele que está trancado. */
+.cldlg{
+  border:0;padding:0;background:transparent;color:var(--txt);
+  max-width:min(92vw,380px);
+}
+.cldlg::backdrop{background:rgba(20,0,18,.62);backdrop-filter:blur(3px)}
+.cldlg__box{
+  display:flex;flex-direction:column;gap:9px;
+  padding:22px 22px 18px;border-radius:16px;
+  background:linear-gradient(180deg,#3D0038,#2B0027);
+  border:1px solid var(--line);box-shadow:0 24px 60px rgba(0,0,0,.5);
+}
+.cldlg__t{margin:0;font-size:1.0625rem;font-weight:700;letter-spacing:-.01em}
+.cldlg__sub{margin:0 0 4px;font-size:.8125rem;color:var(--txt-2);line-height:1.45}
+.cldlg__lbl{
+  font-family:var(--mono);font-size:.5625rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--txt-3);
+}
+.cldlg__in{
+  width:100%;padding:11px 12px;border-radius:9px;
+  border:1px solid var(--line);background:rgba(0,0,0,.28);
+  color:var(--txt);font-family:var(--sans);font-size:.9375rem;
+}
+.cldlg__in:focus{outline:2px solid var(--gold);outline-offset:1px;border-color:transparent}
+.cldlg__erro{margin:0;font-size:.8125rem;color:#FF8FA8}
+.cldlg__acoes{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+.cldlg__b{
+  padding:9px 16px;border-radius:9px;border:0;cursor:pointer;
+  font-family:var(--sans);font-size:.8125rem;font-weight:640;color:#fff;
+  background:linear-gradient(135deg,var(--acao),var(--acao-2));
+}
+.cldlg__b--fantasma{background:none;border:1px solid var(--line);color:var(--txt-2)}
+.cldlg__b:disabled{opacity:.6;cursor:default}
+.cldlg__nota{margin:8px 0 0;font-size:.6875rem;color:var(--txt-3)}
+
 .tablink{
   display:inline-flex;align-items:center;gap:6px;cursor:pointer;
   border:0;background:none;padding:0;
@@ -6453,6 +6501,27 @@ body.pnl-aberto{overflow:hidden}
   </aside>
 </div>
 
+<!-- ═══ PORTA DO RECORTE COSTA E LOBÃO ═══════════════════════════════════════
+     Não é a porta do painel (essa é o Basic Auth, antes de tudo isto): é a
+     porta do recorte da dupla, DENTRO do painel. Quem confere a senha é o
+     servidor (api/cl-auth.js) — este diálogo só a coleta. -->
+<dialog class="cldlg" id="cl-dialog" aria-labelledby="cl-titulo">
+  <form class="cldlg__box" id="cl-form" method="dialog">
+    <h2 class="cldlg__t" id="cl-titulo">Costa e Lobão</h2>
+    <p class="cldlg__sub">Este recorte pede senha. O resto do painel continua aberto.</p>
+    <label class="cldlg__lbl" for="cl-senha">Senha</label>
+    <input class="cldlg__in" id="cl-senha" type="password" autocomplete="current-password"
+           name="senha" required spellcheck="false" placeholder="••••••••">
+    <p class="cldlg__erro" id="cl-erro" role="alert" hidden>Senha incorreta.</p>
+    <div class="cldlg__acoes">
+      <button class="cldlg__b cldlg__b--fantasma" type="button" value="cancel"
+              onclick="this.closest('dialog').close()">Cancelar</button>
+      <button class="cldlg__b" id="cl-enviar" type="submit">Entrar</button>
+    </div>
+    <p class="cldlg__nota">A sessão dura 12 horas neste navegador.</p>
+  </form>
+</dialog>
+
 <script>
 (function () {
 'use strict';
@@ -9881,7 +9950,11 @@ function aplicarOrdenacao() {
   try { localStorage.setItem(LS_KEY_ORD, JSON.stringify(estado.ordenar)); } catch (e) {}
   /* reordena com o dado já em tela — trocar a métrica não busca de novo */
   if (!estado.dados) return;
-  pintarExperts(estado.dados.experts, estado.ehHoje, RAIZ_CL, false);
+  /* com a porta do recorte fechada o payload chega sem `experts` — só o Meta
+     se reordena */
+  if (estado.dados.experts) {
+    pintarExperts(estado.dados.experts, estado.ehHoje, RAIZ_CL, false);
+  }
   if (estado.dados.geral && estado.dados.geral.experts) {
     pintarExperts(estado.dados.geral.experts, estado.ehHoje, RAIZ_GERAL, true);
   }
@@ -10594,6 +10667,12 @@ function carregar(opts) {
 
   var url = ENDPOINT;
   if (r.de && r.ate) url += '?de=' + encodeURIComponent(r.de) + '&ate=' + encodeURIComponent(r.ate);
+  /* PORTA ABERTA PEDE URL PRÓPRIA. O servidor já separa as duas versões por
+     `Vary: Cookie`, mas a borda pode ter uma resposta pública ainda válida
+     gravada antes — e ela voltaria SEM o recorte logo depois de digitar a
+     senha, que é justamente a hora em que isso mais confunde. Um parâmetro a
+     mais (ignorado pela função) garante endereço separado. */
+  if (!CL_TRANCADO) url += (url.indexOf('?') === -1 ? '?' : '&') + 'cl=1';
 
   var id = ++estado.reqId;
   var primeira = !estado.jaCarregou;
@@ -10637,7 +10716,12 @@ function carregar(opts) {
           var det = (json && (json.detail || json.error)) || ('HTTP ' + resp.status);
           throw new Error(det);
         }
-        if (!json || !json.totais) throw new Error('resposta sem dados');
+        /* `totais` é o bloco do recorte da dupla, e ele NÃO vem quando a porta
+           está fechada (cl_bloqueado) — isso é resposta boa, não falha. O que
+           não pode faltar em leitura nenhuma é o Meta inteiro. */
+        var faltaTudo = !json || (!json.totais && !json.cl_bloqueado);
+        var faltaGeral = json && json.cl_bloqueado && !(json.geral && json.geral.totais);
+        if (faltaTudo || faltaGeral) throw new Error('resposta sem dados');
         return json;
       });
     })
@@ -10667,9 +10751,14 @@ function carregar(opts) {
       estado.jaCarregou = true;
       estado.carregando = false;
 
-      /* escopo 1: o recorte de sempre */
-      pintarEscopo({ totais: d.totais, experts: d.experts },
-                   d.periodo, estado.ehHoje, RAIZ_CL, false);
+      /* escopo 1: o recorte da dupla. Vem SEM os blocos quando a porta está
+         fechada (o servidor não manda, ver api/cl-auth.js) — aí não há o que
+         pintar, e o par de recorte aparece com cadeado. */
+      trancaCl(!!d.cl_bloqueado);
+      if (d.experts) {
+        pintarEscopo({ totais: d.totais, experts: d.experts },
+                     d.periodo, estado.ehHoje, RAIZ_CL, false);
+      }
 
       /* escopo 2: a operação inteira. Só entra se a API mandou o bloco. */
       if (d.geral && d.geral.experts) {
@@ -10715,7 +10804,7 @@ function carregar(opts) {
          FECHADOS). Deixa o painel de análise de qualquer expert abrir
          instantâneo. Vai depois de tudo de propósito -- nenhum pixel da tela
          depende dela pra existir. */
-      buscarLoteTendencia('cl');
+      if (!CL_TRANCADO) buscarLoteTendencia('cl');
       if (d.geral && d.geral.experts) buscarLoteTendencia('geral');
 
       /* só o dia corrente se atualiza sozinho */
@@ -11445,6 +11534,86 @@ function ligarPainel() {
                 ativo.getAttribute('data-escopo') || 'cl', ativo);
   });
 }
+
+/* ── 9d. PORTA DO RECORTE COSTA E LOBÃO ───────────────────────────────────
+   Quem manda é o SERVIDOR: se a resposta vem com `cl_bloqueado`, o payload
+   veio sem os blocos da dupla e não existe número nenhum pra mostrar aqui.
+   Este bloco só cuida da cara disso — cadeado no par de recorte, diálogo de
+   senha, e recarga quando a porta abre. Nada aqui protege coisa alguma
+   sozinho, e é de propósito: proteção que mora no navegador não é proteção.
+   ────────────────────────────────────────────────────────────────────────── */
+var CL_TRANCADO = false;
+
+function trancaCl(trancado) {
+  CL_TRANCADO = !!trancado;
+  $$('.recorte label[for="e-cl"]').forEach(function (l) {
+    l.classList.toggle('recorte__lock', CL_TRANCADO);
+    l.title = CL_TRANCADO ? 'Precisa de senha' : 'Só o que a dupla toca';
+  });
+  /* se a porta fechou (sessão venceu) com o recorte aberto, a tela volta pro
+     Meta em vez de ficar mostrando números velhos de um escopo sem dado */
+  if (CL_TRANCADO && document.getElementById('e-cl').checked) {
+    document.getElementById('e-geral').checked = true;
+  }
+}
+
+function abrirPortaCl() {
+  var dlg = $('#cl-dialog');
+  if (!dlg) return;
+  $('#cl-erro').hidden = true;
+  var campo = $('#cl-senha');
+  campo.value = '';
+  if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
+  setTimeout(function () { campo.focus(); }, 30);
+}
+
+function ligarPortaCl() {
+  var input = document.getElementById('e-cl');
+  var dlg = $('#cl-dialog');
+  if (!input || !dlg) return;
+
+  /* o clique no label marca o radio antes de qualquer JS rodar: a única forma
+     de "impedir" é desmarcar na sequência e pedir a senha */
+  input.addEventListener('change', function () {
+    if (!CL_TRANCADO || !input.checked) return;
+    document.getElementById('e-geral').checked = true;
+    abrirPortaCl();
+  });
+
+  $('#cl-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var btn = $('#cl-enviar');
+    var erro = $('#cl-erro');
+    btn.disabled = true; btn.textContent = 'Conferindo…';
+    fetch('/api/cl-auth', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ senha: $('#cl-senha').value })
+    })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        btn.disabled = false; btn.textContent = 'Entrar';
+        if (!res.ok || !res.j.ok) {
+          erro.textContent = 'Senha incorreta.';
+          erro.hidden = false;
+          $('#cl-senha').select();
+          return;
+        }
+        if (dlg.close) dlg.close(); else dlg.removeAttribute('open');
+        trancaCl(false);
+        document.getElementById('e-cl').checked = true;
+        /* o payload que está na tela veio SEM o recorte: só uma leitura nova
+           traz os números da dupla */
+        carregar({ interativo: true });
+      })
+      .catch(function () {
+        btn.disabled = false; btn.textContent = 'Entrar';
+        erro.textContent = 'Não deu pra conferir agora. Tente de novo.';
+        erro.hidden = false;
+      });
+  });
+}
+ligarPortaCl();
 
 /* ── 10. navegação em rota de hash, dois níveis ───────────────────────────
    #<escopo>/<aba>   ->  #cl/visao · #cl/detalhe · #geral/visao · #geral/detalhe

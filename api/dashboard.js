@@ -35,6 +35,21 @@ const RETRY_MIN_SOBRA_MS = 20000;
 const MAX_RANGE_DIAS = 366;
 const TZ = 'America/Sao_Paulo';
 
+/* A porta do recorte Costa e Lobão mora em api/cl-auth.js; aqui só se pergunta
+   se o cookie dela é válido. Se o arquivo sumir, o recorte fica FECHADO — o
+   lado seguro do erro. */
+let sessaoCl = null;
+try { sessaoCl = require('./cl-auth').sessaoValida; } catch (e) { sessaoCl = null; }
+function temSessaoCl(req) {
+  const segredo = process.env.PAINEL_CL_SENHA;
+  /* sem senha configurada o recorte fica aberto como sempre foi: ligar a
+     variável é o que ativa a porta, e assim um deploy sem a env não apaga o
+     painel de quem depende dele */
+  if (!segredo) return true;
+  if (!sessaoCl) return false;
+  return sessaoCl(req, segredo);
+}
+
 // Escopos aceitos no modo tendência. Mesmo default do n8n, repetido aqui só
 // pra resposta ficar previsível caso o front esqueça de mandar o parâmetro.
 const ESCOPOS = ['costa_lobao', 'geral'];
@@ -162,6 +177,18 @@ module.exports = async function handler(req, res) {
       res.setHeader('Cache-Control', 'no-store');
       return res.status(400).json({ error: 'periodo_invalido', detail: erro });
     }
+  }
+
+  /* Tendência e safra também têm escopo — e o escopo `costa_lobao` é o mesmo
+     dado que a porta protege. Sem esta trava, bastava pedir
+     ?tendencia=*&escopo=costa_lobao pra ler por fora o que o recorte esconde. */
+  if ((tendencia || safra) && escopo === 'costa_lobao' && !temSessaoCl(req)) {
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.setHeader('Vary', 'Cookie');
+    return res.status(403).json({
+      error: 'cl_bloqueado',
+      detail: 'O recorte Costa e Lobão pede senha.'
+    });
   }
 
   const url = new URL(UPSTREAM);
@@ -326,14 +353,39 @@ module.exports = async function handler(req, res) {
       });
     }
 
+    /* RECORTE COSTA E LOBÃO: sai da resposta pra quem não abriu a porta.
+       `totais` e `experts` na raiz do payload SÃO o recorte da dupla (o Meta
+       inteiro vem em `geral`). Filtrar aqui, e não na tela, é o que faz a
+       senha valer alguma coisa: escondido só no CSS, o bloco continuaria
+       viajando no JSON e bastaria abrir o DevTools. */
+    const liberado = temSessaoCl(req);
+    if (!liberado) {
+      delete dados.totais;
+      delete dados.experts;
+      dados.cl_bloqueado = true;
+    }
+    /* SEM ISTO A PORTA NÃO EXISTE. A borda da Vercel resolve o cache pela URL
+       antes de a função rodar: sem `Vary`, o primeiro pedido (sem cookie)
+       grava a versão pública e ela passa a ser servida também para quem tem
+       sessão — o recorte nunca voltaria. Com `Vary: Cookie`, pedido com
+       cookie e pedido sem cookie são objetos de cache diferentes, e o
+       liberado ainda por cima sai como `no-store` logo abaixo. */
+    res.setHeader('Vary', 'Cookie');
+
     // Dado do dia muda o tempo todo: cache curto na borda só pra não bater
     // 10 segundos de n8n a cada aba aberta. Período fechado não muda mais.
     const isHoje = !dados || !dados.periodo || dados.periodo.is_hoje !== false;
+    /* Resposta de quem TEM sessão nunca vai pra borda: a Vercel serviria o
+       payload com o recorte pra próxima pessoa que pedisse o mesmo período,
+       sem cookie nenhum. Quem não tem sessão continua sendo cacheado — é a
+       versão pública, e é ela que segura o n8n. */
     res.setHeader(
       'Cache-Control',
-      isHoje
-        ? 'public, max-age=0, s-maxage=45, stale-while-revalidate=120'
-        : 'public, max-age=0, s-maxage=600, stale-while-revalidate=1800'
+      liberado
+        ? 'private, no-store'
+        : (isHoje
+            ? 'public, max-age=0, s-maxage=45, stale-while-revalidate=120'
+            : 'public, max-age=0, s-maxage=600, stale-while-revalidate=1800')
     );
     return res.status(200).json(dados);
   } catch (e) {
