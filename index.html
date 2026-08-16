@@ -10639,12 +10639,15 @@ function pintarCoorte(caixa, escopo, nome) {
   cx.className = 'mtz';
   var grade = document.createElement('div');
   grade.className = 'mtz__grade';
-  /* TETO NA LARGURA DA CÉLULA. Sem ele, uma safra nova (3 colunas) espalha
-     "R$ 884" no meio de 400px de vazio e a matriz parece outra coisa — a leitura
-     é de comparar célula com célula, e pra isso elas precisam ficar perto. O
-     `1fr` continua ali pra matriz longa preencher a largura toda. */
+  /* TETO NA LARGURA DA CÉLULA. Sem ele, uma safra nova (3 colunas) espalhava
+     "R$ 884" no meio de 400px de vazio — e comparar célula com célula pede que
+     elas fiquem perto. `justify-content:start` encosta a matriz curta à
+     esquerda em vez de esticar.
+     NÃO troque o 190px por `min(1fr, 190px)`: `fr` não é comprimento, `min()`
+     com ele é inválido, e o CSS descarta a DECLARAÇÃO INTEIRA em silêncio — o
+     grid perde as colunas e a matriz empilha uma célula por linha. */
   grade.style.gridTemplateColumns =
-    '104px repeat(' + colunas + ', minmax(122px, min(1fr, 190px)))';
+    '104px repeat(' + colunas + ', minmax(122px, 190px))';
   grade.style.justifyContent = 'start';
 
   function celula(classes) {
