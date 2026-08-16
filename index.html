@@ -3292,6 +3292,13 @@ body.pnl-aberto{overflow:hidden}
   margin:9px 0 0;font-size:.75rem;line-height:1.5;color:var(--txt-3);
 }
 .cta-casa__nota b{color:var(--txt-2);font-weight:620}
+/* a leitura da safra é veredito, então ela tem cor — as outras notas do
+   bloco são só explicação e continuam cinza */
+.cta-casa__nota--bom{color:var(--good)}
+.cta-casa__nota--ruim{color:var(--bad)}
+/* safra é OUTRA janela de tempo que não a da tela: linha lateral diferente
+   pra ninguém somar um bloco com o outro */
+.cta-casa--safra{border-left-color:var(--txt-3)}
 /* o custo REAL é o número que decide: entra com o peso de número-herói */
 .cta-kpi--forte .cta-kpi__val{font-size:1.25rem}
 .cta-kpi--boa .cta-kpi__val{color:var(--good)}
@@ -11748,6 +11755,84 @@ function blocoCasa(f, titulo, metaResultado, ctx) {
   return box;
 }
 
+/* ── SAFRA: O JOGADOR VOLTA? ──────────────────────────────────────────────
+   A última variável de escala. Custo por FTD só quer dizer alguma coisa
+   contra o que o jogador faz depois: com recorrência, FTD caro se paga; sem
+   recorrência, FTD barato é dinheiro fora.
+   Chega sob demanda (só quando a campanha é aberta) porque são 250 KB e ~2s
+   por campanha — e a janela não pode esperar isso pra abrir.
+   ────────────────────────────────────────────────────────────────────────── */
+function lerSafra(s, custoPorFtd) {
+  /* Régua deliberadamente grossa: com 25 depositantes numa safra, casa
+     decimal é ruído. O que decide é "voltou" ou "não voltou". */
+  if (!s || !s.depositantes) return null;
+  if (s.recorrencia >= 30 && s.multiplo >= 2) {
+    return { tom: 'bom', txt: 'Jogador desta safra VOLTA: ' + pct(s.recorrencia, 0) +
+      ' depositaram de novo e o total já é ' + vezes(s.multiplo) + ' o primeiro depósito' +
+      (ehNum(custoPorFtd) ? '. Com FTD a ' + brl(custoPorFtd) + ', dá pra pagar mais caro pra ' +
+        'trazer mais gente igual' : '') + '.' };
+  }
+  if (s.recorrencia < 15 || s.multiplo < 1.3) {
+    return { tom: 'ruim', txt: 'Safra que NÃO volta: só ' + pct(s.recorrencia, 0) +
+      ' fizeram um segundo depósito e o total mal passa do primeiro (' + vezes(s.multiplo) +
+      '). Aqui o FTD precisa ser barato pra fechar a conta — não adianta pagar mais.' };
+  }
+  return { tom: 'neutro', txt: pct(s.recorrencia, 0) + ' voltaram a depositar e o total é ' +
+    vezes(s.multiplo) + ' o primeiro. Safra mediana: escale pelo custo, não pela recorrência.' };
+}
+
+function blocoSafra(s, dias, custoPorFtd) {
+  var box = document.createElement('div');
+  box.className = 'cta-casa cta-casa--safra';
+
+  var cap = document.createElement('p');
+  cap.className = 'cta-casa__cap';
+  /* A janela da safra é OUTRA, e isso não pode ficar implícito: quem se
+     cadastrou hoje não teve tempo de depositar de novo. */
+  cap.textContent = 'Qualidade do jogador · quem se cadastrou nos últimos ' + dias +
+    ' dias por esta campanha (não é o recorte da tela)';
+  box.appendChild(cap);
+
+  if (!s || !s.cadastros) {
+    var vazio = document.createElement('p');
+    vazio.className = 'cta-casa__nota';
+    vazio.textContent = 'Nenhum cadastro por esta campanha nos últimos ' + dias + ' dias.';
+    box.appendChild(vazio);
+    return box;
+  }
+
+  var pj = s.por_jogador || {};
+  var kpis = document.createElement('div');
+  kpis.className = 'cta-casa__kpis';
+  kpis.appendChild(kpi('Cadastros na safra', inteiro(s.cadastros)));
+  kpis.appendChild(kpi('Viraram depositante', inteiro(s.depositantes) +
+    (ehNum(s.conversao) ? ' · ' + pct(s.conversao, 0) : '')));
+  kpis.appendChild(kpi('Depositaram de novo',
+    ehNum(s.recorrencia) ? pct(s.recorrencia, 0) : null, 'cta-kpi--forte'));
+  kpis.appendChild(kpi('3+ depósitos', inteiro(s.fieis)));
+  kpis.appendChild(kpi('Depósitos / jogador', ehNum(pj.depositos) ? vezes(pj.depositos) : null));
+  kpis.appendChild(kpi('Depositado / jogador', ehNum(pj.deposito) ? brl(pj.deposito) : null));
+  kpis.appendChild(kpi('Depois do 1º dep.', ehNum(pj.pos_primeiro) ? brl(pj.pos_primeiro) : null));
+  kpis.appendChild(kpi('Net dep / jogador', ehNum(pj.net_dep) ? brl(pj.net_dep) : null));
+  kpis.appendChild(kpi('Apostas / jogador', ehNum(pj.apostas) ? inteiro(Math.round(pj.apostas)) : null));
+  box.appendChild(kpis);
+
+  var l = lerSafra(s, custoPorFtd);
+  if (l) {
+    var p = document.createElement('p');
+    p.className = 'cta-casa__nota cta-casa__nota--' + l.tom;
+    p.textContent = l.txt;
+    box.appendChild(p);
+  }
+  if (s.truncado) {
+    var t = document.createElement('p');
+    t.className = 'cta-casa__nota';
+    t.textContent = 'Safra grande: a leitura usou os 3.000 cadastros mais recentes.';
+    box.appendChild(t);
+  }
+  return box;
+}
+
 /* Aviso do que a TAP viu mas nenhuma campanha reivindicou. Não é firula:
    `{{campaign.name}}` cru é link com a macro não substituída — tráfego pago
    que chega órfão de campanha e some da leitura de custo. */
@@ -11774,6 +11859,50 @@ function blocoOrfaos(fonte) {
   p.className = 'cta-nota';
   p.innerHTML = 'Fora das campanhas acima, no mesmo btag: ' + partes.join('; ') + '.';
   return p;
+}
+
+/* Guarda a safra já lida por campanha: abrir e fechar a mesma linha três
+   vezes não pode virar três chamadas de 250 KB no BO. */
+var SAFRA_CACHE = {};
+
+function ligarSafra(det, sets, c, contaId) {
+  det.addEventListener('toggle', function () {
+    if (!det.open || det.getAttribute('data-safra')) return;
+    det.setAttribute('data-safra', '1');
+
+    var slot = document.createElement('div');
+    var espera = document.createElement('p');
+    espera.className = 'cta-vazio';
+    espera.textContent = 'Perguntando ao BO quem voltou a depositar…';
+    slot.appendChild(espera);
+    /* entra logo abaixo do funil desta campanha, antes dos conjuntos */
+    sets.insertBefore(slot, sets.firstChild ? sets.firstChild.nextSibling : null);
+
+    var custo = c.funil && ehNum(c.funil.custo_por_ftd) ? c.funil.custo_por_ftd : null;
+    var chave = contaId + '|' + c.nome;
+
+    var desenhar = function (j) {
+      slot.innerHTML = '';
+      if (!j || (!j.safra && j.motivo)) {
+        var erro = document.createElement('p');
+        erro.className = 'cta-vazio';
+        erro.textContent = j && j.motivo === 'sem_btag'
+          ? 'Esta conta não tem btag: não dá pra ler safra de jogador.'
+          : 'O BO não respondeu a leitura de safra agora.';
+        slot.appendChild(erro);
+        return;
+      }
+      slot.appendChild(blocoSafra(j.safra, j.dias || 30, custo));
+    };
+
+    if (SAFRA_CACHE[chave]) { desenhar(SAFRA_CACHE[chave]); return; }
+
+    fetch('/api/conta?modo=safra&conta_id=' + encodeURIComponent(contaId) +
+          '&utm=' + encodeURIComponent(c.nome), { headers: { accept: 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { SAFRA_CACHE[chave] = j; desenhar(j); })
+      .catch(function () { desenhar(null); });
+  });
 }
 
 function pintarConta(d) {
@@ -11884,6 +12013,11 @@ function pintarConta(d) {
           'período — ou o link não carrega utm_campaign, ou o nome da campanha mudou depois.';
         sets.appendChild(semUtm);
       }
+
+      /* A safra só é pedida quando a campanha ABRE, e uma vez só por leitura:
+         é a chamada mais cara da janela e ninguém precisa dela pra decidir
+         nas campanhas que não vai olhar. */
+      ligarSafra(det, sets, c, d.conta_id);
 
       if (c.conjuntos && c.conjuntos.length) {
         c.conjuntos.forEach(function (s) { sets.appendChild(linhaEntidade(s, true)); });

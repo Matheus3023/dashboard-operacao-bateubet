@@ -331,6 +331,118 @@ async function tapPorUtm(btags, de, ate, signal) {
   return { linhas: linhas, erro: null };
 }
 
+/* ── SAFRA: O JOGADOR VOLTA? ──────────────────────────────────────────────
+   FTD barato que deposita uma vez e some é prejuízo caro. O relatório
+   agregado não responde isso — ele conta depósito, não conta JOGADOR. Quem
+   responde é `af2_regs_op`, que devolve linha por linha de cadastro, e (esta
+   é a descoberta que abre a porta) carrega `v_utm_campaign` em cada jogador,
+   além de aceitar filtro por ele.
+
+   Então dá pra perguntar, por campanha: dos que se cadastraram, quantos
+   depositaram DE NOVO, quanto entrou depois do primeiro depósito, quanto o
+   jogador apostou. É a última variável de escala: com recorrência, FTD caro
+   pode valer a pena; sem recorrência, FTD barato é dinheiro jogado fora.
+
+   DUAS DECISÕES DE LEITURA, as duas de propósito:
+   · A safra NÃO segue o período do painel. Jogador que se cadastrou hoje de
+     manhã não teve tempo de fazer o segundo depósito — medir recorrência no
+     recorte de "hoje" daria sempre ~0% e o painel condenaria toda campanha
+     nova. A janela é de dias corridos pra trás (30 por padrão), e a tela diz
+     isso na cara.
+   · Os depósitos contados são os da VIDA do jogador até agora, não os da
+     janela. A pergunta é "esse jogador gasta?", não "gastou naquela semana".
+   ────────────────────────────────────────────────────────────────────────── */
+
+const REGS_URL = 'https://boapi3.smartico.ai/api/af2_regs_op';
+const REGS_PAGINA = 1000;   /* teto rígido da API: acima disso ela recusa */
+const REGS_MAX_PAGINAS = 3; /* 3 mil jogadores por campanha já é safra grande */
+const SAFRA_DIAS_PADRAO = 30;
+
+function diasAtras(iso, n) {
+  const d = new Date(iso + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() - n);
+  return d.toISOString().slice(0, 10);
+}
+
+async function safraDaCampanha(btags, utms, de, ate, signal) {
+  const chave = process.env.TAP_API_KEY;
+  if (!chave || !btags.length) return null;
+
+  const jogadores = [];
+  let truncado = false;
+
+  for (let p = 0; p < REGS_MAX_PAGINAS; p++) {
+    const url = new URL(REGS_URL);
+    url.searchParams.set('filter', JSON.stringify({
+      affiliate_id: btags.map(Number),
+      v_utm_campaign: utms,
+      reg_dt: { from: de + 'T00:00:00.000Z', to: ate + 'T23:59:59.999Z' }
+    }));
+    url.searchParams.set('range', JSON.stringify([p * REGS_PAGINA, (p + 1) * REGS_PAGINA - 1]));
+    url.searchParams.set('sort', JSON.stringify(['registration_date', 'DESC']));
+
+    const r = await fetch(url.toString(), {
+      signal, headers: { accept: 'application/json', authorization: chave }
+    });
+    const j = await r.json().catch(() => null);
+    const linhas = Array.isArray(j) ? j : (j && Array.isArray(j.data) ? j.data : null);
+    /* corpo que não é lista = limite de chamada (vem com HTTP 200) */
+    if (!linhas) return jogadores.length ? montarSafra(jogadores, de, ate, true) : null;
+
+    jogadores.push(...linhas);
+    if (linhas.length < REGS_PAGINA) break;
+    if (p === REGS_MAX_PAGINAS - 1) truncado = true;
+  }
+
+  return montarSafra(jogadores, de, ate, truncado);
+}
+
+function montarSafra(js, de, ate, truncado) {
+  const n = (v) => Number(v) || 0;
+  /* "Depositante" pelo CONTADOR de depósitos, não pelo valor do primeiro:
+     jogador com primeiro depósito estornado tem valor 0 e mesmo assim é
+     cliente da casa. */
+  const dep = js.filter((r) => n(r.deposits_count) > 0 || n(r.first_deposit_amount) > 0);
+  const soma = (lista, campo) => lista.reduce((s, r) => s + n(r[campo]), 0);
+
+  const total = soma(dep, 'deposits');
+  const primeiro = soma(dep, 'first_deposit_amount');
+  const qtdDep = soma(dep, 'deposits_count');
+
+  return {
+    de: de, ate: ate, truncado: truncado,
+    cadastros: js.length,
+    depositantes: dep.length,
+    /* recorrência: o número que decide se vale pagar mais caro pelo FTD */
+    recorrentes: dep.filter((r) => n(r.deposits_count) >= 2).length,
+    fieis: dep.filter((r) => n(r.deposits_count) >= 3).length,
+    depositos: qtdDep,
+    deposito_total: total,
+    primeiro_total: primeiro,
+    /* o que entrou DEPOIS do primeiro depósito é a prova de que o jogador
+       ficou — e é o que justifica pagar mais caro na aquisição */
+    pos_primeiro: total - primeiro,
+    net_dep: soma(dep, 'calc_net_deposits'),
+    volume: soma(dep, 'volume'),
+    apostas: soma(dep, 'operations'),
+    saques: soma(dep, 'withdrawals'),
+    por_jogador: dep.length ? {
+      depositos: qtdDep / dep.length,
+      deposito: total / dep.length,
+      primeiro: primeiro / dep.length,
+      pos_primeiro: (total - primeiro) / dep.length,
+      net_dep: soma(dep, 'calc_net_deposits') / dep.length,
+      volume: soma(dep, 'volume') / dep.length,
+      apostas: soma(dep, 'operations') / dep.length
+    } : null,
+    conversao: js.length ? (dep.length / js.length) * 100 : null,
+    recorrencia: dep.length ? (dep.filter((r) => n(r.deposits_count) >= 2).length / dep.length) * 100 : null,
+    /* quantas vezes o depósito da vida é o primeiro depósito: 1× significa
+       que ninguém voltou */
+    multiplo: primeiro > 0 ? total / primeiro : null
+  };
+}
+
 /* Casa cada linha da TAP com UMA campanha do Meta. Exato primeiro; depois
    prefixo, que é o que pega as variantes que a Meta cria sozinha (" — Cópia",
    " 001"). Prefixo mais longo ganha, senão uma campanha nova cujo nome começa
@@ -722,6 +834,42 @@ module.exports = async function handler(req, res) {
   }
 
   const hoje = hojeSP();
+
+  /* ── MODO SAFRA ──────────────────────────────────────────────────────────
+     Pedido separado, e sob demanda de propósito: só sai quando alguém ABRE a
+     campanha. São 250 KB e ~2s por campanha; carregar as quatro junto com a
+     janela pagaria por três leituras que ninguém pediu. */
+  if (q.modo === 'safra') {
+    const utm = typeof q.utm === 'string' ? q.utm.trim() : '';
+    if (!utm) {
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(400).json({ error: 'utm_obrigatoria' });
+    }
+    const dias = Math.min(180, Math.max(7, parseInt(q.dias, 10) || SAFRA_DIAS_PADRAO));
+    const btagsS = BTAG_POR_CONTA[conta] || [];
+    if (!btagsS.length) {
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(200).json({ safra: null, motivo: 'sem_btag' });
+    }
+    const ctrlS = new AbortController();
+    const timerS = setTimeout(() => ctrlS.abort(), TIMEOUT_MS);
+    try {
+      /* a MESMA campanha aparece na TAP decodificada e form-encoded; o filtro
+         é exato, então as duas grafias vão juntas */
+      const variantes = [utm, encodeURIComponent(utm).replace(/%20/g, '+')];
+      const safra = await safraDaCampanha(btagsS, variantes, diasAtras(hoje, dias), hoje, ctrlS.signal);
+      /* safra muda devagar (é acumulado de 30 dias): 10 min de borda economiza
+         a repetição de abrir e fechar a campanha sem atrasar decisão nenhuma */
+      res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=600, stale-while-revalidate=3600');
+      return res.status(200).json({ safra: safra, dias: dias, utm: utm });
+    } catch (e) {
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(200).json({ safra: null, motivo: 'tap_falhou' });
+    } finally {
+      clearTimeout(timerS);
+    }
+  }
+
   let de = typeof q.de === 'string' && q.de ? q.de : null;
   let ate = typeof q.ate === 'string' && q.ate ? q.ate : null;
 
