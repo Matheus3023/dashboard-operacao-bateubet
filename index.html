@@ -1340,7 +1340,7 @@ html.rolado .brand__logo{height:19px}
 
 /* nível 1 · o visual do seletor de escopo está no bloco BARRA DE COMANDO,
    lá em cima. Aqui ficam só os estados dependentes do :checked. */
-#e-cl:checked ~ .topbar .scopebar label[for="e-cl"],
+#e-cl:checked ~ .topbar .scopebar label[for="e-geral"],
 #e-geral:checked ~ .topbar .scopebar label[for="e-geral"],
 #e-google:checked ~ .topbar .scopebar label[for="e-google"],
 #e-tiktok:checked ~ .topbar .scopebar label[for="e-tiktok"],
@@ -1350,13 +1350,13 @@ html.rolado .brand__logo{height:19px}
   border-color:transparent;
   box-shadow:0 1px 10px rgba(226,2,102,.38);
 }
-#e-cl:checked ~ .topbar .scopebar label[for="e-cl"] .scopebar__nome,
+#e-cl:checked ~ .topbar .scopebar label[for="e-geral"] .scopebar__nome,
 #e-geral:checked ~ .topbar .scopebar label[for="e-geral"] .scopebar__nome,
 #e-google:checked ~ .topbar .scopebar label[for="e-google"] .scopebar__nome,
 #e-tiktok:checked ~ .topbar .scopebar label[for="e-tiktok"] .scopebar__nome,
 #e-kwai:checked ~ .topbar .scopebar label[for="e-kwai"] .scopebar__nome,
 #e-taboola:checked ~ .topbar .scopebar label[for="e-taboola"] .scopebar__nome{color:#fff;font-weight:680}
-#e-cl:checked ~ .topbar .scopebar label[for="e-cl"] .scopebar__nome::before,
+#e-cl:checked ~ .topbar .scopebar label[for="e-geral"] .scopebar__nome::before,
 #e-geral:checked ~ .topbar .scopebar label[for="e-geral"] .scopebar__nome::before,
 #e-google:checked ~ .topbar .scopebar label[for="e-google"] .scopebar__nome::before,
 #e-tiktok:checked ~ .topbar .scopebar label[for="e-tiktok"] .scopebar__nome::before,
@@ -1376,13 +1376,13 @@ html.rolado .brand__logo{height:19px}
   box-shadow:0 0 0 3px rgba(46,212,122,.18) !important;
 }
 /* a contagem só existe no escopo ativo: nos outros é ruído e cobra largura */
-#e-cl:checked ~ .topbar .scopebar label[for="e-cl"] .scopebar__sub,
+#e-cl:checked ~ .topbar .scopebar label[for="e-geral"] .scopebar__sub,
 #e-geral:checked ~ .topbar .scopebar label[for="e-geral"] .scopebar__sub,
 #e-google:checked ~ .topbar .scopebar label[for="e-google"] .scopebar__sub,
 #e-tiktok:checked ~ .topbar .scopebar label[for="e-tiktok"] .scopebar__sub,
 #e-kwai:checked ~ .topbar .scopebar label[for="e-kwai"] .scopebar__sub,
 #e-taboola:checked ~ .topbar .scopebar label[for="e-taboola"] .scopebar__sub{display:inline-flex}
-#e-cl:focus-visible ~ .topbar .scopebar label[for="e-cl"],
+#e-cl:focus-visible ~ .topbar .scopebar label[for="e-geral"],
 #e-geral:focus-visible ~ .topbar .scopebar label[for="e-geral"],
 #e-google:focus-visible ~ .topbar .scopebar label[for="e-google"],
 #e-tiktok:focus-visible ~ .topbar .scopebar label[for="e-tiktok"],
@@ -1503,6 +1503,43 @@ html.rolado .brand__logo{height:19px}
 }
 #v-geral:focus-visible ~ .wrap .scope .tabs label[for="v-geral"],
 #v-experts:focus-visible ~ .wrap .scope .tabs label[for="v-experts"]{outline:2px solid var(--gold);outline-offset:-3px}
+/* ── RECORTE DENTRO DO META ───────────────────────────────────────────────
+   Par de pílulas na ponta direita da faixa de abas. Some da faixa das abas em
+   peso de propósito: aba é navegação (sublinhado, texto grande), recorte é
+   filtro (pílula pequena). Se as duas coisas tivessem o mesmo desenho, a
+   pessoa leria "Costa e Lobão" como uma terceira seção da mesma lista. */
+.recorte{
+  margin-left:auto;display:inline-flex;align-items:center;gap:2px;
+  padding:3px;border-radius:999px;background:rgba(255,255,255,.05);
+}
+.recorte label{
+  padding:5px 11px;border-radius:999px;border-bottom:0;margin-bottom:0;
+  font-size:.75rem;font-weight:620;color:var(--txt-3);white-space:nowrap;
+  transition:color .14s ease,background-color .14s ease;
+}
+.recorte label:hover{color:var(--txt);background:rgba(255,255,255,.06)}
+.recorte .tab__badge{margin-left:6px}
+#e-geral:checked ~ .wrap .scope .recorte label[for="e-geral"],
+#e-cl:checked    ~ .wrap .scope .recorte label[for="e-cl"]{
+  color:#fff;background:var(--acao-soft);
+}
+#e-geral:checked ~ .wrap .scope .recorte label[for="e-geral"] .tab__badge,
+#e-cl:checked    ~ .wrap .scope .recorte label[for="e-cl"] .tab__badge{
+  background:rgba(255,255,255,.14);color:#FFC7DE;
+}
+#e-geral:focus-visible ~ .wrap .scope .recorte label[for="e-geral"],
+#e-cl:focus-visible    ~ .wrap .scope .recorte label[for="e-cl"]{outline:2px solid var(--gold);outline-offset:1px}
+/* espaço curto: o rótulo do recorte encolhe antes de empurrar as abas */
+@media (max-width:900px){
+  .recorte label{padding:5px 9px;font-size:.6875rem}
+  .recorte .tab__badge{display:none}
+}
+@media (max-width:560px){
+  .tabs{flex-wrap:wrap;row-gap:0}
+  .recorte{margin:0 0 6px;width:100%;justify-content:center}
+  .recorte label{flex:1 1 0;justify-content:center;text-align:center}
+}
+
 .tablink{
   display:inline-flex;align-items:center;gap:6px;cursor:pointer;
   border:0;background:none;padding:0;
@@ -1580,7 +1617,10 @@ html.rolado .brand__logo{height:19px}
 @media (max-width:759px){
   .placar{grid-template-columns:minmax(0,1fr);gap:10px}
   .verdict__txt{font-size:1.1875rem}
-  .tabs label{padding:12px 13px;font-size:.8125rem;min-height:46px}
+  /* filho direto: alvo de dedo vale pras ABAS. O par de recorte tem o
+     tamanho dele mais abaixo — se herdasse este min-height, empurraria a
+     faixa inteira pra 46px de altura no celular. */
+  .tabs > label{padding:12px 13px;font-size:.8125rem;min-height:46px}
 }
 
 /* ── COMPARATIVO POR EXPERT ───────────────────────────────────────────────
@@ -3383,17 +3423,11 @@ body.pnl-aberto{overflow:hidden}
           <!-- JS: geral.experts.length + soma de geral.experts[].contas.length -->
           <span class="scopebar__sub" data-derived="geral.experts.length + contas">24 experts · 33 contas</span>
         </label>
-        <!-- COSTA E LOBÃO saiu da barra em 13/08 e VOLTOU em 15/08 (pedido do
-             operador: precisa ver o investido do mês só do que a dupla toca).
-             Fica colado no Meta de propósito — não é outro canal, é um RECORTE
-             do Meta, e o sub diz isso pra ninguém ler como quinta plataforma.
-             Consome { totais, experts } da raiz do payload, que a API nunca
-             deixou de mandar; nada de rota nova. -->
-        <label for="e-cl">
-          <span class="scopebar__nome">Costa e Lobão</span>
-          <!-- JS: experts.length (raiz do payload) -->
-          <span class="scopebar__sub" data-derived="experts.length">recorte do Meta</span>
-        </label>
+        <!-- COSTA E LOBÃO NÃO ENTRA AQUI (decisão do operador, 15/08): a barra
+             é de CANAIS, e a dupla é um recorte DENTRO do Meta. O controle
+             dela mora na faixa de abas do Meta (.recorte) — que continua
+             acendendo este botão enquanto o recorte estiver aberto. -->
+
         <label for="e-google">
           <span class="scopebar__nome">Google</span>
           <span class="scopebar__sub" data-derived="google.contas.length">3 contas · MCC</span>
@@ -3613,9 +3647,15 @@ body.pnl-aberto{overflow:hidden}
          ╚═════════════════════════════════════════════════════════════════╝ -->
     <div class="scope scope--cl" id="escopo-cl" data-escopo="cl">
 
-    <nav class="tabs" aria-label="Seções do painel">
+    <nav class="tabs" aria-label="Seções do painel, recorte Costa e Lobão">
       <label for="v-geral">Visão geral</label>
       <label for="v-experts">Por expert <span class="tab__badge" data-derived="experts.length">7</span></label>
+      <!-- o MESMO par da tela de cima: é por aqui que se volta pra operação
+           inteira sem passar pela barra de canais. -->
+      <div class="recorte" role="group" aria-label="Recorte da operação">
+        <label for="e-geral">Todo o Meta</label>
+        <label for="e-cl">Costa e Lobão <span class="tab__badge" data-derived="experts.length">8</span></label>
+      </div>
     </nav>
 
     <!-- ══════════════════ ABA 1 · VISÃO GERAL ══════════════════ -->
@@ -5038,6 +5078,15 @@ body.pnl-aberto{overflow:hidden}
     <nav class="tabs" aria-label="Seções do painel, escopo geral">
       <label for="v-geral">Visão geral</label>
       <label for="v-experts">Por expert <span class="tab__badge" data-derived="geral.experts.length">24</span></label>
+      <!-- RECORTE · vive dentro do Meta de propósito: não é outro canal, é um
+           subconjunto do mesmo. Fica na ponta direita da faixa (margin-left
+           auto) porque não é irmão das abas — as abas dizem O QUE mostrar,
+           este diz DE QUEM. As duas telas do Meta carregam o mesmo par: sem
+           ele no recorte, não haveria caminho de volta. -->
+      <div class="recorte" role="group" aria-label="Recorte da operação">
+        <label for="e-geral">Todo o Meta</label>
+        <label for="e-cl">Costa e Lobão <span class="tab__badge" data-derived="experts.length">8</span></label>
+      </div>
     </nav>
 
     <!-- ══════════════════ GERAL · ABA 1 · VISÃO GERAL ══════════════════ -->
@@ -9353,10 +9402,12 @@ function pintarTopCriativos(d, isHoje, raiz) {
    ────────────────────────────────────────────────────────────────────────── */
 function pintarEscopo(bloco, periodo, isHoje, raiz, geral) {
   if (!raiz || !bloco) return;
-  /* escopo sem botão na barra não é montado: o Costa e Lobão continua no
-     arquivo, mas ninguém chega nele — renderizar (e buscar a safra dele) seria
-     trabalho e uma chamada de rede por atualização pra uma tela invisível. */
-  if (!$('.scopebar label[for="' + (geral ? 'e-geral' : 'e-cl') + '"]')) return;
+  /* tela sem caminho até ela não é montada — renderizar (e buscar a safra)
+     custa trabalho e uma chamada de rede por atualização. O Geral depende do
+     botão Meta na barra de canais; o Costa e Lobão, do par de recorte que vive
+     DENTRO do Meta. Tirar qualquer um dos dois do HTML desliga a renderização
+     sozinho, sem mexer aqui. */
+  if (!$(geral ? '.scopebar label[for="e-geral"]' : '.recorte label[for="e-cl"]')) return;
   var d = { totais: bloco.totais || {}, experts: bloco.experts || [], periodo: periodo };
   /* veredito e sinais continuam falando da OPERAÇÃO inteira de propósito: são
      diagnóstico do escopo, não do recorte que a pessoa está comparando. */
@@ -9556,12 +9607,13 @@ function pintarScopebar(d) {
   var sub = $('.scopebar label[for="e-geral"] .scopebar__sub');
 
   /* Costa e Lobão: os experts vêm na RAIZ do payload, não em geral.experts.
-     Rótulo curto de propósito — a barra já é apertada no notebook. */
-  var subCl = $('.scopebar label[for="e-cl"] .scopebar__sub');
-  if (subCl) {
-    var nCl = (d.experts || []).length;
-    subCl.textContent = nCl ? nCl + ' experts · Meta' : 'recorte do Meta';
-  }
+     A contagem vai no badge do recorte (as DUAS telas do Meta têm o par), e
+     some quando não há ninguém — badge com "0" sugere erro de leitura. */
+  var nCl = (d.experts || []).length;
+  $$('.recorte label[for="e-cl"] .tab__badge').forEach(function (b) {
+    b.textContent = nCl ? String(nCl) : '';
+    b.hidden = !nCl;
+  });
 
   var ents = (d.geral && d.geral.experts) || [];
   if (sub) {
@@ -9585,7 +9637,6 @@ function pintarScopebar(d) {
    acende: não tem como estar rodando o que não está ligado. */
 function pintarPontosCanais(d) {
   var vivos = {
-    'e-cl': !!(d.totais && d.totais.investimento_total > 0),
     'e-geral': !!(d.geral && d.geral.totais && d.geral.totais.investimento_total > 0),
     'e-google': !!(d.google && ehNum(d.google.investimento_total) &&
                    d.google.investimento_total > 0)
@@ -9596,7 +9647,7 @@ function pintarPontosCanais(d) {
     else l.removeAttribute('data-rodando');
     l.title = vivos[alvo]
       ? 'Rodando: teve investimento no período'
-      : (alvo === 'e-cl' || alvo === 'e-geral' || alvo === 'e-google'
+      : (alvo === 'e-geral' || alvo === 'e-google'
           ? 'Sem investimento no período'
           : 'Canal ainda não ligado');
   });
@@ -11398,10 +11449,11 @@ function ligarPainel() {
                          #experts vira #geral/detalhe
    Link antigo que circulou no grupo do time continua abrindo onde abria.
    ────────────────────────────────────────────────────────────────────────── */
-/* 'cl' voltou a apontar pro próprio input (15/08): com o botão de novo na
-   barra, o link antigo #cl/visao — que circulou no grupo do time — abre onde
-   sempre abriu, e agora tem como voltar dali. O LEGADO sem barra continua
-   caindo no Geral: quem salvou #geral/#experts salvou a tela do dia inteiro. */
+/* 'cl' voltou a apontar pro próprio input (15/08): o recorte agora é um
+   controle DENTRO do Meta, e o link antigo #cl/visao — que circulou no grupo
+   do time — abre onde sempre abriu, com o par de recorte na tela pra voltar.
+   O LEGADO sem barra continua caindo no Geral: quem salvou #geral/#experts
+   salvou a tela da operação inteira. */
 var ESCOPOS = { cl: 'e-cl', geral: 'e-geral', google: 'e-google',
                 tiktok: 'e-tiktok', kwai: 'e-kwai', taboola: 'e-taboola' };
 var ABAS    = { visao: 'v-geral', detalhe: 'v-experts' };
