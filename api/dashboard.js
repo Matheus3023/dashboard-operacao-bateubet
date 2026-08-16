@@ -36,18 +36,20 @@ const MAX_RANGE_DIAS = 366;
 const TZ = 'America/Sao_Paulo';
 
 /* A porta do recorte Costa e Lobão mora em api/cl-auth.js; aqui só se pergunta
-   se o cookie dela é válido. Se o arquivo sumir, o recorte fica FECHADO — o
-   lado seguro do erro. */
-let sessaoCl = null;
-try { sessaoCl = require('./cl-auth').sessaoValida; } catch (e) { sessaoCl = null; }
+   se o token que veio no cabeçalho é válido. Se o arquivo sumir, o recorte
+   fica FECHADO — o lado seguro do erro.
+   Token no cabeçalho, e não cookie: a senha tem que ser pedida a cada carga
+   da página, e cookie sobreviveria ao F5. */
+let tokenCl = null;
+try { tokenCl = require('./cl-auth').tokenValido; } catch (e) { tokenCl = null; }
 function temSessaoCl(req) {
   const segredo = process.env.PAINEL_CL_SENHA;
   /* sem senha configurada o recorte fica aberto como sempre foi: ligar a
      variável é o que ativa a porta, e assim um deploy sem a env não apaga o
      painel de quem depende dele */
   if (!segredo) return true;
-  if (!sessaoCl) return false;
-  return sessaoCl(req, segredo);
+  if (!tokenCl) return false;
+  return tokenCl(req, segredo);
 }
 
 // Escopos aceitos no modo tendência. Mesmo default do n8n, repetido aqui só
@@ -364,13 +366,12 @@ module.exports = async function handler(req, res) {
       delete dados.experts;
       dados.cl_bloqueado = true;
     }
-    /* SEM ISTO A PORTA NÃO EXISTE. A borda da Vercel resolve o cache pela URL
-       antes de a função rodar: sem `Vary`, o primeiro pedido (sem cookie)
-       grava a versão pública e ela passa a ser servida também para quem tem
-       sessão — o recorte nunca voltaria. Com `Vary: Cookie`, pedido com
-       cookie e pedido sem cookie são objetos de cache diferentes, e o
-       liberado ainda por cima sai como `no-store` logo abaixo. */
-    res.setHeader('Vary', 'Cookie');
+    /* A borda resolve o cache pela URL antes de a função rodar, e o token vai
+       em CABEÇALHO — que a borda ignora. Quem está autenticado pede uma URL
+       com marca própria (`_s`, gerada pela página), então nunca cai no objeto
+       público; este Vary é cinto de segurança para o caso de alguém pedir a
+       mesma URL com e sem token. */
+    res.setHeader('Vary', 'x-cl-token');
 
     // Dado do dia muda o tempo todo: cache curto na borda só pra não bater
     // 10 segundos de n8n a cada aba aberta. Período fechado não muda mais.

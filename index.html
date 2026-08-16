@@ -6658,7 +6658,7 @@ body.pnl-aberto{overflow:hidden}
               onclick="this.closest('dialog').close()">Cancelar</button>
       <button class="cldlg__b" id="cl-enviar" type="submit">Entrar</button>
     </div>
-    <p class="cldlg__nota">A sessão dura 12 horas neste navegador.</p>
+    <p class="cldlg__nota">A senha vale só enquanto esta página estiver aberta — atualizou, pede de novo.</p>
   </form>
 </dialog>
 
@@ -9248,8 +9248,11 @@ function buscarLoteTendencia(esc) {
 
   lote.estado = 'carregando';
   var url = ENDPOINT + '?tendencia=*&escopo=' + encodeURIComponent(ESCOPO_API[esc] || 'geral');
+  /* a rota do escopo da dupla responde 403 sem o token — ele viaja no
+     cabeçalho, e a URL ganha a marca da carga pra escapar do cache da borda */
+  if (esc === 'cl' && CL_TOKEN) url += '&_s=' + CL_NONCE;
 
-  fetch(url, { cache: 'no-store', headers: { accept: 'application/json' } })
+  fetch(url, { cache: 'no-store', headers: cabecalhoCl({ accept: 'application/json' }) })
     .then(function (resp) {
       return resp.text().then(function (txt) {
         var json = null;
@@ -10231,8 +10234,9 @@ function carregarSafra(escopo) {
   if (estado.safraBuscando[escopo]) return;
   estado.safraBuscando[escopo] = true;
 
-  fetch(ENDPOINT + '?safra=1&escopo=' + encodeURIComponent(SAFRA_ESCOPO_API[escopo]),
-        { cache: 'no-store' })
+  fetch(ENDPOINT + '?safra=1&escopo=' + encodeURIComponent(SAFRA_ESCOPO_API[escopo]) +
+        (escopo === 'cl' && CL_TOKEN ? '&_s=' + CL_NONCE : ''),
+        { cache: 'no-store', headers: cabecalhoCl({}) })
     .then(function (r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
@@ -10793,17 +10797,8 @@ function preencherSeguemCmp(raiz, geral) {
   });
 }
 
-var CL_CONSULTADO = false;
 function carregar(opts) {
   opts = opts || {};
-  /* PRIMEIRA LEITURA ESPERA A PORTA RESPONDER. São milissegundos, e é o que
-     impede o F5 de quem tem sessão de receber a versão pública (que voltaria
-     pedindo senha de novo). Da segunda leitura em diante não custa nada. */
-  if (!CL_CONSULTADO) {
-    CL_CONSULTADO = true;
-    CL_PRONTO.then(function () { trancaCl(!CL_SESSAO); carregar(opts); });
-    return;
-  }
   var preset = presetAtual();
   var r = intervaloDe(preset);
 
@@ -10816,14 +10811,11 @@ function carregar(opts) {
 
   var url = ENDPOINT;
   if (r.de && r.ate) url += '?de=' + encodeURIComponent(r.de) + '&ate=' + encodeURIComponent(r.ate);
-  /* PORTA ABERTA PEDE URL PRÓPRIA. O servidor separa as duas versões por
-     `Vary: Cookie`, mas na prática a borda ainda serviu resposta pública pra
-     quem tinha sessão (a primeira leitura depois de abrir a página voltava
-     trancada, e só um refresh destravava). Quem tem sessão passa a pedir um
-     endereço que muda de minuto em minuto: garante execução da função, e
-     como a resposta liberada é `no-store`, não suja o cache de ninguém.
-     `_r` é ignorado pela função — serve só de chave. */
-  if (CL_SESSAO) url += (url.indexOf('?') === -1 ? '?' : '&') + '_r=' + Math.floor(Date.now() / 60000);
+  /* PORTA ABERTA PEDE URL PRÓPRIA. O token vai em cabeçalho e a borda da
+     Vercel só enxerga a URL: sem uma marca aqui, a resposta pública (sem o
+     recorte) seria servida pra quem acabou de digitar a senha. `_s` é
+     ignorado pela função — serve só de chave de cache. */
+  if (CL_TOKEN) url += (url.indexOf('?') === -1 ? '?' : '&') + '_s=' + CL_NONCE;
 
   var id = ++estado.reqId;
   var primeira = !estado.jaCarregou;
@@ -10858,7 +10850,7 @@ function carregar(opts) {
     elApply.textContent = 'Carregando…';
   }
 
-  fetch(url, { cache: 'no-store', headers: { accept: 'application/json' } })
+  fetch(url, { cache: 'no-store', headers: cabecalhoCl({ accept: 'application/json' }) })
     .then(function (resp) {
       return resp.text().then(function (txt) {
         var json = null;
@@ -11391,8 +11383,9 @@ function buscarTendencia(nome, esc, forcar) {
 
   var url = ENDPOINT + '?tendencia=' + encodeURIComponent(nome) +
             '&escopo=' + encodeURIComponent(ESCOPO_API[esc] || 'geral');
+  if (esc === 'cl' && CL_TOKEN) url += '&_s=' + CL_NONCE;
 
-  fetch(url, { cache: 'no-store', headers: { accept: 'application/json' } })
+  fetch(url, { cache: 'no-store', headers: cabecalhoCl({ accept: 'application/json' }) })
     .then(function (resp) {
       return resp.text().then(function (txt) {
         var json = null;
@@ -11987,20 +11980,23 @@ function mtEsc(s) {
    senha, e recarga quando a porta abre. Nada aqui protege coisa alguma
    sozinho, e é de propósito: proteção que mora no navegador não é proteção.
    ────────────────────────────────────────────────────────────────────────── */
-var CL_TRANCADO = false;
-/* o que o SERVIDOR diz sobre a sessão (não o que a tela mostra). Fica null
-   até a primeira resposta de /api/cl-auth. */
-var CL_SESSAO = false;
+/* A tela NASCE trancada, sempre. O token vive só nesta variável: F5 apaga a
+   memória, a porta fecha e a senha é pedida de novo — que é exatamente o
+   pedido do operador (16/08). Nada de cookie, localStorage ou sessionStorage
+   aqui: qualquer um dos três sobreviveria ao refresh. */
+var CL_TRANCADO = true;
+var CL_TOKEN = null;
+/* marca de água desta carga da página: entra na URL de quem está autenticado
+   pra a resposta nunca vir do objeto de cache público (a borda não olha
+   cabeçalho, só a URL). */
+var CL_NONCE = String(Math.floor(Math.random() * 1e9));
 
-/* PERGUNTA A PORTA ANTES DA PRIMEIRA LEITURA. Sem isto, o F5 de quem já tem
-   sessão pedia a versão pública (CL_SESSAO ainda era false), a borda devolvia
-   o payload sem o recorte e a tela voltava a pedir senha a cada refresh —
-   sessão válida e tudo. Uma chamada de milissegundos resolve; `carregar()`
-   espera por ela na primeira vez. */
-var CL_PRONTO = fetch('/api/cl-auth', { headers: { accept: 'application/json' } })
-  .then(function (r) { return r.json(); })
-  .then(function (j) { CL_SESSAO = !!(j && j.ok); return CL_SESSAO; })
-  .catch(function () { return false; });
+/* cabeçalho do recorte — vai em toda chamada que pede dado da dupla */
+function cabecalhoCl(extra) {
+  var h = extra || {};
+  if (CL_TOKEN) h['x-cl-token'] = CL_TOKEN;
+  return h;
+}
 
 function trancaCl(trancado) {
   CL_TRANCADO = !!trancado;
@@ -12069,7 +12065,9 @@ function ligarPortaCl() {
           return;
         }
         if (dlg.close) dlg.close(); else dlg.removeAttribute('open');
-        CL_SESSAO = true;
+        /* o token fica AQUI e só aqui: em memória. Recarregar a página perde
+           ele de propósito. */
+        CL_TOKEN = res.j.token || null;
         trancaCl(false);
         document.getElementById('e-cl').checked = true;
         /* o payload que está na tela veio SEM o recorte: só uma leitura nova
@@ -12115,12 +12113,16 @@ function hashAtual() {
         : (ab && ab.id === 'v-metas' ? 'metas' : 'visao');
   return e + '/' + a;
 }
+/* link que apontava pro recorte: o boot usa isso pra já abrir o diálogo da
+   senha em vez de calar e mandar a pessoa pro Meta sem explicação */
+var VEIO_PARA_CL = false;
 function aplicarHash() {
   var h = (location.hash || '').replace('#', '');
   if (!h) return;
   if (LEGADO[h]) h = LEGADO[h];
   var p = h.split('/');
   var idEsc = ESCOPOS[p[0]], idAba = ABAS[p[1]];
+  if (idEsc === 'e-cl') VEIO_PARA_CL = true;
   if (idEsc) document.getElementById(idEsc).checked = true;
   if (idAba) document.getElementById(idAba).checked = true;
 }
@@ -12978,6 +12980,12 @@ document.addEventListener('visibilitychange', function () {
 
 /* a pílula envelhece sozinha mesmo sem fetch novo */
 setInterval(function () { if (estado.dados) pintarStatus('ok'); }, 30000);
+
+/* PORTA FECHADA A CADA CARGA. Roda depois do hash: link salvo em #cl/... não
+   pode entrar no recorte sem passar pela senha — e já abre o diálogo, porque
+   quem salvou aquele link estava indo pra lá mesmo. */
+trancaCl(true);
+if (VEIO_PARA_CL) abrirPortaCl();
 
 carregar();
 })();
