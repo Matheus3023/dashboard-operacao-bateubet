@@ -10930,6 +10930,9 @@ function carregar(opts) {
                      d.periodo, estado.ehHoje, RAIZ_CL, false);
         /* a aba Metas lê o MESMO payload — nenhuma chamada a mais */
         pintarMetas(d);
+        /* o histórico é a única coisa dela que pede rede própria, e só quando
+           a aba está aberta: quem nunca clica em Metas não paga por ela */
+        mtTalvezHistorico();
       }
 
       /* escopo 2: a operação inteira. Só entra se a API mandou o bloco. */
@@ -11749,7 +11752,11 @@ var PLANO = {
   roasFtdMin: 0.75,
   margemMin: 45,
   roiExpertMin: 100,
-  quebraGrave: 30
+  quebraGrave: 30,
+  /* entrega de relatório o painel não tem como medir — não passa por API
+     nenhuma. Fica aqui como declaração: true = a dupla entregou no prazo.
+     Virou "no alvo" a pedido do gestor em 16/08; pra tirar, basta false. */
+  relatoriosNoPrazo: true
 };
 var LS_NIVEL = 'bb.plano.nivel';
 
@@ -11792,25 +11799,14 @@ function entrouNoMeio(e) {
   return (e.investimento_total || 0) > 0 && (t.net_pl || 0) / e.investimento_total > 30;
 }
 
-function pintarMetas(d) {
-  var raiz = RAIZ_CL;
-  if (!raiz || !$('.view--metas', raiz) || !d || !d.experts) return;
-
-  var nivel = nivelAtual();
-  var sel = $('#mt-nivel-sel');
-  if (sel) sel.value = String(nivel.n);
-
+/* TUDO QUE O PLANO PRECISA SABER DE UM PAYLOAD.
+   A mesma conta serve pro período que está na tela e pra cada mês fechado que
+   o histórico busca — por isso mora aqui fora, e não dentro de pintarMetas. */
+function mtMedir(d) {
   var f = frentesDoRecorte(d.experts);
   var distorcidos = f.exp.filter(entrouNoMeio);
   var expLimpos = f.exp.filter(function (e) { return !entrouNoMeio(e); });
   var sExpLimpo = f.somar(expLimpos);
-
-  var mInst = f.sInst.inv > 0 ? f.sInst.npl / f.sInst.inv * 100 : null;
-  var mExp = sExpLimpo.inv > 0 ? sExpLimpo.npl / sExpLimpo.inv * 100 : null;
-  var mExpBruta = f.sExp.inv > 0 ? f.sExp.npl / f.sExp.inv * 100 : null;
-
-  var t = d.totais || {};
-  var invTotal = t.investimento_total || 0;
 
   /* ROAS no FTD = ticket médio do FTD ÷ CAC. Sem os distorcidos, pelo mesmo
      motivo da margem. */
@@ -11823,6 +11819,44 @@ function pintarMetas(d) {
      meio do período). Duas réguas na mesma tela confundiriam mais do que o
      número a mais informaria. */
   var margemOp = sLimpo.inv > 0 ? sLimpo.npl / sLimpo.inv * 100 : null;
+
+  var quebrados = f.exp.filter(function (e) {
+    if (entrouNoMeio(e)) return false;
+    if (!(e.investimento_total > 0)) return false;
+    return ((e.tap || {}).net_pl || 0) / e.investimento_total * 100 < PLANO.roiExpertMin;
+  }).sort(function (a, b) { return b.investimento_total - a.investimento_total; });
+
+  return {
+    f: f, distorcidos: distorcidos, expLimpos: expLimpos,
+    mInst: f.sInst.inv > 0 ? f.sInst.npl / f.sInst.inv * 100 : null,
+    mExp: sExpLimpo.inv > 0 ? sExpLimpo.npl / sExpLimpo.inv * 100 : null,
+    mExpBruta: f.sExp.inv > 0 ? f.sExp.npl / f.sExp.inv * 100 : null,
+    roasFtd: roasFtd, margemOp: margemOp, quebrados: quebrados,
+    invTotal: (d.totais || {}).investimento_total || 0,
+    kpisNoAlvo: quebrados.length === 0 &&
+      roasFtd != null && roasFtd >= PLANO.roasFtdMin &&
+      margemOp != null && margemOp >= PLANO.margemMin &&
+      PLANO.relatoriosNoPrazo
+  };
+}
+
+function pintarMetas(d) {
+  var raiz = RAIZ_CL;
+  if (!raiz || !$('.view--metas', raiz) || !d || !d.experts) return;
+
+  /* o histórico pode ter promovido a dupla desde a última pintura — a leitura
+     do nível vem DEPOIS de aplicar isso, senão a tela paga o mês no nível
+     velho. */
+  mtAplicarPromocao();
+  var nivel = nivelAtual();
+  var sel = $('#mt-nivel-sel');
+  if (sel) sel.value = String(nivel.n);
+
+  var med = mtMedir(d);
+  var f = med.f, distorcidos = med.distorcidos, expLimpos = med.expLimpos;
+  var mInst = med.mInst, mExp = med.mExp, mExpBruta = med.mExpBruta;
+  var roasFtd = med.roasFtd, margemOp = med.margemOp, quebrados = med.quebrados;
+  var invTotal = med.invTotal;
 
   /* ── 1 · GATE DE VOLUME ── */
   var per = d.periodo || {};
@@ -11866,12 +11900,6 @@ function pintarMetas(d) {
     mtLinha('Variável do mês', '', grave ? 'ZERADO: margem da operação abaixo de 30%' : 'teto do nível: ' + mtMoeda(nivel.teto), mtMoeda(variavel), 'mt-row--tot');
 
   /* ── 3 · KPIs ── */
-  var quebrados = f.exp.filter(function (e) {
-    if (entrouNoMeio(e)) return false;
-    if (!(e.investimento_total > 0)) return false;
-    return ((e.tap || {}).net_pl || 0) / e.investimento_total * 100 < PLANO.roiExpertMin;
-  }).sort(function (a, b) { return b.investimento_total - a.investimento_total; });
-
   $('#mt-kpis').innerHTML =
     mtLinha('KPI', 'Real', 'Meta', 'Status', 'mt-row--head') +
     mtKpi('ROAS no FTD' + mtSub('ticket médio do FTD ÷ CAC'),
@@ -11887,25 +11915,29 @@ function pintarMetas(d) {
         quebrados.length ? quebrados.length + ' fora' : 'todos',
         '≥ 100% cada', quebrados.length === 0) +
     mtKpi('TikTok Ads' + mtSub('marco de implantação'), 'não ligado', 'no ar até o mês 3', null) +
-    mtKpi('Relatórios' + mtSub('o painel não mede isso'), '—', '100% no prazo', null);
+    mtKpi('Relatórios' + mtSub(PLANO.relatoriosNoPrazo
+          ? 'entrega declarada pela dupla — o painel não mede isso'
+          : 'o painel não mede isso'),
+        PLANO.relatoriosNoPrazo ? '100%' : '—',
+        '100% no prazo', PLANO.relatoriosNoPrazo ? true : null);
 
   /* ── 4 · PROMOÇÃO ── */
-  var kpisNoAlvo = quebrados.length === 0 &&
-    roasFtd != null && roasFtd >= PLANO.roasFtdMin &&
-    margemOp != null && margemOp >= PLANO.margemMin;
+  var kpisNoAlvo = med.kpisNoAlvo;
   var promoveAlvo = step ? step.promove : PLANO.steps[0].promove;
+  var prox = mtProximoNivel(nivel);
   $('#mt-promo').innerHTML =
     mtCard('Volume', volumeOk ? step.nome + ' ✓' : 'abaixo do Step 1',
          volumeOk ? 'no ritmo atual' : 'faltam ' + mtMoeda(PLANO.steps[0].min - proj.valor) + ' no mês',
          volumeOk ? 'mt-ok' : 'mt-nao') +
     mtCard('KPIs no alvo', kpisNoAlvo ? 'sim' : 'não',
-         kpisNoAlvo ? 'este mês conta pra progressão' : 'mês não conta enquanto houver KPI quebrado',
+         kpisNoAlvo ? 'conta pra progressão quando o mês fechar' : 'mês não conta enquanto houver KPI quebrado',
          kpisNoAlvo ? 'mt-ok' : 'mt-nao') +
-    mtCard('Consistência', '2 dos últimos 3 meses',
-         'regra do plano — pico isolado não promove', 'mt-meio') +
-    mtCard('Próximo nível', promoveAlvo,
-         volumeOk && kpisNoAlvo ? 'condições do mês atendidas' : 'ainda não',
-         volumeOk && kpisNoAlvo ? 'mt-ok' : '');
+    mtCardConsistencia() +
+    (prox
+      ? mtCard('Próximo nível', prox.nome, prox.falta, prox.cls)
+      : mtCard('Próximo nível', promoveAlvo,
+             volumeOk && kpisNoAlvo ? 'condições do mês atendidas' : 'ainda não',
+             volumeOk && kpisNoAlvo ? 'mt-ok' : ''));
 
   /* ── VEREDITO ── */
   var vd = $('#mt-verdict');
@@ -11929,7 +11961,11 @@ function pintarMetas(d) {
 
   $('#mt-nivel-nota').textContent =
     'Fixo ' + mtMoeda(nivel.fixo) + ' · teto do variável ' + mtMoeda(nivel.teto) +
-    ' · total possível ' + mtMoeda(nivel.fixo + nivel.teto);
+    ' · total possível ' + mtMoeda(nivel.fixo + nivel.teto) +
+    (mtHist.promocao
+      ? ' · subiu sozinho de ' + PLANO.niveis[mtHist.promocao.de - 1].nome.split(' ')[0] +
+        ' pra ' + mtHist.promocao.nome.split(' ')[0] + ': ' + mtHist.promocao.porque
+      : '');
 }
 
 /* projeta o mês cheio a partir do que já correu — só faz sentido em período
@@ -11955,6 +11991,167 @@ function mtProjetar(valor, per) {
   /* qualquer outro recorte (hoje, ontem, 7d, datas soltas) NÃO é um mês, e o
      gate do plano é mensal: melhor dizer isso do que fingir uma projeção */
   return { valor: valor, parcial: false, foraDoMes: true, porDia: 0, diasCorridos: 0, diasMes: diasMes };
+}
+
+/* ══ HISTÓRICO: O NÍVEL SOBE SOZINHO ══════════════════════════════════════
+   O plano não promove por pico: cada step só vira nível depois de `meses`
+   meses batendo o volume dele COM os KPIs no alvo. A tela lê um período por
+   vez, então quem quiser responder "já subiu?" precisa ir buscar os meses
+   fechados — um pedido por mês no mesmo endpoint, em série pra não empilhar
+   três leituras pesadas no n8n de uma vez.
+
+   SÓ MÊS FECHADO CONTA. No mês corrente o step sai de projeção, e projeção não
+   promove ninguém: o mês entra na conta na virada, não no dia 3.
+
+   E o nível só SOBE. Mês ruim não rebaixa: rebaixamento é conversa de
+   contrato, não coisa que um painel decide sozinho numa leitura parcial. */
+var MT_MESES_HIST = 3;              /* o Step 3 é o mais longo: 3 meses */
+var mtHist = { estado: 'inicio', meses: [], promocao: null };
+
+/* os n meses inteiros ANTERIORES ao corrente, do mais recente pro mais antigo */
+function mtMesesFechados(n) {
+  var hoje = hojeSP();
+  var ano = parseInt(hoje.slice(0, 4), 10), mes = parseInt(hoje.slice(5, 7), 10);
+  var out = [];
+  for (var i = 1; i <= n; i++) {
+    var m = mes - i, a = ano;
+    while (m <= 0) { m += 12; a -= 1; }
+    var mm = (m < 10 ? '0' : '') + m;
+    var ult = new Date(a, m, 0).getDate();
+    out.push({ chave: a + '-' + mm, de: a + '-' + mm + '-01', ate: a + '-' + mm + '-' + ult });
+  }
+  return out;
+}
+
+/* busca em série; cada mês que chega já repinta a tela */
+function mtCarregarHistorico() {
+  if (mtHist.estado === 'carregando' || mtHist.estado === 'pronto') return;
+  if (CL_TRANCADO || !CL_TOKEN) { mtHist.estado = 'fechado'; return; }
+
+  mtHist.estado = 'carregando';
+  mtHist.meses = mtMesesFechados(MT_MESES_HIST).map(function (m) {
+    return { chave: m.chave, de: m.de, ate: m.ate, ok: false, inv: 0, kpis: false, erro: null };
+  });
+  if (estado.dados) pintarMetas(estado.dados);
+
+  var fila = mtHist.meses.slice();
+  (function proximo() {
+    var m = fila.shift();
+    if (!m) {
+      mtHist.estado = 'pronto';
+      if (estado.dados) pintarMetas(estado.dados);
+      return;
+    }
+    var url = ENDPOINT + '?de=' + encodeURIComponent(m.de) + '&ate=' + encodeURIComponent(m.ate) +
+              '&_s=' + CL_NONCE;
+    fetch(url, { cache: 'no-store', headers: cabecalhoCl({ accept: 'application/json' }) })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        if (!res.ok || !res.j || res.j.cl_bloqueado || !res.j.totais) {
+          m.erro = 'sem dado do recorte';
+          return;
+        }
+        var med = mtMedir(res.j);
+        m.ok = true;
+        m.inv = med.invTotal;
+        m.kpis = med.kpisNoAlvo;
+      })
+      .catch(function (e) { m.erro = (e && e.message) || 'falha de rede'; })
+      .then(function () {
+        /* mês lido é mês que pode ter promovido — aplica antes de repintar */
+        if (estado.dados) pintarMetas(estado.dados);
+        proximo();
+      });
+  })();
+}
+
+function mtNivelPorNome(nome) {
+  for (var i = 0; i < PLANO.niveis.length; i++) {
+    if (PLANO.niveis[i].nome === nome) return PLANO.niveis[i].n;
+  }
+  return 0;
+}
+
+/* quantos meses fechados já batem este step (volume E KPIs) */
+function mtMesesNoStep(s) {
+  return mtHist.meses.filter(function (m) {
+    return m.ok && m.kpis && m.inv >= s.min;
+  });
+}
+
+/* o maior nível que o histórico já garante */
+function mtNivelConquistado() {
+  var alvo = 0;
+  PLANO.steps.forEach(function (s) {
+    if (mtMesesNoStep(s).length < s.meses) return;
+    var n = mtNivelPorNome(s.promove);
+    if (n > alvo) alvo = n;
+  });
+  return alvo;
+}
+
+/* sobe o nível salvo quando o histórico manda — e guarda o porquê pra tela */
+function mtAplicarPromocao() {
+  if (mtHist.estado !== 'pronto') return;
+  var n = mtNivelConquistado();
+  var atual = nivelAtual().n;
+  if (n <= atual) return;
+
+  var passo = null;
+  PLANO.steps.forEach(function (s) {
+    if (mtNivelPorNome(s.promove) === n) passo = s;
+  });
+  try { localStorage.setItem(LS_NIVEL, String(n)); } catch (e) {}
+  mtHist.promocao = {
+    de: atual, para: n,
+    nome: PLANO.niveis[n - 1].nome,
+    porque: passo
+      ? passo.nome + ' batido em ' + passo.meses + (passo.meses === 1 ? ' mês fechado' : ' meses fechados') +
+        ' com os KPIs no alvo (' + mtMesesNoStep(passo).map(function (m) { return mesCurto(m.chave); }).join(', ') + ')'
+      : 'histórico dos meses fechados'
+  };
+}
+
+function mtCardConsistencia() {
+  if (mtHist.estado === 'fechado') {
+    return mtCard('Consistência', 'não medida',
+      'a porta do recorte está fechada — sem histórico, sem progressão', 'mt-meio');
+  }
+  if (mtHist.estado !== 'pronto') {
+    var lidos = mtHist.meses.filter(function (m) { return m.ok || m.erro; }).length;
+    return mtCard('Consistência', 'lendo…',
+      'buscando os ' + MT_MESES_HIST + ' últimos meses fechados · ' + lidos + ' de ' + MT_MESES_HIST, 'mt-meio');
+  }
+  var bons = mtHist.meses.filter(function (m) { return m.ok && m.kpis; });
+  var falhou = mtHist.meses.filter(function (m) { return m.erro; });
+  var detalhe = mtHist.meses.map(function (m) {
+    return mesCurto(m.chave) + ' ' + (m.erro ? '?' : (m.kpis ? '✓' : '✗'));
+  }).join(' · ');
+  return mtCard('Consistência', bons.length + ' de ' + mtHist.meses.length + ' meses',
+    detalhe + (falhou.length ? ' · ? = não deu pra ler' : ''),
+    bons.length ? 'mt-ok' : 'mt-nao');
+}
+
+/* o que ainda falta pro degrau seguinte, medido no histórico */
+function mtProximoNivel(nivel) {
+  if (mtHist.estado !== 'pronto') return null;
+  var alvo = null;
+  PLANO.steps.forEach(function (s) {
+    var n = mtNivelPorNome(s.promove);
+    if (n <= nivel.n) return;                       /* degrau já passado */
+    if (!alvo || n < mtNivelPorNome(alvo.promove)) alvo = s;
+  });
+  if (!alvo) return { nome: 'topo do plano', falta: 'nenhum step acima do nível atual', cls: 'mt-meio' };
+  var tem = mtMesesNoStep(alvo).length;
+  var falta = alvo.meses - tem;
+  return {
+    nome: alvo.promove,
+    falta: falta <= 0
+      ? 'condições batidas — o nível já subiu'
+      : tem + ' de ' + alvo.meses + ' meses no ' + alvo.nome + ' · faltam ' + falta +
+        ' fechando acima de ' + mtMoeda(alvo.min) + ' com KPIs no alvo',
+    cls: falta <= 0 ? 'mt-ok' : ''
+  };
 }
 
 function mtCard(k, v, o, cls) {
@@ -11994,12 +12191,31 @@ function mtEsc(s) {
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-/* o nível é contrato: fica no navegador de quem olha, não na API */
+/* o nível é contrato: fica no navegador de quem olha, não na API.
+   Escolha à mão continua valendo pra CIMA — o histórico só impede que fique
+   abaixo do que a dupla já conquistou. */
 (function ligarNivel() {
   var sel = $('#mt-nivel-sel');
   if (!sel) return;
   sel.addEventListener('change', function () {
     try { localStorage.setItem(LS_NIVEL, sel.value); } catch (e) {}
+    if (estado.dados) pintarMetas(estado.dados);
+  });
+})();
+
+/* o histórico custa 3 leituras pesadas: só sai quando a aba Metas está aberta
+   e a porta do recorte já foi destrancada. */
+function mtTalvezHistorico() {
+  var aba = document.getElementById('v-metas');
+  if (!aba || !aba.checked) return;
+  if (CL_TRANCADO || !CL_TOKEN) return;
+  if (mtHist.estado === 'fechado') mtHist.estado = 'inicio';   /* destrancou depois */
+  mtCarregarHistorico();
+}
+(function ligarHistorico() {
+  var aba = document.getElementById('v-metas');
+  if (aba) aba.addEventListener('change', function () {
+    mtTalvezHistorico();
     if (estado.dados) pintarMetas(estado.dados);
   });
 })();
