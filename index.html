@@ -11876,7 +11876,8 @@ function pintarMetas(d) {
       ? mtCard('Step alcançado', 'não medido', 'período não é um mês', 'mt-meio')
       : mtCard('Step alcançado', step ? step.nome : 'nenhum',
                step ? 'faixa de ' + mtMoeda(step.min) + ' a ' + (step.max === Infinity ? 'sem teto' : mtMoeda(step.max))
-                    : 'o Step 1 começa em ' + mtMoeda(PLANO.steps[0].min) + ' — faltam ' + mtMoeda(PLANO.steps[0].min - proj.valor),
+                    : 'o Step 1 começa em ' + mtMoeda(PLANO.steps[0].min) + ' — faltam ' + mtMoeda(PLANO.steps[0].min - invTotal) + ' de investimento'
+                      + (proj.parcial ? ' · no ritmo atual o mês fecha ' + mtMoeda(PLANO.steps[0].min - proj.valor) + ' abaixo' : ''),
                step ? 'mt-ok' : 'mt-nao'));
 
   /* ── 2 · VARIÁVEL POR FRENTE ── */
@@ -11927,7 +11928,9 @@ function pintarMetas(d) {
   var prox = mtProximoNivel(nivel);
   $('#mt-promo').innerHTML =
     mtCard('Volume', volumeOk ? step.nome + ' ✓' : 'abaixo do Step 1',
-         volumeOk ? 'no ritmo atual' : 'faltam ' + mtMoeda(PLANO.steps[0].min - proj.valor) + ' no mês',
+         volumeOk ? 'no ritmo atual'
+                  : 'faltam ' + mtMoeda(PLANO.steps[0].min - invTotal) + ' de investimento no mês'
+                    + (proj.parcial ? ' · projeção fecha ' + mtMoeda(PLANO.steps[0].min - proj.valor) + ' abaixo' : ''),
          volumeOk ? 'mt-ok' : 'mt-nao') +
     mtCard('KPIs no alvo', kpisNoAlvo ? 'sim' : 'não',
          kpisNoAlvo ? 'conta pra progressão quando o mês fechar' : 'mês não conta enquanto houver KPI quebrado',
