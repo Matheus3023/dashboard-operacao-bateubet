@@ -6,8 +6,17 @@
     },
     "api/conta.js": {
       "maxDuration": 30
+    },
+    "api/push-spend.js": {
+      "maxDuration": 60
     }
   },
+  "crons": [
+    {
+      "path": "/api/push-spend",
+      "schedule": "0 * * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
