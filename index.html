@@ -1160,7 +1160,7 @@ html.rolado .brand__logo{height:19px}
 .num--neg{color:var(--bad)}
 .num--pos{color:var(--good)}
 
-/* TAP: funil em cima (5), financeiro embaixo (5) */
+/* TAP: funil em cima (5), financeiro embaixo (6) */
 .tap-funnel{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:14px}
 /* com 5 colunas a coluna útil cai pra ~100px na menor tela que ainda usa este
    grid (1180px). "R$ 1.234,56" a 17px não cabia e era CLIPADO (o .m__val corta
@@ -1176,8 +1176,13 @@ html.rolado .brand__logo{height:19px}
   .tap-funnel{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 .tap-fin{
-  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;
+  display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;
   margin-top:13px;padding-top:12px;border-top:1px solid var(--line-soft);
+}
+/* mesma faixa apertada do funil: com 6 colunas a célula cai pra ~80px e
+   dinheiro de 5 dígitos seria clipado — 3 por linha em duas linhas. */
+@media (min-width:1180px) and (max-width:1359px){
+  .tap-fin{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 .tap-fin .m__val{font-size:.875rem;font-weight:560;color:var(--txt-2)}
 .tap-fin .m__lbl{font-size:.625rem}
@@ -4410,6 +4415,7 @@ body.pnl-aberto{overflow:hidden}
             <div class="tap-fin">
               <div class="m"><span class="m__lbl">Valor FTD</span><span class="m__val" data-field="tap.valor_ftd">R$ 909,00</span></div>
               <div class="m"><span class="m__lbl">Depósito</span><span class="m__val" data-field="tap.deposito">R$ 10.585,51</span></div>
+              <div class="m m--depftd"><span class="m__lbl">Depósito médio</span><span class="m__val" data-derived="tap.deposito / tap.ftd">—</span></div>
               <div class="m"><span class="m__lbl">Net dep</span><span class="m__val num--pos" data-field="tap.net_dep">R$ 3.174,34</span></div>
               <div class="m"><span class="m__lbl">Net PL</span><span class="m__val num--pos" data-field="tap.net_pl">R$ 1.570,62</span></div>
               <div class="m"><span class="m__lbl">Volume</span><span class="m__val" data-field="tap.volume">R$ 19.647,35</span></div>
@@ -4595,6 +4601,7 @@ body.pnl-aberto{overflow:hidden}
             <div class="tap-fin">
               <div class="m"><span class="m__lbl">Valor FTD</span><span class="m__val" data-field="tap.valor_ftd">R$ 320,00</span></div>
               <div class="m"><span class="m__lbl">Depósito</span><span class="m__val" data-field="tap.deposito">R$ 12.480,30</span></div>
+              <div class="m m--depftd"><span class="m__lbl">Depósito médio</span><span class="m__val" data-derived="tap.deposito / tap.ftd">—</span></div>
               <div class="m"><span class="m__lbl">Net dep</span><span class="m__val num--pos" data-field="tap.net_dep">R$ 4.210,55</span></div>
               <div class="m"><span class="m__lbl">Net PL</span><span class="m__val num--neg" data-field="tap.net_pl">-R$ 318,40</span></div>
               <div class="m"><span class="m__lbl">Volume</span><span class="m__val" data-field="tap.volume">R$ 15.340,90</span></div>
@@ -4762,6 +4769,7 @@ body.pnl-aberto{overflow:hidden}
             <div class="tap-fin">
               <div class="m"><span class="m__lbl">Valor FTD</span><span class="m__val" data-field="tap.valor_ftd">R$ 150,00</span></div>
               <div class="m"><span class="m__lbl">Depósito</span><span class="m__val" data-field="tap.deposito">R$ 6.320,90</span></div>
+              <div class="m m--depftd"><span class="m__lbl">Depósito médio</span><span class="m__val" data-derived="tap.deposito / tap.ftd">—</span></div>
               <div class="m"><span class="m__lbl">Net dep</span><span class="m__val num--pos" data-field="tap.net_dep">R$ 1.890,25</span></div>
               <div class="m"><span class="m__lbl">Net PL</span><span class="m__val num--pos" data-field="tap.net_pl">R$ 742,10</span></div>
               <div class="m"><span class="m__lbl">Volume</span><span class="m__val" data-field="tap.volume">R$ 8.120,60</span></div>
@@ -4845,6 +4853,7 @@ body.pnl-aberto{overflow:hidden}
             <div class="tap-fin">
               <div class="m"><span class="m__lbl">Valor FTD</span><span class="m__val" data-field="tap.valor_ftd">R$ 640,00</span></div>
               <div class="m"><span class="m__lbl">Depósito</span><span class="m__val" data-field="tap.deposito">R$ 9.740,10</span></div>
+              <div class="m m--depftd"><span class="m__lbl">Depósito médio</span><span class="m__val" data-derived="tap.deposito / tap.ftd">—</span></div>
               <div class="m"><span class="m__lbl">Net dep</span><span class="m__val num--pos" data-field="tap.net_dep">R$ 3.120,80</span></div>
               <div class="m"><span class="m__lbl">Net PL</span><span class="m__val num--pos" data-field="tap.net_pl">R$ 1.980,35</span></div>
               <div class="m"><span class="m__lbl">Volume</span><span class="m__val" data-field="tap.volume">R$ 11.450,25</span></div>
@@ -5042,6 +5051,7 @@ body.pnl-aberto{overflow:hidden}
             <div class="tap-fin">
               <div class="m"><span class="m__lbl">Valor FTD</span><span class="m__val" data-field="tap.valor_ftd">R$ 120,00</span></div>
               <div class="m"><span class="m__lbl">Depósito</span><span class="m__val" data-field="tap.deposito">R$ 800,00</span></div>
+              <div class="m m--depftd"><span class="m__lbl">Depósito médio</span><span class="m__val" data-derived="tap.deposito / tap.ftd">—</span></div>
               <div class="m"><span class="m__lbl">Net dep</span><span class="m__val num--neg" data-field="tap.net_dep">-R$ 30,00</span></div>
               <div class="m"><span class="m__lbl">Net PL</span><span class="m__val num--pos" data-field="tap.net_pl">R$ 55,00</span></div>
               <div class="m"><span class="m__lbl">Volume</span><span class="m__val" data-field="tap.volume">R$ 620,00</span></div>
@@ -5107,6 +5117,7 @@ body.pnl-aberto{overflow:hidden}
             <div class="tap-fin">
               <div class="m"><span class="m__lbl">Valor FTD</span><span class="m__val" data-field="tap.valor_ftd">R$ 0,00</span></div>
               <div class="m"><span class="m__lbl">Depósito</span><span class="m__val" data-field="tap.deposito">R$ 3.350,20</span></div>
+              <div class="m m--depftd"><span class="m__lbl">Depósito médio</span><span class="m__val" data-derived="tap.deposito / tap.ftd">—</span></div>
               <div class="m"><span class="m__lbl">Net dep</span><span class="m__val num--neg" data-field="tap.net_dep">-R$ 420,15</span></div>
               <div class="m"><span class="m__lbl">Net PL</span><span class="m__val num--pos" data-field="tap.net_pl">R$ 210,90</span></div>
               <div class="m"><span class="m__lbl">Volume</span><span class="m__val" data-field="tap.volume">R$ 4.180,70</span></div>
@@ -5170,6 +5181,7 @@ body.pnl-aberto{overflow:hidden}
             <div class="tap-fin">
               <div class="m"><span class="m__lbl">Valor FTD</span><span class="m__val" data-field="tap.valor_ftd">R$ 0,00</span></div>
               <div class="m"><span class="m__lbl">Depósito</span><span class="m__val" data-field="tap.deposito">R$ 16.730,00</span></div>
+              <div class="m m--depftd"><span class="m__lbl">Depósito médio</span><span class="m__val" data-derived="tap.deposito / tap.ftd">—</span></div>
               <div class="m"><span class="m__lbl">Net dep</span><span class="m__val num--pos" data-field="tap.net_dep">R$ 6.730,00</span></div>
               <div class="m"><span class="m__lbl">Net PL</span><span class="m__val num--pos" data-field="tap.net_pl">R$ 3.026,80</span></div>
               <div class="m"><span class="m__lbl">Volume</span><span class="m__val" data-field="tap.volume">R$ 20.728,05</span></div>
@@ -5810,6 +5822,7 @@ body.pnl-aberto{overflow:hidden}
             <div class="tap-fin">
               <div class="m"><span class="m__lbl">Valor FTD</span><span class="m__val" data-field="tap.valor_ftd">R$ 450,00</span></div>
               <div class="m"><span class="m__lbl">Depósito</span><span class="m__val" data-field="tap.deposito">R$ 9.740,10</span></div>
+              <div class="m m--depftd"><span class="m__lbl">Depósito médio</span><span class="m__val" data-derived="tap.deposito / tap.ftd">—</span></div>
               <div class="m"><span class="m__lbl">Net dep</span><span class="m__val num--pos" data-field="tap.net_dep">R$ 2.980,44</span></div>
               <div class="m"><span class="m__lbl">Net PL</span><span class="m__val num--pos" data-field="tap.net_pl">R$ 1.204,10</span></div>
               <div class="m"><span class="m__lbl">Volume</span><span class="m__val" data-field="tap.volume">R$ 14.220,30</span></div>
@@ -5878,6 +5891,7 @@ body.pnl-aberto{overflow:hidden}
             <div class="tap-fin">
               <div class="m"><span class="m__lbl">Valor FTD</span><span class="m__val" data-field="tap.valor_ftd">R$ 1.143,55</span></div>
               <div class="m"><span class="m__lbl">Depósito</span><span class="m__val" data-field="tap.deposito">R$ 11.961,48</span></div>
+              <div class="m m--depftd"><span class="m__lbl">Depósito médio</span><span class="m__val" data-derived="tap.deposito / tap.ftd">—</span></div>
               <div class="m"><span class="m__lbl">Net dep</span><span class="m__val num--pos" data-field="tap.net_dep">R$ 6.010,34</span></div>
               <div class="m"><span class="m__lbl">Net PL</span><span class="m__val num--pos" data-field="tap.net_pl">R$ 1.660,45</span></div>
               <div class="m"><span class="m__lbl">Volume</span><span class="m__val" data-field="tap.volume">R$ 17.130,98</span></div>
@@ -6034,6 +6048,7 @@ body.pnl-aberto{overflow:hidden}
             <div class="tap-fin">
               <div class="m"><span class="m__lbl">Valor FTD</span><span class="m__val" data-field="tap.valor_ftd">R$ 3.280,00</span></div>
               <div class="m"><span class="m__lbl">Depósito</span><span class="m__val" data-field="tap.deposito">R$ 96.204,80</span></div>
+              <div class="m m--depftd"><span class="m__lbl">Depósito médio</span><span class="m__val" data-derived="tap.deposito / tap.ftd">—</span></div>
               <div class="m"><span class="m__lbl">Net dep</span><span class="m__val num--pos" data-field="tap.net_dep">R$ 41.880,22</span></div>
               <div class="m"><span class="m__lbl">Net PL</span><span class="m__val num--neg" data-field="tap.net_pl">-R$ 2.104,66</span></div>
               <div class="m"><span class="m__lbl">Volume</span><span class="m__val" data-field="tap.volume">R$ 148.930,41</span></div>
@@ -6159,6 +6174,7 @@ body.pnl-aberto{overflow:hidden}
             <div class="tap-fin">
               <div class="m"><span class="m__lbl">Valor FTD</span><span class="m__val" data-field="tap.valor_ftd">R$ 405,00</span></div>
               <div class="m"><span class="m__lbl">Depósito</span><span class="m__val" data-field="tap.deposito">R$ 22.480,15</span></div>
+              <div class="m m--depftd"><span class="m__lbl">Depósito médio</span><span class="m__val" data-derived="tap.deposito / tap.ftd">—</span></div>
               <div class="m"><span class="m__lbl">Net dep</span><span class="m__val num--pos" data-field="tap.net_dep">R$ 8.120,44</span></div>
               <div class="m"><span class="m__lbl">Net PL</span><span class="m__val num--pos" data-field="tap.net_pl">R$ 2.410,88</span></div>
               <div class="m"><span class="m__lbl">Volume</span><span class="m__val" data-field="tap.volume">R$ 31.204,60</span></div>
@@ -7841,6 +7857,12 @@ function pintarExpert(expert, ehPrimeiro, isHoje, geral) {
           brl(inv > 0 && ehNum(tap.custo_por_ftd) ? tap.custo_por_ftd : 0));
   escreve(campo(boxTap, 'tap.valor_ftd'), brl(tap.valor_ftd));
   escreve(campo(boxTap, 'tap.deposito'), brl(tap.deposito));
+  /* Depósito médio é DERIVADO (a API não manda por expert): depósito ÷ FTD,
+     mesma conta do tile "Depósito médio por FTD" dos totais. Sem FTD imprime
+     R$ 0,00, seguindo a regra de 13/08 das colunas de custo do card. */
+  var ftdEx = ehNum(tap.ftd) ? tap.ftd : 0;
+  escreve($('.m--depftd .m__val', boxTap),
+          brl(ftdEx > 0 ? (tap.deposito || 0) / ftdEx : 0));
   var nd = campo(boxTap, 'tap.net_dep'), np = campo(boxTap, 'tap.net_pl');
   escreve(nd, brl(tap.net_dep)); classeSinal(nd, tap.net_dep);
   escreve(np, brl(tap.net_pl));  classeSinal(np, tap.net_pl);
