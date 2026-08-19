@@ -6247,12 +6247,14 @@ body.pnl-aberto{overflow:hidden}
         </div>
         </div>
 
-      <!-- MESMOS TRÊS NÍVEIS dos outros dois escopos, com as métricas que o
-           Google tem. Sem net dep (a TAP não separa saque por este btag). -->
+      <!-- MESMOS TRÊS NÍVEIS dos outros dois escopos, lendo IGUAL aos cards
+           do Meta (pedido do operador em 19/08): mesmos rótulos, mesmas
+           sublinhas, mesmas réguas de cor. O que era só do Google (cliques,
+           CPC, conversões) desceu pro cabeçalho da lista de contas. -->
       <section class="totals" aria-label="Totais do Google">
         <!-- ── NÍVEL 1 ───────────────────────────────────────────────────── -->
         <div class="tcard tcard--hero">
-          <span class="tcard__lbl">Investimento Google</span>
+          <span class="tcard__lbl">Investimento total</span>
           <span class="tcard__val" data-field="google.investimento_total">—</span>
           <span class="tcard__sub">—</span>
         </div>
@@ -6280,17 +6282,8 @@ body.pnl-aberto{overflow:hidden}
         <div class="tcard">
           <span class="tcard__lbl">Depósito</span>
           <span class="tcard__val" data-field="google.deposito">—</span>
-          <span class="tcard__sub">—</span>
-        </div>
-        <div class="tcard">
-          <span class="tcard__lbl">Conversão cadastro → FTD</span>
-          <span class="tcard__val" data-field="google.conversao">—</span>
-          <span class="tcard__sub">—</span>
-        </div>
-        <div class="tcard">
-          <span class="tcard__lbl">Valor dos FTD</span>
-          <span class="tcard__val" data-field="google.valor_ftd">—</span>
-          <span class="tcard__sub">—</span>
+          <!-- mesmo uso do dourado dos outros dois escopos: retorno sobre o investido -->
+          <span class="tcard__sub tcard__sub--gold">—</span>
         </div>
         <!-- ── NÍVEL 3 ───────────────────────────────────────────────────── -->
         <div class="totals__fin">
@@ -6355,7 +6348,10 @@ body.pnl-aberto{overflow:hidden}
         </div>
       </section>
 
-      <div class="section-head"><h2 class="eyebrow">Contas de anúncio · MCC <span data-field="google.mcc">—</span></h2></div>
+      <!-- a entrega total (cliques · CPC · conversões) morava em tiles que os
+           outros escopos não têm; desceu pra cá quando os cards viraram
+           espelho do Meta — a informação continua, só mudou de andar. -->
+      <div class="section-head"><h2 class="eyebrow">Contas de anúncio · MCC <span data-field="google.mcc">—</span><span data-field="google.entrega" hidden></span></h2></div>
       <div class="gcontas" data-list="google-contas">
         <div class="gcontas__row gcontas__row--head" aria-hidden="true">
           <span>Conta</span><span class="gcontas__val gcontas__id">ID</span><span class="gcontas__val">Investimento</span><span class="gcontas__entrega">Cliques · CPC</span>
@@ -9715,55 +9711,101 @@ function pintarGoogle(g, periodo) {
     }
   }
 
+  /* Daqui pra baixo os tiles LEEM IGUAL aos do Meta (pintarTotais): mesmos
+     textos de apoio, mesmas réguas, mesmos fallbacks. A única diferença que
+     sobrou é o `pend`: no Meta o investimento sempre existe, aqui a leitura
+     da Google Ads API pode ter falhado — e aí a resposta honesta segue sendo
+     "aguardando API", nunca R$ 0,00. */
+  var temCadG = ehNum(t.cadastros) && t.cadastros > 0;
+  var temFtdG = ehNum(t.ftd) && t.ftd > 0;
+
   pintar('google.investimento_total', inv == null ? null : brl(inv),
          pend ? 'aguardando acesso à API do Google'
-              : inteiro(g.cliques) + ' cliques · CPC ' + (ehNum(g.cpc) ? brl(g.cpc) : '—'),
+              : (temCadG ? brl((inv || 0) / t.cadastros) + ' por cadastro' : 'sem cadastro ainda'),
          'aguardando API');
   pintar('google.deposito', brl(t.deposito),
-         inv ? vezes((t.deposito || 0) / inv) + ' o investido' : 'total depositado no período');
+         pend ? 'retorno aguardando API do Google'
+              : (ehNum(inv) && inv > 0 ? vezes((t.deposito || 0) / inv) + ' o investido' : 'sem investimento'));
   var elNp = campo(raiz, 'google.net_pl');
   escreve(elNp, brl(t.net_pl));
   classeSinal(elNp, t.net_pl);
-  escreve(sub(elNp), ehNum(t.volume) && t.volume > 0 ? pct((t.net_pl || 0) / t.volume * 100) + ' do volume' : '—');
+  escreve(sub(elNp), ehNum(t.volume) && t.volume > 0
+    ? pct((t.net_pl || 0) / t.volume * 100) + ' do volume' : 'sem volume no período');
   pintar('google.volume', brl(t.volume),
-         ehNum(t.deposito) && t.deposito > 0 ? vezes((t.volume || 0) / t.deposito) + ' o depósito' : '—');
-  pintar('google.cadastros', inteiro(t.cadastros), 'vindos do btag ' + (g.btag || '—'));
+         ehNum(t.deposito) && t.deposito > 0 ? vezes((t.volume || 0) / t.deposito) + ' o depósito' : 'sem depósito no período');
+  pintar('google.cadastros', inteiro(t.cadastros),
+         temCadG ? pct((t.ftd || 0) / t.cadastros * 100) + ' viraram FTD' : 'sem cadastro ainda');
   pintar('google.custo_cadastro', ehNum(g.custo_por_cadastro) ? brl(g.custo_por_cadastro) : null,
-         pend ? 'depende do investimento' : inteiro(t.cadastros) + ' cadastros no período', 'aguardando API');
-  pintar('google.ftd', inteiro(t.ftd),
-         t.cadastros > 0 ? pct((t.ftd || 0) / t.cadastros * 100) + ' dos cadastros' : 'sem cadastro');
-  var elCfg = campo(raiz, 'google.custo_ftd');
-  pintar('google.custo_ftd', ehNum(g.custo_por_ftd) ? brl(g.custo_por_ftd) : null,
          pend ? 'depende do investimento'
-              : (g.custo_por_ftd <= FAIXA_BOA ? 'dentro da faixa boa (até ' + brl(FAIXA_BOA) + ')'
-                : g.custo_por_ftd < FAIXA_ALTA ? 'acima do confortável' : 'alto (teto ' + brl(FAIXA_ALTA) + ')'),
+              : (temCadG ? inteiro(t.cadastros) + ' cadastros no período' : 'sem cadastro no período'),
+         'aguardando API');
+
+  /* custo por FTD embaixo do FTD, colorido pela faixa — igual ao Meta */
+  var cpaG = ehNum(g.custo_por_ftd) ? g.custo_por_ftd
+    : (ehNum(inv) && temFtdG ? inv / t.ftd : null);
+  var elFtdG = campo(raiz, 'google.ftd');
+  escreve(elFtdG, inteiro(t.ftd));
+  var subFtdG = sub(elFtdG);
+  escreve(subFtdG, pend ? 'custo por FTD aguardando API'
+    : cpaG == null
+      ? (ehNum(inv) && inv > 0 ? brl(inv) + ' investidos, nenhum FTD' : 'sem FTD no período')
+      : brl(cpaG) + ' por FTD');
+  if (subFtdG) {
+    subFtdG.classList.remove('is-good', 'is-warn', 'is-bad');
+    if (!pend && cpaG != null) {
+      subFtdG.classList.add(cpaG <= FAIXA_BOA ? 'is-good'
+        : (cpaG < FAIXA_ALTA ? 'is-warn' : 'is-bad'));
+    }
+    subFtdG.title = (pend || cpaG == null) ? ''
+      : (cpaG <= FAIXA_BOA ? 'dentro da faixa boa (até ' + brl(FAIXA_BOA) + ')'
+        : (cpaG < FAIXA_ALTA ? 'acima do confortável (' + brl(FAIXA_BOA) + ')'
+          : 'alto (teto ' + brl(FAIXA_ALTA) + ')'));
+  }
+
+  var elCfg = campo(raiz, 'google.custo_ftd');
+  pintar('google.custo_ftd', ehNum(cpaG) ? brl(cpaG) : (pend ? null : brl(0)),
+         pend ? 'depende do investimento'
+              : ehNum(cpaG)
+                ? (cpaG <= FAIXA_BOA ? 'dentro da faixa boa (até ' + brl(FAIXA_BOA) + ')'
+                  : cpaG < FAIXA_ALTA ? 'acima do confortável (' + brl(FAIXA_BOA) + ')'
+                  : 'alto (teto ' + brl(FAIXA_ALTA) + ')')
+                : (ehNum(inv) && inv > 0 ? brl(inv) + ' investidos, nenhum FTD' : 'nada investido no período'),
          'aguardando API');
   if (elCfg) {
     elCfg.classList.remove('val--good', 'val--warn', 'val--bad');
-    if (ehNum(g.custo_por_ftd)) elCfg.classList.add(g.custo_por_ftd <= FAIXA_BOA ? 'val--good'
-      : g.custo_por_ftd < FAIXA_ALTA ? 'val--warn' : 'val--bad');
+    if (ehNum(cpaG)) elCfg.classList.add(cpaG <= FAIXA_BOA ? 'val--good'
+      : cpaG < FAIXA_ALTA ? 'val--warn' : 'val--bad');
     /* mesmo herói de custo por FTD dos outros dois escopos (v5) */
     var tileCfg = elCfg.closest ? elCfg.closest('.tcard--cpa') : null;
     if (tileCfg) {
       tileCfg.classList.remove('is-good', 'is-warn', 'is-bad');
-      if (ehNum(g.custo_por_ftd)) tileCfg.classList.add(g.custo_por_ftd <= FAIXA_BOA ? 'is-good'
-        : g.custo_por_ftd < FAIXA_ALTA ? 'is-warn' : 'is-bad');
+      if (ehNum(cpaG)) tileCfg.classList.add(cpaG <= FAIXA_BOA ? 'is-good'
+        : cpaG < FAIXA_ALTA ? 'is-warn' : 'is-bad');
     }
   }
-  pintar('google.ticket_ftd', ehNum(t.ticket_ftd) ? brl(t.ticket_ftd) : null,
-         'valor do 1º depósito', 'sem FTD');
-  pintar('google.deposito_ftd', ehNum(t.deposito_por_ftd) ? brl(t.deposito_por_ftd) : null,
-         t.ftd > 0 ? 'depósito ÷ ' + inteiro(t.ftd) + ' FTD' : '—', 'sem FTD');
-  pintar('google.conversao', ehNum(t.conversao_cadastro_ftd) ? pct(t.conversao_cadastro_ftd) : null,
-         'cadastro que virou FTD', 'sem cadastro');
-  pintar('google.valor_ftd', brl(t.valor_ftd),
-         ehNum(g.conversoes) ? inteiro(g.conversoes) + ' conversões no Google Ads' : 'soma dos primeiros depósitos');
+  pintar('google.ticket_ftd', temFtdG ? brl(ehNum(t.ticket_ftd) ? t.ticket_ftd : (t.valor_ftd || 0) / t.ftd) : 'sem FTD',
+         temFtdG ? 'valor do 1º depósito · ' + brl(t.valor_ftd) + ' no total' : 'nenhum FTD no período');
+  pintar('google.deposito_ftd', temFtdG ? brl(ehNum(t.deposito_por_ftd) ? t.deposito_por_ftd : (t.deposito || 0) / t.ftd) : 'sem FTD',
+         temFtdG ? 'depósito ÷ ' + inteiro(t.ftd) + (t.ftd === 1 ? ' FTD' : ' FTDs') : 'nenhum FTD no período');
 
   var elNd = campo(raiz, 'google.net_dep');
   escreve(elNd, brl(t.net_dep));
   classeSinal(elNd, t.net_dep);
   escreve(sub(elNd), ehNum(t.deposito) && t.deposito > 0
-    ? pct((t.net_dep || 0) / t.deposito * 100) + ' do depósito bruto' : '—');
+    ? pct((t.net_dep || 0) / t.deposito * 100) + ' do depósito bruto' : 'sem depósito no período');
+
+  /* a entrega do Google (cliques · CPC · conversões) morava em tiles que o
+     Meta não tem; agora vive no cabeçalho da lista de contas. */
+  var elEnt = campo(raiz, 'google.entrega');
+  if (elEnt) {
+    var pedacos = [];
+    if (ehNum(g.cliques) && g.cliques > 0) {
+      pedacos.push(inteiro(g.cliques) + ' cliques' + (ehNum(g.cpc) ? ' · CPC ' + brl(g.cpc) : ''));
+    }
+    if (ehNum(g.conversoes) && g.conversoes > 0) pedacos.push(inteiro(g.conversoes) + ' conversões');
+    elEnt.textContent = pedacos.length ? ' · ' + pedacos.join(' · ') : '';
+    elEnt.hidden = !pedacos.length;
+  }
 
   /* ── retorno e afiliado ────────────────────────────────────────────────
      Mesmas contas dos outros escopos. A diferença é que aqui o investimento
