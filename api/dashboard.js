@@ -39,6 +39,14 @@ const TZ = 'America/Sao_Paulo';
    da página, e cookie sobreviveria ao F5. */
 let tokenCl = null;
 try { tokenCl = require('./cl-auth').tokenValido; } catch (e) { tokenCl = null; }
+
+/* Postback de investimento pro CRM da Bateu (gamifydeposit). O plano Hobby só
+   dá cron diário, então o "tempo real" é este carona: toda busca do DIA
+   CORRENTE reaproveita o payload que já está na mão e empurra nome + investido
+   pro hook (a trava de 4 min mora no próprio módulo). Se o arquivo sumir, o
+   painel segue vivo — o postback é o único que morre. */
+let pushSpend = null;
+try { pushSpend = require('./push-spend').entregarComTrava; } catch (e) { pushSpend = null; }
 function temSessaoCl(req) {
   const segredo = process.env.PAINEL_CL_SENHA;
   /* sem senha configurada o recorte fica aberto como sempre foi: ligar a
@@ -347,7 +355,15 @@ module.exports = async function handler(req, res) {
             ? 'public, max-age=0, s-maxage=45, stale-while-revalidate=120'
             : 'public, max-age=0, s-maxage=600, stale-while-revalidate=1800')
     );
-    return res.status(200).json(dados);
+    res.status(200).json(dados);
+    /* DEPOIS de responder, de propósito: o painel não espera o CRM. A função
+       só congela quando esta promise resolve, então o await aqui ainda roda.
+       Só dado de HOJE viaja — período fechado mandaria gasto antigo com data
+       antiga e sujaria o número do dia lá no CRM. */
+    if (pushSpend && isHoje) {
+      await pushSpend(dados);
+    }
+    return;
   } catch (e) {
     res.setHeader('Cache-Control', 'no-store');
     const abortou = e && (e.name === 'AbortError' || e.name === 'TimeoutError');

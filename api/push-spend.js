@@ -38,7 +38,80 @@ const HOOK_TIMEOUT_MS = 8000;
 
 function numeroOuZero(v) {
   const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
+  /* Duas casas: o n8n soma float e mandaria 2854.3100000000004 pro CRM. */
+  return Number.isFinite(n) ? Math.round(n * 100) / 100 : 0;
+}
+
+/**
+ * Monta o corpo a partir do payload do painel e entrega no hook do CRM.
+ * Devolve um resumo do que houve; joga erro só se nem chegou a enviar.
+ * É usada pelo handler abaixo (cron) e pelo /api/dashboard (tempo real).
+ */
+async function entregar(dados) {
+  const lista = dados && dados.geral && Array.isArray(dados.geral.experts)
+    ? dados.geral.experts
+    : null;
+  if (!lista) {
+    return { enviado: false, motivo: 'payload sem geral.experts' };
+  }
+
+  const experts = lista.map((e) => ({
+    nome: String(e.expert_name || '').trim() || 'sem nome',
+    valor_investido: numeroOuZero(e.investimento_total)
+  }));
+
+  const corpo = {
+    origem: 'dashboard-operacao-bateubet',
+    data: dados.periodo && dados.periodo.de ? dados.periodo.de : null,
+    total_investido: numeroOuZero(
+      experts.reduce((s, e) => s + e.valor_investido, 0)
+    ),
+    experts
+  };
+
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), HOOK_TIMEOUT_MS);
+  try {
+    const r = await fetch(HOOK_URL, {
+      method: 'POST',
+      signal: ctrl.signal,
+      headers: {
+        'content-type': 'application/json',
+        apikey: process.env.GAMIFY_APIKEY || GAMIFY_APIKEY_PADRAO
+      },
+      body: JSON.stringify(corpo)
+    });
+    const resposta = await r.text();
+    return {
+      enviado: r.ok,
+      hook_status: r.status,
+      hook_resposta: resposta.slice(0, 300),
+      experts_enviados: experts.length,
+      total_investido: corpo.total_investido
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/* TEMPO REAL, do jeito que dá sem cron de minuto (plano Hobby): o
+   /api/dashboard chama isto a cada busca do dia corrente. A trava de 4 min é
+   por INSTÂNCIA da função (variável de módulo sobrevive enquanto a instância
+   está quente) — instância nova manda na primeira chamada, o que só adianta o
+   relógio, nunca atrasa. Erro aqui morre aqui: o CRM fora do ar não pode
+   derrubar o painel. */
+const INTERVALO_MIN_MS = 4 * 60 * 1000;
+let ultimaEntrega = 0;
+
+async function entregarComTrava(dados) {
+  const agora = Date.now();
+  if (agora - ultimaEntrega < INTERVALO_MIN_MS) return { pulado: true };
+  ultimaEntrega = agora;
+  try {
+    return await entregar(dados);
+  } catch (e) {
+    return { enviado: false, motivo: String((e && e.message) || e).slice(0, 200) };
+  }
 }
 
 module.exports = async function handler(req, res) {
@@ -101,62 +174,28 @@ module.exports = async function handler(req, res) {
     clearTimeout(timer);
   }
 
-  /* 2. Recorte: escopo GERAL (todas as entidades com conta de anúncio), só
-     nome + investido. `geral.experts` é a lista completa; a raiz `experts` é
-     apenas o recorte Costa e Lobão e ficaria devendo gente. */
-  const lista = dados && dados.geral && Array.isArray(dados.geral.experts)
-    ? dados.geral.experts
-    : null;
-  if (!lista) {
-    return res.status(502).json({
-      error: 'upstream_incompleto',
-      detail: 'A resposta do n8n veio sem geral.experts.'
-    });
-  }
-
-  const experts = lista.map((e) => ({
-    nome: String(e.expert_name || '').trim() || 'sem nome',
-    valor_investido: numeroOuZero(e.investimento_total)
-  }));
-
-  const corpo = {
-    origem: 'dashboard-operacao-bateubet',
-    data: dados.periodo && dados.periodo.de ? dados.periodo.de : null,
-    total_investido: experts.reduce((s, e) => s + e.valor_investido, 0),
-    experts
-  };
-
-  // 3. Entrega no hook do CRM.
-  const ctrl2 = new AbortController();
-  const timer2 = setTimeout(() => ctrl2.abort(), HOOK_TIMEOUT_MS);
+  /* 2. Recorte (escopo GERAL, todas as contas — a raiz `experts` é só o
+     recorte Costa e Lobão e ficaria devendo gente) + entrega no hook.
+     O hook devolvendo erro NÃO é falha nossa de infra: o corpo foi montado e
+     enviado. Devolve 200 com o espelho do que houve, pra log do cron contar
+     a história inteira sem precisar abrir o Lovable. */
   try {
-    const r = await fetch(HOOK_URL, {
-      method: 'POST',
-      signal: ctrl2.signal,
-      headers: {
-        'content-type': 'application/json',
-        apikey: process.env.GAMIFY_APIKEY || GAMIFY_APIKEY_PADRAO
-      },
-      body: JSON.stringify(corpo)
-    });
-    const resposta = await r.text();
-    /* O hook devolvendo erro NÃO é falha nossa de infra: o corpo foi montado e
-       enviado. Devolve 200 com o espelho do que houve, pra log do cron contar
-       a história inteira sem precisar abrir o Lovable. */
-    return res.status(200).json({
-      enviado: r.ok,
-      hook_status: r.status,
-      hook_resposta: resposta.slice(0, 300),
-      experts_enviados: experts.length,
-      total_investido: corpo.total_investido
-    });
+    const resultado = await entregar(dados);
+    if (!resultado.enviado && resultado.motivo === 'payload sem geral.experts') {
+      return res.status(502).json({
+        error: 'upstream_incompleto',
+        detail: 'A resposta do n8n veio sem geral.experts.'
+      });
+    }
+    return res.status(200).json(resultado);
   } catch (e) {
     const abortou = e && (e.name === 'AbortError' || e.name === 'TimeoutError');
-    return res.status(502).json({
+    return res.status(abortou ? 504 : 502).json({
       error: abortou ? 'hook_timeout' : 'hook_unreachable',
       detail: String((e && e.message) || e).slice(0, 200)
     });
-  } finally {
-    clearTimeout(timer2);
   }
 };
+
+module.exports.entregar = entregar;
+module.exports.entregarComTrava = entregarComTrava;
