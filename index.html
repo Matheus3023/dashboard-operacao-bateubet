@@ -8057,7 +8057,14 @@ function pintarTotais(d, isHoje, raiz, rodape, nSelecionados) {
      era a outra ponta que so existia num tile separado. Cada numero mora em
      UM lugar -- repetir o mesmo valor em dois tiles da mesma faixa e o que
      fazia a faixa parecer maior do que e. */
-  escreve(sub(elInv), t.cadastros > 0 ? brl(inv / t.cadastros) + ' por cadastro' : 'sem cadastro ainda');
+  /* o custo por cadastro desceu pro tile de CADASTROS em 20/08, pelo mesmo
+     motivo que o custo por FTD desceu pro tile de FTD: cada numero mora em UM
+     lugar. O heroi ficou com a divisao de canal, que e a leitura que so ele
+     tem (os dois tiles de canal saem escondidos de fabrica). */
+  escreve(sub(elInv), inv > 0
+    ? pct((t.investimento_grupo || 0) / inv * 100) + ' em grupo · ' +
+      pct((t.investimento_direto || 0) / inv * 100) + ' direto'
+    : 'sem verba no período');
 
   var somaGrupo = exps.reduce(function (s, e) { return s + ((e.grupo && e.grupo.ativo && e.grupo.resultado) || 0); }, 0);
   var somaDireto = exps.reduce(function (s, e) { return s + ((e.direto && e.direto.ativo && e.direto.resultado) || 0); }, 0);
@@ -8074,10 +8081,14 @@ function pintarTotais(d, isHoje, raiz, rodape, nSelecionados) {
      "resultados" aqui deixava parecer conversão. Ver unidadeResultado(). */
   escreve(sub(elD), pct(pctDireto) + ' do total · ' + inteiro(somaDireto) + ' cliques no perfil');
 
+  /* 20/08: o sub deste tile era a conversao cadastro -> FTD, que ja vive
+     colada no tile de FTD. No lugar dela entrou o CUSTO do cadastro, pela
+     mesma regra de 13/08 que desceu o custo por FTD pro tile de FTD: o preco
+     mora ao lado do numero que ele explica. */
   var elC = campo(raiz, 'totais.cadastros');
   escreve(elC, inteiro(t.cadastros));
   escreve(sub(elC), t.cadastros > 0
-    ? pct(t.ftd / t.cadastros * 100) + ' viraram FTD'
+    ? brl(inv / t.cadastros) + ' por cadastro'
     : 'sem cadastro ainda');
 
   /* CUSTO POR FTD EMBAIXO DO FTD (13/08, pedido do operador). O tile separado
@@ -9763,7 +9774,10 @@ function pintarGoogle(g, periodo) {
   pintar('google.volume', brl(t.volume),
          ehNum(t.deposito) && t.deposito > 0 ? vezes((t.volume || 0) / t.deposito) + ' o depósito' : 'sem depósito no período');
   pintar('google.cadastros', inteiro(t.cadastros),
-         temCadG ? pct((t.ftd || 0) / t.cadastros * 100) + ' viraram FTD' : 'sem cadastro ainda');
+         temCadG
+           ? (ehNum(g.custo_por_cadastro) ? brl(g.custo_por_cadastro) + ' por cadastro'
+                                          : 'custo depende do investimento')
+           : 'sem cadastro ainda');
   pintar('google.custo_cadastro', ehNum(g.custo_por_cadastro) ? brl(g.custo_por_cadastro) : null,
          pend ? 'depende do investimento'
               : (temCadG ? inteiro(t.cadastros) + ' cadastros no período' : 'sem cadastro no período'),
