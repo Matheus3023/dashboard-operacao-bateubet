@@ -870,6 +870,24 @@ html.rolado .brand__logo{height:19px}
   .topbar__in,.brand__logo{transition:none}
 }
 
+/* ── A FAIXA SAI DE CENA AO DESCER (só no celular) ────────────────────────
+   Empilhada, a barra come 158px de uma tela de 844 -- quase 20% do painel
+   ocupado por comando enquanto se lê número. Descendo, ela sai; subindo o
+   dedo, ela volta na hora, que é o gesto que todo app de celular já ensinou.
+   As .tabs sobem pro topo junto (elas grudam em --topbar-h) pra não deixar
+   buraco no lugar da barra que saiu.
+   NÃO sai quando: está perto do topo (os primeiros 160px) ou o painel de
+   análise está aberto -- ali a barra é a referência de onde se está.
+   Quem põe e tira a classe é ligarBarraCompacta(), no JS. */
+@media (max-width:759px){
+  .topbar{transition:transform .2s ease}
+  html.topbar-fora .topbar{transform:translateY(-100%)}
+  html.topbar-fora .tabs{top:0}
+}
+@media (prefers-reduced-motion:reduce){
+  .topbar{transition:none}
+}
+
 /* ── BANNER DE ERRO ─────────────────────────────────────────────────────── */
 .errbar{
   margin:14px 0 0;padding:11px 14px;
@@ -2122,6 +2140,86 @@ html.rolado .brand__logo{height:19px}
   .opsfil{order:2;width:100%}
   .opsfil__btn{width:100%;justify-content:center}
   .opsfil__pop{width:auto;left:0;right:0}
+}
+
+/* ── COMPARATIVO NO CELULAR: CARTÃO, NÃO TABELA ───────────────────────────
+   Quatro colunas numa tela de 390px davam ~40px pro nome, e a coluna que
+   IDENTIFICA a linha virava "J…", "D..", "G..". Tabela com a chave ilegível
+   não é tabela: é uma pilha de números órfãos.
+   Da largura de celular pra baixo cada expert vira um cartão -- nome inteiro
+   em cima (podendo quebrar em duas linhas), métricas embaixo em pares
+   rótulo → valor. Perde-se a varredura lado a lado, que numa tela desta
+   largura já não existia; ganha-se saber de quem é o número.
+   O rótulo nasce em ::before por CLASSE da célula. A única que não tem classe
+   própria é o investido, pega por posição (4º filho) -- se a ordem das células
+   mudar no HTML, é esta regra que precisa acompanhar.
+   ────────────────────────────────────────────────────────────────────────── */
+@media (max-width:559px){
+  .cmp{overflow-x:visible}
+  .cmp__body .cmp__row{
+    display:grid;grid-template-columns:1fr auto;align-items:baseline;
+    row-gap:3px;column-gap:14px;padding:13px 14px 14px;
+  }
+  .cmp__name{
+    grid-column:1/-1;margin-bottom:7px;align-items:flex-start;
+    font-size:.9375rem;letter-spacing:.01em;
+  }
+  /* o nome PODE quebrar: é a chave da linha, e cortar a chave foi o defeito
+     que este bloco veio consertar */
+  .cmp__nomewrap{
+    white-space:normal;overflow:visible;text-overflow:clip;
+    display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 8px;line-height:1.25;
+  }
+  .cmp__nomewrap > .cmp__tag{
+    display:inline;margin-top:0;white-space:normal;overflow:visible;text-overflow:clip;
+    font-size:.625rem;
+  }
+  .cmp__pick{width:16px;height:16px;margin-top:3px}
+  /* Cada métrica ocupa a linha inteira: rótulo à esquerda, valor à direita.
+     Só as TRÊS que sobrevivem no celular são citadas -- pegar `.cmp__num`
+     inteiro ressuscitaria as doze colunas escondidas lá em cima, que têm
+     display:none com menos especificidade que este seletor. */
+  .cmp__body .cmp__row > :nth-child(4),
+  .cmp__body .cmp__row > .cmp__custoftd,
+  .cmp__body .cmp__row > .cmp__custores{
+    grid-column:1/-1;display:flex;flex-direction:row;align-items:baseline;
+    justify-content:space-between;gap:14px;overflow:visible;
+  }
+  .cmp__body .cmp__row > :nth-child(4)::before,
+  .cmp__body .cmp__row > .cmp__custoftd::before,
+  .cmp__body .cmp__row > .cmp__custores::before{
+    font-family:var(--mono);font-size:.5625rem;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--txt-3);font-weight:600;
+    white-space:nowrap;
+  }
+  .cmp__body .cmp__row > :nth-child(4)::before{content:"Investido"}
+  .cmp__body .cmp__row > .cmp__custores::before{content:"Custo/result."}
+  .cmp__body .cmp__row > .cmp__custoftd::before{content:"Custo por FTD"}
+  /* o chip de custo/result. tem duas linhas quando há dois canais: alinhado
+     à direita, cada uma na sua */
+  .cmp__custores{flex-wrap:nowrap}
+  /* margin só no PRIMEIRO chip: com dois canais na mesma célula (grupo e
+     perfil), o auto em cada um separava os dois no meio da linha */
+  .cmp__custores > .chip:first-of-type{margin-left:auto}
+
+  /* ── CABEÇALHO VIRA FAIXA DE CHIPS DE ORDENAÇÃO ─────────────────────────
+     Sem tabela não há coluna pra clicar, mas a ordenação não pode sumir: ela
+     é como se acha o pior CPA no meio de 39 linhas. Os mesmos botões viram
+     chips numa faixa que rola de lado, e o ativo fica aceso. */
+  .cmp__row--head{
+    display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;
+    padding:9px 14px;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+  }
+  .cmp__row--head::-webkit-scrollbar{display:none}
+  .cmp__row--head > *{
+    flex:none;padding:5px 11px;border:1px solid var(--line);border-radius:999px;
+    background:rgba(255,255,255,.03);color:var(--txt-2);
+  }
+  .cmp__row--head > *:first-child{padding-left:11px}
+  .cmp__th.is-ord{
+    color:var(--txt-1);border-color:var(--acao);background:rgba(230,0,122,.14);
+  }
+  .cmp__th__t{overflow:visible;text-overflow:clip}
 }
 
 
@@ -3498,6 +3596,73 @@ body.pnl-aberto{overflow:hidden}
   margin:0;font-size:.6875rem;line-height:1.6;color:var(--txt-3);
 }
 @media (prefers-reduced-motion:reduce){.cta-chev{transition:none}}
+/* ── AS DUAS BARRAS DE COMANDO CABEM NA TELA ──────────────────────────────
+   Canal e período rolavam de lado sem dizer que rolavam: "Taboola" e "Datas"
+   ficavam meio cortados na borda e pareciam corte de layout, não conteúdo
+   escondido. Em 360px eram 374px de conteúdo em 330px úteis.
+   Apertando respiro e letra, os seis períodos e os cinco canais cabem
+   inteiros -- e o overflow continua ali como rede, caso entre um canal novo. */
+@media (max-width:559px){
+  .seg{gap:1px}
+  .seg label{padding:0 8px;font-size:.75rem}
+  .scopebar{gap:1px}
+  .scopebar label{padding:0 7px}
+  .scopebar__nome{font-size:.75rem}
+}
+/* 360px é o chão real (Galaxy A, iPhone SE deitado no bolso de alguém): ali
+   as duas barras ainda estouravam ~40px, então o respiro aperta mais um passo.
+   A ALTURA do alvo de toque não muda -- quem encolhe é o respiro lateral. */
+@media (max-width:400px){
+  .seg{gap:0}
+  .seg label{padding:0 6px;font-size:.71875rem}
+  .scopebar label{padding:0 5px}
+  /* o ponto do canal é o ::before do nome; quem encolhe é o gap entre eles */
+  .scopebar__nome{font-size:.71875rem;gap:5px}
+}
+
+/* ── DEDO E LETRA NO CELULAR ──────────────────────────────────────────────
+   Varredura de 22/08 em 390px: seis controles abaixo de 36px de altura (o
+   escopo com 25, os dois seletores com 29, os chips de ordenação com 23, o
+   link do rodapé da tabela com 17) e rótulos em 8-9px. Num painel que se
+   consulta em pé, no meio da operação, isso é erro de toque e leitura forçada.
+   Altura mínima de 40px onde há dedo, 34 nos chips (que vêm em faixa e não
+   podem virar botão de formulário), e chão de 10px na letra de rótulo.
+   ────────────────────────────────────────────────────────────────────────── */
+@media (max-width:759px){
+  .recorte label{min-height:40px}
+  .metfil__btn,.opsfil__btn{min-height:40px}
+  .cmp__foot .tablink{min-height:40px;display:inline-flex;align-items:center}
+}
+@media (max-width:559px){
+  .cmp__row--head > *{min-height:34px;align-items:center}
+  .cmp__th__t{font-size:.625rem}
+  .cmp__tag,.tcard__lbl,.tab__badge,.crtv__owner,
+  .metfil__lbl,.opsfil__lbl,.verdict__lbl,.sinal__lbl{font-size:.625rem}
+}
+
+/* ── A PRIMEIRA TELA DO CELULAR PRECISA TER NÚMERO ────────────────────────
+   Aberto no telefone, o painel entregava: 158px de barra, seis linhas de
+   ressalva em amarelo e só então algum dado. Quem abre no meio da operação
+   quer saber COMO ESTÁ O DIA -- a ressalva é rodapé da leitura, não manchete.
+   No celular o placar (veredito + melhor/pior CPA) sobe pra primeira posição
+   e o aviso desce pra logo depois dele, com respiro menor. Uma troca de
+   ordem, sem tocar no HTML: no desktop, onde os dois cabem lado a lado na
+   mesma dobra, nada muda. */
+@media (max-width:559px){
+  /* a view só existe visível pelo :checked do radio da aba (especificidade de
+     id), então é ali que o display tem que virar flex -- .view sozinho perde
+     a disputa e a ordem não sairia do lugar */
+  #v-geral:checked ~ .wrap .scope .view--geral,
+  #v-experts:checked ~ .wrap .scope .view--experts,
+  #v-metas:checked ~ .wrap .scope .view--metas,
+  #v-metas:checked ~ .wrap .scope:not(.scope--cl) .view--geral{
+    display:flex;flex-direction:column;
+  }
+  .view > *{order:1}
+  .view > .placar{order:0}
+  .scope-aviso{padding:11px 13px;font-size:.8125rem;line-height:1.45}
+}
+
 </style>
 </head>
 
@@ -11701,12 +11866,36 @@ function ligarMedicaoTopbar() {
 
 /* A FAIXA ENCOLHE AO ROLAR. Passivo, com histerese (liga em 44px, desliga em
    24px) pra não ficar piscando quem para o scroll bem em cima do limiar. */
+/* A MESMA LEITURA DE SCROLL FAZ DUAS COISAS:
+     1. encolhe a faixa (html.rolado), em qualquer largura;
+     2. TIRA a faixa de cena ao descer (html.topbar-fora) -- efeito que só
+        existe no celular, onde a barra empilhada come 158px. Ver o CSS.
+   Limiares diferentes pra cada direção de propósito: sair pede um gesto de
+   verdade (24px), voltar tem que ser imediato (8px). Quem lê número no celular
+   sobe o dedo justamente pra alcançar o filtro -- fazer esperar irrita. */
 function ligarBarraCompacta() {
   var raiz = document.documentElement, compacto = false;
+  var fora = false, ancora = 0, descendo = null;
+  var SAI = 24, VOLTA = 8, ZONA_LIVRE = 160;
+  function esconder(v) {
+    if (v === fora) return;
+    fora = v;
+    raiz.classList.toggle('topbar-fora', v);
+  }
   function ler() {
     var y = window.pageYOffset || raiz.scrollTop || 0;
     if (!compacto && y > 44) { compacto = true; raiz.classList.add('rolado'); }
     else if (compacto && y < 24) { compacto = false; raiz.classList.remove('rolado'); }
+
+    /* topo da página e painel aberto: a barra fica */
+    if (y <= ZONA_LIVRE || document.body.classList.contains('pnl-aberto')) {
+      esconder(false); ancora = y; descendo = null; return;
+    }
+    var dir = y > ancora ? 1 : (y < ancora ? -1 : descendo);
+    /* virou o sentido do dedo: a distância volta a contar do zero */
+    if (dir !== descendo) { descendo = dir; ancora = y; return; }
+    if (dir > 0 && y - ancora > SAI) { esconder(true); ancora = y; }
+    else if (dir < 0 && ancora - y > VOLTA) { esconder(false); ancora = y; }
   }
   window.addEventListener('scroll', ler, { passive: true });
   ler();
@@ -11721,6 +11910,9 @@ function abrirPainel(nome, esc, origem) {
   medirTopbar();
   PNL.raiz.hidden = false;
   document.body.classList.add('pnl-aberto');
+  /* o painel abre com a barra no lugar: ele se encaixa embaixo dela
+     (top:var(--topbar-h)) e com a barra fora de cena sobraria um rasgo */
+  document.documentElement.classList.remove('topbar-fora');
   var corpo = $('.pnl__body', PNL.raiz);
   if (corpo) corpo.scrollTop = 0;
   pintarPainel();
