@@ -342,7 +342,17 @@ module.exports = async function handler(req, res) {
 
     // Dado do dia muda o tempo todo: cache curto na borda só pra não bater
     // 10 segundos de n8n a cada aba aberta. Período fechado não muda mais.
-    const isHoje = !dados || !dados.periodo || dados.periodo.is_hoje !== false;
+    /* DUAS PERGUNTAS, e elas não são a mesma (arrumado em 22/08):
+       · soHoje     -> o recorte é o dia corrente e mais nada. É o que o CRM
+         pode receber: período fechado mandaria gasto antigo com data antiga e
+         sujaria o número do dia lá no gamifydeposit.
+       · incluiHoje -> o recorte TERMINA hoje, então ainda está recebendo dado.
+         É o que manda no cache da borda. Mês, 30d e qualquer custom que vai
+         até hoje caíam no ramo de período fechado e ficavam 10 min parados na
+         borda — parados em cima de um número que muda o dia inteiro. */
+    const per = (dados && dados.periodo) || null;
+    const soHoje = !per || per.is_hoje !== false;
+    const incluiHoje = soHoje || per.ate === hojeSP();
     /* Resposta de quem TEM sessão nunca vai pra borda: a Vercel serviria o
        payload com o recorte pra próxima pessoa que pedisse o mesmo período,
        sem cookie nenhum. Quem não tem sessão continua sendo cacheado — é a
@@ -351,7 +361,7 @@ module.exports = async function handler(req, res) {
       'Cache-Control',
       liberado
         ? 'private, no-store'
-        : (isHoje
+        : (incluiHoje
             ? 'public, max-age=0, s-maxage=45, stale-while-revalidate=120'
             : 'public, max-age=0, s-maxage=600, stale-while-revalidate=1800')
     );
@@ -360,7 +370,7 @@ module.exports = async function handler(req, res) {
        só congela quando esta promise resolve, então o await aqui ainda roda.
        Só dado de HOJE viaja — período fechado mandaria gasto antigo com data
        antiga e sujaria o número do dia lá no CRM. */
-    if (pushSpend && isHoje) {
+    if (pushSpend && soHoje) {
       await pushSpend(dados);
     }
     return;

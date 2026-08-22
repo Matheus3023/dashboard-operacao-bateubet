@@ -10993,17 +10993,25 @@ function carregar(opts) {
         : null;
 
       estado.dados = d;
-      estado.isHoje = !!(d.periodo && d.periodo.is_hoje);
       /* DUAS PERGUNTAS DIFERENTES, de propósito:
          · estado.isHoje  -> "continua entrando dado?"  manda no auto-refresh
-           e na pílula. Quem responde é a API (is_hoje).
-         · estado.ehHoje  -> "posso escrever a palavra HOJE na tela?" Só se o
-           período devolvido termina no dia de hoje em Brasília.
-         Elas divergem por uns minutos na virada da meia-noite: o n8n lê de um
-         cache de 2 min e ainda devolve ontem marcado como is_hoje. O timer
-         precisa continuar rodando (o dia novo vai entrar), mas a tela não pode
-         carimbar "Investido hoje" em número de ontem. */
-      estado.ehHoje = estado.isHoje && !!(d.periodo && d.periodo.ate === hojeSP());
+           e na pílula ("ao vivo · 5 min" × "período fechado").
+         · estado.ehHoje  -> "posso escrever a palavra HOJE na tela?" Só quando
+           o recorte é o dia de hoje e mais nada.
+         O `is_hoje` da API responde só a SEGUNDA pergunta: ele é true apenas
+         quando de === ate === hoje. Usá-lo no auto-refresh (era assim até
+         22/08) carimbava "período fechado · sem atualização" em Mês, 30d e
+         qualquer custom que TERMINA hoje — recorte que ainda está recebendo
+         dado o dia inteiro — e ainda desligava o timer de 5 min.
+         Quem manda no timer, então, é o último dia do recorte.
+         O `|| is_hoje` continua no meio do caminho por causa da virada da
+         meia-noite: o n8n lê de um cache de 2 min e ainda devolve ontem
+         marcado como is_hoje. O timer precisa continuar rodando (o dia novo
+         vai entrar), mas a tela não pode carimbar "Investido hoje" em número
+         de ontem — daí ehHoje exigir a data de hoje nas duas pontas. */
+      var hojeStr = hojeSP();
+      estado.isHoje = !!(d.periodo && (d.periodo.is_hoje || d.periodo.ate === hojeStr));
+      estado.ehHoje = !!(d.periodo && d.periodo.de === hojeStr && d.periodo.ate === hojeStr);
       estado.ultimoOk = Date.now();
       estado.jaCarregou = true;
       estado.carregando = false;
