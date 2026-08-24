@@ -13554,9 +13554,10 @@ elForm.addEventListener('submit', function (ev) { ev.preventDefault(); carregar(
   el.addEventListener('focus', atualizarMaxDatas);
   el.addEventListener('change', function () {
     mostrarMsg(null);
-    /* escolher a data já dispara a busca — não espera clique em "Aplicar".
-       O botão continua existindo como reforço visual/acessível. */
-    if (presetAtual() === 'custom') carregar({ interativo: true });
+    /* escolher a data NÃO dispara busca (pedido do operador, 24/08): período
+       custom é caro (30-40s no n8n) e o disparo automático buscava no meio da
+       escolha, com a outra ponta do intervalo ainda no valor antigo. A busca
+       sai só no "Aplicar" (clique ou Enter no form). */
   });
 });
 
@@ -13625,7 +13626,8 @@ elForm.addEventListener('submit', function (ev) { ev.preventDefault(); carregar(
     inp.value = ymd;
     if (inp === elDe && elAte.value && elAte.value < ymd) elAte.value = ymd;
     if (inp === elAte && elDe.value && elDe.value > ymd) elDe.value = ymd;
-    /* dispara o listener de change lá de cima (limpa msg + carregar) */
+    /* notifica o listener de change lá de cima (só limpa a msg de validação:
+       a busca fica pro "Aplicar", escolher data não busca nada) */
     inp.dispatchEvent(new Event('change', { bubbles: true }));
   }
   function aoClicar(ev) {
