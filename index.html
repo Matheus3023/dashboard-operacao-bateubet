@@ -721,6 +721,54 @@ h1,h2,h3,h4,p{margin:0}
   font-family:var(--mono);font-size:.75rem;
 }
 .range-custom input[type=date]:focus-visible{outline:2px solid var(--acao);outline-offset:1px}
+/* ── calendário próprio do filtro "Datas" (.dpk) ──────────────────────────
+   O popup do <input type=date> é do NAVEGADOR e não aceita CSS: abria um
+   calendário cinza no meio do painel roxo. Os inputs viraram readonly (o
+   indicador nativo some abaixo) e quem abre é este popover, com os tokens
+   da marca. O input segue sendo a fonte da verdade: value AAAA-MM-DD +
+   evento change — nada do resto do filtro mudou. */
+.range-custom{position:relative}
+.range-custom input[type=date]{cursor:pointer}
+.range-custom input[type=date]::-webkit-calendar-picker-indicator{display:none}
+.dpk{
+  position:absolute;left:0;top:calc(100% + 9px);z-index:45;
+  width:274px;max-width:calc(100vw - 32px);
+  padding:12px;border-radius:12px;
+  background:var(--surface-2);border:1px solid var(--line-strong);
+  box-shadow:0 18px 46px rgba(0,0,0,.55);
+}
+.dpk__head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.dpk__mes{font-size:.8125rem;font-weight:700;color:var(--txt)}
+.dpk__nav{display:flex;gap:4px}
+.dpk__nav button{
+  width:28px;height:28px;border-radius:7px;border:1px solid var(--line);
+  background:var(--surface-sunk);color:var(--txt-2);
+  font-family:var(--sans);font-size:.875rem;line-height:1;cursor:pointer;
+}
+.dpk__nav button:hover{border-color:var(--acao-line);color:var(--txt)}
+.dpk__nav button:disabled{opacity:.35;cursor:default}
+.dpk__grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.dpk__dow{font-size:.625rem;font-weight:700;color:var(--txt-3);text-align:center;padding:4px 0}
+.dpk__dia{
+  height:33px;border:0;border-radius:7px;background:none;
+  font-family:var(--sans);font-size:.75rem;color:var(--txt-2);cursor:pointer;
+}
+.dpk__dia:hover{background:var(--acao-soft);color:var(--txt)}
+.dpk__dia--fora{opacity:.45}
+/* futuro: sem dado, não clica */
+.dpk__dia--off,.dpk__dia--off:hover{background:none;color:var(--txt-3);opacity:.28;cursor:default}
+/* miolo do intervalo escolhido */
+.dpk__dia--faixa{background:var(--acao-soft);border-radius:0;color:var(--txt)}
+/* pontas do intervalo (a data "de" e a "até") */
+.dpk__dia--sel{background:var(--acao);color:#fff;font-weight:700}
+.dpk__dia--sel:hover{background:var(--acao-2);color:#fff}
+.dpk__dia--hoje{outline:1px dashed var(--gold-line);outline-offset:-1px}
+.dpk__foot{display:flex;justify-content:flex-end;margin-top:8px}
+.dpk__ir-hoje{
+  border:0;background:none;color:var(--acao);font-family:var(--sans);
+  font-size:.6875rem;font-weight:700;cursor:pointer;padding:4px 7px;border-radius:6px;
+}
+.dpk__ir-hoje:hover{background:var(--acao-soft)}
 .sort-select{
   min-height:32px;padding:0 9px;border-radius:7px;width:100%;
   background:var(--surface-sunk);border:1px solid var(--line);color:var(--txt);
@@ -10314,6 +10362,14 @@ function salvarEscolha(preset, r) {
    O que sobrou do localStorage: só as DATAS do custom, pra não reescrever o
    intervalo à mão. O preset salvo é ignorado de propósito — não apagar a
    escrita em salvarEscolha(), é ela que alimenta esse preenchimento. */
+/* o max dos <input type=date> não pode ser carimbado só no carregamento: o
+   painel fica aberto dias na tela e o calendário passava a bloquear o "hoje"
+   real (aba aberta dia 17 não deixava escolher 18 em diante). Recarimbar
+   sempre que o controle de datas for usado. */
+function atualizarMaxDatas() {
+  var hoje = hojeSP();
+  if (elDe.max !== hoje) { elDe.max = hoje; elAte.max = hoje; }
+}
 function restaurarEscolha() {
   var hoje = hojeSP();
   elDe.max = hoje; elAte.max = hoje;
@@ -10329,6 +10385,7 @@ function restaurarEscolha() {
   sincronizarCustom();
 }
 function sincronizarCustom() {
+  atualizarMaxDatas();
   elForm.classList.toggle('is-custom', presetAtual() === 'custom');
   if (presetAtual() !== 'custom') mostrarMsg(null);
 }
@@ -13492,6 +13549,9 @@ $$('input[name="range"]').forEach(function (inp) {
 $('#range-apply').addEventListener('click', function () { carregar({ interativo: true }); });
 elForm.addEventListener('submit', function (ev) { ev.preventDefault(); carregar({ interativo: true }); });
 [elDe, elAte].forEach(function (el) {
+  /* virada de dia com o painel já em "Datas": o focus roda antes do calendário
+     abrir, então o max chega atualizado sem depender de troca de preset */
+  el.addEventListener('focus', atualizarMaxDatas);
   el.addEventListener('change', function () {
     mostrarMsg(null);
     /* escolher a data já dispara a busca — não espera clique em "Aplicar".
@@ -13499,6 +13559,104 @@ elForm.addEventListener('submit', function (ev) { ev.preventDefault(); carregar(
     if (presetAtual() === 'custom') carregar({ interativo: true });
   });
 });
+
+/* ── 8c. calendário próprio do "Datas" (.dpk) ──────────────────────────────
+   O popup nativo do <input type=date> é do navegador: cinza, sem CSS possível
+   e com o max congelado se a página passou da meia-noite aberta. Este popover
+   substitui só a ESCOLHA da data — os dois inputs continuam sendo a fonte da
+   verdade (value AAAA-MM-DD + evento change, que o listener acima já escuta).
+   Regras herdadas do filtro: futuro não clica (mesma checagem do validar()),
+   e escolher um "de" depois do "até" arrasta o outro junto, nunca inverte. */
+(function () {
+  var pop = null, alvo = null, vAno = 0, vMes = 0; /* vMes 1-12 */
+  var DOW = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+  var MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+               'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+  function ymdDe(a, m, d) { return new Date(Date.UTC(a, m - 1, d)).toISOString().slice(0, 10); }
+  function fimDoMesVisto() { return ymdDe(vAno, vMes, new Date(Date.UTC(vAno, vMes, 0)).getUTCDate()); }
+  function fechar() { if (pop) { pop.remove(); pop = null; alvo = null; } }
+  function abrir(inp) {
+    if (pop && alvo === inp) return;
+    atualizarMaxDatas();
+    fechar();
+    alvo = inp;
+    var base = inp.value || hojeSP();
+    vAno = +base.slice(0, 4); vMes = +base.slice(5, 7);
+    pop = document.createElement('div');
+    pop.className = 'dpk';
+    /* mousedown não rouba o clique nem fecha pelo listener de fora */
+    pop.addEventListener('mousedown', function (ev) { ev.preventDefault(); });
+    pop.addEventListener('click', aoClicar);
+    inp.closest('.range-custom').appendChild(pop);
+    render();
+  }
+  function render() {
+    var hoje = hojeSP(), de = elDe.value, ate = elAte.value;
+    var h = '<div class="dpk__head">'
+      + '<span class="dpk__mes">' + MESES[vMes - 1].charAt(0).toUpperCase() + MESES[vMes - 1].slice(1) + ' de ' + vAno + '</span>'
+      + '<span class="dpk__nav">'
+      + '<button type="button" data-nav="-1" aria-label="Mês anterior">&lsaquo;</button>'
+      + '<button type="button" data-nav="1" aria-label="Próximo mês"'
+      + (fimDoMesVisto() >= hoje ? ' disabled' : '') + '>&rsaquo;</button>'
+      + '</span></div><div class="dpk__grid">';
+    for (var i = 0; i < 7; i++) h += '<span class="dpk__dow">' + DOW[i] + '</span>';
+    var ini = new Date(Date.UTC(vAno, vMes - 1, 1)).getUTCDay();      /* domingo=0 */
+    var total = new Date(Date.UTC(vAno, vMes, 0)).getUTCDate();
+    var antTotal = new Date(Date.UTC(vAno, vMes - 1, 0)).getUTCDate();
+    var celas = [];
+    for (var a = ini - 1; a >= 0; a--) celas.push({ ymd: ymdDe(vAno, vMes - 1, antTotal - a), fora: true });
+    for (var d = 1; d <= total; d++) celas.push({ ymd: ymdDe(vAno, vMes, d), fora: false });
+    for (var p = 1; celas.length % 7; p++) celas.push({ ymd: ymdDe(vAno, vMes + 1, p), fora: true });
+    celas.forEach(function (c) {
+      var cls = 'dpk__dia';
+      if (c.fora) cls += ' dpk__dia--fora';
+      if (c.ymd > hoje) cls += ' dpk__dia--off';
+      else if (c.ymd === de || c.ymd === ate) cls += ' dpk__dia--sel';
+      else if (de && ate && c.ymd > de && c.ymd < ate) cls += ' dpk__dia--faixa';
+      if (c.ymd === hoje) cls += ' dpk__dia--hoje';
+      h += '<button type="button" class="' + cls + '" data-ymd="' + c.ymd + '">' + (+c.ymd.slice(8)) + '</button>';
+    });
+    h += '</div><div class="dpk__foot"><button type="button" class="dpk__ir-hoje">Hoje</button></div>';
+    pop.innerHTML = h;
+  }
+  function escolher(ymd) {
+    var inp = alvo;
+    fechar();
+    inp.value = ymd;
+    if (inp === elDe && elAte.value && elAte.value < ymd) elAte.value = ymd;
+    if (inp === elAte && elDe.value && elDe.value > ymd) elDe.value = ymd;
+    /* dispara o listener de change lá de cima (limpa msg + carregar) */
+    inp.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  function aoClicar(ev) {
+    var nav = ev.target.closest('[data-nav]');
+    if (nav) {
+      vMes += +nav.dataset.nav;
+      if (vMes < 1) { vMes = 12; vAno--; } else if (vMes > 12) { vMes = 1; vAno++; }
+      render(); return;
+    }
+    if (ev.target.closest('.dpk__ir-hoje')) { escolher(hojeSP()); return; }
+    var dia = ev.target.closest('.dpk__dia');
+    if (dia && !dia.classList.contains('dpk__dia--off')) escolher(dia.dataset.ymd);
+  }
+  [elDe, elAte].forEach(function (el) {
+    el.readOnly = true;                       /* mata o popup nativo e a digitação */
+    el.addEventListener('mousedown', function (ev) { ev.preventDefault(); abrir(el); });
+    el.addEventListener('focus', function () { abrir(el); });   /* teclado (Tab) */
+    el.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape') fechar();
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); abrir(el); }
+    });
+  });
+  document.addEventListener('mousedown', function (ev) {
+    if (pop && !ev.target.closest('.dpk') && ev.target !== elDe && ev.target !== elAte) fechar();
+  });
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') fechar(); });
+  /* sair do preset "Datas" com o popover aberto não pode deixá-lo pendurado */
+  $$('input[name="range"]').forEach(function (inp) {
+    inp.addEventListener('change', function () { if (presetAtual() !== 'custom') fechar(); });
+  });
+})();
 
 /* topbar pode mudar de altura ao girar o celular / redimensionar com o painel
    aberto -- remedir evita reabrir o buraco que deixava o filtro clicável. */
