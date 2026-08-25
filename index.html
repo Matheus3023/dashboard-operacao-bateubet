@@ -2411,6 +2411,36 @@ html.rolado .brand__logo{height:19px}
     rgba(255,255,255,.16) 0 4px, transparent 4px 8px);
 }
 
+/* Toggle mês/semana do card de coorte. Botões, não abas: trocam o DADO do
+   mesmo card, não a tela. */
+.mtz__topo{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.mtz__gran{display:inline-flex;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex:none}
+.mtz__gran button{
+  appearance:none;border:0;background:transparent;color:var(--txt-3);
+  font:inherit;font-size:.75rem;font-weight:600;padding:5px 12px;cursor:pointer;
+}
+.mtz__gran button[aria-pressed="true"]{
+  background:var(--surface-sunk);color:var(--txt-1);
+}
+
+/* Coluna-resumo da safra: investimento × retorno + veredito de payback. Fica
+   colada na coluna da turma porque é a LEITURA da linha — as células à direita
+   são a prova. */
+.mtz__c--resumo{
+  align-items:flex-start;text-align:left;gap:3px;padding:8px 10px;
+  background:var(--surface-sunk);
+}
+.mtz__inv{font-size:.75rem;color:var(--txt-3)}
+.mtz__inv b{color:var(--txt-1);font-weight:600}
+.mtz__pb{
+  display:inline-block;font-size:.6875rem;font-weight:600;line-height:1.35;
+  padding:2px 7px;border-radius:6px;margin-top:2px;
+}
+.mtz__pb--ok{background:rgba(34,197,94,.16);color:#4ade80}
+.mtz__pb--proj{background:rgba(234,179,8,.16);color:#facc15}
+.mtz__pb--ruim{background:rgba(239,68,68,.16);color:#f87171}
+.mtz__pb--na{background:var(--surface);color:var(--txt-3)}
+
 /* ── RODAPÉ ─────────────────────────────────────────────────────────────── */
 .foot{
   margin-top:28px;padding-top:16px;border-top:1px solid var(--line-soft);
@@ -6810,22 +6840,9 @@ body.pnl-aberto{overflow:hidden}
         <div id="pnl-tend-corpo" hidden></div>
       </section>
 
-      <!-- 4. SAFRA · o que cada turma daquele expert deixou
-           Fica aqui, dentro do expert, e não numa aba global: safra é leitura
-           de UMA operação por vez ("a galera que o Deko trouxe em dezembro
-           ainda está apostando?"). Numa tabela com 28 linhas de expert × 11
-           meses ninguém acha a resposta.
-           A linha do tempo corre pra BAIXO, do mês mais novo pro mais velho:
-           é a leitura de retenção — quanto mais fundo, mais tempo a turma teve
-           pra sumir, e a coluna "seguem" mostra quantos não sumiram. -->
-      <section class="pnl-card" id="pnl-safra">
-        <h3 class="pnl-card__tit">
-          Safra
-          <small>por mês de cadastro · o que cada turma fez até hoje</small>
-        </h3>
-        <div class="pnl-safra__estado" id="pnl-safra-estado">Levantando as safras…</div>
-        <div id="pnl-safra-corpo" hidden></div>
-      </section>
+      <!-- 4. SAFRA · card removido a pedido (25/08). A rota ?safra=1 segue
+           sendo buscada: ela alimenta a coluna da carteira no comparativo.
+           pintarSafraDoExpert() vira no-op sem estes elementos no DOM. -->
 
       <!-- 4b. COORTE DE FTD · o GGR que cada turma gerou, mês a mês
            Card próprio, e não um pedaço do de cima, porque a pergunta é outra e
@@ -7477,6 +7494,7 @@ var estado = {
   coorte: {},
   coorteBuscando: {},
   coorteFalhou: {},
+  coorteGran: 'mes',   /* mês ou semana — preferência da sessão, vale pra todo expert */
   /* métricas escondidas da faixa de totais (preferência de quem está olhando) */
   metOcultas: null,
   /* "ainda não chegou" e "tentou e não deu" mostram textos diferentes: o
@@ -10835,7 +10853,9 @@ function brlCurto(v) {
   });
 }
 
-function chaveCoorte(escopo, nome) { return escopo + '|' + nome; }
+function chaveCoorte(escopo, nome) {
+  return escopo + '|' + nome + '|' + estado.coorteGran;
+}
 
 function carregarCoorte(escopo, nome) {
   var api = COORTE_ESCOPO_API[escopo];
@@ -10846,6 +10866,7 @@ function carregarCoorte(escopo, nome) {
 
   fetch('/api/coorte?escopo=' + encodeURIComponent(api) +
         '&expert=' + encodeURIComponent(nome) +
+        '&gran=' + estado.coorteGran +
         (escopo === 'cl' && CL_TOKEN ? '&_s=' + CL_NONCE : ''),
         { cache: 'no-store', headers: cabecalhoCl({}) })
     .then(function (r) {
@@ -10879,20 +10900,103 @@ function pintarCoorteDoExpert() {
   pintarCoorte(caixa, estado.painel.escopo, estado.painel.nome);
 }
 
+/* Rótulo de um período da coorte: mês vira "jun/26", semana vira "17/ago" (a
+   data é a SEGUNDA-FEIRA da semana — o nome da turma semanal). */
+function rotuloCoorte(gran, p) {
+  if (gran !== 'semana') return mesCurto(p);
+  var d = String(p || '').split('-');
+  if (d.length !== 3) return p || '—';
+  return d[2] + '/' + (MESES_CURTO[Number(d[1]) - 1] || d[1]);
+}
+
+/* O veredito de payback da safra, já em palavras. A conta mora em
+   api/coorte.js — aqui é só tradução de status pra chip. */
+function chipPayback(s, gran) {
+  var pb = s.payback;
+  var el = document.createElement('span');
+  var recemChegada = (s.celulas || []).length === 1 && s.celulas[0] &&
+                     s.celulas[0].parcial;
+  if (s.investimento == null) {
+    el.className = 'mtz__pb mtz__pb--na';
+    el.textContent = 'invest. não rastreado';
+    el.title = 'Esta operação não tem conta de Meta Ads mapeada na rota da coorte.';
+  } else if (!pb) {
+    el.className = 'mtz__pb mtz__pb--na';
+    el.textContent = 'sem gasto no período';
+  } else if (pb.status === 'pago') {
+    el.className = 'mtz__pb mtz__pb--ok';
+    el.textContent = 'pagou em ' + (gran === 'semana' ? 'S' : 'M') + pb.idade +
+      ' · ' + rotuloCoorte(gran, pb.periodo);
+    el.title = 'O GGR acumulado da turma cobriu o investimento dela ' +
+      (gran === 'semana' ? 'na semana de ' : 'em ') + rotuloCoorte(gran, pb.periodo) + '.';
+  } else if (recemChegada && pb.status !== 'projetado') {
+    /* turma com um período parcial de vida: qualquer projeção seria chute */
+    el.className = 'mtz__pb mtz__pb--na';
+    el.textContent = 'cedo pra projetar';
+  } else if (pb.status === 'projetado') {
+    el.className = 'mtz__pb mtz__pb--proj';
+    el.textContent = 'payback ~' + rotuloCoorte(gran, pb.periodo);
+    el.title = 'Projeção: último período como base, decaindo ' +
+      Math.round((1 - pb.fator) * 100) + '% por período (medido nesta matriz). ' +
+      'Aproximação, não promessa.';
+  } else if (pb.status === 'sem_ritmo') {
+    el.className = 'mtz__pb mtz__pb--ruim';
+    el.textContent = 'sem ritmo de payback';
+    el.title = 'A turma não está gerando GGR — faltam ' + brlCurto(pb.falta) +
+      ' e não há de onde projetar retorno.';
+  } else {
+    el.className = 'mtz__pb mtz__pb--ruim';
+    el.textContent = 'não fecha no ritmo atual';
+    el.title = 'Mesmo projetando todos os períodos seguintes no ritmo de hoje, ' +
+      'faltariam ' + brlCurto(pb.falta) + ' pra cobrir o investimento.';
+  }
+  return el;
+}
+
 function pintarCoorte(caixa, escopo, nome) {
   caixa.innerHTML = '';
 
   if (!COORTE_ESCOPO_API[escopo]) return;   /* Google é um btag só, sem expert */
 
+  var gran = estado.coorteGran;
+  var semana = gran === 'semana';
+
+  var topo = document.createElement('div');
+  topo.className = 'mtz__topo';
+  var topoTxt = document.createElement('div');
+
   var tit = document.createElement('p');
   tit.className = 'mtz__tit';
-  tit.textContent = 'GGR gerado por safra de FTD, mês a mês';
-  caixa.appendChild(tit);
+  tit.textContent = 'GGR gerado por safra de FTD, ' +
+    (semana ? 'semana a semana' : 'mês a mês');
+  topoTxt.appendChild(tit);
 
   var sub = document.createElement('p');
   sub.className = 'mtz__sub';
-  sub.textContent = 'R$, valor específico daquele mês — não acumulado';
-  caixa.appendChild(sub);
+  sub.textContent = semana
+    ? 'R$, valor específico daquela semana (seg–dom) — últimas 16 semanas'
+    : 'R$, valor específico daquele mês — não acumulado';
+  topoTxt.appendChild(sub);
+  topo.appendChild(topoTxt);
+
+  /* O toggle troca o DADO do card, não a tela: busca (ou pega do cache) a
+     matriz na outra granularidade e redesenha aqui mesmo. */
+  var alternador = document.createElement('div');
+  alternador.className = 'mtz__gran';
+  [['mes', 'Mês'], ['semana', 'Semana']].forEach(function (par) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = par[1];
+    b.setAttribute('aria-pressed', gran === par[0] ? 'true' : 'false');
+    b.addEventListener('click', function () {
+      if (estado.coorteGran === par[0]) return;
+      estado.coorteGran = par[0];
+      carregarCoorte(escopo, nome);
+    });
+    alternador.appendChild(b);
+  });
+  topo.appendChild(alternador);
+  caixa.appendChild(topo);
 
   var k = chaveCoorte(escopo, nome);
   var d = estado.coorte[k];
@@ -10956,7 +11060,7 @@ function pintarCoorte(caixa, escopo, nome) {
      com ele é inválido, e o CSS descarta a DECLARAÇÃO INTEIRA em silêncio — o
      grid perde as colunas e a matriz empilha uma célula por linha. */
   grade.style.gridTemplateColumns =
-    '104px repeat(' + colunas + ', minmax(122px, 190px))';
+    '104px 172px repeat(' + colunas + ', minmax(122px, 190px))';
   grade.style.justifyContent = 'start';
 
   function celula(classes) {
@@ -10967,26 +11071,61 @@ function pintarCoorte(caixa, escopo, nome) {
   }
 
   /* régua das idades, solta acima da matriz */
+  var letra = semana ? 'S' : 'M';
+  var unidade = semana ? 'semana' : 'mês';
   celula('mtz__c--head');
+  var hResumo = celula('mtz__c--head');
+  hResumo.textContent = 'invest → retorno';
   for (var i = 0; i < colunas; i++) {
     var h = celula('mtz__c--head');
-    h.textContent = 'M' + i;
-    h.title = i === 0 ? 'O próprio mês do primeiro depósito'
-                      : i + (i === 1 ? ' mês' : ' meses') + ' depois do FTD';
+    h.textContent = letra + i;
+    h.title = i === 0 ? 'A própria ' + unidade + ' do primeiro depósito'
+                      : i + ' ' + (semana ? (i === 1 ? 'semana' : 'semanas')
+                                          : (i === 1 ? 'mês' : 'meses')) +
+                        ' depois do FTD';
   }
 
   safras.forEach(function (s) {
     var turma = celula('mtz__c--turma');
     var nomeT = document.createElement('span');
-    nomeT.textContent = mesCurto(s.mes);
+    nomeT.textContent = rotuloCoorte(gran, s.mes);
     turma.appendChild(nomeT);
     var cad = document.createElement('span');
     cad.className = 'mtz__cad';
     cad.textContent = inteiro(s.jogadores) + ' FTD';
     turma.appendChild(cad);
-    turma.title = 'Turma que fez o primeiro depósito em ' + mesCurto(s.mes) +
+    turma.title = 'Turma que fez o primeiro depósito ' +
+      (semana ? 'na semana de ' : 'em ') + rotuloCoorte(gran, s.mes) +
       ': ' + inteiro(s.jogadores) + ' jogadores. Eles ficam nesta safra pra ' +
       'sempre — depósito novo não muda a turma de lugar.';
+
+    /* resumo da linha: o que entrou de verba na safra × o que a turma já
+       devolveu (GGR e net dep acumulados) + o veredito de payback */
+    var resumo = celula('mtz__c--resumo');
+    var ret = s.retorno || { ggr: 0, net_dep: 0 };
+    var linhaInv = document.createElement('span');
+    linhaInv.className = 'mtz__inv';
+    linhaInv.innerHTML = s.investimento == null
+      ? 'ads <b>—</b>'
+      : 'ads <b>' + brlCurto(s.investimento) + '</b>';
+    resumo.appendChild(linhaInv);
+    var linhaRet = document.createElement('span');
+    linhaRet.className = 'mtz__inv';
+    linhaRet.innerHTML = 'GGR <b>' + brlCurto(ret.ggr) + '</b> · net dep <b>' +
+      brlCurto(ret.net_dep) + '</b>';
+    resumo.appendChild(linhaRet);
+    if (s.investimento > 0) {
+      var pct = document.createElement('span');
+      pct.className = 'mtz__inv';
+      pct.textContent = Math.round((ret.ggr / s.investimento) * 100) +
+        '% do investido de volta';
+      resumo.appendChild(pct);
+    }
+    resumo.appendChild(chipPayback(s, gran));
+    resumo.title = 'Investimento em Meta Ads d' +
+      (semana ? 'a semana' : 'o mês') + ' da safra × o acumulado que a turma ' +
+      'gerou até hoje. O gasto do período também trouxe gente que ainda não ' +
+      'depositou — é régua de comparação, não extrato.';
 
     for (var i = 0; i < colunas; i++) {
       var c = (s.celulas || [])[i];
@@ -11021,10 +11160,12 @@ function pintarCoorte(caixa, escopo, nome) {
         cel.appendChild(av);
       }
 
-      cel.title = mesCurto(s.mes) + ' em ' + mesCurto(c.mes_ref) + ' (M' + i +
-        '): ' + brlCurto(c.ggr) + ' de GGR, ' + inteiro(c.ativos) + ' de ' +
+      cel.title = rotuloCoorte(gran, s.mes) + ' em ' +
+        rotuloCoorte(gran, c.mes_ref) + ' (' + letra + i + '): ' +
+        brlCurto(c.ggr) + ' de GGR, ' + brlCurto(c.net_dep || 0) +
+        ' de net dep, ' + inteiro(c.ativos) + ' de ' +
         inteiro(s.jogadores) + ' jogadores ativos' +
-        (c.parcial ? ' · mês ainda correndo, o número sobe até o fim dele' : '');
+        (c.parcial ? ' · ' + unidade + ' ainda correndo, o número sobe até o fim' : '');
     }
   });
 
@@ -11037,19 +11178,21 @@ function pintarCoorte(caixa, escopo, nome) {
     '<span><i class="mtz__sw mtz__sw--neg"></i> GGR negativo</span>' +
     '<span><i class="mtz__sw mtz__sw--zero"></i> perto de zero</span>' +
     '<span><i class="mtz__sw mtz__sw--pos"></i> GGR positivo (mais forte = mais escuro)</span>' +
-    '<span><i class="mtz__sw mtz__sw--parcial"></i> mês ainda correndo</span>';
+    '<span><i class="mtz__sw mtz__sw--parcial"></i> ' + unidade + ' ainda correndo</span>';
   caixa.appendChild(leg);
 
   var nota = document.createElement('p');
   nota.className = 'mtz__nota';
-  nota.textContent = 'Cada linha é a turma que fez o PRIMEIRO DEPÓSITO naquele ' +
-    'mês, e as colunas são a idade dela: M0 é o próprio mês do FTD, M1 o ' +
-    'seguinte. Cada célula é só o GGR DAQUELE mês — não é acumulado, então não ' +
-    'some a linha esperando o total da safra. "N FTD" na lateral é quanta gente ' +
-    'entrou na turma; "N ativos" na célula é quanta gente daquela turma ainda ' +
-    'estava gerando naquele mês. A queda de um pro outro é a retenção. Célula ' +
-    'em branco é mês que ainda não chegou; célula hachurada é o mês corrente, ' +
-    'que ainda vai subir.';
+  nota.textContent = 'Cada linha é a turma que fez o PRIMEIRO DEPÓSITO naquel' +
+    (semana ? 'a semana' : 'e mês') + ', e as colunas são a idade dela: ' +
+    letra + '0 é a própria ' + unidade + ' do FTD, ' + letra + '1 a seguinte. ' +
+    'Cada célula é só o GGR DAQUELE período — não é acumulado; o acumulado ' +
+    'mora na coluna "invest → retorno", junto com o net dep e o payback. ' +
+    '"ads" é o gasto de Meta Ads do período da safra (aproximação: parte ' +
+    'dessa verba trouxe gente que ainda não depositou). A projeção de payback ' +
+    'decai o último período no ritmo medido nesta própria matriz — é bússola, ' +
+    'não promessa. Célula em branco é período que ainda não chegou; hachurada ' +
+    'é o corrente, que ainda vai subir.';
   caixa.appendChild(nota);
 }
 
