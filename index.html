@@ -11189,11 +11189,15 @@ function pintarCoorte(caixa, escopo, nome) {
          apareceu no período — o inverso da retenção. */
       var at = document.createElement('span');
       at.className = 'mtz__ativos';
-      at.textContent = inteiro(c.ativos) + ' ativos' +
-        (s.jogadores > 0
-          ? ' · churn ' + Math.round((1 - c.ativos / s.jogadores) * 100) + '%'
-          : '');
+      at.textContent = inteiro(c.ativos) + ' ativos';
       cel.appendChild(at);
+      if (s.jogadores > 0) {
+        var ch = document.createElement('span');
+        ch.className = 'mtz__ativos';
+        ch.textContent = 'churn ' +
+          Math.round((1 - c.ativos / s.jogadores) * 100) + '%';
+        cel.appendChild(ch);
+      }
 
       if (c.parcial) {
         var av = document.createElement('span');
