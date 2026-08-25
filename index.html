@@ -10926,13 +10926,19 @@ function pintarCoorteDoExpert() {
   pintarCoorte(caixa, estado.painel.escopo, estado.painel.nome);
 }
 
-/* Rótulo de um período da coorte: mês vira "jun/26", semana vira "17/ago" (a
-   data é a SEGUNDA-FEIRA da semana — o nome da turma semanal). */
+/* Rótulo de um período da coorte: mês vira "jun/26", semana vira o intervalo
+   seg–dom — "17–23/ago", ou "28/jul–3/ago" quando vira o mês. A data que chega
+   é a SEGUNDA-FEIRA da semana (o nome da turma semanal); o fim é ela + 6. */
 function rotuloCoorte(gran, p) {
   if (gran !== 'semana') return mesCurto(p);
   var d = String(p || '').split('-');
   if (d.length !== 3) return p || '—';
-  return d[2] + '/' + (MESES_CURTO[Number(d[1]) - 1] || d[1]);
+  var ini = new Date(Number(d[0]), Number(d[1]) - 1, Number(d[2]));
+  var fim = new Date(ini.getFullYear(), ini.getMonth(), ini.getDate() + 6);
+  var mi = MESES_CURTO[ini.getMonth()], mf = MESES_CURTO[fim.getMonth()];
+  return mi === mf
+    ? ini.getDate() + '–' + fim.getDate() + '/' + mi
+    : ini.getDate() + '/' + mi + '–' + fim.getDate() + '/' + mf;
 }
 
 /* O veredito de payback da safra, já em palavras. A conta mora em
