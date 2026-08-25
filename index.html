@@ -11123,7 +11123,7 @@ function pintarCoorte(caixa, escopo, nome) {
     /* resumo da linha: o que entrou de verba na safra × o que a turma já
        devolveu (GGR e net dep acumulados) + o veredito de payback */
     var resumo = celula('mtz__c--resumo');
-    var ret = s.retorno || { ggr: 0, net_dep: 0 };
+    var ret = s.retorno || { ggr: 0, net_dep: 0, volume: 0 };
     /* Texto CORRIDO, não um span por linha: com a coorte semanal a matriz tem
        muitas linhas e cada métrica em linha própria deixava a linha com o
        triplo da altura da célula de mês — virava um paredão de vazio. Cada
@@ -11134,6 +11134,12 @@ function pintarCoorte(caixa, escopo, nome) {
       '<span style="white-space:nowrap">GGR <b>' + brlCurto(ret.ggr) + '</b></span>',
       '<span style="white-space:nowrap">net dep <b>' + brlCurto(ret.net_dep) + '</b></span>'
     ];
+    /* Volume APOSTADO acumulado da turma. O ehNum protege contra resposta
+       ainda em cache da rota (s-maxage=1800) de antes do campo existir. */
+    if (ehNum(ret.volume)) {
+      partes.push('<span style="white-space:nowrap">volume <b>' +
+        brlCurto(ret.volume) + '</b></span>');
+    }
     if (s.investimento > 0) {
       partes.push('<span style="white-space:nowrap">' +
         Math.round((ret.ggr / s.investimento) * 100) + '% de volta</span>');
@@ -11199,7 +11205,8 @@ function pintarCoorte(caixa, escopo, nome) {
       cel.title = rotuloCoorte(gran, s.mes) + ' em ' +
         rotuloCoorte(gran, c.mes_ref) + ' (' + letra + i + '): ' +
         brlCurto(c.ggr) + ' de GGR, ' + brlCurto(c.net_dep || 0) +
-        ' de net dep, ' + inteiro(c.ativos) + ' de ' +
+        ' de net dep, ' + brlCurto(c.volume || 0) + ' de volume apostado, ' +
+        inteiro(c.ativos) + ' de ' +
         inteiro(s.jogadores) + ' jogadores ativos' +
         (c.parcial ? ' · ' + unidade + ' ainda correndo, o número sobe até o fim' : '');
     }
@@ -11223,7 +11230,8 @@ function pintarCoorte(caixa, escopo, nome) {
     (semana ? 'a semana' : 'e mês') + ', e as colunas são a idade dela: ' +
     letra + '0 é a própria ' + unidade + ' do FTD, ' + letra + '1 a seguinte. ' +
     'Cada célula é só o GGR DAQUELE período — não é acumulado; o acumulado ' +
-    'mora na coluna "invest → retorno", junto com o net dep e o payback. ' +
+    'mora na coluna "invest → retorno", junto com o net dep, o volume ' +
+    'apostado e o payback. ' +
     '"ads" é o gasto de Meta Ads do período da safra (aproximação: parte ' +
     'dessa verba trouxe gente que ainda não depositou). ' +
     'Célula em branco é período que ainda não chegou; hachurada ' +

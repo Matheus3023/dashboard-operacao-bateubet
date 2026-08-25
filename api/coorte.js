@@ -38,6 +38,7 @@
  *   GGR        `net_pl` do período (na TAP, net_pl = pl = netwin quando não há
  *              bônus). NÃO é acumulado: cada célula é só aquele período.
  *   net dep    `net_deposits` do período (depósitos − saques). Mesma regra.
+ *   volume     `volume` do período (total apostado pela turma). Mesma regra.
  *   ativos     jogadores DISTINTOS da safra com atividade no período.
  *   jogadores  tamanho da safra: quantos fizeram FTD naquele período.
  *
@@ -504,11 +505,13 @@ function montar(leituras, periodos, indicePeriodo) {
 
       const ggr = Number(r.net_pl) || 0;
       const netDep = Number(r.net_deposits) || 0;
+      const vol = Number(r.volume) || 0;
       const ops = Number(r.operations) || 0;
       const k = safra + '|' + idade;
-      if (!celulas[k]) celulas[k] = { ggr: 0, net_dep: 0, ativos: 0 };
+      if (!celulas[k]) celulas[k] = { ggr: 0, net_dep: 0, volume: 0, ativos: 0 };
       celulas[k].ggr += ggr;
       celulas[k].net_dep += netDep;
+      celulas[k].volume += vol;
       /* ATIVO É JOGADOR DISTINTO, não transação: a TAP já entrega uma linha por
          jogador dentro da janela, então basta não contar quem ficou parado. */
       if (ops > 0 || ggr !== 0 || netDep !== 0) celulas[k].ativos += 1;
@@ -523,13 +526,14 @@ function montar(leituras, periodos, indicePeriodo) {
       /* PERÍODO FUTURO NÃO ENTRA — o laço já para na idade de hoje. Célula que
          existe e está zerada é GGR zero de verdade: a turma teve o período e
          não gerou nada. As duas coisas não podem virar a mesma coisa na tela. */
-      const c = celulas[chaveSafra + '|' + i] || { ggr: 0, net_dep: 0, ativos: 0 };
+      const c = celulas[chaveSafra + '|' + i] || { ggr: 0, net_dep: 0, volume: 0, ativos: 0 };
       const ref = periodos[indicePeriodo[chaveSafra] + i];
       linha.celulas.push({
         idade: i,
         mes_ref: ref,
         ggr: Math.round(c.ggr * 100) / 100,
         net_dep: Math.round(c.net_dep * 100) / 100,
+        volume: Math.round(c.volume * 100) / 100,
         ativos: c.ativos,
         parcial: indicePeriodo[chaveSafra] + i === ultimoIdx   /* período corrente */
       });
@@ -665,11 +669,12 @@ module.exports = async function handler(req, res) {
   for (const s of safras) {
     const inv = temInvestimento ? (investimentoPorPeriodo[s.mes] || 0) : null;
     s.investimento = inv == null ? null : Math.round(inv * 100) / 100;
-    let ggrAcum = 0, depAcum = 0;
-    for (const c of s.celulas) { ggrAcum += c.ggr; depAcum += c.net_dep; }
+    let ggrAcum = 0, depAcum = 0, volAcum = 0;
+    for (const c of s.celulas) { ggrAcum += c.ggr; depAcum += c.net_dep; volAcum += c.volume; }
     s.retorno = {
       ggr: Math.round(ggrAcum * 100) / 100,
-      net_dep: Math.round(depAcum * 100) / 100
+      net_dep: Math.round(depAcum * 100) / 100,
+      volume: Math.round(volAcum * 100) / 100
     };
     s.payback = calcularPayback(s, s.investimento, fator, gran);
   }
