@@ -10961,24 +10961,11 @@ function chipPayback(s, gran) {
       ' · ' + rotuloCoorte(gran, pb.periodo);
     el.title = 'O GGR acumulado da turma cobriu o investimento dela ' +
       (gran === 'semana' ? 'na semana de ' : 'em ') + rotuloCoorte(gran, pb.periodo) + '.';
-  } else if (recemChegada && pb.status !== 'projetado') {
-    /* turma com um período parcial de vida: qualquer projeção seria chute */
-    el.className = 'mtz__pb mtz__pb--na';
-    el.textContent = 'cedo pra projetar';
-  } else if (pb.status === 'projetado') {
-    el.className = 'mtz__pb mtz__pb--proj';
-    el.textContent = 'payback ~' + rotuloCoorte(gran, pb.periodo);
-    el.title = 'Projeção: último período como base, decaindo ' +
-      Math.round((1 - pb.fator) * 100) + '% por período (medido nesta matriz). ' +
-      'Aproximação, não promessa.';
-  } else if (pb.status === 'sem_ritmo') {
-    el.className = 'mtz__pb mtz__pb--ruim';
-    el.textContent = 'sem ritmo de payback';
-    el.title = 'A turma não está gerando GGR — faltam ' + brlCurto(pb.falta) +
-      ' e não há de onde projetar retorno.';
   } else {
-    /* projeção negativa ("não fecha no ritmo atual") saiu a pedido do gestor
-       em 25/08 — safra no vermelho já se lê pelo % de volta e pelas células */
+    /* TODA projeção saiu a pedido do gestor em 25/08 ("payback ~X", "cedo pra
+       projetar", "sem ritmo", "não fecha no ritmo atual"). Só sobra chip de
+       FATO: pagou, sem gasto, invest. não rastreado. O que ainda não pagou se
+       lê pelo % de volta e pela cor das células. */
     return null;
   }
   return el;
@@ -11221,9 +11208,8 @@ function pintarCoorte(caixa, escopo, nome) {
     'Cada célula é só o GGR DAQUELE período — não é acumulado; o acumulado ' +
     'mora na coluna "invest → retorno", junto com o net dep e o payback. ' +
     '"ads" é o gasto de Meta Ads do período da safra (aproximação: parte ' +
-    'dessa verba trouxe gente que ainda não depositou). A projeção de payback ' +
-    'decai o último período no ritmo medido nesta própria matriz — é bússola, ' +
-    'não promessa. Célula em branco é período que ainda não chegou; hachurada ' +
+    'dessa verba trouxe gente que ainda não depositou). ' +
+    'Célula em branco é período que ainda não chegou; hachurada ' +
     'é o corrente, que ainda vai subir.';
   caixa.appendChild(nota);
 }
