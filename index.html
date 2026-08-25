@@ -11124,29 +11124,29 @@ function pintarCoorte(caixa, escopo, nome) {
        devolveu (GGR e net dep acumulados) + o veredito de payback */
     var resumo = celula('mtz__c--resumo');
     var ret = s.retorno || { ggr: 0, net_dep: 0, volume: 0 };
-    /* Texto CORRIDO, não um span por linha: com a coorte semanal a matriz tem
-       muitas linhas e cada métrica em linha própria deixava a linha com o
-       triplo da altura da célula de mês — virava um paredão de vazio. Cada
-       métrica é um nowrap; a quebra só acontece nos separadores "·". */
+    /* UMA MÉTRICA POR LINHA (pedido do gestor em 25/08): o texto corrido
+       quebrava no meio dos pares nome+valor e ficava embolado. */
     var partes = [
-      '<span style="white-space:nowrap">ads <b>' +
+      '<span style="display:block;white-space:nowrap">ads <b>' +
         (s.investimento == null ? '—' : brlCurto(s.investimento)) + '</b></span>',
-      '<span style="white-space:nowrap">GGR <b>' + brlCurto(ret.ggr) + '</b></span>',
-      '<span style="white-space:nowrap">net dep <b>' + brlCurto(ret.net_dep) + '</b></span>'
+      '<span style="display:block;white-space:nowrap">GGR <b>' + brlCurto(ret.ggr) + '</b></span>',
+      '<span style="display:block;white-space:nowrap">net dep <b>' + brlCurto(ret.net_dep) + '</b></span>'
     ];
     /* Volume APOSTADO acumulado da turma. O ehNum protege contra resposta
        ainda em cache da rota (s-maxage=1800) de antes do campo existir. */
     if (ehNum(ret.volume)) {
-      partes.push('<span style="white-space:nowrap">volume <b>' +
+      partes.push('<span style="display:block;white-space:nowrap">volume <b>' +
         brlCurto(ret.volume) + '</b></span>');
     }
     if (s.investimento > 0) {
-      partes.push('<span style="white-space:nowrap">' +
+      partes.push('<span style="display:block;white-space:nowrap">' +
         Math.round((ret.ggr / s.investimento) * 100) + '% de volta</span>');
     }
     var linhaRes = document.createElement('span');
     linhaRes.className = 'mtz__inv';
-    linhaRes.innerHTML = partes.join(' · ');
+    /* join('') e não ' · ': texto solto entre spans de bloco viraria uma
+       linha anônima só com o separador. */
+    linhaRes.innerHTML = partes.join('');
     resumo.appendChild(linhaRes);
     var chip = chipPayback(s, gran);
     if (chip) resumo.appendChild(chip);
@@ -11185,13 +11185,13 @@ function pintarCoorte(caixa, escopo, nome) {
           Math.round((c.ggr / s.investimento) * 100) + '%';
         cel.appendChild(ro);
       }
-      /* % de retenção junto: ativos sobre o tamanho da safra — é o que diz
-         quanto da turma ainda está viva naquele período */
+      /* CHURN junto (pedido do gestor em 25/08): a fatia da turma que NÃO
+         apareceu no período — o inverso da retenção. */
       var at = document.createElement('span');
       at.className = 'mtz__ativos';
       at.textContent = inteiro(c.ativos) + ' ativos' +
         (s.jogadores > 0
-          ? ' · ' + Math.round((c.ativos / s.jogadores) * 100) + '%'
+          ? ' · churn ' + Math.round((1 - c.ativos / s.jogadores) * 100) + '%'
           : '');
       cel.appendChild(at);
 
