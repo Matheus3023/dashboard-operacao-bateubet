@@ -10977,10 +10977,9 @@ function chipPayback(s, gran) {
     el.title = 'A turma não está gerando GGR — faltam ' + brlCurto(pb.falta) +
       ' e não há de onde projetar retorno.';
   } else {
-    el.className = 'mtz__pb mtz__pb--ruim';
-    el.textContent = 'não fecha no ritmo atual';
-    el.title = 'Mesmo projetando todos os períodos seguintes no ritmo de hoje, ' +
-      'faltariam ' + brlCurto(pb.falta) + ' pra cobrir o investimento.';
+    /* projeção negativa ("não fecha no ritmo atual") saiu a pedido do gestor
+       em 25/08 — safra no vermelho já se lê pelo % de volta e pelas células */
+    return null;
   }
   return el;
 }
@@ -11153,7 +11152,8 @@ function pintarCoorte(caixa, escopo, nome) {
     linhaRes.className = 'mtz__inv';
     linhaRes.innerHTML = partes.join(' · ');
     resumo.appendChild(linhaRes);
-    resumo.appendChild(chipPayback(s, gran));
+    var chip = chipPayback(s, gran);
+    if (chip) resumo.appendChild(chip);
     resumo.title = 'Investimento em Meta Ads d' +
       (semana ? 'a semana' : 'o mês') + ' da safra × o acumulado que a turma ' +
       'gerou até hoje. O gasto do período também trouxe gente que ainda não ' +
