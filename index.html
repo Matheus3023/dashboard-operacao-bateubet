@@ -11170,6 +11170,12 @@ function pintarCoorte(caixa, escopo, nome) {
       var at = document.createElement('span');
       at.className = 'mtz__ativos';
       at.textContent = inteiro(c.ativos) + ' ativos';
+      /* ROAS do período: GGR da célula sobre o investimento DA SAFRA (linha).
+         Vai na mesma linha dos ativos pra não engordar a célula. */
+      if (s.investimento > 0 && ehNum(c.ggr)) {
+        at.textContent += ' · ROAS ' +
+          Math.round((c.ggr / s.investimento) * 100) + '%';
+      }
       cel.appendChild(at);
 
       if (c.parcial) {
