@@ -11135,27 +11135,24 @@ function pintarCoorte(caixa, escopo, nome) {
        devolveu (GGR e net dep acumulados) + o veredito de payback */
     var resumo = celula('mtz__c--resumo');
     var ret = s.retorno || { ggr: 0, net_dep: 0 };
-    var linhaInv = document.createElement('span');
-    linhaInv.className = 'mtz__inv';
-    linhaInv.innerHTML = s.investimento == null
-      ? 'ads <b>—</b>'
-      : 'ads <b>' + brlCurto(s.investimento) + '</b>';
-    resumo.appendChild(linhaInv);
-    var linhaRet = document.createElement('span');
-    linhaRet.className = 'mtz__inv';
-    /* cada métrica num nowrap próprio: se a linha não couber, ela quebra no
-       "·" (entre as duas), nunca no meio de "net dep R$ 1.109" */
-    linhaRet.innerHTML = '<span style="white-space:nowrap">GGR <b>' +
-      brlCurto(ret.ggr) + '</b></span> · <span style="white-space:nowrap">' +
-      'net dep <b>' + brlCurto(ret.net_dep) + '</b></span>';
-    resumo.appendChild(linhaRet);
+    /* Texto CORRIDO, não um span por linha: com a coorte semanal a matriz tem
+       muitas linhas e cada métrica em linha própria deixava a linha com o
+       triplo da altura da célula de mês — virava um paredão de vazio. Cada
+       métrica é um nowrap; a quebra só acontece nos separadores "·". */
+    var partes = [
+      '<span style="white-space:nowrap">ads <b>' +
+        (s.investimento == null ? '—' : brlCurto(s.investimento)) + '</b></span>',
+      '<span style="white-space:nowrap">GGR <b>' + brlCurto(ret.ggr) + '</b></span>',
+      '<span style="white-space:nowrap">net dep <b>' + brlCurto(ret.net_dep) + '</b></span>'
+    ];
     if (s.investimento > 0) {
-      var pct = document.createElement('span');
-      pct.className = 'mtz__inv';
-      pct.textContent = Math.round((ret.ggr / s.investimento) * 100) +
-        '% do investido de volta';
-      resumo.appendChild(pct);
+      partes.push('<span style="white-space:nowrap">' +
+        Math.round((ret.ggr / s.investimento) * 100) + '% de volta</span>');
     }
+    var linhaRes = document.createElement('span');
+    linhaRes.className = 'mtz__inv';
+    linhaRes.innerHTML = partes.join(' · ');
+    resumo.appendChild(linhaRes);
     resumo.appendChild(chipPayback(s, gran));
     resumo.title = 'Investimento em Meta Ads d' +
       (semana ? 'a semana' : 'o mês') + ' da safra × o acumulado que a turma ' +
