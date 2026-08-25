@@ -1285,15 +1285,20 @@ html.rolado .brand__logo{height:19px}
 .crtvs[open] .crtvs__chev{transform:rotate(180deg)}
 @media (prefers-reduced-motion:reduce){.crtvs__chev{transition:none}}
 
+/* Mesmo cuidado da .mtz: scrollbar-width/scrollbar-color NÃO podem coexistir
+   com ::-webkit-scrollbar (no Chrome 121+ as padrão vencem e a barra some no
+   overlay do macOS). Webkit-only + @supports pro Firefox. */
 .crtvs__strip{
   display:flex;gap:8px;
   padding:0 16px 14px;
   overflow-x:auto;overscroll-behavior-x:contain;
   scroll-snap-type:x proximity;
-  scrollbar-width:thin;scrollbar-color:rgba(226,2,102,.6) transparent;
+}
+@supports not selector(::-webkit-scrollbar){
+  .crtvs__strip{scrollbar-width:thin;scrollbar-color:rgba(226,2,102,.6) transparent}
 }
 .crtvs__strip::-webkit-scrollbar{height:6px}
-.crtvs__strip::-webkit-scrollbar-track{background:transparent}
+.crtvs__strip::-webkit-scrollbar-track{background:rgba(255,255,255,.05);border-radius:999px}
 .crtvs__strip::-webkit-scrollbar-thumb{background:rgba(226,2,102,.55);border-radius:999px}
 .crtvs__strip::-webkit-scrollbar-thumb:hover{background:var(--acao)}
 
@@ -2332,15 +2337,22 @@ html.rolado .brand__logo{height:19px}
    De onde vem: /api/coorte, que lê af2_media_report_op por mês agrupado por
    jogador. É retroativo desde o primeiro mês da operação — não depende de
    fotografar nada ao longo do tempo. */
+/* NÃO declare scrollbar-width/scrollbar-color junto das regras ::-webkit-
+   scrollbar: no Chrome 121+ as propriedades padrão VENCEM e desligam as
+   webkit — sobra o overlay do macOS, que só aparece durante o scroll e
+   ninguém descobre que a matriz rola. Webkit-only = barra clássica sempre
+   visível; o @supports abaixo cobre o Firefox, que não tem ::-webkit-. */
 .mtz{
-  overflow-x:auto;margin-top:14px;padding-bottom:6px;
+  overflow-x:auto;margin-top:14px;padding-bottom:4px;
   overscroll-behavior-x:contain;
-  scrollbar-width:thin;scrollbar-color:rgba(226,2,102,.6) transparent;
 }
-.mtz::-webkit-scrollbar{height:6px}
-.mtz::-webkit-scrollbar-track{background:transparent}
+.mtz::-webkit-scrollbar{height:8px}
+.mtz::-webkit-scrollbar-track{background:rgba(255,255,255,.05);border-radius:999px}
 .mtz::-webkit-scrollbar-thumb{background:rgba(226,2,102,.55);border-radius:999px}
 .mtz::-webkit-scrollbar-thumb:hover{background:var(--acao)}
+@supports not selector(::-webkit-scrollbar){
+  .mtz{scrollbar-width:thin;scrollbar-color:rgba(226,2,102,.6) transparent}
+}
 .mtz__tit{margin:0 0 2px;font-size:1rem;font-weight:700;color:var(--txt-1)}
 .mtz__sub{margin:0 0 12px;font-size:.75rem;color:var(--txt-3);line-height:1.5}
 .mtz__grade{display:grid;min-width:100%;width:max-content;gap:3px}
