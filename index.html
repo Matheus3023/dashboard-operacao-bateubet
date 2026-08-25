@@ -2374,7 +2374,7 @@ html.rolado .brand__logo{height:19px}
   position:sticky;left:0;z-index:1;text-align:left;
   background:var(--surface);font-weight:700;color:var(--txt-1);
   display:flex;flex-direction:column;gap:1px;justify-content:center;
-  padding-left:0;
+  padding-left:12px;
 }
 /* tamanho da safra embaixo do nome: sem ele, "R$ 4.514" de uma turma de 2 mil
    lê igual a "R$ 4.514" de uma turma de 40. NÃO é o mesmo número que "ativos"
@@ -11092,7 +11092,7 @@ function pintarCoorte(caixa, escopo, nome) {
      com ele é inválido, e o CSS descarta a DECLARAÇÃO INTEIRA em silêncio — o
      grid perde as colunas e a matriz empilha uma célula por linha. */
   grade.style.gridTemplateColumns =
-    '104px 186px repeat(' + colunas + ', minmax(122px, 190px))';
+    '118px 186px repeat(' + colunas + ', minmax(122px, 190px))';
   grade.style.justifyContent = 'start';
 
   function celula(classes) {
