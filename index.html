@@ -2390,6 +2390,9 @@ html.rolado .brand__logo{height:19px}
   background:var(--surface-sunk);
 }
 .mtz__ativos{font-size:.75rem;font-weight:600;color:var(--txt-3)}
+/* ROAS em dourado: precisa se destacar do valor (branco) e dos ativos (cinza)
+   sobre qualquer fundo do calor, azul ou vermelho */
+.mtz__roas{font-size:.75rem;font-weight:700;color:var(--gold-2)}
 /* CALOR: intensidade é |GGR| sobre o maior valor da matriz DAQUELE expert — a
    comparação que interessa é dentro da mesma operação. Azul pro que a casa
    ganhou, vermelho pro que ela pagou. Quatro degraus e não gradiente contínuo:
@@ -11167,15 +11170,18 @@ function pintarCoorte(caixa, escopo, nome) {
       val.textContent = brlCurto(c.ggr);
       cel.appendChild(val);
 
+      /* Ordem pedida pelo gestor: valor, ROAS (dourado), ativos. ROAS do
+         período = GGR da célula sobre o investimento DA SAFRA (linha). */
+      if (s.investimento > 0 && ehNum(c.ggr)) {
+        var ro = document.createElement('span');
+        ro.className = 'mtz__roas';
+        ro.textContent = 'ROAS ' +
+          Math.round((c.ggr / s.investimento) * 100) + '%';
+        cel.appendChild(ro);
+      }
       var at = document.createElement('span');
       at.className = 'mtz__ativos';
       at.textContent = inteiro(c.ativos) + ' ativos';
-      /* ROAS do período: GGR da célula sobre o investimento DA SAFRA (linha).
-         Vai na mesma linha dos ativos pra não engordar a célula. */
-      if (s.investimento > 0 && ehNum(c.ggr)) {
-        at.textContent += ' · ROAS ' +
-          Math.round((c.ggr / s.investimento) * 100) + '%';
-      }
       cel.appendChild(at);
 
       if (c.parcial) {
