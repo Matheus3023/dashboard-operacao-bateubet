@@ -11050,6 +11050,33 @@ function pintarSafraGoogle() {
     box.innerHTML = '<p class="mtz__nota">A varredura ainda não terminou nenhum mês.</p>';
     return;
   }
+
+  /* Pedido do gestor 26/08: "Google tem que puxar só de quando gerou" -- a
+     conta é nova, os meses antes do primeiro cadastro são coluna vazia sem
+     informação nenhuma (nem "sem gasto", zero de verdade porque a conta nem
+     existia). Corta tudo ANTES do primeiro mês com cadastro ou FTD; não
+     mexe nos meses de trás pra frente por causa disso (um mês zerado NO
+     MEIO da história, depois que a conta já rodou, continua aparecendo --
+     esse zero é informação real). */
+  var totaisPorMes = {};
+  (d.meses || []).forEach(function (m) {
+    var t = { cadastros: 0, ftd: 0 };
+    (m.experts || []).forEach(function (e) {
+      t.cadastros += e.cadastros || 0;
+      t.ftd += e.ftd || 0;
+    });
+    totaisPorMes[m.mes] = t;
+  });
+  var primeiroComDado = meses.findIndex(function (mes) {
+    var t = totaisPorMes[mes];
+    return t && (t.cadastros > 0 || t.ftd > 0);
+  });
+  if (primeiroComDado > 0) { meses = meses.slice(primeiroComDado); }
+  if (primeiroComDado === -1) {
+    box.innerHTML = '<p class="mtz__nota">O Google ainda não teve cadastro nem FTD no período medido.</p>';
+    return;
+  }
+
   montarGradeSafra(box, 'google', todos, meses, { mes: 'todos' });
 }
 
