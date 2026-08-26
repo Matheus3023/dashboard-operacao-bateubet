@@ -11945,20 +11945,11 @@ function montarGradeSafra(caixa, escopo, marcadosNomes, meses, sel) {
     turma.appendChild(cadSpan);
     turma.title = ehTotal ? 'Soma dos experts marcados no filtro' : nomeCompleto(nome);
 
-    /* resumo: acumulado dos meses MOSTRADOS nesta linha -- cadastros da
-       turma toda × quem a TAP ainda classifica como ativo × quanto cada
-       depositante deixou em média. */
+    /* resumo: acumulado dos meses MOSTRADOS nesta linha. Pedido do gestor
+       26/08: só o bloco "invest → retorno" (ads/GGR/net dep/volume) — o
+       antigo cadastros/seguem/por FTD saiu, virou redundante depois que
+       este bloco entrou. */
     var resumoCel = celula('mtz__c--resumo' + extra);
-    var porCabeca = resumo.ftd ? resumo.net_pl / resumo.ftd : null;
-    var linhaRes = document.createElement('span');
-    linhaRes.className = 'mtz__inv';
-    linhaRes.innerHTML =
-      '<span style="display:block;white-space:nowrap">cadastros <b>' + inteiro(resumo.cadastros) + '</b></span>' +
-      '<span style="display:block;white-space:nowrap">seguem <b>' + inteiro(resumo.ativos) +
-        (ehNum(resumo.retencao) ? ' · ' + pct(resumo.retencao) : '') + '</b></span>' +
-      '<span style="display:block;white-space:nowrap">por FTD <b>' +
-        (porCabeca == null ? '—' : brlCurto(porCabeca)) + '</b></span>';
-    resumoCel.appendChild(linhaRes);
 
     /* 26/08: mesmo bloco "invest → retorno" da coorte (ads/GGR/net dep/
        volume), pedido do gestor pra bater visualmente com a matriz de
