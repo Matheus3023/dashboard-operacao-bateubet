@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex, nofollow, noarchive">
 <title>Bateu Bet · Operação ao vivo</title>
 <meta name="description" content="Painel interno da operação Bateu Bet: investimento em Meta Ads e funil TAP por expert, atualizado a cada 5 minutos.">
-<meta name="theme-color" content="#2C0028">
+<meta name="theme-color" content="#0A0308">
 <meta name="color-scheme" content="dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -441,13 +441,18 @@ NOTA SOBRE OS DADOS DE EXEMPLO
 
 <style>
 /* ── TOKENS ────────────────────────────────────────────────────────────────
-   IDENTIDADE BATEU BET (hex extraídos do CSS de bateu.bet.br, não são chute):
-     ameixa escura  #3B0038  fundo principal
-     ameixa header  #570433  superfícies elevadas (topo de card)
-     magenta ação   #E20266 -> #C80062, variação #BB0154
-     dourado prêmio #FFC824 / #E2B43B   (uso contido, ver abaixo)
-     cinza neutro   #3F4142  elementos desligados
-     texto          branco puro
+   IDENTIDADE BATEU BET — trocada em 26/08 pra seguir a Estratégia de Marca
+   (documento formal do cliente). Os hex antigos (ameixa #3B0038/#570433,
+   magenta #E20266) vinham extraídos do CSS de bateu.bet.br, ou seja, do
+   PRODUTO (a casa em si). A estratégia de marca documenta que produto e
+   comunicação falam idiomas visuais diferentes hoje, e define a identidade
+   de COMUNICAÇÃO (site institucional, redes, materiais) como a oficial pra
+   qualquer entregável novo -- este painel migrou pra essa, de propósito:
+     vinho       #4A0E2E → #0A0308  fundo principal (gradiente, não chapado)
+     magenta     #D81B60 / #C2185B  cor de ação
+     dourado     #E8B23D / #D4AF37  uso contido (ver abaixo)
+     cinza neutro #3F4142  elementos desligados
+     texto        branco puro
 
    ONDE O DOURADO APARECE, E SÓ AÍ (3 significados no painel inteiro):
      1. selo "maior investimento" no primeiro expert
@@ -457,9 +462,11 @@ NOTA SOBRE OS DADOS DE EXEMPLO
    valor" e vira decoração.
 
    CANAL: grupo = magenta da marca (é 90,8% da verba, merece a cor de ação),
-   direto = dourado fosco #E2B43B. Escolhido por contraste de matiz sobre
-   ameixa. Se o cliente quiser o dourado 100% reservado a destaque, trocar
-   --direto por um lilás (#C08CFF) resolve num token só, o layout não muda.
+   direto = dourado fosco #E2B43B (mantido intacto -- é uma cor categórica,
+   não a identidade de marca, e já tinha contraste de matiz resolvido antes
+   da troca). Escolhido por contraste de matiz sobre o fundo. Se o cliente
+   quiser o dourado 100% reservado a destaque, trocar --direto por um lilás
+   (#C08CFF) resolve num token só, o layout não muda.
 
    SAÚDE (verde/âmbar/vermelho) fica FORA da identidade de propósito: é função.
    O âmbar foi puxado pro laranja (#FF9E2C) pra não colidir com o dourado da
@@ -468,14 +475,15 @@ NOTA SOBRE OS DADOS DE EXEMPLO
    bom <= 300 · atenção entre 300 e 350 · alto >= 350.
    ────────────────────────────────────────────────────────────────────────── */
 :root{
-  /* escada de profundidade: canvas mais fundo que a base da marca, card na base
-     da marca (#3B0038), topo de card no header da marca (#570433). Assim os dois
-     hex oficiais aparecem inteiros na tela e ainda sobra contraste entre camadas. */
-  --bg:#2C0028;
-  --surface:#3B0038;
-  --surface-2:#570433;
-  --surface-sunk:#340030;
-  --surface-3:#63093F;
+  /* escada de profundidade: canvas mais fundo (ponta escura do gradiente vinho),
+     card na ponta clara do vinho (#4A0E2E), topo de card um ponto acima. Os dois
+     hex oficiais da estratégia de marca aparecem inteiros na tela e ainda sobra
+     contraste entre camadas. */
+  --bg:#0A0308;
+  --surface:#33101F;
+  --surface-2:#4A0E2E;
+  --surface-sunk:#1F0812;
+  --surface-3:#5A1830;
 
   --line:rgba(255,255,255,.14);
   --line-soft:rgba(255,255,255,.075);
@@ -485,21 +493,21 @@ NOTA SOBRE OS DADOS DE EXEMPLO
   --txt-2:rgba(255,255,255,.72);
   --txt-3:rgba(255,255,255,.50);
 
-  --acao:#E20266;
-  --acao-2:#C80062;
-  --acao-3:#BB0154;
-  --acao-soft:rgba(226,2,102,.16);
-  --acao-line:rgba(226,2,102,.46);
+  --acao:#D81B60;
+  --acao-2:#C2185B;
+  --acao-3:#A01450;
+  --acao-soft:rgba(216,27,96,.16);
+  --acao-line:rgba(216,27,96,.46);
 
-  --gold:#FFC824;
-  --gold-2:#E2B43B;
-  --gold-soft:rgba(255,200,36,.13);
-  --gold-line:rgba(255,200,36,.38);
+  --gold:#E8B23D;
+  --gold-2:#D4AF37;
+  --gold-soft:rgba(232,178,61,.13);
+  --gold-line:rgba(232,178,61,.38);
 
   --neutro:#3F4142;
 
   --grupo:#FF3D85;
-  --grupo-soft:rgba(226,2,102,.18);
+  --grupo-soft:rgba(216,27,96,.18);
   --grupo-line:rgba(255,61,133,.42);
 
   --direto:#E2B43B;
@@ -524,12 +532,12 @@ NOTA SOBRE OS DADOS DE EXEMPLO
 html{-webkit-text-size-adjust:100%}
 /* ── TEXTURA DE MARCA (fundo-marca.jpg) ───────────────────────────────────
    Quatro camadas, de cima pra baixo na declaração:
-     1. VÉU. Não é enfeite, é o que torna a textura utilizável. A imagem crua
-        tem pico ~#B4004E no topo, mais CLARA que a superfície dos cards
-        (#3B0038). Sem o véu o canvas fica mais claro que o card e a escada de
+     1. VÉU. Não é enfeite, é o que torna a textura utilizável. Trocada em
+        26/08 pela versão vinho (Magnific, mesma direção de foto do login):
+        pico mais claro no topo, mais CLARO que a superfície dos cards
+        (#33101F). Sem o véu o canvas fica mais claro que o card e a escada de
         profundidade inverte: o card vira buraco no lugar de camada elevada.
-        Com 62%→88% de véu o pico cai pra ~#550035 na faixa que o topbar já
-        cobre e pra ~#3F0031 na faixa do conteúdo, ou seja, empatado com o
+        Com 62%→88% de véu sobre o --bg novo o pico cai bem abaixo do tom do
         card. Sobra o halo magenta e o fio dourado, que é a assinatura.
      2. A TEXTURA. `100% auto` ancorada no topo: ela existe no primeiro dobra
         e some depois, igual ao gradiente que substituiu.
@@ -545,9 +553,9 @@ html{-webkit-text-size-adjust:100%}
 body{
   margin:0;
   background:
-    linear-gradient(180deg, rgba(44,0,40,.62) 0%, rgba(44,0,40,.88) 42%, var(--bg) 74%),
+    linear-gradient(180deg, rgba(10,3,8,.62) 0%, rgba(10,3,8,.88) 42%, var(--bg) 74%),
     url("fundo-marca.jpg") top center / 100% auto no-repeat,
-    radial-gradient(1100px 420px at 50% -180px, rgba(226,2,102,.22), transparent 70%),
+    radial-gradient(1100px 420px at 50% -180px, rgba(216,27,96,.22), transparent 70%),
     var(--bg);
   /* fixo, não acompanha o scroll, pra não competir com o conteúdo */
   background-attachment:fixed,fixed,fixed,fixed;
@@ -599,7 +607,7 @@ h1,h2,h3,h4,p{margin:0}
 #dashboard-root > input{position:absolute;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none}
 .topbar{
   position:sticky;top:0;z-index:30;
-  background:rgba(52,0,48,.95);
+  background:rgba(31,8,18,.95);
   backdrop-filter:saturate(150%) blur(10px);
   border-bottom:1px solid var(--line);
 }
@@ -628,7 +636,7 @@ h1,h2,h3,h4,p{margin:0}
   width:30px;height:30px;border-radius:9px;flex:none;
   display:grid;place-items:center;
   background:linear-gradient(140deg,var(--acao),var(--acao-3));
-  box-shadow:0 0 0 1px rgba(255,255,255,.14) inset, 0 2px 10px rgba(226,2,102,.35);
+  box-shadow:0 0 0 1px rgba(255,255,255,.14) inset, 0 2px 10px rgba(216,27,96,.35);
   font-weight:800;font-size:.9375rem;letter-spacing:-.03em;color:#fff;
 }
 .brand__word{
@@ -711,7 +719,7 @@ h1,h2,h3,h4,p{margin:0}
 .seg input:checked + label{
   background:linear-gradient(135deg,var(--acao),var(--acao-2));
   color:#fff;font-weight:640;
-  box-shadow:0 1px 8px rgba(226,2,102,.35);
+  box-shadow:0 1px 8px rgba(216,27,96,.35);
 }
 .seg input:focus-visible + label{outline:2px solid var(--gold);outline-offset:2px}
 .range-custom{display:flex;align-items:center;gap:7px;font-size:.75rem;color:var(--txt-3)}
@@ -811,6 +819,31 @@ h1,h2,h3,h4,p{margin:0}
 }
 .sortpop__pop .seg{width:100%}
 .sortpop__pop .seg label{flex:1;font-size:.6875rem}
+/* mesma pílula do .sortpop__sum, só que é <button> de verdade (some/aparece
+   via [hidden], não via CSS de estado) */
+.limpar-filtros{
+  display:inline-flex;align-items:center;gap:7px;flex:none;
+  min-height:32px;padding:0 11px;border-radius:8px;cursor:pointer;
+  background:var(--gold-soft);border:1px solid var(--gold-line);color:var(--gold);
+  font:inherit;font-size:.6875rem;font-weight:600;white-space:nowrap;
+  transition:filter .14s ease;
+}
+.limpar-filtros svg{width:13px;height:13px;flex:none}
+.limpar-filtros:hover{filter:brightness(1.12)}
+.limpar-filtros:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+@media (max-width:640px){.limpar-filtros span{display:none}}
+/* mesmo padrão de pílula, cor neutra (não é filtro "fora do padrão" no
+   sentido de período/ordenação -- é uma escolha de visibilidade separada) */
+.ver-inativos{
+  display:inline-flex;align-items:center;gap:6px;flex:none;margin-left:auto;
+  min-height:28px;padding:0 11px;border-radius:8px;cursor:pointer;
+  background:var(--surface-sunk);border:1px solid var(--line);color:var(--txt-2);
+  font:inherit;font-size:.6875rem;font-weight:600;white-space:nowrap;
+  transition:color .14s ease,border-color .14s ease;
+}
+.ver-inativos:hover{color:var(--txt);border-color:var(--line-strong)}
+.ver-inativos:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.ver-inativos[data-ativo]{color:var(--acao);border-color:var(--acao-line);background:var(--acao-soft)}
 .busca__lbl{margin-left:6px}
 .busca-input{
   min-height:32px;padding:0 11px;border-radius:7px;min-width:160px;
@@ -886,6 +919,27 @@ h1,h2,h3,h4,p{margin:0}
 .freshness__meta{font-size:.625rem;color:var(--txt-3)}
 .freshness__meta::before{content:"· ";color:var(--line-strong)}
 @media (prefers-reduced-motion:reduce){.status__dot{animation:none}}
+
+/* ── QUEM ESTÁ LOGADO (26/08) ─────────────────────────────────────────────
+   Preenchido por /api/auth/me depois que a página já está de pé — por isso
+   nasce [hidden] em vez de com um "Carregando…" que ninguém precisa ver.
+   Nome é o do Google (scope profile); sem ele, cai pro pedaço antes do @ do
+   e-mail (ver ligarUsuario() no <script>). */
+.userbox{display:flex;align-items:center;gap:10px;flex:none}
+.userbox__nome{
+  font-size:.6875rem;color:var(--txt-3);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;max-width:160px;
+}
+.userbox__sair{
+  font-size:.6875rem;font-weight:600;color:var(--txt-2);
+  text-decoration:none;padding:5px 12px;border-radius:999px;
+  border:1px solid var(--line);background:var(--surface-sunk);
+  transition:border-color .14s ease,color .14s ease;white-space:nowrap;
+}
+.userbox__sair:hover{border-color:var(--line-strong);color:var(--txt)}
+.userbox__sair:focus-visible{outline:2px solid var(--acao);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.userbox__sair{transition:none}}
+@media (max-width:719px){.userbox__nome{display:none}}
 
 /* ── A FAIXA ENCOLHIDA (rolando) ──────────────────────────────────────────
    O JS põe .rolado no <html> depois de ~44px de scroll (histerese em 24px pra
@@ -1065,6 +1119,19 @@ html.rolado .brand__logo{height:19px}
   font-variant-numeric:tabular-nums;
 }
 .tcard--hero .tcard__sub{margin-top:7px;font-size:.8125rem}
+/* comparação com período anterior (26/08). display:none por padrão -- o JS
+   (pintarDeltaTile) só liga pra inline-flex quando tem o que comparar; sem
+   isso, nenhum "▲ 0%" falso aparece no primeiro dia de operação. Neutro por
+   padrão (investido não é bom nem ruim); is-good/is-bad só entram nas
+   métricas onde crescer tem polaridade real (ver METRICAS_DELTA). */
+.tcard__delta{
+  display:none;align-items:center;gap:4px;margin-top:3px;
+  font-size:.6875rem;font-weight:650;font-variant-numeric:tabular-nums;
+  color:var(--txt-3);
+}
+.tcard--hero .tcard__delta{font-size:.75rem;margin-top:4px}
+.tcard__delta.is-good{color:var(--good)}
+.tcard__delta.is-bad{color:var(--bad)}
 /* único múltiplo que merece dourado: retorno sobre o investido */
 .tcard__sub--gold{color:var(--gold);font-weight:600}
 .dot{width:7px;height:7px;border-radius:2px;display:inline-block;flex:none}
@@ -1113,7 +1180,7 @@ html.rolado .brand__logo{height:19px}
   display:inline-flex;align-items:center;gap:6px;
   padding:3px 9px 3px 7px;border-radius:999px;
   background:linear-gradient(135deg,var(--gold),var(--gold-2));
-  color:#3B0038;
+  color:var(--bg);
   font-family:var(--mono);font-size:.5625rem;letter-spacing:.1em;
   text-transform:uppercase;font-weight:700;white-space:nowrap;
 }
@@ -1295,11 +1362,11 @@ html.rolado .brand__logo{height:19px}
   scroll-snap-type:x proximity;
 }
 @supports not selector(::-webkit-scrollbar){
-  .crtvs__strip{scrollbar-width:thin;scrollbar-color:rgba(226,2,102,.6) transparent}
+  .crtvs__strip{scrollbar-width:thin;scrollbar-color:rgba(216,27,96,.6) transparent}
 }
 .crtvs__strip::-webkit-scrollbar{height:6px}
 .crtvs__strip::-webkit-scrollbar-track{background:rgba(255,255,255,.05);border-radius:999px}
-.crtvs__strip::-webkit-scrollbar-thumb{background:rgba(226,2,102,.55);border-radius:999px}
+.crtvs__strip::-webkit-scrollbar-thumb{background:rgba(216,27,96,.55);border-radius:999px}
 .crtvs__strip::-webkit-scrollbar-thumb:hover{background:var(--acao)}
 
 .crtv{
@@ -1424,7 +1491,7 @@ html.rolado .brand__logo{height:19px}
 #e-taboola:checked ~ .topbar .scopebar label[for="e-taboola"]{
   background:linear-gradient(135deg,var(--acao),var(--acao-2));
   border-color:transparent;
-  box-shadow:0 1px 10px rgba(226,2,102,.38);
+  box-shadow:0 1px 10px rgba(216,27,96,.38);
 }
 #e-cl:checked ~ .topbar .scopebar label[for="e-geral"] .scopebar__nome,
 #e-geral:checked ~ .topbar .scopebar label[for="e-geral"] .scopebar__nome,
@@ -1546,7 +1613,7 @@ html.rolado .brand__logo{height:19px}
   display:flex;align-items:center;gap:2px;
   margin:0 -20px 6px;padding:0 20px;
   border-bottom:1px solid var(--line);
-  background:rgba(52,0,48,.95);
+  background:rgba(31,8,18,.95);
   backdrop-filter:saturate(150%) blur(10px);
 }
 .tabs label{
@@ -1568,7 +1635,8 @@ html.rolado .brand__logo{height:19px}
 .view{display:none}
 #v-geral:checked ~ .wrap .scope .view--geral,
 #v-experts:checked ~ .wrap .scope .view--experts,
-#v-metas:checked ~ .wrap .scope .view--metas{display:block}
+#v-metas:checked ~ .wrap .scope .view--metas,
+#v-safra:checked ~ .wrap .scope .view--safra{display:block}
 /* a aba Metas só existe no recorte. Se ela ficar marcada e a pessoa trocar
    pro Meta (ou pro Google), aquele escopo não tem .view--metas e a tela
    ficaria VAZIA — o JS devolve pra "Visão geral" nessa hora, mas esta regra
@@ -1577,7 +1645,8 @@ html.rolado .brand__logo{height:19px}
 
 #v-geral:checked ~ .wrap .scope .tabs label[for="v-geral"],
 #v-experts:checked ~ .wrap .scope .tabs label[for="v-experts"],
-#v-metas:checked ~ .wrap .scope .tabs label[for="v-metas"]{
+#v-metas:checked ~ .wrap .scope .tabs label[for="v-metas"],
+#v-safra:checked ~ .wrap .scope .tabs label[for="v-safra"]{
   color:var(--txt);border-bottom-color:var(--acao);
 }
 #v-geral:checked ~ .wrap .scope .tabs label[for="v-geral"] .tab__badge,
@@ -1586,7 +1655,8 @@ html.rolado .brand__logo{height:19px}
 }
 #v-geral:focus-visible ~ .wrap .scope .tabs label[for="v-geral"],
 #v-experts:focus-visible ~ .wrap .scope .tabs label[for="v-experts"],
-#v-metas:focus-visible ~ .wrap .scope .tabs label[for="v-metas"]{outline:2px solid var(--gold);outline-offset:-3px}
+#v-metas:focus-visible ~ .wrap .scope .tabs label[for="v-metas"],
+#v-safra:focus-visible ~ .wrap .scope .tabs label[for="v-safra"]{outline:2px solid var(--gold);outline-offset:-3px}
 
 /* ── TELA DE METAS (plano de carreira) ────────────────────────────────────
    Segue a régua do resto do painel: veredito em texto primeiro, número
@@ -1707,11 +1777,11 @@ html.rolado .brand__logo{height:19px}
   border:0;padding:0;background:transparent;color:var(--txt);
   max-width:min(92vw,380px);
 }
-.cldlg::backdrop{background:rgba(20,0,18,.62);backdrop-filter:blur(3px)}
+.cldlg::backdrop{background:rgba(10,3,8,.62);backdrop-filter:blur(3px)}
 .cldlg__box{
   display:flex;flex-direction:column;gap:9px;
   padding:22px 22px 18px;border-radius:16px;
-  background:linear-gradient(180deg,#3D0038,#2B0027);
+  background:linear-gradient(180deg,#3A0F22,#1A0710);
   border:1px solid var(--line);box-shadow:0 24px 60px rgba(0,0,0,.5);
 }
 .cldlg__t{margin:0;font-size:1.0625rem;font-weight:700;letter-spacing:-.01em}
@@ -2270,7 +2340,7 @@ html.rolado .brand__logo{height:19px}
   }
   .cmp__row--head > *:first-child{padding-left:11px}
   .cmp__th.is-ord{
-    color:var(--txt-1);border-color:var(--acao);background:rgba(230,0,122,.14);
+    color:var(--txt-1);border-color:var(--acao);background:rgba(216,27,96,.14);
   }
   .cmp__th__t{overflow:visible;text-overflow:clip}
 }
@@ -2323,6 +2393,96 @@ html.rolado .brand__logo{height:19px}
    é muito ou pouco, e a % sozinha esconde turma pequena (1 de 2 = 50%) */
 .sfr__ret{font-family:var(--mono);font-size:.5625rem;font-weight:500;opacity:.75}
 
+/* ── SAFRA · ABA COM FILTRO (26/08) ───────────────────────────────────────
+   Mesmo padrão visual da matriz de coorte logo abaixo (.mtz — pedido do
+   Costa, "essa é a certa"): a LINHA é o expert em vez da safra por mês, a
+   coluna de calor é "deixou pra casa" (net PL) em vez do GGR por idade, e o
+   resumo traz cadastros/seguem/por-FTD em vez de invest→retorno. Reaproveita
+   as classes .mtz__* inteiras -- cor, hachura, legenda e nota são as MESMAS
+   regras, só o conteúdo muda (ver pintarSafraFiltro). */
+.sf-topo{margin:0 0 6px}
+.sf-filtros{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+/* TOTAL fecha o grid: um traço mais forte separa ele das linhas de expert. */
+.mtz__c--totallinha{border-top:1px solid var(--line-strong);margin-top:2px}
+
+.sf-mes{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;border-radius:999px;
+  border:1px solid var(--line);background:var(--surface-sunk);
+  color:var(--txt-2);font:inherit;font-size:.6875rem;
+}
+.sf-mes__lbl{letter-spacing:.08em;text-transform:uppercase;font-size:.5625rem;color:var(--txt-3)}
+.sf-mes select{background:transparent;border:0;color:var(--txt-1);font:inherit;font-size:.6875rem;font-weight:600;cursor:pointer}
+.sf-mes select:focus-visible{outline:2px solid var(--acao);outline-offset:2px}
+
+/* seletor de experts: MESMO desenho do .opsfil (busca + lista + ações), mas
+   isolado em classe própria -- .opsfil já é agarrado por seletor único
+   ($('.opsfil', raiz)) em outro lugar do JS, e um segundo elemento com a
+   mesma classe dentro do mesmo escopo quebraria aquele código. Aqui a marcação
+   aplica DIRETO (sem rascunho + "Aplicar"): a exigência é os filtros
+   responderem juntos, não em dois passos. */
+.sffil{flex:none;position:relative}
+.sffil__btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:var(--surface-sunk);
+  color:var(--txt-2);font:inherit;font-size:.6875rem;
+  transition:border-color .14s ease,color .14s ease;
+}
+.sffil__btn:hover{border-color:var(--line-strong);color:var(--txt-1)}
+.sffil__btn:focus-visible{outline:2px solid var(--acao);outline-offset:2px}
+.sffil__lbl{letter-spacing:.08em;text-transform:uppercase;font-size:.5625rem;color:var(--txt-3)}
+.sffil__val{color:var(--txt-1);font-weight:600}
+.sffil__chev{
+  width:0;height:0;flex:none;
+  border-left:4px solid transparent;border-right:4px solid transparent;
+  border-top:5px solid currentColor;opacity:.75;
+  transition:transform .14s ease;
+}
+.sffil[data-aberto] .sffil__btn{border-color:var(--acao);color:var(--txt-1)}
+.sffil[data-aberto] .sffil__chev{transform:rotate(180deg)}
+.sffil[data-filtrando] .sffil__btn{border-color:var(--acao);background:var(--acao-soft)}
+.sffil__pop{
+  position:absolute;z-index:50;top:calc(100% + 7px);right:0;
+  width:260px;max-width:calc(100vw - 32px);
+  display:flex;flex-direction:column;
+  border-radius:12px;border:1px solid var(--line-strong);
+  background:var(--surface);box-shadow:0 16px 44px rgba(0,0,0,.5);
+  overflow:hidden;
+}
+.sffil__busca{
+  flex:none;margin:0;padding:9px 12px;
+  border:0;border-bottom:1px solid var(--line-soft);
+  background:var(--surface-sunk);color:var(--txt-1);
+  font:inherit;font-size:.75rem;
+}
+.sffil__busca::placeholder{color:var(--txt-3)}
+.sffil__busca:focus{outline:0;border-bottom-color:var(--acao)}
+.sffil__lista{max-height:262px;overflow-y:auto;padding:5px 0}
+.sffil__item{
+  display:flex;align-items:center;gap:9px;
+  padding:7px 12px;cursor:pointer;color:var(--txt-2);font-size:.75rem;
+  user-select:none;
+}
+.sffil__item:hover{background:rgba(255,255,255,.045);color:var(--txt-1)}
+.sffil__item input{width:14px;height:14px;flex:none;margin:0;accent-color:var(--acao);cursor:pointer}
+.sffil__item--todas{border-bottom:1px solid var(--line-soft);margin-bottom:4px;padding-bottom:9px;font-weight:600;color:var(--txt-1)}
+.sffil__nome{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sffil__vazio{padding:14px 12px;color:var(--txt-3);font-size:.75rem;text-align:center}
+.sffil__acoes{
+  flex:none;display:flex;gap:6px;padding:8px;
+  border-top:1px solid var(--line-soft);background:var(--surface-sunk);
+}
+.sffil__acao{
+  flex:1;padding:6px 8px;border-radius:8px;cursor:pointer;
+  border:1px solid var(--line);background:transparent;
+  color:var(--txt-2);font:inherit;font-size:.6875rem;
+  transition:border-color .14s ease,color .14s ease;
+}
+.sffil__acao:hover{border-color:var(--line-strong);color:var(--txt-1)}
+.sffil__acao:focus-visible{outline:2px solid var(--acao);outline-offset:1px}
+@media (prefers-reduced-motion:reduce){.sffil__btn,.sffil__chev,.sffil__acao{transition:none}}
+
 /* ── COORTE DE FTD ────────────────────────────────────────────────────────
    Linha = a turma que fez o PRIMEIRO DEPÓSITO naquele mês. Coluna = a IDADE
    dessa turma (M0 é o próprio mês do FTD, M1 o seguinte). Célula = o GGR que
@@ -2348,10 +2508,10 @@ html.rolado .brand__logo{height:19px}
 }
 .mtz::-webkit-scrollbar{height:8px}
 .mtz::-webkit-scrollbar-track{background:rgba(255,255,255,.05);border-radius:999px}
-.mtz::-webkit-scrollbar-thumb{background:rgba(226,2,102,.55);border-radius:999px}
+.mtz::-webkit-scrollbar-thumb{background:rgba(216,27,96,.55);border-radius:999px}
 .mtz::-webkit-scrollbar-thumb:hover{background:var(--acao)}
 @supports not selector(::-webkit-scrollbar){
-  .mtz{scrollbar-width:thin;scrollbar-color:rgba(226,2,102,.6) transparent}
+  .mtz{scrollbar-width:thin;scrollbar-color:rgba(216,27,96,.6) transparent}
 }
 .mtz__tit{margin:0 0 2px;font-size:1rem;font-weight:700;color:var(--txt-1)}
 .mtz__sub{margin:0 0 12px;font-size:.75rem;color:var(--txt-3);line-height:1.5}
@@ -2674,8 +2834,8 @@ html.rolado .brand__logo{height:19px}
      lados da borda têm a mesma cor. Se um dia o vídeo sair, este miolo escuro
      pode voltar a ser ameixa sem prejuízo. */
   background:
-    radial-gradient(30% 26% at 50% 44%, rgba(226,2,102,.16), transparent 70%),
-    radial-gradient(42% 38% at 50% 44%, rgba(3,0,3,.96), rgba(22,0,20,.93) 60%, rgba(28,0,25,.93));
+    radial-gradient(30% 26% at 50% 44%, rgba(216,27,96,.16), transparent 70%),
+    radial-gradient(42% 38% at 50% 44%, rgba(3,1,2,.96), rgba(20,6,14,.93) 60%, rgba(26,8,18,.93));
   backdrop-filter:blur(3px) saturate(115%);
   font-size:.8125rem;color:var(--txt-2);
   text-align:center;padding:24px;
@@ -2739,7 +2899,7 @@ html.rolado .brand__logo{height:19px}
   background:url("marca-b.png") center/68% no-repeat;
   transform-origin:50% 50%;
   animation:boot-b 1.6s cubic-bezier(.45,0,.25,1) infinite;
-  filter:drop-shadow(0 0 14px rgba(226,2,102,.85));
+  filter:drop-shadow(0 0 14px rgba(216,27,96,.85));
 }
 /* FIO DE LUZ varrendo a marca. Nasceu de um estudo de motion gerado na
    Magnific a partir deste mesmo B: lá o brilho aparecia como uma aresta
@@ -2764,15 +2924,15 @@ html.rolado .brand__logo{height:19px}
   100%    {background-position:-70% 0}
 }
 @keyframes boot-b{
-  0%   {transform:perspective(70px) rotateY(0deg)   scale(1);   filter:drop-shadow(0 0 3px rgba(226,2,102,.45))}
-  45%  {transform:perspective(70px) rotateY(180deg) scale(1.14);filter:drop-shadow(0 0 9px rgba(226,2,102,.95))}
+  0%   {transform:perspective(70px) rotateY(0deg)   scale(1);   filter:drop-shadow(0 0 3px rgba(216,27,96,.45))}
+  45%  {transform:perspective(70px) rotateY(180deg) scale(1.14);filter:drop-shadow(0 0 9px rgba(216,27,96,.95))}
   55%  {transform:perspective(70px) rotateY(180deg) scale(1.14);filter:drop-shadow(0 0 9px rgba(255,200,36,.75))}
-  100% {transform:perspective(70px) rotateY(360deg) scale(1);   filter:drop-shadow(0 0 3px rgba(226,2,102,.45))}
+  100% {transform:perspective(70px) rotateY(360deg) scale(1);   filter:drop-shadow(0 0 3px rgba(216,27,96,.45))}
 }
 @media (prefers-reduced-motion:reduce){
   /* nem sombra piscando: quem pediu menos movimento não quer estrobo. A marca
      fica parada e o texto "Carregando…" já diz o que está acontecendo. */
-  .boot__b{animation:none;filter:drop-shadow(0 0 4px rgba(226,2,102,.6))}
+  .boot__b{animation:none;filter:drop-shadow(0 0 4px rgba(216,27,96,.6))}
   .boot__b::after{display:none}
 }
 
@@ -3062,7 +3222,8 @@ html.rolado .brand__logo{height:19px}
    Não troque as propriedades animadas aqui sem mover a medição pro fim. */
 @keyframes entraView{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 #v-geral:checked ~ .wrap .scope .view--geral,
-#v-experts:checked ~ .wrap .scope .view--experts{animation:entraView .16s ease-out both}
+#v-experts:checked ~ .wrap .scope .view--experts,
+#v-safra:checked ~ .wrap .scope .view--safra{animation:entraView .16s ease-out both}
 /* troca de ESCOPO tem animação própria e um pouco mais lenta: é troca de
    universo, não de seção, e o corte seco fazia parecer recarga de página. */
 @keyframes entraScope{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
@@ -3134,7 +3295,7 @@ html.rolado .brand__logo{height:19px}
 .boot{position:fixed;overflow:hidden}
 .boot::after{
   content:"";position:absolute;inset:0;
-  background:linear-gradient(100deg,transparent 30%,rgba(226,2,102,.22) 50%,transparent 70%);
+  background:linear-gradient(100deg,transparent 30%,rgba(216,27,96,.22) 50%,transparent 70%);
   transform:translateX(-100%);
   animation:varre 1.5s ease-in-out infinite;
 }
@@ -3153,6 +3314,7 @@ html.rolado .brand__logo{height:19px}
   .entra > .cmp__row,
   #v-geral:checked ~ .wrap .scope .view--geral,
   #v-experts:checked ~ .wrap .scope .view--experts,
+  #v-safra:checked ~ .wrap .scope .view--safra,
   #e-cl:checked ~ .wrap .scope--cl,
   #e-geral:checked ~ .wrap .scope--geral,
   #e-google:checked ~ .wrap .scope--google,
@@ -3269,7 +3431,7 @@ body.pnl-aberto{overflow:hidden}
      "7 dias" achando que ia trocar o período, e só fechava o painel sem avisar
      nada, porque data-pnl-fechar tá aqui. */
   position:absolute;left:0;right:0;bottom:0;top:var(--topbar-h,0px);
-  background:rgba(18,0,16,.68);
+  background:rgba(10,3,8,.68);
   -webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);
   pointer-events:auto;
 }
@@ -3804,6 +3966,11 @@ body.pnl-aberto{overflow:hidden}
   <input type="radio" name="view" id="v-experts">
   <!-- terceira aba, só do recorte Costa e Lobão (ver .view--metas) -->
   <input type="radio" name="view" id="v-metas">
+  <!-- quarta aba, existe nos dois escopos que têm expert (ver .view--safra):
+       a mesma estrutura de safra que já alimenta o painel do expert e a
+       coluna Seguem do comparativo, só que com um filtro de experts por
+       cima -- nenhuma conta nova, ver PARTE "SAFRA · ABA COM FILTRO". -->
+  <input type="radio" name="view" id="v-safra">
 
   <!-- ═══ BARRA DE COMANDO ═══════════════════════════════════════════════════
        Uma faixa só, na ordem de quem manda: marca · ESCOPO · período ·
@@ -3967,6 +4134,20 @@ body.pnl-aberto{overflow:hidden}
       </div>
     </details>
 
+    <!-- ═══ LIMPAR FILTROS · SÓ APARECE COM ALGO PRA LIMPAR ═══════════════
+         Fica escondido (hidden) enquanto período = Hoje e ordenação = padrão
+         (Investimento ↓), que é o estado de abertura do painel. Some sozinho
+         em vez de ficar cinza/desabilitado: presença = "tem filtro fora do
+         padrão", ausência = "nada pra limpar". Clicar volta período pra Hoje,
+         ordenação pro padrão, e clica em qualquer "Selecionar todos/todas"
+         de operação/expert que estiver com recorte ativo (mesmo botão que
+         já existe em cada popover — não duplica lógica de estado nova). -->
+    <button type="button" class="limpar-filtros" id="btn-limpar-filtros" hidden
+            title="Voltar período, ordenação e seleções pro padrão">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+      <span>Limpar filtros</span>
+    </button>
+
     <!-- ═══ ESTADO · UMA PÍLULA, DUAS LINHAS ═══════════════════════════════
          Eram três elementos dizendo quase a mesma coisa em dois lugares da
          tela (pílula de frescor + #range-note + #range-applied). Viraram um.
@@ -3997,6 +4178,14 @@ body.pnl-aberto{overflow:hidden}
             </span>
           </span>
         </span>
+      </div>
+
+      <!-- LOGIN GOOGLE (26/08). Some enquanto /api/auth/me não responde --
+           não há "usuário genérico" pra mostrar, e um rótulo vazio pisca
+           feio na carga. Preenchido por ligarUsuario() no <script>. -->
+      <div class="userbox" id="userbox" hidden>
+        <span class="userbox__nome" id="userbox-nome" title=""></span>
+        <a class="userbox__sair" href="/api/auth/logout" title="Sair da sessão">Sair</a>
       </div>
     </div>
   </header>
@@ -4060,6 +4249,7 @@ body.pnl-aberto{overflow:hidden}
       <label for="v-experts">Por expert <span class="tab__badge" data-derived="experts.length">7</span></label>
       <!-- aba só do recorte: o plano de carreira mede o que a dupla gerencia -->
       <label for="v-metas">Metas</label>
+      <label for="v-safra">Safra</label>
       <!-- o MESMO par da tela de cima: é por aqui que se volta pra operação
            inteira sem passar pela barra de canais. -->
       <div class="recorte" role="group" aria-label="Recorte da operação">
@@ -4618,7 +4808,12 @@ body.pnl-aberto{overflow:hidden}
          ORDEM = investimento_total decrescente (sort no JS, ver contrato no topo).
          Hoje: GP DADOS, DEKO, CHARLES, TANOS, QZL, GREGORIO BIG, EDERSON.
          O selo dourado "maior investimento" acompanha o primeiro do sort. -->
-    <div class="section-head"><h2 class="eyebrow">Por expert · 7 ativos · maior investimento primeiro</h2></div>
+    <div class="section-head"><h2 class="eyebrow">Por expert · 7 ativos · maior investimento primeiro</h2>
+      <!-- só aparece quando há expert oculto por inatividade (ver pintarExperts/
+           estaInativo em index.html) -- histórico dele continua intacto no
+           back-end, isso só esconde o CARD, nunca apaga dado. -->
+      <button type="button" class="ver-inativos" data-ver-inativos hidden></button>
+    </div>
 
     <section class="experts" id="experts-list" data-list="experts" aria-label="Desempenho por expert">
 
@@ -4655,12 +4850,12 @@ body.pnl-aberto{overflow:hidden}
           <section class="block block--grupo" data-block="grupo">
             <h4 class="block__title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13h6M8 9h8"/><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M3.5 20.5 5 16"/></svg>
-              Grupo <small>WhatsApp / Telegram</small>
+              Meta Ads
             </h4>
             <div class="metrics">
               <div class="m"><span class="m__lbl">Investido</span><span class="m__val" data-field="grupo.valor_investido">R$ 706,06</span></div>
-              <div class="m"><span class="m__lbl">Entradas</span><span class="m__val" data-field="grupo.resultado">85</span></div>
-              <div class="m"><span class="m__lbl">Custo / entrada</span><span class="m__val" data-field="grupo.custo_por_resultado">R$ 8,31</span></div>
+              <div class="m"><span class="m__lbl">Resultado</span><span class="m__val" data-field="grupo.resultado">85</span></div>
+              <div class="m"><span class="m__lbl">Custo / resultado</span><span class="m__val" data-field="grupo.custo_por_resultado">R$ 8,31</span></div>
             </div>
           </section>
 
@@ -4847,12 +5042,12 @@ body.pnl-aberto{overflow:hidden}
           <section class="block block--grupo" data-block="grupo">
             <h4 class="block__title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13h6M8 9h8"/><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M3.5 20.5 5 16"/></svg>
-              Grupo <small>WhatsApp / Telegram</small>
+              Meta Ads
             </h4>
             <div class="metrics">
               <div class="m"><span class="m__lbl">Investido</span><span class="m__val" data-field="grupo.valor_investido">R$ 612,80</span></div>
-              <div class="m"><span class="m__lbl">Entradas</span><span class="m__val" data-field="grupo.resultado">74</span></div>
-              <div class="m"><span class="m__lbl">Custo / entrada</span><span class="m__val" data-field="grupo.custo_por_resultado">R$ 8,28</span></div>
+              <div class="m"><span class="m__lbl">Resultado</span><span class="m__val" data-field="grupo.resultado">74</span></div>
+              <div class="m"><span class="m__lbl">Custo / resultado</span><span class="m__val" data-field="grupo.custo_por_resultado">R$ 8,28</span></div>
             </div>
           </section>
           <section class="block block--direto block--off" data-block="direto">
@@ -5015,12 +5210,12 @@ body.pnl-aberto{overflow:hidden}
           <section class="block block--grupo" data-block="grupo">
             <h4 class="block__title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13h6M8 9h8"/><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M3.5 20.5 5 16"/></svg>
-              Grupo <small>WhatsApp / Telegram</small>
+              Meta Ads
             </h4>
             <div class="metrics">
               <div class="m"><span class="m__lbl">Investido</span><span class="m__val" data-field="grupo.valor_investido">R$ 498,31</span></div>
-              <div class="m"><span class="m__lbl">Entradas</span><span class="m__val" data-field="grupo.resultado">61</span></div>
-              <div class="m"><span class="m__lbl">Custo / entrada</span><span class="m__val" data-field="grupo.custo_por_resultado">R$ 8,17</span></div>
+              <div class="m"><span class="m__lbl">Resultado</span><span class="m__val" data-field="grupo.resultado">61</span></div>
+              <div class="m"><span class="m__lbl">Custo / resultado</span><span class="m__val" data-field="grupo.custo_por_resultado">R$ 8,17</span></div>
             </div>
           </section>
           <section class="block block--direto block--off" data-block="direto">
@@ -5099,12 +5294,12 @@ body.pnl-aberto{overflow:hidden}
           <section class="block block--grupo" data-block="grupo">
             <h4 class="block__title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13h6M8 9h8"/><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M3.5 20.5 5 16"/></svg>
-              Grupo <small>WhatsApp / Telegram</small>
+              Meta Ads
             </h4>
             <div class="metrics">
               <div class="m"><span class="m__lbl">Investido</span><span class="m__val" data-field="grupo.valor_investido">R$ 402,15</span></div>
-              <div class="m"><span class="m__lbl">Entradas</span><span class="m__val" data-field="grupo.resultado">47</span></div>
-              <div class="m"><span class="m__lbl">Custo / entrada</span><span class="m__val" data-field="grupo.custo_por_resultado">R$ 8,56</span></div>
+              <div class="m"><span class="m__lbl">Resultado</span><span class="m__val" data-field="grupo.resultado">47</span></div>
+              <div class="m"><span class="m__lbl">Custo / resultado</span><span class="m__val" data-field="grupo.custo_por_resultado">R$ 8,56</span></div>
             </div>
           </section>
           <section class="block block--direto block--off" data-block="direto">
@@ -5297,7 +5492,7 @@ body.pnl-aberto{overflow:hidden}
           <section class="block block--grupo block--off" data-block="grupo">
             <h4 class="block__title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13h6M8 9h8"/><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M3.5 20.5 5 16"/></svg>
-              Grupo <small>WhatsApp / Telegram</small>
+              Meta Ads
             </h4>
             <p class="block__off">Sem campanha ativa hoje</p>
           </section>
@@ -5363,12 +5558,12 @@ body.pnl-aberto{overflow:hidden}
           <section class="block block--grupo" data-block="grupo">
             <h4 class="block__title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13h6M8 9h8"/><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M3.5 20.5 5 16"/></svg>
-              Grupo <small>WhatsApp / Telegram</small>
+              Meta Ads
             </h4>
             <div class="metrics">
               <div class="m"><span class="m__lbl">Investido</span><span class="m__val" data-field="grupo.valor_investido">R$ 240,26</span></div>
-              <div class="m"><span class="m__lbl">Entradas</span><span class="m__val" data-field="grupo.resultado">22</span></div>
-              <div class="m"><span class="m__lbl">Custo / entrada</span><span class="m__val" data-field="grupo.custo_por_resultado">R$ 10,92</span></div>
+              <div class="m"><span class="m__lbl">Resultado</span><span class="m__val" data-field="grupo.resultado">22</span></div>
+              <div class="m"><span class="m__lbl">Custo / resultado</span><span class="m__val" data-field="grupo.custo_por_resultado">R$ 10,92</span></div>
             </div>
           </section>
           <section class="block block--direto block--off" data-block="direto">
@@ -5427,12 +5622,12 @@ body.pnl-aberto{overflow:hidden}
           <section class="block block--grupo" data-block="grupo">
             <h4 class="block__title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13h6M8 9h8"/><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M3.5 20.5 5 16"/></svg>
-              Grupo <small>WhatsApp / Telegram</small>
+              Meta Ads
             </h4>
             <div class="metrics">
               <div class="m"><span class="m__lbl">Investido</span><span class="m__val" data-field="grupo.valor_investido">R$ 36,45</span></div>
-              <div class="m"><span class="m__lbl">Entradas</span><span class="m__val" data-field="grupo.resultado">6</span></div>
-              <div class="m"><span class="m__lbl">Custo / entrada</span><span class="m__val" data-field="grupo.custo_por_resultado">R$ 6,08</span></div>
+              <div class="m"><span class="m__lbl">Resultado</span><span class="m__val" data-field="grupo.resultado">6</span></div>
+              <div class="m"><span class="m__lbl">Custo / resultado</span><span class="m__val" data-field="grupo.custo_por_resultado">R$ 6,08</span></div>
             </div>
           </section>
           <section class="block block--direto block--off" data-block="direto">
@@ -5534,6 +5729,52 @@ body.pnl-aberto{overflow:hidden}
 
     </div><!-- ══════════ /ABA 3 · METAS ══════════ -->
 
+    <!-- ══════════════════ ABA 4 · SAFRA (FILTRO POR EXPERT) ══════════════════
+         Mesma safra que já alimenta o painel do expert e a coluna Seguem do
+         comparativo (rota ?safra=1, ver carregarSafra) — nenhuma conta nova
+         aqui, só um filtro por cima: mês de fechamento + quais experts.
+         Visual: MESMO padrão da matriz de coorte (.mtz — pedido do Costa
+         26/08, "essa é a certa"), com o expert no lugar da safra por mês e
+         "deixou pra casa" (net PL) no lugar do GGR por idade.
+         JS: pintarSafraFiltro(), na PARTE "SAFRA · ABA COM FILTRO". -->
+    <div class="view view--safra">
+
+      <div class="mtz__topo sf-topo">
+        <div>
+          <p class="mtz__tit">Safra por expert</p>
+          <p class="mtz__sub" data-sf-sub>Carteira inteira, todos os experts</p>
+        </div>
+        <div class="sf-filtros">
+          <label class="sf-mes">
+            <span class="sf-mes__lbl">Mês de fechamento</span>
+            <select class="sf-mes-sel">
+              <option value="todos">Toda a carteira</option>
+            </select>
+          </label>
+
+          <div class="sffil" data-safra-experts>
+            <button type="button" class="sffil__btn" aria-expanded="false" aria-haspopup="dialog">
+              <span class="sffil__lbl">Experts</span>
+              <span class="sffil__val">Todos</span>
+              <span class="sffil__chev" aria-hidden="true"></span>
+            </button>
+            <div class="sffil__pop" hidden role="dialog" aria-label="Escolher experts, recorte Costa e Lobão">
+              <input type="search" class="sffil__busca" placeholder="Buscar expert…" autocomplete="off">
+              <div class="sffil__lista"></div>
+              <div class="sffil__acoes">
+                <button type="button" class="sffil__acao" data-acao="todos">Selecionar todos</button>
+                <button type="button" class="sffil__acao" data-acao="limpar">Limpar seleção</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="mtz__nota" data-sf-estado hidden>Levantando as safras…</p>
+
+      <div data-sf-tabela></div>
+
+    </div><!-- ══════════ /ABA 4 · SAFRA ══════════ -->
 
     </div><!-- ╚══ /ESCOPO 1 · COSTA E LOBÃO ══╝ -->
 
@@ -5558,6 +5799,7 @@ body.pnl-aberto{overflow:hidden}
     <nav class="tabs" aria-label="Seções do painel, escopo geral">
       <label for="v-geral">Visão geral</label>
       <label for="v-experts">Por expert <span class="tab__badge" data-derived="geral.experts.length">24</span></label>
+      <label for="v-safra">Safra</label>
       <!-- RECORTE · vive dentro do Meta de propósito: não é outro canal, é um
            subconjunto do mesmo. Fica na ponta direita da faixa (margin-left
            auto) porque não é irmão das abas — as abas dizem O QUE mostrar,
@@ -6034,7 +6276,9 @@ body.pnl-aberto{overflow:hidden}
     <!-- ══════════════════ GERAL · ABA 2 · POR ENTIDADE ══════════════════ -->
     <div class="view view--experts">
 
-    <div class="section-head"><h2 class="eyebrow">Por expert · 24 na operação · maior investimento primeiro</h2></div>
+    <div class="section-head"><h2 class="eyebrow">Por expert · 24 na operação · maior investimento primeiro</h2>
+      <button type="button" class="ver-inativos" data-ver-inativos hidden></button>
+    </div>
 
     <section class="experts" id="geral-list" data-list="experts" aria-label="Desempenho por expert">
 
@@ -6068,12 +6312,12 @@ body.pnl-aberto{overflow:hidden}
           <section class="block block--grupo" data-block="grupo">
             <h4 class="block__title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13h6M8 9h8"/><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M3.5 20.5 5 16"/></svg>
-              Grupo <small>WhatsApp / Telegram</small>
+              Meta Ads
             </h4>
             <div class="metrics">
               <div class="m"><span class="m__lbl">Investido</span><span class="m__val" data-field="grupo.valor_investido">R$ 402,15</span></div>
-              <div class="m"><span class="m__lbl">Entradas</span><span class="m__val" data-field="grupo.resultado">48</span></div>
-              <div class="m"><span class="m__lbl">Custo / entrada</span><span class="m__val" data-field="grupo.custo_por_resultado">R$ 8,38</span></div>
+              <div class="m"><span class="m__lbl">Resultado</span><span class="m__val" data-field="grupo.resultado">48</span></div>
+              <div class="m"><span class="m__lbl">Custo / resultado</span><span class="m__val" data-field="grupo.custo_por_resultado">R$ 8,38</span></div>
             </div>
           </section>
           <section class="block block--direto block--off" data-block="direto">
@@ -6141,7 +6385,7 @@ body.pnl-aberto{overflow:hidden}
           <section class="block block--grupo block--off" data-block="grupo">
             <h4 class="block__title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13h6M8 9h8"/><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M3.5 20.5 5 16"/></svg>
-              Grupo <small>WhatsApp / Telegram</small>
+              Meta Ads
             </h4>
             <p class="block__off">Sem campanha ativa hoje</p>
           </section>
@@ -6298,7 +6542,7 @@ body.pnl-aberto{overflow:hidden}
           <section class="block block--grupo block--off" data-block="grupo">
             <h4 class="block__title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13h6M8 9h8"/><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M3.5 20.5 5 16"/></svg>
-              Grupo <small>WhatsApp / Telegram</small>
+              Meta Ads
             </h4>
             <p class="block__off">Sem campanha ativa hoje</p>
           </section>
@@ -6424,7 +6668,7 @@ body.pnl-aberto{overflow:hidden}
           <section class="block block--grupo block--off" data-block="grupo">
             <h4 class="block__title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13h6M8 9h8"/><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M3.5 20.5 5 16"/></svg>
-              Grupo <small>WhatsApp / Telegram</small>
+              Meta Ads
             </h4>
             <p class="block__off">Sem campanha ativa hoje</p>
           </section>
@@ -6499,6 +6743,47 @@ body.pnl-aberto{overflow:hidden}
 
     </div><!-- ══════════ /GERAL · ABA 2 ══════════ -->
 
+    <!-- ══════════════════ GERAL · ABA 3 · SAFRA (FILTRO POR EXPERT) ══════════
+         Mesmo bloco do recorte Costa e Lobão, alimentado por estado.safra.geral
+         (rota ?safra=1&escopo=geral). Ver comentário completo na aba irmã. -->
+    <div class="view view--safra">
+
+      <div class="mtz__topo sf-topo">
+        <div>
+          <p class="mtz__tit">Safra por expert</p>
+          <p class="mtz__sub" data-sf-sub>Carteira inteira, todos os experts</p>
+        </div>
+        <div class="sf-filtros">
+          <label class="sf-mes">
+            <span class="sf-mes__lbl">Mês de fechamento</span>
+            <select class="sf-mes-sel">
+              <option value="todos">Toda a carteira</option>
+            </select>
+          </label>
+
+          <div class="sffil" data-safra-experts>
+            <button type="button" class="sffil__btn" aria-expanded="false" aria-haspopup="dialog">
+              <span class="sffil__lbl">Experts</span>
+              <span class="sffil__val">Todos</span>
+              <span class="sffil__chev" aria-hidden="true"></span>
+            </button>
+            <div class="sffil__pop" hidden role="dialog" aria-label="Escolher experts, escopo geral">
+              <input type="search" class="sffil__busca" placeholder="Buscar expert…" autocomplete="off">
+              <div class="sffil__lista"></div>
+              <div class="sffil__acoes">
+                <button type="button" class="sffil__acao" data-acao="todos">Selecionar todos</button>
+                <button type="button" class="sffil__acao" data-acao="limpar">Limpar seleção</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="mtz__nota" data-sf-estado hidden>Levantando as safras…</p>
+
+      <div data-sf-tabela></div>
+
+    </div><!-- ══════════ /GERAL · ABA 3 · SAFRA ══════════ -->
 
     </div><!-- ╚══ /ESCOPO 2 · GERAL ══╝ -->
 
@@ -6645,6 +6930,22 @@ body.pnl-aberto{overflow:hidden}
           <span>Conta</span><span class="gcontas__val gcontas__id">ID</span><span class="gcontas__val">Investimento</span><span class="gcontas__entrega">Cliques · CPC</span>
         </div>
       </div>
+
+      <!-- ═══ SAFRA · GOOGLE (26/08) ═══════════════════════════════════════
+           Mesma safra por mês de cadastro que já alimenta Costa e Lobão/Geral
+           (?safra=1&escopo=google — o n8n soma o btag do Google desde 13/08,
+           só não estava ligado na tela). Sem filtro de expert (é 1 conta só,
+           não tem o que escolher) e sem filtro de mês (matriz sempre inteira):
+           JS em pintarSafraGoogle(). Mesmas classes .mtz da coorte/safra dos
+           outros dois escopos. -->
+      <div class="mtz__topo sf-topo">
+        <div>
+          <p class="mtz__tit">Safra · turma por mês de cadastro</p>
+          <p class="mtz__sub">Google Ads, carteira inteira</p>
+        </div>
+      </div>
+      <p class="mtz__nota" data-sf-estado hidden>Levantando a safra…</p>
+      <div data-sf-tabela></div>
 
     </div><!-- ╚══ /ESCOPO 3 · GOOGLE ══╝ -->
 
@@ -7515,6 +7816,10 @@ var estado = {
      rodízio de 15 min, e o número não muda de minuto em minuto. */
   safra: { cl: null, geral: null },
   safraBuscando: {},
+  /* filtro da aba Safra (26/08): mês de fechamento + quais experts entram na
+     tabela. `experts: null` é o "todos" -- não uma lista com todo mundo, pra
+     gente nova entrar já marcada sem precisar reabrir o seletor. */
+  safraSel: { cl: { mes: 'todos', experts: null }, geral: { mes: 'todos', experts: null } },
 
   /* COORTE DE FTD (16/08). Rota própria (/api/coorte), buscada por EXPERT e não
      por escopo: cada matriz custa ~11 leituras da TAP, e ninguém abre 23
@@ -7529,6 +7834,11 @@ var estado = {
   /* "ainda não chegou" e "tentou e não deu" mostram textos diferentes: o
      primeiro é pra esperar, o segundo é pra recarregar a página. */
   safraFalhou: {},
+  /* "Ver todos os experts" (26/08): por padrão esconde quem está há mais de
+     15 dias sem investimento (dias_sem_investimento vem do n8n, calculado
+     sobre o histórico inteiro -- ver CLAUDE.md). Preferência de sessão, uma
+     chave por escopo; começa false (oculta) nos dois. */
+  mostrarInativos: { cl: false, geral: false },
   /* cache da tendência por expert × escopo. A série só tem dias FECHADOS, ou
      seja, não muda enquanto a página está aberta: uma busca por sessão basta,
      e o refresh de 5 min recalcula em cima do cache em vez de bater na API
@@ -7926,20 +8236,27 @@ function pintarBloco(art, expert, canal, isHoje) {
   sec.classList.remove('block--off');
   var mm = (canal === 'grupo' ? MOLDE.metricasGrupo : MOLDE.metricasDireto).cloneNode(true);
 
-  /* INSTITUCIONAL: o bloco Grupo aqui não é WhatsApp/Telegram de verdade --
-     é tráfego direto pra casa (site/produto). "Entradas" é o resultado bruto
-     do Meta (conversa iniciada) e não diz nada sobre o que interessa nesse
-     canal: mostra FTD/custo por FTD no lugar, puxado do funil TAP do próprio
-     expert. Só o Institucional troca -- os outros têm grupo de verdade. */
-  var ehInstitucionalGrupo = canal === 'grupo' && expert.expert_name === 'INSTITUCIONAL';
+  /* GRUPO: o EVENTO por trás do "resultado" muda de expert pra expert (26/08,
+     ajuste do Costa) -- tem operação em que a campanha roda de verdade pra
+     entrada de grupo (WhatsApp/Telegram) e o resultado do Meta é a métrica
+     certa; tem outra em que essa conversão vem zerada ou nem existe (ex.:
+     Gregório Big, R$ 499 gastos e 0 no Meta) e quem sobra pra medir é a FTD
+     da TAP. Não é por NOME de expert -- é o DADO que decide: resultado > 0
+     manda, só cai pra FTD quando o Meta genuinamente não capturou nada. Por
+     isso o rótulo fica sempre genérico ("Resultado"/"Custo / resultado"):
+     batizar de "FTD" um card que às vezes mostra entrada de grupo seria
+     mentira do outro lado. TRÁFEGO PERFIL (canal "direto") não entra nessa
+     conta -- cliques no perfil continuam sendo sempre a métrica certa ali. */
   var vals, nomes;
-  if (ehInstitucionalGrupo) {
+  if (canal === 'grupo') {
     var tap = expert.tap || {};
-    vals = [brl(d.valor_investido), inteiro(tap.ftd), brl(tap.custo_por_ftd)];
-    nomes = ['valor_investido', 'ftd_no_lugar_de_entrada', 'custo_ftd_no_lugar_de_entrada'];
-    var lbls = $$('.m__lbl', mm);
-    if (lbls[1]) lbls[1].textContent = 'FTD';
-    if (lbls[2]) lbls[2].textContent = 'Custo / FTD';
+    var temResultadoMeta = ehNum(d.resultado) && d.resultado > 0;
+    vals = temResultadoMeta
+      ? [brl(d.valor_investido), inteiro(d.resultado), brl(d.custo_por_resultado)]
+      : [brl(d.valor_investido), inteiro(tap.ftd), brl(tap.custo_por_ftd)];
+    nomes = temResultadoMeta
+      ? ['valor_investido', 'resultado', 'custo_por_resultado']
+      : ['valor_investido', 'ftd', 'custo_por_ftd'];
   } else {
     vals = [brl(d.valor_investido), inteiro(d.resultado), brl(d.custo_por_resultado)];
     nomes = ['valor_investido', 'resultado', 'custo_por_resultado'];
@@ -8135,12 +8452,28 @@ function pintarExpert(expert, ehPrimeiro, isHoje, geral) {
   return art;
 }
 
+/* limiar oficial (26/08): expert sem investimento há mais desses dias vem
+   escondido por padrão, mas continua existindo em tudo o mais (histórico,
+   safra, comparativo) -- é só o card de "Por expert" que soma. null significa
+   "sem histórico suficiente pra afirmar" (n8n só tem dado desde 07/08): NUNCA
+   trata como inativo, senão esconderia expert novo por engano. */
+var LIMIAR_INATIVO_DIAS = 15;
+function estaInativo(e) {
+  return ehNum(e.dias_sem_investimento) && e.dias_sem_investimento > LIMIAR_INATIVO_DIAS;
+}
+
 function pintarExperts(exps, isHoje, raiz, geral) {
   var lista = $('[data-list="experts"]', raiz);
   if (!lista) return;
   exps = ordenarExperts(exps || [], estado.ordenar.metrica, estado.ordenar.dir);
+
+  var chaveEsc = geral ? 'geral' : 'cl';
+  var inativos = exps.filter(estaInativo);
+  var mostrarTodos = !!estado.mostrarInativos[chaveEsc];
+  var exibidos = mostrarTodos ? exps : exps.filter(function (e) { return !estaInativo(e); });
+
   var frag = document.createDocumentFragment();
-  exps.forEach(function (e, i) {
+  exibidos.forEach(function (e, i) {
     var art = pintarExpert(e, i === 0, isHoje, geral);
     /* teto de 12: com 24 entidades, escalonar todas daria 600ms de espera pro
        último card. Depois do 12º todos entram juntos. */
@@ -8157,12 +8490,28 @@ function pintarExperts(exps, isHoje, raiz, geral) {
   if (cab) {
     var h = $('.eyebrow', cab);
     if (h) h.textContent = geral
-      ? 'Por expert · ' + exps.length + ' na operação · ' + ordemTxt
-      : 'Por expert · ' + exps.length + (exps.length === 1 ? ' ativo' : ' ativos') +
+      ? 'Por expert · ' + exibidos.length + ' na operação · ' + ordemTxt
+      : 'Por expert · ' + exibidos.length + (exibidos.length === 1 ? ' ativo' : ' ativos') +
         ' · ' + ordemTxt;
+    var btn = $('[data-ver-inativos]', cab);
+    if (btn) {
+      if (!inativos.length) {
+        btn.hidden = true;
+      } else {
+        btn.hidden = false;
+        btn.toggleAttribute('data-ativo', mostrarTodos);
+        btn.textContent = mostrarTodos
+          ? 'Ver só ativos'
+          : 'Ver todos os experts (+' + inativos.length + ' sem verba há +' + LIMIAR_INATIVO_DIAS + 'd)';
+        btn.onclick = function () {
+          estado.mostrarInativos[chaveEsc] = !estado.mostrarInativos[chaveEsc];
+          pintarExperts(exps, isHoje, raiz, geral);
+        };
+      }
+    }
   }
   var badge = $('.tab__badge', raiz);
-  if (badge) badge.textContent = String(exps.length);
+  if (badge) badge.textContent = String(exibidos.length);
   if (typeof aplicarBusca === 'function') aplicarBusca(raiz);
 }
 
@@ -9984,6 +10333,9 @@ function pintarGoogle(g, periodo) {
     return;
   }
   if (botao) botao.hidden = false;
+  /* safra é busca sob demanda, uma vez por sessão (mesma regra dos outros
+     dois escopos) -- carregarSafra é idempotente, com o dado em mãos só repinta */
+  carregarSafra('google');
 
   var t = g.tap || {};
   var inv = ehNum(g.investimento_total) ? g.investimento_total : null;
@@ -10614,11 +10966,15 @@ function pintarBoot(texto) {
    Ciclo próprio: busca sob demanda na primeira abertura de um painel daquele
    escopo, uma vez por sessão. O workflow recalcula em rodízio, o número não
    muda de minuto em minuto — não faz sentido acompanhar o refresh de 5 min. */
-var SAFRA_ESCOPO_API = { cl: 'costa_lobao', geral: 'geral' };
+/* 'google' entrou em 26/08: o n8n já soma o btag do Google (543779) desde
+   13/08 (workflow "Dashboard Operação - Safra", mapa 'Montar Linhas Safra')
+   -- só não estava ligado na tela. Não é conta nova nenhuma, só passou a
+   pedir o dado que já existia. */
+var SAFRA_ESCOPO_API = { cl: 'costa_lobao', geral: 'geral', google: 'google' };
 
 function carregarSafra(escopo) {
   if (!escopo || !SAFRA_ESCOPO_API[escopo]) return;
-  if (estado.safra[escopo]) { pintarSafraDoExpert(); return; }
+  if (estado.safra[escopo]) { pintarSafraDoExpert(); pintarSafraFiltro(escopo); return; }
   if (estado.safraBuscando[escopo]) return;
   estado.safraBuscando[escopo] = true;
 
@@ -10651,9 +11007,50 @@ function carregarSafra(escopo) {
     })
     .then(function () {
       estado.safraBuscando[escopo] = false;
+      /* Google não tem painel de expert nem coluna Seguem no comparativo (é
+         uma conta só) -- só a matriz mesmo, sem o resto do combo dos outros
+         dois escopos. */
+      if (escopo === 'google') { pintarSafraGoogle(); return; }
       pintarSafraDoExpert();
       pintarSafraOndeCabe(escopo);
+      pintarSafraFiltro(escopo);
     });
+}
+
+/* Safra do Google (26/08): mesmo motor de pintarSafraFiltro(), sem o filtro
+   de experts (é 1 conta só, não tem o que escolher) e sem o filtro de mês
+   (o Google é discreto demais pra valer a pena colapsar a matriz numa
+   coluna). Sempre "toda a carteira", todas as colunas. */
+function pintarSafraGoogle() {
+  var raiz = RAIZ_GOOGLE;
+  if (!raiz) return;
+  var box = $('[data-sf-tabela]', raiz);
+  var estadoTxt = $('[data-sf-estado]', raiz);
+  if (!box) return;
+
+  var d = estado.safra.google;
+  if (!d) {
+    if (estadoTxt) {
+      estadoTxt.hidden = false;
+      estadoTxt.textContent = estado.safraFalhou.google
+        ? 'Não deu pra carregar a safra agora.' : 'Levantando a safra…';
+    }
+    box.innerHTML = '';
+    return;
+  }
+  if (estadoTxt) estadoTxt.hidden = true;
+
+  var todos = expertsDaSafra('google');
+  if (!todos.length) {
+    box.innerHTML = '<p class="mtz__nota">A varredura ainda não terminou nenhum mês.</p>';
+    return;
+  }
+  var meses = mesesVisiveis(d, { mes: 'todos' });
+  if (!meses.length) {
+    box.innerHTML = '<p class="mtz__nota">A varredura ainda não terminou nenhum mês.</p>';
+    return;
+  }
+  montarGradeSafra(box, 'google', todos, meses, { mes: 'todos' });
 }
 
 /* A safra aparece em três lugares que vivem em ciclos diferentes: o painel do
@@ -11248,7 +11645,8 @@ function pintarCoorte(caixa, escopo, nome) {
 function safraPorExpert(escopo, nome) {
   var d = estado.safra[escopo];
   if (!d || !d.meses) return null;
-  var t = { ativos: 0, ftd: 0, cadastros: 0, net_pl: 0, achou: false };
+  var t = { ativos: 0, ftd: 0, cadastros: 0, net_pl: 0, net_dep: 0, volume: 0,
+            investimento: 0, investimento_disponivel: true, achou: false };
   d.meses.forEach(function (m) {
     (m.experts || []).forEach(function (e) {
       if (e.expert_name !== nome) return;
@@ -11257,10 +11655,18 @@ function safraPorExpert(escopo, nome) {
       t.ftd       += e.ftd || 0;
       t.cadastros += e.cadastros || 0;
       t.net_pl    += e.net_pl || 0;
+      t.net_dep   += e.net_dep || 0;
+      t.volume    += e.volume || 0;
+      /* investimento pela metade e pior que investimento ausente (mesma regra
+         da coorte): um mes sem gasto rastreado invalida a soma inteira, senao
+         o total mentiria pra baixo sem avisar. */
+      if (e.investimento_disponivel) { t.investimento += e.investimento || 0; }
+      else { t.investimento_disponivel = false; }
     });
   });
   if (!t.achou) return null;
   t.retencao = t.ftd ? (t.ativos / t.ftd) * 100 : null;
+  if (!t.investimento_disponivel) { t.investimento = null; }
   return t;
 }
 
@@ -11320,6 +11726,487 @@ function preencherSeguemCmp(raiz, geral) {
     cel.title = inteiro(s.ativos) + ' de ' + inteiro(s.ftd) + ' depositantes ' +
       'ainda ativos, somando todas as turmas · ' + brl(s.net_pl) + ' deixados ' +
       'pra casa · número de carteira, não do período escolhido';
+  });
+}
+
+/* ── SAFRA · ABA COM FILTRO (26/08) ───────────────────────────────────────
+   Mesmo estado.safra[escopo] de cima (meses -> experts[]): nenhuma conta
+   nova. Só que aqui a pergunta muda de "a carteira inteira de UM expert" pra
+   "estes experts, neste mês, somam quanto" — e a linha da tabela vira o
+   expert, não o mês.
+   REGRA: soma cadastros/ftd/ativos/net_pl PRIMEIRO, taxa (retenção, "por
+   FTD") DEPOIS, a partir da soma. Média das taxas de cada expert mente
+   quando as turmas têm tamanho diferente — pedido explícito do Costa. */
+
+/* nomes distintos de expert que aparecem em algum mês da safra deste escopo,
+   em ordem alfabética (a safra não carrega investimento, não tem "maior
+   verba primeiro" pra seguir aqui). */
+function expertsDaSafra(escopo) {
+  var d = estado.safra[escopo];
+  if (!d || !d.meses) return [];
+  var vistos = {}, nomes = [];
+  d.meses.forEach(function (m) {
+    (m.experts || []).forEach(function (e) {
+      if (vistos[e.expert_name]) return;
+      vistos[e.expert_name] = true;
+      nomes.push(e.expert_name);
+    });
+  });
+  nomes.sort(function (a, b) { return nomeExpert(a).localeCompare(nomeExpert(b), 'pt-BR'); });
+  return nomes;
+}
+
+/* a safra de UM expert, no filtro corrente: um mês específico, ou a carteira
+   inteira (mesma soma de safraPorExpert, que já alimenta a coluna Seguem do
+   comparativo). Sem cadastro naquele mês CONTINUA sendo linha — zerada, não
+   some: a pessoa marcou aquele expert de propósito. */
+function safraLinhaFiltrada(escopo, nome, mes) {
+  if (mes === 'todos') {
+    return safraPorExpert(escopo, nome) ||
+      { ativos: 0, ftd: 0, cadastros: 0, net_pl: 0, net_dep: 0, volume: 0,
+        investimento: null, investimento_disponivel: false, retencao: null };
+  }
+  var d = estado.safra[escopo];
+  var m = (d && d.meses || []).filter(function (x) { return x.mes === mes; })[0];
+  var e = m && (m.experts || []).filter(function (x) { return x.expert_name === nome; })[0];
+  var t = { ativos: (e && e.ativos) || 0, ftd: (e && e.ftd) || 0,
+            cadastros: (e && e.cadastros) || 0, net_pl: (e && e.net_pl) || 0,
+            net_dep: (e && e.net_dep) || 0, volume: (e && e.volume) || 0,
+            investimento: e ? e.investimento : null,
+            investimento_disponivel: !!(e && e.investimento_disponivel) };
+  t.retencao = t.ftd ? (t.ativos / t.ftd) * 100 : null;
+  return t;
+}
+
+/* soma pura das linhas exibidas. O TOTAL da tabela e os cards em cima dela
+   chamam esta MESMA função, pra nunca divergir um número do outro. */
+function somarLinhasSafra(linhas) {
+  var t = { cadastros: 0, ftd: 0, ativos: 0, net_pl: 0, net_dep: 0, volume: 0,
+            investimento: 0, investimento_disponivel: true };
+  linhas.forEach(function (l) {
+    t.cadastros += l.cadastros || 0;
+    t.ftd       += l.ftd || 0;
+    t.ativos    += l.ativos || 0;
+    t.net_pl    += l.net_pl || 0;
+    t.net_dep   += l.net_dep || 0;
+    t.volume    += l.volume || 0;
+    /* mesma regra da coorte: um mês sem gasto rastreado invalida a soma
+       inteira, senão o total mentiria pra baixo sem avisar. */
+    if (l.investimento_disponivel) { t.investimento += l.investimento || 0; }
+    else { t.investimento_disponivel = false; }
+  });
+  t.retencao = t.ftd ? (t.ativos / t.ftd) * 100 : null;
+  if (!t.investimento_disponivel) { t.investimento = null; }
+  return t;
+}
+
+function safraSel(geral) { return estado.safraSel[chaveEscopo(geral)]; }
+
+function atualizarBotaoSffil(view, marcados, todos) {
+  var cx = $('.sffil', view);
+  var val = $('.sffil__val', view);
+  if (!cx || !val) return;
+  var todosMarcados = todos.length > 0 && marcados.length === todos.length;
+  val.textContent = todosMarcados ? 'Todos'
+    : (marcados.length === 0 ? 'Nenhum' : marcados.length + ' de ' + todos.length);
+  cx.toggleAttribute('data-filtrando', !todosMarcados);
+}
+
+/* Redesenhar a lista apaga o texto de busca em digitação e o foco do teclado
+   no meio de um clique — só reconstrói quando o CONJUNTO de experts muda
+   (gente nova entrando na operação); marcação em si só reflete o checked. */
+function montarListaSffil(view, todos, marcados) {
+  var lista = $('.sffil__lista', view);
+  if (!lista) return;
+  var assinatura = todos.join('|');
+  if (lista.dataset.assinatura === assinatura) {
+    $$('input[value]', lista).forEach(function (cb) {
+      cb.checked = marcados.indexOf(cb.value) !== -1;
+    });
+    return;
+  }
+  lista.dataset.assinatura = assinatura;
+  lista.innerHTML = '';
+  if (!todos.length) {
+    var vazio = document.createElement('p');
+    vazio.className = 'sffil__vazio';
+    vazio.textContent = 'A varredura ainda não trouxe nenhum expert.';
+    lista.appendChild(vazio);
+    return;
+  }
+  todos.forEach(function (nome) {
+    var it = document.createElement('label');
+    it.className = 'sffil__item';
+    var cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.value = nome;
+    cb.checked = marcados.indexOf(nome) !== -1;
+    var nm = document.createElement('span');
+    nm.className = 'sffil__nome';
+    nm.textContent = nomeExpert(nome);
+    nm.title = nomeCompleto(nome);
+    it.appendChild(cb);
+    it.appendChild(nm);
+    lista.appendChild(it);
+  });
+}
+
+/* Quais meses viram COLUNA na grade: todos os meses da safra (cronológico,
+   mais velho primeiro -- lê como linha do tempo, esquerda pra direita, igual
+   M0→M1→M2 da coorte) quando o filtro está em "Toda a carteira"; só o mês
+   escolhido, sozinho, quando o filtro pede um mês específico. Mesma função
+   pinta as duas situações -- 1 coluna não é um caso especial, é só o N=1
+   deste array. */
+function mesesVisiveis(d, sel) {
+  var todos = (d.meses || []).map(function (m) { return m.mes; });
+  todos.sort(function (a, b) { return mesOrdinal(a) - mesOrdinal(b); });
+  if (sel.mes === 'todos') return todos;
+  return todos.indexOf(sel.mes) !== -1 ? [sel.mes] : todos;
+}
+
+/* Constrói o bloco visual completo (grade + legenda + nota) no MESMO padrão
+   da matriz de coorte (.mtz, ver pintarCoorte) — pedido do Costa 26/08,
+   "esse formato lá, tudo igual". Reaproveita as classes .mtz__* inteiras:
+   LINHA = expert (a coorte usa a safra por mês), COLUNA = mês de cadastro
+   (a coorte usa a idade M0..Mn), CÉLULA = "deixou pra casa" (net PL) daquele
+   mês (a coorte usa o GGR daquela idade). Uma matriz de verdade, não um
+   resumo espremido numa célula só -- por isso o "mês de fechamento" agora
+   decide QUANTAS colunas aparecem (1 ou todas), nunca o conteúdo de uma
+   célula sozinha. */
+function montarGradeSafra(caixa, escopo, marcadosNomes, meses, sel) {
+  caixa.innerHTML = '';
+
+  var hoje = mesCorrente();
+
+  /* por expert: uma célula por mês visível + resumo = soma dessas células
+     (nunca uma conta à parte -- resumo e colunas sempre batem). */
+  var linhas = marcadosNomes.map(function (nome) {
+    var celulas = meses.map(function (mes) { return safraLinhaFiltrada(escopo, nome, mes); });
+    return { nome: nome, celulas: celulas, resumo: somarLinhasSafra(celulas) };
+  }).sort(function (a, b) { return (b.resumo.net_pl || 0) - (a.resumo.net_pl || 0); });
+
+  /* TOTAL: por mês, soma de todo mundo marcado; resumo = soma de tudo. */
+  var totalCelulas = meses.map(function (_, i) {
+    return somarLinhasSafra(linhas.map(function (x) { return x.celulas[i]; }));
+  });
+  var totalResumo = somarLinhasSafra(totalCelulas);
+
+  /* topo da escala de cor: maior |net PL| ENTRE AS CÉLULAS DE EXPERT (nunca
+     TOTAL, que por somar todo mundo seria sempre a maior e apagaria a
+     diferença entre os experts -- mesmo cuidado da coorte com o mês
+     corrente ficando fora da escala). */
+  var maxAbs = 0;
+  linhas.forEach(function (x) {
+    x.celulas.forEach(function (c) {
+      var a = Math.abs(c.net_pl || 0);
+      if (a > maxAbs) maxAbs = a;
+    });
+  });
+  function degrau(v) {
+    if (!maxAbs || !ehNum(v) || v === 0) return '';
+    var r = Math.abs(v) / maxAbs;
+    var n = r > 0.6 ? 4 : (r > 0.3 ? 3 : (r > 0.1 ? 2 : 1));
+    return ' mtz__c--' + (v > 0 ? 'p' : 'n') + n;
+  }
+
+  var cx = document.createElement('div');
+  cx.className = 'mtz';
+  var grade = document.createElement('div');
+  grade.className = 'mtz__grade';
+  grade.style.gridTemplateColumns = '132px 186px repeat(' + meses.length + ', minmax(122px,170px))';
+  grade.style.justifyContent = 'start';
+
+  function celula(classes) {
+    var c = document.createElement('div');
+    c.className = 'mtz__c' + (classes ? ' ' + classes : '');
+    grade.appendChild(c);
+    return c;
+  }
+
+  /* régua de meses solta acima da grade, igual à coorte */
+  celula('mtz__c--head');
+  var hResumo = celula('mtz__c--head'); hResumo.textContent = 'cadastros → seguem';
+  meses.forEach(function (mes) {
+    var h = celula('mtz__c--head');
+    h.textContent = mesCurto(mes);
+    h.title = 'Turma que se cadastrou em ' + mesCurto(mes);
+  });
+
+  function linha(nome, celulas, resumo, ehTotal) {
+    var extra = ehTotal ? ' mtz__c--totallinha' : '';
+
+    var turma = celula('mtz__c--turma' + extra);
+    var nomeSpan = document.createElement('span');
+    nomeSpan.textContent = ehTotal ? 'TOTAL' : nomeExpert(nome);
+    turma.appendChild(nomeSpan);
+    var cadSpan = document.createElement('span');
+    cadSpan.className = 'mtz__cad';
+    cadSpan.textContent = inteiro(resumo.ftd) + ' FTD';
+    turma.appendChild(cadSpan);
+    turma.title = ehTotal ? 'Soma dos experts marcados no filtro' : nomeCompleto(nome);
+
+    /* resumo: acumulado dos meses MOSTRADOS nesta linha -- cadastros da
+       turma toda × quem a TAP ainda classifica como ativo × quanto cada
+       depositante deixou em média. */
+    var resumoCel = celula('mtz__c--resumo' + extra);
+    var porCabeca = resumo.ftd ? resumo.net_pl / resumo.ftd : null;
+    var linhaRes = document.createElement('span');
+    linhaRes.className = 'mtz__inv';
+    linhaRes.innerHTML =
+      '<span style="display:block;white-space:nowrap">cadastros <b>' + inteiro(resumo.cadastros) + '</b></span>' +
+      '<span style="display:block;white-space:nowrap">seguem <b>' + inteiro(resumo.ativos) +
+        (ehNum(resumo.retencao) ? ' · ' + pct(resumo.retencao) : '') + '</b></span>' +
+      '<span style="display:block;white-space:nowrap">por FTD <b>' +
+        (porCabeca == null ? '—' : brlCurto(porCabeca)) + '</b></span>';
+    resumoCel.appendChild(linhaRes);
+
+    /* 26/08: mesmo bloco "invest → retorno" da coorte (ads/GGR/net dep/
+       volume), pedido do gestor pra bater visualmente com a matriz de
+       FTD. O investimento vem da dashboard_coorte (gasto de Meta Ads por
+       expert+mês calendário — o mesmo número serve pra safra de cadastro
+       e pra safra de FTD, só muda o rótulo do agrupamento em volta dele). */
+    var linhaInv = document.createElement('span');
+    linhaInv.className = 'mtz__inv';
+    var partesInv = [
+      '<span style="display:block;white-space:nowrap">ads <b>' +
+        (resumo.investimento == null ? '—' : brlCurto(resumo.investimento)) + '</b></span>',
+      '<span style="display:block;white-space:nowrap">GGR <b>' + brlCurto(resumo.net_pl) + '</b></span>',
+      '<span style="display:block;white-space:nowrap">net dep <b>' + brlCurto(resumo.net_dep) + '</b></span>',
+      '<span style="display:block;white-space:nowrap">volume <b>' + brlCurto(resumo.volume) + '</b></span>'
+    ];
+    if (resumo.investimento > 0) {
+      partesInv.push('<span style="display:block;white-space:nowrap">' +
+        Math.round((resumo.net_pl / resumo.investimento) * 100) + '% de volta</span>');
+    }
+    linhaInv.innerHTML = partesInv.join('');
+    resumoCel.appendChild(linhaInv);
+    /* mesmo chip de FATO da coorte -- sem projeção de payback aqui (a safra
+       não sabe M0/M1/M2), só os dois estados que são fato consumado. */
+    var chipInv = document.createElement('span');
+    if (resumo.investimento == null) {
+      chipInv.className = 'mtz__pb mtz__pb--na';
+      chipInv.textContent = 'invest. não rastreado';
+      chipInv.title = 'Algum mês desta linha ainda não tem gasto de Meta Ads calculado.';
+    } else if (resumo.investimento === 0) {
+      chipInv.className = 'mtz__pb mtz__pb--na';
+      chipInv.textContent = 'sem gasto no período';
+    }
+    if (chipInv.className) resumoCel.appendChild(chipInv);
+    resumoCel.title = 'Acumulado dos meses mostrados nesta linha.';
+
+    /* célula de calor por mês: o valor não ganha cor de TEXTO, quem diz o
+       sinal é o fundo -- mesma regra da coorte, pelo mesmo motivo (duas
+       codificações de cor brigando entre si atrapalham a leitura em vez de
+       ajudar). */
+    celulas.forEach(function (c, i) {
+      var mesEhCorrente = meses[i] === hoje;
+      var classes = 'mtz__c--mes' + degrau(c.net_pl) +
+        (mesEhCorrente ? ' mtz__c--parcial' : '') + extra;
+      var cel = celula(classes);
+      var val = document.createElement('span');
+      val.textContent = brlCurto(c.net_pl);
+      cel.appendChild(val);
+      if (ehNum(c.retencao)) {
+        var ro = document.createElement('span');
+        ro.className = 'mtz__roas';
+        ro.textContent = pct(c.retencao) + ' seguem';
+        cel.appendChild(ro);
+      }
+      var at = document.createElement('span');
+      at.className = 'mtz__ativos';
+      at.textContent = inteiro(c.ativos) + ' ativos';
+      cel.appendChild(at);
+      if (mesEhCorrente) {
+        var av = document.createElement('span');
+        av.className = 'mtz__alerta';
+        av.textContent = '⚠';
+        cel.appendChild(av);
+      }
+      cel.title = (ehTotal ? 'Soma dos experts marcados' : nomeCompleto(nome)) + ' em ' +
+        mesCurto(meses[i]) + ': ' + brlCurto(c.net_pl) + ' deixados pra casa, ' +
+        inteiro(c.ativos) + ' de ' + inteiro(c.ftd) + ' depositantes ainda ativos' +
+        (mesEhCorrente ? ' · mês ainda correndo, o número sobe até o fim' : '');
+    });
+  }
+
+  linhas.forEach(function (x) { linha(x.nome, x.celulas, x.resumo, false); });
+  linha(null, totalCelulas, totalResumo, true);
+
+  cx.appendChild(grade);
+  caixa.appendChild(cx);
+
+  var mostraParcial = meses.indexOf(hoje) !== -1;
+  var leg = document.createElement('p');
+  leg.className = 'mtz__leg';
+  leg.innerHTML =
+    '<span><i class="mtz__sw mtz__sw--neg"></i> deixou negativo (devolveu)</span>' +
+    '<span><i class="mtz__sw mtz__sw--zero"></i> perto de zero</span>' +
+    '<span><i class="mtz__sw mtz__sw--pos"></i> deixou positivo (mais forte = mais escuro)</span>' +
+    (mostraParcial ? '<span><i class="mtz__sw mtz__sw--parcial"></i> mês ainda correndo</span>' : '');
+  caixa.appendChild(leg);
+
+  var nota = document.createElement('p');
+  nota.className = 'mtz__nota';
+  nota.textContent = 'Cada linha é um expert, e as colunas são os meses em que a turma dele se ' +
+    'CADASTROU -- cada célula é o "deixou pra casa" (net PL) só DAQUELE mês, não acumulado; o ' +
+    'acumulado mora na coluna "cadastros → seguem". O fundo da célula é quem diz o sinal (azul = ' +
+    'deixou dinheiro pra casa, vermelho = devolveu) — a intensidade compara todas as células desta ' +
+    'matriz entre si, não um valor absoluto. TOTAL soma cadastros, FTD, ativos e net PL de quem ' +
+    'está marcado a cada mês; "por FTD" e a retenção saem dessa soma, nunca da média das taxas de ' +
+    'cada expert. Hachurado é o mês corrente, que ainda vai subir.';
+  caixa.appendChild(nota);
+}
+
+/* Redesenha a aba Safra inteira (mês, filtro de experts, grade) de uma vez —
+   é o pedido do Costa: os dois filtros respondem juntos, no mesmo componente. */
+function pintarSafraFiltro(escopo) {
+  var geral = escopo === 'geral';
+  var raiz = geral ? RAIZ_GERAL : RAIZ_CL;
+  if (!raiz) return;
+  var view = $('.view--safra', raiz);
+  if (!view) return;
+
+  var estadoTxt = $('[data-sf-estado]', view);
+  var subEl     = $('[data-sf-sub]', view);
+  var tabBox    = $('[data-sf-tabela]', view);
+
+  var d = estado.safra[escopo];
+  if (!d) {
+    if (estadoTxt) {
+      estadoTxt.hidden = false;
+      estadoTxt.textContent = estado.safraFalhou[escopo]
+        ? 'Não deu pra carregar a safra agora.' : 'Levantando as safras…';
+    }
+    if (tabBox) tabBox.innerHTML = '';
+    return;
+  }
+  if (estadoTxt) estadoTxt.hidden = true;
+
+  /* mês de fechamento: opções vêm de d.meses; a escolha sobrevive à
+     repintura, só cai pra "todos" se o mês escolhido tiver saído da lista */
+  var sel = safraSel(geral);
+  var selMes = $('.sf-mes-sel', view);
+  if (selMes) {
+    var atual = sel.mes;
+    selMes.innerHTML = '<option value="todos">Toda a carteira</option>';
+    (d.meses || []).forEach(function (m) {
+      var op = document.createElement('option');
+      op.value = m.mes;
+      op.textContent = mesCurto(m.mes);
+      selMes.appendChild(op);
+    });
+    var existe = atual === 'todos' || (d.meses || []).some(function (m) { return m.mes === atual; });
+    if (!existe) { atual = 'todos'; sel.mes = 'todos'; }
+    selMes.value = atual;
+  }
+
+  /* quem entra na grade: experts:null é "todos" — a lista completa do
+     escopo, sempre em dia com gente nova entrando na operação */
+  var todos = expertsDaSafra(escopo);
+  var marcados = sel.experts
+    ? sel.experts.filter(function (n) { return todos.indexOf(n) !== -1; })
+    : todos;
+
+  atualizarBotaoSffil(view, marcados, todos);
+  montarListaSffil(view, todos, marcados);
+
+  if (subEl) {
+    subEl.textContent = (sel.mes === 'todos' ? 'Toda a carteira' : 'Turma de ' + mesCurto(sel.mes)) +
+      ' · ' + (marcados.length === todos.length
+        ? 'todos os experts'
+        : (marcados.length === 1 ? '1 expert' : marcados.length + ' de ' + todos.length + ' experts'));
+  }
+
+  if (!todos.length) {
+    if (tabBox) tabBox.innerHTML = '<p class="mtz__nota">A varredura ainda não terminou nenhum mês.</p>';
+    return;
+  }
+  if (!marcados.length) {
+    if (tabBox) tabBox.innerHTML = '<p class="mtz__nota">Nenhum expert marcado no filtro.</p>';
+    return;
+  }
+
+  var meses = mesesVisiveis(d, sel);
+  if (!meses.length) {
+    if (tabBox) tabBox.innerHTML = '<p class="mtz__nota">A varredura ainda não terminou nenhum mês.</p>';
+    return;
+  }
+
+  if (tabBox) montarGradeSafra(tabBox, escopo, marcados, meses, sel);
+}
+
+function fecharTodosSffil() {
+  $$('.sffil').forEach(function (cx) {
+    var pop = $('.sffil__pop', cx);
+    var btn = $('.sffil__btn', cx);
+    if (pop) pop.hidden = true;
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+    cx.removeAttribute('data-aberto');
+  });
+}
+
+/* liga o mês, o seletor de experts (busca + marcação + ações) e o botão da
+   aba, nos dois escopos que têm safra. Marcação aplica NA HORA — sem
+   rascunho + "Aplicar" como o seletor de Operações: o pedido aqui é os
+   filtros responderem juntos, não em dois passos. */
+function ligarSafraFiltro() {
+  $$('.view--safra').forEach(function (view) {
+    var raiz = view.closest('.scope');
+    var geral = !!(raiz && raiz.classList.contains('scope--geral'));
+
+    var selMes = $('.sf-mes-sel', view);
+    if (selMes) {
+      selMes.addEventListener('change', function () {
+        safraSel(geral).mes = selMes.value;
+        pintarSafraFiltro(chaveEscopo(geral));
+      });
+    }
+
+    var cx = $('.sffil', view);
+    if (!cx) return;
+
+    $('.sffil__btn', cx).addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      var abrindo = $('.sffil__pop', cx).hidden;
+      fecharTodosSffil();
+      if (abrindo) {
+        $('.sffil__pop', cx).hidden = false;
+        $('.sffil__btn', cx).setAttribute('aria-expanded', 'true');
+        cx.setAttribute('data-aberto', '');
+      }
+    });
+    $('.sffil__pop', cx).addEventListener('click', function (ev) { ev.stopPropagation(); });
+
+    $('.sffil__busca', cx).addEventListener('input', function () {
+      var termo = this.value.trim().toLowerCase();
+      $$('.sffil__item', cx).forEach(function (it) {
+        var nomeEl = $('.sffil__nome', it);
+        it.hidden = !!termo && nomeEl.textContent.toLowerCase().indexOf(termo) === -1;
+      });
+    });
+
+    $('.sffil__lista', cx).addEventListener('change', function (ev) {
+      var alvo = ev.target;
+      if (!alvo || alvo.tagName !== 'INPUT') return;
+      var todos = expertsDaSafra(chaveEscopo(geral));
+      var marcados = $$('input[value]', $('.sffil__lista', cx))
+        .filter(function (i) { return i.checked; })
+        .map(function (i) { return i.value; });
+      safraSel(geral).experts = (marcados.length === todos.length) ? null : marcados;
+      pintarSafraFiltro(chaveEscopo(geral));
+    });
+
+    $$('.sffil__acao', cx).forEach(function (b) {
+      b.addEventListener('click', function () {
+        safraSel(geral).experts = b.getAttribute('data-acao') === 'limpar' ? [] : null;
+        pintarSafraFiltro(chaveEscopo(geral));
+      });
+    });
+  });
+
+  document.addEventListener('click', fecharTodosSffil);
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape' || ev.key === 'Esc') fecharTodosSffil();
   });
 }
 
@@ -11491,6 +12378,9 @@ function carregar(opts) {
 
       /* só o dia corrente se atualiza sozinho */
       agendar(estado.isHoje ? REFRESH_MS : null);
+
+      /* comparação com o período anterior (enhancement, ver função) */
+      buscarPeriodoAnterior(preset, r);
     })
     .catch(function (e) {
       if (id !== estado.reqId) return;
@@ -11526,6 +12416,108 @@ function carregar(opts) {
       agendar(interativo ? RETRY_INTERATIVO_MS : RETRY_MS,
               interativo ? { interativo: true } : null);
     });
+}
+
+/* ── 9a-bis. COMPARAÇÃO COM O PERÍODO ANTERIOR (26/08) ─────────────────────
+   Enhancement por cima do que carregar() já pintou -- nunca é o dado
+   principal e nunca aparece em #erro-banner se falhar ou demorar: a tela já
+   está completa sem isto. Período anterior = o MESMO NÚMERO DE DIAS
+   imediatamente antes do período em tela (Hoje compara com ontem, 7d com os
+   7 dias antes desses, Mês com os mesmos dias corridos do mês anterior a
+   partir do dia 1, etc.) -- regra única, sem caso especial por preset.
+   PULADO em "Datas" (custom): dobrar uma consulta que já pode levar 30-40s
+   no n8n sem o operador ter pedido a comparação não vale o custo.
+   Só pinta os tiles-herói de "Totais da operação" (a leitura mais vista da
+   tela); os demais cards/tabelas ficam pra uma fase seguinte. */
+var reqIdAnterior = 0;
+function diasEntreCliente(de, ate) {
+  var pd = de.split('-'), pa = ate.split('-');
+  var a = Date.UTC(+pd[0], +pd[1] - 1, +pd[2]);
+  var b = Date.UTC(+pa[0], +pa[1] - 1, +pa[2]);
+  return Math.round((b - a) / 86400000);
+}
+function periodoAnteriorDe(preset, r) {
+  if (preset === 'custom') return null;
+  var hoje = hojeSP();
+  var de = r.de || hoje, ate = r.ate || hoje;
+  var nDias = diasEntreCliente(de, ate) + 1;
+  return { de: somaDias(de, -nDias), ate: somaDias(de, -1) };
+}
+/* mesmo fallback de net_dep que pintarTotais() usa (a API não manda esse
+   total pronto -- soma os experts quando falta). Fatorado aqui pra não
+   duplicar a regra em dois lugares e um dia desalinhar. */
+function totaisResumo(bloco) {
+  if (!bloco) return null;
+  var t = bloco.totais || {};
+  var exps = bloco.experts || [];
+  var netDep = ehNum(t.net_dep) ? t.net_dep
+    : exps.reduce(function (s, e) { return s + ((e.tap && e.tap.net_dep) || 0); }, 0);
+  return {
+    investimento_total: ehNum(t.investimento_total) ? t.investimento_total : 0,
+    cadastros: ehNum(t.cadastros) ? t.cadastros : 0,
+    ftd: ehNum(t.ftd) ? t.ftd : 0,
+    deposito: ehNum(t.deposito) ? t.deposito : 0,
+    net_dep: netDep,
+    net_pl: ehNum(t.net_pl) ? t.net_pl : null
+  };
+}
+/* polaridade: "investido" é fato neutro (gastar mais não é bom nem ruim por
+   si só -- fica cinza, nunca verde/vermelho decorativo). Os outros cinco são
+   crescimento = bom, mesma leitura que o texto narrativo do painel já usa
+   ("mais FTD" é sempre lido como coisa boa). Custo por FTD não entra aqui:
+   ele já tem cor própria (faixa oficial do cliente) em pintarTotais(), e um
+   segundo selo verde/vermelho por cima seria dois sinais concorrentes pro
+   mesmo número. */
+var METRICAS_DELTA = [
+  { campo: 'totais.investimento_total', chave: 'investimento_total', tom: 'neutro' },
+  { campo: 'totais.cadastros',          chave: 'cadastros',          tom: 'bom' },
+  { campo: 'totais.ftd',                chave: 'ftd',                tom: 'bom' },
+  { campo: 'totais.deposito',           chave: 'deposito',           tom: 'bom' },
+  { campo: 'totais.net_dep',            chave: 'net_dep',            tom: 'bom' },
+  { campo: 'totais.net_pl',             chave: 'net_pl',             tom: 'bom' }
+];
+function pintarDeltaTile(raiz, m, atual, anterior) {
+  var elVal = campo(raiz, m.campo);
+  if (!elVal) return;
+  var elDelta = elVal.parentElement.querySelector('.tcard__delta');
+  if (!elDelta) {
+    elDelta = document.createElement('span');
+    elDelta.className = 'tcard__delta';
+    elVal.insertAdjacentElement('afterend', elDelta);
+  }
+  elDelta.classList.remove('is-good', 'is-bad');
+  var v = (atual && anterior) ? variacao(anterior[m.chave], atual[m.chave]) : null;
+  if (!v) { elDelta.style.display = 'none'; return; }
+  var seta = v.dir === 'subiu' ? '▲' : (v.dir === 'desceu' ? '▼' : '●');
+  elDelta.textContent = seta + ' ' + pct(Math.abs(v.pct)) + ' vs. período anterior';
+  if (m.tom === 'bom' && v.dir !== 'estavel') {
+    elDelta.classList.add(v.dir === 'subiu' ? 'is-good' : 'is-bad');
+  }
+  elDelta.style.display = 'inline-flex';
+}
+function aplicarDeltasBloco(raiz, atual, anterior) {
+  METRICAS_DELTA.forEach(function (m) { pintarDeltaTile(raiz, m, atual, anterior); });
+}
+function pintarDeltas(anteriorJson) {
+  var d = estado.dados;
+  if (!d) return;
+  aplicarDeltasBloco(RAIZ_CL,
+    d.experts ? totaisResumo(d) : null,
+    anteriorJson && anteriorJson.experts ? totaisResumo(anteriorJson) : null);
+  aplicarDeltasBloco(RAIZ_GERAL,
+    (d.geral && d.geral.experts) ? totaisResumo(d.geral) : null,
+    (anteriorJson && anteriorJson.geral && anteriorJson.geral.experts) ? totaisResumo(anteriorJson.geral) : null);
+}
+function buscarPeriodoAnterior(preset, r) {
+  var ant = periodoAnteriorDe(preset, r);
+  var id = ++reqIdAnterior;
+  if (!ant) { pintarDeltas(null); return; }
+  var url = ENDPOINT + '?de=' + encodeURIComponent(ant.de) + '&ate=' + encodeURIComponent(ant.ate);
+  if (CL_TOKEN) url += '&_s=' + CL_NONCE;
+  fetch(url, { cache: 'no-store', headers: cabecalhoCl({ accept: 'application/json' }) })
+    .then(function (resp) { return resp.ok ? resp.json() : null; })
+    .then(function (d) { if (id === reqIdAnterior) pintarDeltas(d); })
+    .catch(function () { if (id === reqIdAnterior) pintarDeltas(null); });
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -12867,6 +13859,48 @@ function ligarPortaCl() {
 }
 ligarPortaCl();
 
+/* ── QUEM ESTÁ LOGADO (26/08) ──────────────────────────────────────────────
+   Só decoração: quem TRANCA o painel é o middleware (server), isto aqui
+   nunca é chamado pra decidir se mostra a tela — só pra escrever o nome de
+   quem já está vendo ela e dar o link de sair. Por isso nunca dá erro pra
+   quem olha: se /api/auth/me falhar, o userbox continua escondido, sem
+   travar nada. */
+function nomeDoEmail(email) {
+  var local = String(email || '').split('@')[0];
+  return local.split(/[._-]+/).filter(Boolean).map(function (p) {
+    return p.length <= 2 ? p.toUpperCase() : p.charAt(0).toUpperCase() + p.slice(1).toLowerCase();
+  }).join(' ');
+}
+function ligarUsuario() {
+  fetch('/api/auth/me', { cache: 'no-store' })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (!d || !d.ok) return;
+      var caixa = document.getElementById('userbox');
+      var nomeEl = document.getElementById('userbox-nome');
+      if (!caixa || !nomeEl) return;
+      nomeEl.textContent = d.nome || nomeDoEmail(d.email);
+      nomeEl.title = d.email || '';
+      caixa.hidden = false;
+    })
+    .catch(function () {});
+}
+ligarUsuario();
+
+/* SESSÃO DESLIZANTE (26/08, pedido do Costa): "sempre pede login, e depois
+   de um tempo ocioso pede de novo" -- o cookie vence sozinho em 30min (ver
+   api/auth/callback.js) e só continua vivo enquanto ALGUÉM chamar este
+   toque. Rodando de 5 em 5 min (o mesmo intervalo do refresh de dados),
+   uma aba aberta e em uso não esbarra no prazo; uma aba esquecida, fechada
+   ou um computador que dormiu para de tocar e o próximo acesso cai no
+   login -- sem esperar o dono decidir "sair". Falha de rede aqui não é erro
+   de tela nenhum: se o toque não chegar, o próprio vencimento do cookie já
+   resolve sozinho no próximo acesso. */
+function renovarSessao() {
+  fetch('/api/auth/touch', { cache: 'no-store' }).catch(function () {});
+}
+setInterval(renovarSessao, 5 * 60 * 1000);
+
 /* ── 10. navegação em rota de hash, dois níveis ───────────────────────────
    #<escopo>/<aba>   ->  #cl/visao · #cl/detalhe · #geral/visao · #geral/detalhe
    Legado sem barra  ->  #geral  vira #geral/visao   (era a "Visão geral" antiga)
@@ -12880,7 +13914,7 @@ ligarPortaCl();
    salvou a tela da operação inteira. */
 var ESCOPOS = { cl: 'e-cl', geral: 'e-geral', google: 'e-google',
                 tiktok: 'e-tiktok', kwai: 'e-kwai', taboola: 'e-taboola' };
-var ABAS    = { visao: 'v-geral', detalhe: 'v-experts', metas: 'v-metas' };
+var ABAS    = { visao: 'v-geral', detalhe: 'v-experts', metas: 'v-metas', safra: 'v-safra' };
 var LEGADO  = { geral: 'geral/visao', experts: 'geral/detalhe' };
 /* id do input -> pedaço de escopo da URL. Tabela em vez de encadear ternário:
    quando o Google entrou como terceiro escopo, o ternário antigo mandava
@@ -12894,7 +13928,8 @@ function hashAtual() {
   var esc = $('input[name="escopo"]:checked'), ab = $('input[name="view"]:checked');
   var e = (esc && ESCOPO_ID_PARA_HASH[esc.id]) || 'geral';
   var a = ab && ab.id === 'v-experts' ? 'detalhe'
-        : (ab && ab.id === 'v-metas' ? 'metas' : 'visao');
+        : (ab && ab.id === 'v-metas' ? 'metas'
+        : (ab && ab.id === 'v-safra' ? 'safra' : 'visao'));
   return e + '/' + a;
 }
 /* link que apontava pro recorte: o boot usa isso pra já abrir o diálogo da
@@ -13727,6 +14762,7 @@ restaurarOrdenacao();
 ligarOpsFil();
 ligarOrdenacao();
 ligarMetricas();
+ligarSafraFiltro();
 pintarNotaPeriodo();
 
 $$('input[name="range"]').forEach(function (inp) {
@@ -13750,6 +14786,48 @@ elForm.addEventListener('submit', function (ev) { ev.preventDefault(); carregar(
        sai só no "Aplicar" (clique ou Enter no form). */
   });
 });
+
+/* ── 8d. limpar filtros (26/08) ────────────────────────────────────────────
+   Um botão só, escondido enquanto período = Hoje e ordenação = padrão
+   (Investimento ↓) -- que é o estado de abertura do painel. Clicar nele
+   devolve os dois pro padrão e aciona "Selecionar todos/todas" + zera busca
+   em toda seleção múltipla com recorte ativo (data-filtrando), clicando nos
+   MESMOS botões que já existem em cada popover -- não inventa estado novo. */
+var elBtnLimpar = $('#btn-limpar-filtros');
+function filtrosForaDoPadrao() {
+  return presetAtual() !== 'hoje' || elSortMetrica.value !== 'investimento' || dirAtual() !== 'desc';
+}
+function atualizarBotaoLimpar() {
+  if (elBtnLimpar) elBtnLimpar.hidden = !filtrosForaDoPadrao();
+}
+if (elBtnLimpar) {
+  elBtnLimpar.addEventListener('click', function () {
+    var alvoHoje = $('input[name="range"][value="hoje"]');
+    if (alvoHoje && !alvoHoje.checked) {
+      alvoHoje.checked = true;
+      alvoHoje.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    if (elSortMetrica.value !== 'investimento') {
+      elSortMetrica.value = 'investimento';
+      elSortMetrica.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    var alvoDesc = $('#sd-desc');
+    if (alvoDesc && !alvoDesc.checked) {
+      alvoDesc.checked = true;
+      alvoDesc.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    $$('.sffil[data-filtrando] [data-acao="todos"], .opsfil[data-filtrando] [data-acao="todas"]')
+      .forEach(function (b) { b.click(); });
+    $$('.cmpbusca, .sffil__busca, .opsfil__busca').forEach(function (inp) {
+      if (inp.value) { inp.value = ''; inp.dispatchEvent(new Event('input', { bubbles: true })); }
+    });
+    atualizarBotaoLimpar();
+  });
+}
+$$('input[name="range"]').forEach(function (inp) { inp.addEventListener('change', atualizarBotaoLimpar); });
+elSortMetrica.addEventListener('change', atualizarBotaoLimpar);
+$$('input[name="sortdir"]').forEach(function (inp) { inp.addEventListener('change', atualizarBotaoLimpar); });
+atualizarBotaoLimpar();
 
 /* ── 8c. calendário próprio do "Datas" (.dpk) ──────────────────────────────
    O popup nativo do <input type=date> é do navegador: cinza, sem CSS possível
