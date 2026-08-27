@@ -80,18 +80,29 @@ trabalho é ADITIVO, não reconstrução.
   quando período ≠ Hoje ou ordenação ≠ padrão (`filtrosForaDoPadrao()`).
   Clicar reidrata os dois e aciona os mesmos botões "Selecionar todos/todas"
   de cada popover com recorte ativo (`data-filtrando`) — não duplica estado.
-- **Fase 2 (feito, revisado, pendente QA visual)**: comparação com período
-  anterior nos tiles-herói de "Totais da operação" (Investimento, Cadastros,
-  FTD, Depósito, Net Dep, Net PL). Período anterior = mesmo nº de dias
-  imediatamente antes do período em tela (regra única pra todo preset,
+- **Fase 2 (feito, testado em produção com dado real, 27/08)**: comparação
+  com período anterior nos tiles-herói de "Totais da operação" (Investimento,
+  Cadastros, FTD, Depósito, Net Dep, Net PL). Período anterior = mesmo nº de
+  dias imediatamente antes do período em tela (regra única pra todo preset,
   `periodoAnteriorDe()`). Busca extra, encadeada DEPOIS do `carregar()`
   principal ter sucesso (`buscarPeriodoAnterior`) — nunca bloqueia, nunca
   aparece em `#erro-banner`, pulada em "Datas" (custom) pra não dobrar uma
   consulta de 30-40s sem pedido. Polaridade por métrica: investido é neutro
   (cinza, gastar mais não é bom/ruim), os outros 5 são "subiu = bom" — nunca
-  verde/vermelho decorativo. Pendente: QA visual contra dado real (preview
-  usa URL nova a cada deploy, que não bate com o redirect_uri do Google
-  Cloud registrado — testar em produção ou registrar a URL do preview).
+  verde/vermelho decorativo.
+  **✅ BUG achado na QA visual e corrigido (27/08)**: `variacao()` dividia
+  pelo valor cru de "antes" pra achar o percentual. Pra Net Dep/Net PL, que
+  são legitimamente negativos boa parte do tempo (ex.: Net Dep de hoje é
+  -R$53.441,56), isso dava dois problemas em produção — período anterior
+  <= 0 fazia o selo de comparação sumir da tela em silêncio (guarda
+  `antes <= 0` descartava a conta inteira), e se a guarda fosse só
+  afrouxada uma melhora de net dep (-50k → -30k) apareceria pintada de
+  vermelho como se tivesse piorado (dividir por base negativa inverte o
+  sinal). Corrigido: direção (subiu/desceu/estável) vem sempre do diff cru
+  (`depois - antes`), que não inverte perto do zero; só a magnitude do
+  percentual usa `|antes|` como base. Pra métrica sempre positiva
+  (investimento/cadastros/ftd/depósito/CPA/giro/retenção) o resultado é
+  idêntico ao de antes, zero mudança de comportamento aí.
 - **Esconder expert inativo >15 dias (feito, no ar em produção)**: campo
   novo `dias_sem_investimento` (por expert, em `experts[]`/`geral.experts[]`)
   calculado no n8n (`Dashboard Operação - Refresh Cache`, node **"Calcular
