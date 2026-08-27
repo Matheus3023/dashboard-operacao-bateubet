@@ -8461,11 +8461,16 @@ function pintarExpert(expert, ehPrimeiro, isHoje, geral) {
   /* Ticket do depósito é DERIVADO: depósito ÷ QUANTIDADE de depósitos
      (tap.depositos, o deposit_count da TAP), mesma conta do tile "Ticket
      médio do depósito" dos totais. Não confundir com ticket do FTD, que só
-     olha o primeiro depósito. Sem depósito imprime R$ 0,00, seguindo a regra
-     de 13/08 das colunas de custo do card. */
+     olha o primeiro depósito. Sem depósito de verdade imprime R$ 0,00,
+     seguindo a regra de 13/08 das colunas de custo do card -- mas sem
+     CONTAGEM (payload pré-v14) com depósito > 0 não pode imprimir R$ 0,00
+     também, seria a mesma mentira que o tile dos totais tinha (achado por
+     auditoria 27/08): "—" nesse caso, igual ao placeholder que o HTML já
+     nascia com antes de qualquer pintura. */
   var qtdDepEx = ehNum(tap.depositos) ? tap.depositos : 0;
+  var temDepExR = ehNum(tap.deposito) && tap.deposito > 0;
   escreve($('.m--tkdep .m__val', boxTap),
-          brl(qtdDepEx > 0 ? (tap.deposito || 0) / qtdDepEx : 0));
+          qtdDepEx > 0 ? brl((tap.deposito || 0) / qtdDepEx) : (temDepExR ? '—' : brl(0)));
   var nd = campo(boxTap, 'tap.net_dep'), np = campo(boxTap, 'tap.net_pl');
   escreve(nd, brl(tap.net_dep)); classeSinal(nd, tap.net_dep);
   escreve(np, brl(tap.net_pl));  classeSinal(np, tap.net_pl);
@@ -8636,7 +8641,7 @@ function pintarSinais(d, raiz) {
 function somarTotais(exps) {
   var t = {
     investimento_total: 0, investimento_grupo: 0, investimento_direto: 0,
-    cadastros: 0, ftd: 0, deposito: 0, valor_ftd: 0, net_dep: 0, net_pl: 0, volume: 0,
+    cadastros: 0, ftd: 0, deposito: 0, depositos: 0, valor_ftd: 0, net_dep: 0, net_pl: 0, volume: 0,
     /* comissão e pagamento de afiliado são aditivos como o resto: com recorte
        no comparativo, os tiles têm que somar só quem está marcado. */
     comissao: 0, pagamentos: 0
@@ -8649,6 +8654,13 @@ function somarTotais(exps) {
     t.cadastros += tap.cadastros || 0;
     t.ftd       += tap.ftd || 0;
     t.deposito  += tap.deposito || 0;
+    /* depositos (deposit_count) faltava aqui -- achado por auditoria (27/08):
+       toda vez que existia recorte de expert ativo, o tile "Ticket médio do
+       depósito" lia qtdDep sempre 0 (mesmo com contagem real em cada expert
+       somado), porque essa função nunca somava o campo. Mesmo padrão aditivo
+       dos outros: falta em ALGUM expert (pre-v14) só não soma aquela parte,
+       não zera o total inteiro. */
+    t.depositos += tap.depositos || 0;
     t.valor_ftd += tap.valor_ftd || 0;
     t.net_dep   += tap.net_dep || 0;
     t.net_pl    += tap.net_pl || 0;

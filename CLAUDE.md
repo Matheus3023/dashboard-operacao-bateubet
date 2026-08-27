@@ -163,6 +163,17 @@ trabalho é ADITIVO, não reconstrução.
   o Costa viu (pode ter sido Costa e Lobão, que pede senha, ou um instante de
   cache específico). Se reaparecer, o texto novo já diferencia os dois casos
   em vez de esconder que teve dinheiro entrando.
+  **✅ Auditoria (code-review --level max, 27/08) achou 2 furos no próprio
+  fix, corrigidos na sequência**: (1) `somarTotais()` — usada quando existe
+  RECORTE de expert ativo (seleção no comparativo) — nunca somava
+  `tap.depositos`, então com qualquer recorte marcado o tile "Ticket médio do
+  depósito" lia contagem SEMPRE zero e mostrava "sem contagem" mesmo com o
+  dado presente em cada expert. Corrigido: campo `depositos` entrou na soma,
+  mesmo padrão aditivo dos outros campos. (2) O card por-expert (`.m--tkdep`,
+  "Ticket do depósito" dentro do painel "Por expert") tinha a MESMA mentira
+  que o tile dos totais tinha antes do fix — mostrava "R$ 0,00" quando faltava
+  só a contagem (não sem depósito de verdade). Corrigido pra "—" nesse caso,
+  igual ao placeholder que o próprio HTML já nascia com.
 - **Gráfico de evolução: feito, testado, e REMOVIDO a pedido do Costa
   (26/08, mesmo dia)** — "ficou uma merda". Testei em 3 larguras (1512/820/
   390px) sem achar defeito visual reproduzível; hipótese não confirmada é
