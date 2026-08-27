@@ -2408,18 +2408,7 @@ html.rolado .brand__logo{height:19px}
    resumo traz cadastros/seguem/por-FTD em vez de invest→retorno. Reaproveita
    as classes .mtz__* inteiras -- cor, hachura, legenda e nota são as MESMAS
    regras, só o conteúdo muda (ver pintarSafraFiltro). */
-/* pedido do Costa 27/08: rolando a matriz pra baixo (muitos experts), sumia
-   de vista tanto QUAL mês/ano é cada coluna quanto os filtros de De/Até e
-   Experts -- tinha que rolar de volta pro topo pra qualquer ajuste. Agora a
-   barra gruda logo abaixo das .tabs (mesmo --topbar-h+--tabs-h que elas já
-   usam) com o mesmo fundo/blur da topbar, e sangra 20px pros lados igual
-   .tabs pra cobrir o padding do .wrap por baixo. --tabs-h é medido em JS
-   (ligarMedicaoTabs()), mesmo raciocínio do --topbar-h. */
-.sf-topo{
-  margin:0 -20px 6px;padding:14px 20px 6px;
-  position:sticky;top:calc(var(--topbar-h,62px) + var(--tabs-h,44px));z-index:12;
-  background:rgba(31,8,18,.95);backdrop-filter:saturate(150%) blur(10px);
-}
+.sf-topo{margin:0 0 6px}
 .sf-filtros{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 /* TOTAL fecha o grid: um traço mais forte separa ele das linhas de expert. */
 .mtz__c--totallinha{border-top:1px solid var(--line-strong);margin-top:2px}
@@ -2547,25 +2536,6 @@ html.rolado .brand__logo{height:19px}
   text-transform:uppercase;color:var(--txt-3);font-weight:600;
   padding-bottom:4px;background:none;
 }
-/* Safra (27/08, pedido do Costa): a régua de mês/ano gruda embaixo da barra
-   de filtro (que já gruda embaixo das .tabs -- ver .sf-topo), pra rolando a
-   matriz pra baixo com muitos experts você continuar vendo QUAL mês/ano é
-   cada coluna sem voltar pro topo. --sftopo-h é medido por seção em
-   montarGradeSafra()/ligarMedicaoSfTopo() (a página tem duas matrizes de
-   Safra empilhadas no escopo Geral -- topo geral e topo do Google, alturas
-   diferentes -- por isso o var é setado no próprio .mtz de cada matriz, não
-   global). Escopado a .mtz--safra pra NÃO grudar o cabeçalho da coorte logo
-   abaixo, que usa a mesma classe .mtz__c--head mas não tem barra de filtro
-   sticky por cima combinando a altura. */
-.mtz--safra .mtz__c--head{
-  position:sticky;z-index:2;background:var(--bg);
-  top:calc(var(--topbar-h,62px) + var(--tabs-h,44px) + var(--sftopo-h,64px));
-}
-/* o canto (cabeçalho vazio acima da coluna do expert) precisa grudar nos
-   DOIS eixos -- mesmo z-index maior que a linha .mtz__c--turma (1) e que o
-   resto do cabeçalho (2), senão ele desliza por baixo de um dos dois ao
-   rolar na diagonal. */
-.mtz--safra .mtz__grade > .mtz__c--head:first-child{position:sticky;left:0;z-index:3}
 /* a coluna da safra fica presa: rolando pra direita atrás de M8, sem ela você
    perde de quem é a linha */
 .mtz__c--turma{
@@ -2725,7 +2695,6 @@ html.rolado .brand__logo{height:19px}
   .sortpop__sum{padding:0 9px}
   .sortpop__pop{right:0;left:auto}
   .tabs{margin:0 -14px 6px;padding:0 14px}
-  .sf-topo{margin:0 -14px 6px;padding:14px 14px 6px}
   /* alvo de toque confortável no celular */
   .seg{width:100%;min-width:0;max-width:100%;overflow-x:auto;scrollbar-width:none}
   .seg::-webkit-scrollbar{display:none}
@@ -12014,13 +11983,7 @@ function montarGradeSafra(caixa, escopo, marcadosNomes, meses, sel) {
   }
 
   var cx = document.createElement('div');
-  cx.className = 'mtz mtz--safra';
-  /* --sftopo-h: altura da barra de filtro desta seção (o escopo Geral tem
-     DUAS matrizes de safra empilhadas -- geral e Google -- com barras de
-     altura diferente; setar no PRÓPRIO .mtz, não num var global, garante
-     que cada uma gruda embaixo da SUA barra, não da do vizinho). */
-  var topoDesta = sfTopoAnterior(caixa);
-  if (topoDesta) cx.style.setProperty('--sftopo-h', topoDesta.offsetHeight + 'px');
+  cx.className = 'mtz';
   var grade = document.createElement('div');
   grade.className = 'mtz__grade';
   grade.style.gridTemplateColumns = '132px 186px repeat(' + meses.length + ', minmax(122px,170px))';
@@ -13243,56 +13206,6 @@ function ligarMedicaoTopbar() {
   medirTopbar();
   var top = $('.topbar');
   if (top && window.ResizeObserver) new ResizeObserver(medirTopbar).observe(top);
-}
-
-/* --tabs-h: altura da barra .tabs (Visão geral/Por expert/Safra), mesmo
-   motivo do --topbar-h acima -- a barra de filtro da Safra (.sf-topo) gruda
-   embaixo das DUAS (topbar+tabs) e precisa saber a soma. Só existem duas
-   .tabs na página (escopo Costa e Lobão + escopo Geral), nunca as duas
-   visíveis ao mesmo tempo -- o guard `h > 0` ignora a que está em
-   display:none (mediria 0 e sobrescreveria o valor certo da visível). */
-function medirTabs() {
-  $$('.tabs').forEach(function (t) {
-    var h = t.offsetHeight;
-    if (h > 0) document.documentElement.style.setProperty('--tabs-h', h + 'px');
-  });
-}
-function ligarMedicaoTabs() {
-  medirTabs();
-  if (window.ResizeObserver) {
-    $$('.tabs').forEach(function (t) { new ResizeObserver(medirTabs).observe(t); });
-  }
-}
-
-/* Safra (27/08): cabeçalho de mês/ano da matriz gruda embaixo da barra de
-   filtro (.sf-topo). Acha a .sf-topo dona de uma seção andando pelos irmãos
-   anteriores -- CSS puro não dá porque o escopo Geral empilha DUAS seções
-   (geral + Google) dentro do mesmo .view--safra, sem wrapper por seção. */
-function sfTopoAnterior(el) {
-  var n = el;
-  while (n) {
-    n = n.previousElementSibling;
-    if (n && n.classList && n.classList.contains('sf-topo')) return n;
-  }
-  return null;
-}
-/* --sftopo-h por seção é setada uma vez em montarGradeSafra() na hora do
-   render, e reforçada aqui a cada resize da própria barra (ex.: filtro
-   quebrando de 1 pra 2 linhas no celular) -- sem isso o cabeçalho sticky
-   ficaria com a folga errada até a próxima troca de filtro re-renderizar a
-   grade. */
-function medirSfTopo(topo) {
-  var h = topo.offsetHeight;
-  var n = topo.nextElementSibling;
-  while (n && !n.hasAttribute('data-sf-tabela')) n = n.nextElementSibling;
-  var grid = n && $('.mtz--safra', n);
-  if (grid) grid.style.setProperty('--sftopo-h', h + 'px');
-}
-function ligarMedicaoSfTopo() {
-  if (!window.ResizeObserver) return;
-  $$('.sf-topo').forEach(function (topo) {
-    new ResizeObserver(function () { medirSfTopo(topo); }).observe(topo);
-  });
 }
 
 /* A FAIXA ENCOLHE AO ROLAR. Passivo, com histerese (liga em 44px, desliga em
@@ -14947,8 +14860,6 @@ ligarAjusteDeFonte();
 ligarPainel();
 ligarDetalheConta();
 ligarMedicaoTopbar();
-ligarMedicaoTabs();
-ligarMedicaoSfTopo();
 ligarBarraCompacta();
 ligarGlossario();
 restaurarEscolha();
