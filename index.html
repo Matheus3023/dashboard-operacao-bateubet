@@ -11067,32 +11067,12 @@ function pintarSafraGoogle() {
     return;
   }
 
-  /* Pedido do gestor 26/08: "Google tem que puxar só de quando gerou" -- a
-     conta é nova, os meses antes do primeiro cadastro são coluna vazia sem
-     informação nenhuma (nem "sem gasto", zero de verdade porque a conta nem
-     existia). Corta tudo ANTES do primeiro mês com cadastro ou FTD; não
-     mexe nos meses de trás pra frente por causa disso (um mês zerado NO
-     MEIO da história, depois que a conta já rodou, continua aparecendo --
-     esse zero é informação real). */
-  var totaisPorMes = {};
-  (d.meses || []).forEach(function (m) {
-    var t = { cadastros: 0, ftd: 0 };
-    (m.experts || []).forEach(function (e) {
-      t.cadastros += e.cadastros || 0;
-      t.ftd += e.ftd || 0;
-    });
-    totaisPorMes[m.mes] = t;
-  });
-  var primeiroComDado = meses.findIndex(function (mes) {
-    var t = totaisPorMes[mes];
-    return t && (t.cadastros > 0 || t.ftd > 0);
-  });
-  if (primeiroComDado > 0) { meses = meses.slice(primeiroComDado); }
-  if (primeiroComDado === -1) {
-    box.innerHTML = '<p class="mtz__nota">O Google ainda não teve cadastro nem FTD no período medido.</p>';
-    return;
-  }
-
+  /* Chegou a ter um corte aqui (26/08, "Google só de quando gerou") que
+     escondia os meses antes do primeiro cadastro -- revertido no mesmo dia
+     porque deixava o Google inconsistente com todo mundo: os outros experts
+     sempre mostram a safra inteira, com R$0/0 ativos nos meses sem
+     atividade, e esse zero é informação real (a verba pode ter rodado sem
+     gerar registro sob esse rastreio ainda). Google segue a mesma regra. */
   montarGradeSafra(box, 'google', todos, meses, { mesDe: 'todos', mesAte: 'todos' });
 }
 
