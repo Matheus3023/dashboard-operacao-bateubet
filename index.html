@@ -12100,7 +12100,12 @@ function montarGradeSafra(caixa, escopo, marcadosNomes, meses, sel) {
         ro2.textContent = 'ROAS ' + Math.round((c.net_pl / c.investimento) * 100) + '%';
         cel.appendChild(ro2);
       }
-      if (ehNum(c.retencao)) {
+      /* "X% seguem" tirado da Safra do Google (pedido do Costa 27/08): com o
+         volume pequeno da conta (poucas dezenas de ativos por mês), a
+         retenção oscila demais e o percentual mais confunde do que ajuda.
+         Meta e Costa e Lobão mantêm -- lá o volume por expert sustenta a
+         leitura. */
+      if (escopo !== 'google' && ehNum(c.retencao)) {
         var ro = document.createElement('span');
         ro.className = 'mtz__roas';
         ro.textContent = pct(c.retencao) + ' seguem';

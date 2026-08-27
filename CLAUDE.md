@@ -239,6 +239,40 @@ nos modos `tendencia`/`safra` — `?safra=1&escopo=google` voltava 400 mesmo
 com o front certo. `google` entrou nessa lista. Testado com dado real
 (matriz Out/25→hoje, TOTAL batendo com a única linha).
 
+**✅ "X% seguem" tirado da célula (27/08)**: pedido do Costa — com o volume
+pequeno da conta (poucas dezenas de ativos por mês), a retenção oscilava
+demais e confundia mais que ajudava. `montarGradeSafra()` ganhou o parâmetro
+`escopo` na condição (`escopo !== 'google' && ehNum(c.retencao)`) — Meta e
+Costa e Lobão mantêm o "seguem", só Google não mostra mais.
+
+**⚠️ Mês de junho/26 zerado no Google — causa raiz achada, AINDA NÃO
+corrigido (27/08)**: a linha `2026-06` de `dashboard_safra` pro Google está
+com `cadastros: 0` e o campo `updated_at` num sentinela manual (`2000-01-01`,
+claramente escrito à mão numa sessão de debug anterior — ver workflow
+descartável "TEMP - Debug Coorte Google" — pra forçar o rodízio a reprocessar
+aquele mês). `Escolher mes` nunca honrou isso: a regra "mês CORRENTE fura a
+fila quando passa de 1h sem atualizar" faz agosto vencer de novo toda vez que
+a fila demora (gap de agendamento, execução manual de teste, etc.), starvando
+QUALQUER outro mês — inclusive um marcado como prioritário com sentinela
+antigo. `primeiroComDado` no front só corta meses ANTES do primeiro com dado
+real, então um mês no meio (junho) com zero por bug nunca aparece como
+"pendente", aparece como se não existisse.
+
+Tentei destravar disparando `execute_workflow` manual 2x seguidas (27/08,
+~19:30) — a 1ª pegou agosto de novo (esperado, fresco < 1h), a 2ª TAMBÉM
+pegou agosto (não deveria — quase todos os btags vieram com `falhou:true`
+porque a 2ª chamada estourou rate limit da TAP: `errCode:3 "Too many
+requests to API from the same account"`). **Nenhum dado bom foi sobrescrito**
+(o fix de 27/08 documentado acima em "apagão de dados da TAP" garante que
+leitura falha nunca grava por cima de leitura boa), mas junho continua
+zerado e eu queimei a cota da API à toa. **Não tentar de novo em sequência
+rápida** — esperar uns minutos o rate limit esfriar, disparar UMA execução
+só, e SÓ repetir se ela realmente cair no mês certo (checar `Escolher mes`
+antes de confiar). Se dispatchar de novo e continuar caindo em agosto,
+o jeito mais seguro é editar `Escolher mes` no n8n pra dar prioridade
+explícita a meses fora do corrente quando existe sentinela antigo, em vez
+de insistir em rodar às cegas.
+
 ## QA de preview com login Google (26/08)
 
 Cada `vercel deploy --yes` gera uma URL nova (hash aleatório) e o Google só
