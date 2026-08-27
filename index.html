@@ -11998,7 +11998,7 @@ function montarGradeSafra(caixa, escopo, marcadosNomes, meses, sel) {
 
   /* régua de meses solta acima da grade, igual à coorte */
   celula('mtz__c--head');
-  var hResumo = celula('mtz__c--head'); hResumo.textContent = 'cadastros → seguem';
+  var hResumo = celula('mtz__c--head'); hResumo.textContent = 'invest → retorno';
   meses.forEach(function (mes) {
     var h = celula('mtz__c--head');
     h.textContent = mesCurto(mes);
@@ -12129,7 +12129,7 @@ function montarGradeSafra(caixa, escopo, marcadosNomes, meses, sel) {
   nota.className = 'mtz__nota';
   nota.textContent = 'Cada linha é um expert, e as colunas são os meses em que a turma dele se ' +
     'CADASTROU -- cada célula é o "deixou pra casa" (net PL) só DAQUELE mês, não acumulado; o ' +
-    'acumulado mora na coluna "cadastros → seguem". O fundo da célula é quem diz o sinal (azul = ' +
+    'acumulado mora na coluna "invest → retorno". O fundo da célula é quem diz o sinal (azul = ' +
     'deixou dinheiro pra casa, vermelho = devolveu) — a intensidade compara todas as células desta ' +
     'matriz entre si, não um valor absoluto. TOTAL soma cadastros, FTD, ativos e net PL de quem ' +
     'está marcado a cada mês; "por FTD" e a retenção saem dessa soma, nunca da média das taxas de ' +
