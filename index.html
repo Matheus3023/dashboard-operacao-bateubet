@@ -12726,9 +12726,19 @@ function mediaDe(arr) {
   return arr.reduce(function (s, v) { return s + v; }, 0) / arr.length;
 }
 function variacao(antes, depois) {
-  if (!ehNum(antes) || !ehNum(depois) || antes <= 0) return null;
-  var v = (depois - antes) / antes * 100;
-  return { pct: v, dir: Math.abs(v) < RUIDO_PCT ? 'estavel' : (v > 0 ? 'subiu' : 'desceu') };
+  if (!ehNum(antes) || !ehNum(depois) || antes === 0) return null;
+  /* base = |antes|, nunca antes cru -- com antes negativo (net dep/net pl no
+     vermelho), dividir pelo valor cru inverte o sinal do percentual e o
+     "subiu/desceu" resultante vira o OPOSTO da direção real (ex.: net dep
+     melhorando de -50 pra -30 dava percentual negativo e pintava vermelho,
+     quando é uma melhora). Direção agora vem sempre do diff cru (depois -
+     antes), que é a única conta que não inverte perto do zero; só a
+     magnitude do percentual usa |antes| como base. Pra métrica sempre
+     positiva (investimento/cadastros/ftd/depósito/cpa/giro/retenção) o
+     resultado é idêntico ao de antes, porque |antes| = antes. */
+  var diff = depois - antes;
+  var v = diff / Math.abs(antes) * 100;
+  return { pct: v, dir: Math.abs(v) < RUIDO_PCT ? 'estavel' : (diff > 0 ? 'subiu' : 'desceu') };
 }
 /* primeira metade × segunda metade da série. Com número ímpar de pontos o do
    meio fica de fora: ele não pertence a nenhum dos dois lados e incluí-lo dos
