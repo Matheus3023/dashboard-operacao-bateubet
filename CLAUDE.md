@@ -245,33 +245,36 @@ demais e confundia mais que ajudava. `montarGradeSafra()` ganhou o parâmetro
 `escopo` na condição (`escopo !== 'google' && ehNum(c.retencao)`) — Meta e
 Costa e Lobão mantêm o "seguem", só Google não mostra mais.
 
-**⚠️ Mês de junho/26 zerado no Google — causa raiz achada, AINDA NÃO
-corrigido (27/08)**: a linha `2026-06` de `dashboard_safra` pro Google está
-com `cadastros: 0` e o campo `updated_at` num sentinela manual (`2000-01-01`,
+**✅ Mês de junho/26 zerado no Google — causa raiz achada e CORRIGIDA no
+n8n (27/08)**: a linha `2026-06` de `dashboard_safra` pro Google estava com
+`cadastros: 0` e o campo `updated_at` num sentinela manual (`2000-01-01`,
 claramente escrito à mão numa sessão de debug anterior — ver workflow
-descartável "TEMP - Debug Coorte Google" — pra forçar o rodízio a reprocessar
-aquele mês). `Escolher mes` nunca honrou isso: a regra "mês CORRENTE fura a
-fila quando passa de 1h sem atualizar" faz agosto vencer de novo toda vez que
-a fila demora (gap de agendamento, execução manual de teste, etc.), starvando
-QUALQUER outro mês — inclusive um marcado como prioritário com sentinela
-antigo. `primeiroComDado` no front só corta meses ANTES do primeiro com dado
-real, então um mês no meio (junho) com zero por bug nunca aparece como
-"pendente", aparece como se não existisse.
+descartável "TEMP - Debug Coorte Google" — pra forçar o rodízio a
+reprocessar aquele mês). `Escolher mes` nunca honrava isso: a regra "mês
+CORRENTE fura a fila quando passa de 1h sem atualizar" usava o updated_at
+MAIS VELHO entre os 24 btags do mês pra decidir se ele estava atrasado —
+um único btag flaky (rate limit, timeout) que não atualizava há >1h já
+bastava pra fazer o mês corrente (agosto) parecer eternamente atrasado, e
+ele furava a fila TODA execução, starvando qualquer outro mês pra sempre
+(inclusive um marcado a mão com sentinela antigo pra reprocessar). Duas
+tentativas de destravar via `execute_workflow` manual (sem mexer no código)
+não pegaram o mês certo e a 2ª ainda estourou rate limit da TAP (`errCode:3
+"Too many requests"`) — nenhum dado bom foi sobrescrito (a proteção contra
+leitura falha segurou), mas não resolveu.
 
-Tentei destravar disparando `execute_workflow` manual 2x seguidas (27/08,
-~19:30) — a 1ª pegou agosto de novo (esperado, fresco < 1h), a 2ª TAMBÉM
-pegou agosto (não deveria — quase todos os btags vieram com `falhou:true`
-porque a 2ª chamada estourou rate limit da TAP: `errCode:3 "Too many
-requests to API from the same account"`). **Nenhum dado bom foi sobrescrito**
-(o fix de 27/08 documentado acima em "apagão de dados da TAP" garante que
-leitura falha nunca grava por cima de leitura boa), mas junho continua
-zerado e eu queimei a cota da API à toa. **Não tentar de novo em sequência
-rápida** — esperar uns minutos o rate limit esfriar, disparar UMA execução
-só, e SÓ repetir se ela realmente cair no mês certo (checar `Escolher mes`
-antes de confiar). Se dispatchar de novo e continuar caindo em agosto,
-o jeito mais seguro é editar `Escolher mes` no n8n pra dar prioridade
-explícita a meses fora do corrente quando existe sentinela antigo, em vez
-de insistir em rodar às cegas.
+**Fix de verdade, aplicado no node `Escolher mes` via `update_workflow` +
+`publish_workflow`**: a checagem de "mês corrente atrasado" passou a usar o
+updated_at MAIS RECENTE entre os btags (evidência de que o mês está sendo
+tocado por PELO MENOS um), não o mais velho — só a escolha do mês mais
+atrasado no rodízio (bloco "senão") continua usando o mais velho, que é a
+pergunta certa ali. Testado e confirmado: a execução seguinte pegou junho
+de verdade (`mes: "2026-06"`) e o Google saiu do zero — 295 cadastros, 147
+FTD, R$40.614,24 em depósito. Se acontecer de novo com outro mês no meio da
+série travado em zero, o sintoma agora deveria ser raro (só se NENHUM btag
+do mês corrente atualizar por >1h inteira), mas o jeito de checar é o
+mesmo: olhar a linha em `dashboard_safra` — `updated_at` muito velho +
+todos os campos zerados é sinal de leitura nunca bem-sucedida, não mês
+genuinamente vazio.
 
 ## QA de preview com login Google (26/08)
 
