@@ -5746,9 +5746,15 @@ body.pnl-aberto{overflow:hidden}
         </div>
         <div class="sf-filtros">
           <label class="sf-mes">
-            <span class="sf-mes__lbl">Mês de fechamento</span>
-            <select class="sf-mes-sel">
-              <option value="todos">Toda a carteira</option>
+            <span class="sf-mes__lbl">De</span>
+            <select class="sf-mes-sel sf-mes-sel--de">
+              <option value="todos">Início</option>
+            </select>
+          </label>
+          <label class="sf-mes">
+            <span class="sf-mes__lbl">Até</span>
+            <select class="sf-mes-sel sf-mes-sel--ate">
+              <option value="todos">Hoje</option>
             </select>
           </label>
 
@@ -6755,9 +6761,15 @@ body.pnl-aberto{overflow:hidden}
         </div>
         <div class="sf-filtros">
           <label class="sf-mes">
-            <span class="sf-mes__lbl">Mês de fechamento</span>
-            <select class="sf-mes-sel">
-              <option value="todos">Toda a carteira</option>
+            <span class="sf-mes__lbl">De</span>
+            <select class="sf-mes-sel sf-mes-sel--de">
+              <option value="todos">Início</option>
+            </select>
+          </label>
+          <label class="sf-mes">
+            <span class="sf-mes__lbl">Até</span>
+            <select class="sf-mes-sel sf-mes-sel--ate">
+              <option value="todos">Hoje</option>
             </select>
           </label>
 
@@ -7816,10 +7828,14 @@ var estado = {
      rodízio de 15 min, e o número não muda de minuto em minuto. */
   safra: { cl: null, geral: null },
   safraBuscando: {},
-  /* filtro da aba Safra (26/08): mês de fechamento + quais experts entram na
-     tabela. `experts: null` é o "todos" -- não uma lista com todo mundo, pra
-     gente nova entrar já marcada sem precisar reabrir o seletor. */
-  safraSel: { cl: { mes: 'todos', experts: null }, geral: { mes: 'todos', experts: null } },
+  /* filtro da aba Safra (26/08, virou intervalo em 27/08): de que mês até
+     que mês + quais experts entram na tabela. `mesDe`/`mesAte: 'todos'` é
+     a ponta em aberto (desde o início / até hoje) -- os dois em 'todos' é
+     "toda a carteira". `experts: null` é o "todos" -- não uma lista com
+     todo mundo, pra gente nova entrar já marcada sem precisar reabrir o
+     seletor. */
+  safraSel: { cl: { mesDe: 'todos', mesAte: 'todos', experts: null },
+              geral: { mesDe: 'todos', mesAte: 'todos', experts: null } },
 
   /* COORTE DE FTD (16/08). Rota própria (/api/coorte), buscada por EXPERT e não
      por escopo: cada matriz custa ~11 leituras da TAP, e ninguém abre 23
@@ -11045,7 +11061,7 @@ function pintarSafraGoogle() {
     box.innerHTML = '<p class="mtz__nota">A varredura ainda não terminou nenhum mês.</p>';
     return;
   }
-  var meses = mesesVisiveis(d, { mes: 'todos' });
+  var meses = mesesVisiveis(d, { mesDe: 'todos', mesAte: 'todos' });
   if (!meses.length) {
     box.innerHTML = '<p class="mtz__nota">A varredura ainda não terminou nenhum mês.</p>';
     return;
@@ -11077,7 +11093,7 @@ function pintarSafraGoogle() {
     return;
   }
 
-  montarGradeSafra(box, 'google', todos, meses, { mes: 'todos' });
+  montarGradeSafra(box, 'google', todos, meses, { mesDe: 'todos', mesAte: 'todos' });
 }
 
 /* A safra aparece em três lugares que vivem em ciclos diferentes: o painel do
@@ -11889,17 +11905,24 @@ function montarListaSffil(view, todos, marcados) {
   });
 }
 
-/* Quais meses viram COLUNA na grade: todos os meses da safra (cronológico,
-   mais velho primeiro -- lê como linha do tempo, esquerda pra direita, igual
-   M0→M1→M2 da coorte) quando o filtro está em "Toda a carteira"; só o mês
-   escolhido, sozinho, quando o filtro pede um mês específico. Mesma função
-   pinta as duas situações -- 1 coluna não é um caso especial, é só o N=1
-   deste array. */
+/* Quais meses viram COLUNA na grade: fatia cronológica (mais velho primeiro
+   -- lê como linha do tempo, esquerda pra direita, igual M0→M1→M2 da coorte)
+   entre `sel.mesDe` e `sel.mesAte`. Ponta em 'todos' fica em aberto (desde o
+   início / até hoje); os dois em 'todos' é "toda a carteira" de sempre.
+   De/Até invertido pelo usuário se resolve sozinho -- sempre a fatia entre
+   os dois índices, não importa em que ordem vieram. */
 function mesesVisiveis(d, sel) {
   var todos = (d.meses || []).map(function (m) { return m.mes; });
   todos.sort(function (a, b) { return mesOrdinal(a) - mesOrdinal(b); });
-  if (sel.mes === 'todos') return todos;
-  return todos.indexOf(sel.mes) !== -1 ? [sel.mes] : todos;
+  var de = sel.mesDe && sel.mesDe !== 'todos' ? sel.mesDe : null;
+  var ate = sel.mesAte && sel.mesAte !== 'todos' ? sel.mesAte : null;
+  if (!de && !ate) return todos;
+  var iDe = de ? todos.indexOf(de) : 0;
+  var iAte = ate ? todos.indexOf(ate) : todos.length - 1;
+  if (iDe === -1) iDe = 0;
+  if (iAte === -1) iAte = todos.length - 1;
+  if (iDe > iAte) { var tmp = iDe; iDe = iAte; iAte = tmp; }
+  return todos.slice(iDe, iAte + 1);
 }
 
 /* Constrói o bloco visual completo (grade + legenda + nota) no MESMO padrão
@@ -12111,23 +12134,29 @@ function pintarSafraFiltro(escopo) {
   }
   if (estadoTxt) estadoTxt.hidden = true;
 
-  /* mês de fechamento: opções vêm de d.meses; a escolha sobrevive à
-     repintura, só cai pra "todos" se o mês escolhido tiver saído da lista */
+  /* range De/Até: opções vêm de d.meses (mesmas nos dois selects); a
+     escolha sobrevive à repintura, só cai pra "todos" se o mês escolhido
+     tiver saído da lista */
   var sel = safraSel(geral);
-  var selMes = $('.sf-mes-sel', view);
-  if (selMes) {
-    var atual = sel.mes;
-    selMes.innerHTML = '<option value="todos">Toda a carteira</option>';
-    (d.meses || []).forEach(function (m) {
+  var mesesOrdenados = (d.meses || []).slice().sort(function (a, b) {
+    return mesOrdinal(a.mes) - mesOrdinal(b.mes);
+  });
+  ['de', 'ate'].forEach(function (ponta) {
+    var selEl = $('.sf-mes-sel--' + ponta, view);
+    if (!selEl) return;
+    var chave = ponta === 'de' ? 'mesDe' : 'mesAte';
+    var atual = sel[chave];
+    selEl.innerHTML = '<option value="todos">' + (ponta === 'de' ? 'Início' : 'Hoje') + '</option>';
+    mesesOrdenados.forEach(function (m) {
       var op = document.createElement('option');
       op.value = m.mes;
       op.textContent = mesCurto(m.mes);
-      selMes.appendChild(op);
+      selEl.appendChild(op);
     });
-    var existe = atual === 'todos' || (d.meses || []).some(function (m) { return m.mes === atual; });
-    if (!existe) { atual = 'todos'; sel.mes = 'todos'; }
-    selMes.value = atual;
-  }
+    var existe = atual === 'todos' || mesesOrdenados.some(function (m) { return m.mes === atual; });
+    if (!existe) { atual = 'todos'; sel[chave] = 'todos'; }
+    selEl.value = atual;
+  });
 
   /* quem entra na grade: experts:null é "todos" — a lista completa do
      escopo, sempre em dia com gente nova entrando na operação */
@@ -12140,7 +12169,19 @@ function pintarSafraFiltro(escopo) {
   montarListaSffil(view, todos, marcados);
 
   if (subEl) {
-    subEl.textContent = (sel.mes === 'todos' ? 'Toda a carteira' : 'Turma de ' + mesCurto(sel.mes)) +
+    var deTodos = !sel.mesDe || sel.mesDe === 'todos';
+    var ateTodos = !sel.mesAte || sel.mesAte === 'todos';
+    var rotuloPeriodo;
+    if (deTodos && ateTodos) {
+      rotuloPeriodo = 'Toda a carteira';
+    } else if (deTodos) {
+      rotuloPeriodo = 'Até ' + mesCurto(sel.mesAte);
+    } else if (ateTodos) {
+      rotuloPeriodo = 'De ' + mesCurto(sel.mesDe) + ' até hoje';
+    } else {
+      rotuloPeriodo = 'De ' + mesCurto(sel.mesDe) + ' até ' + mesCurto(sel.mesAte);
+    }
+    subEl.textContent = rotuloPeriodo +
       ' · ' + (marcados.length === todos.length
         ? 'todos os experts'
         : (marcados.length === 1 ? '1 expert' : marcados.length + ' de ' + todos.length + ' experts'));
@@ -12183,10 +12224,17 @@ function ligarSafraFiltro() {
     var raiz = view.closest('.scope');
     var geral = !!(raiz && raiz.classList.contains('scope--geral'));
 
-    var selMes = $('.sf-mes-sel', view);
-    if (selMes) {
-      selMes.addEventListener('change', function () {
-        safraSel(geral).mes = selMes.value;
+    var selDe = $('.sf-mes-sel--de', view);
+    if (selDe) {
+      selDe.addEventListener('change', function () {
+        safraSel(geral).mesDe = selDe.value;
+        pintarSafraFiltro(chaveEscopo(geral));
+      });
+    }
+    var selAte = $('.sf-mes-sel--ate', view);
+    if (selAte) {
+      selAte.addEventListener('change', function () {
+        safraSel(geral).mesAte = selAte.value;
         pintarSafraFiltro(chaveEscopo(geral));
       });
     }

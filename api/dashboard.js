@@ -57,9 +57,11 @@ function temSessaoCl(req) {
   return tokenCl(req, segredo);
 }
 
-// Escopos aceitos no modo tendência. Mesmo default do n8n, repetido aqui só
-// pra resposta ficar previsível caso o front esqueça de mandar o parâmetro.
-const ESCOPOS = ['costa_lobao', 'geral'];
+// Escopos aceitos nos modos tendência e safra. Mesmo default do n8n, repetido
+// aqui só pra resposta ficar previsível caso o front esqueça de mandar o
+// parâmetro. 'google' entrou em 26/08: o workflow de safra já soma o btag do
+// Google (543779) desde 13/08, só a validação daqui não deixava pedir.
+const ESCOPOS = ['costa_lobao', 'geral', 'google'];
 const ESCOPO_PADRAO = 'costa_lobao';
 
 function hojeSP() {
