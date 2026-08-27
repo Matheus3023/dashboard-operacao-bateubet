@@ -1,7 +1,7 @@
 # Graph Report - dashboard-operacao-bateubet  (2026-08-27)
 
 ## Corpus Check
-- 15 files · ~124,827 words
+- 15 files · ~125,084 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `add9bfb8`
+- Built from commit: `aeb322d2`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -36,9 +36,9 @@
 1. `index.html · Painel Operação ao vivo` - 21 edges
 2. `README · Painel Operação Bateu Bet` - 13 edges
 3. `montarLinha()` - 6 edges
-4. `middleware()` - 5 edges
+4. `num()` - 5 edges
 5. `tapPorUtm()` - 5 edges
-6. `num()` - 5 edges
+6. `middleware()` - 5 edges
 7. `logo-bateubet.svg (wordmark oficial)` - 5 edges
 8. `vereditoLinha()` - 4 edges
 9. `validarPeriodo()` - 4 edges
@@ -111,14 +111,14 @@ Cohesion: 0.67
 Nodes (4): ehDestravarBarato(), moeda(), vereditoConta(), vereditoLinha()
 
 ## Knowledge Gaps
-- **31 isolated node(s):** `graphify`, `Login Google (26/08)`, `Identidade visual: migração pra Estratégia de Marca (26/08)`, `Redesign de BI (26/08, em andamento por fase)`, `✅ RESOLVIDO: apagão de dados da TAP (26/08)` (+26 more)
+- **31 isolated node(s):** `crypto`, `crypto`, `crypto`, `crypto`, `crypto` (+26 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **5 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **What connects `graphify`, `Login Google (26/08)`, `Identidade visual: migração pra Estratégia de Marca (26/08)` to the rest of the system?**
+- **What connects `crypto`, `crypto`, `crypto` to the rest of the system?**
   _31 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `index.html · Painel Operação ao vivo` be split into smaller, more focused modules?**
   _Cohesion score 0.13405797101449277 - nodes in this community are weakly interconnected._

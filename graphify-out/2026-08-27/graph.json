@@ -718,7 +718,7 @@
       "node_kind": "heading",
       "norm_label": "\u2705 coorte de ftd migrada pra tabela pre-calculada (26/08)",
       "source_file": "CLAUDE.md",
-      "source_location": "L227"
+      "source_location": "L244"
     },
     {
       "id": "claude_graphify",
@@ -766,7 +766,7 @@
       "node_kind": "heading",
       "norm_label": "qa de preview com login google (26/08)",
       "source_file": "CLAUDE.md",
-      "source_location": "L214"
+      "source_location": "L231"
     },
     {
       "id": "claude_redesign_de_bi_26_08_em_andamento_por_fase",
@@ -790,7 +790,7 @@
       "node_kind": "heading",
       "norm_label": "\u2705 resolvido: apagao de dados da tap (26/08)",
       "source_file": "CLAUDE.md",
-      "source_location": "L160"
+      "source_location": "L177"
     },
     {
       "id": "claude_safra_do_google_26_08",
@@ -802,7 +802,7 @@
       "node_kind": "heading",
       "norm_label": "safra do google (26/08)",
       "source_file": "CLAUDE.md",
-      "source_location": "L199"
+      "source_location": "L216"
     },
     {
       "id": "claude_workflow_deste_projeto_instru\u00e7\u00e3o_do_costa_26_08",
@@ -814,7 +814,7 @@
       "node_kind": "heading",
       "norm_label": "workflow deste projeto (instrucao do costa, 26/08)",
       "source_file": "CLAUDE.md",
-      "source_location": "L276"
+      "source_location": "L293"
     },
     {
       "id": "middleware",
@@ -2547,7 +2547,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "CLAUDE.md",
-      "source_location": "L160",
+      "source_location": "L177",
       "weight": 1.0
     },
     {
@@ -2558,7 +2558,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "CLAUDE.md",
-      "source_location": "L199",
+      "source_location": "L216",
       "weight": 1.0
     },
     {
@@ -2569,7 +2569,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "CLAUDE.md",
-      "source_location": "L214",
+      "source_location": "L231",
       "weight": 1.0
     },
     {
@@ -2580,7 +2580,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "CLAUDE.md",
-      "source_location": "L227",
+      "source_location": "L244",
       "weight": 1.0
     },
     {
@@ -2591,7 +2591,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "CLAUDE.md",
-      "source_location": "L276",
+      "source_location": "L293",
       "weight": 1.0
     },
     {
@@ -3257,5 +3257,5 @@
       "source_file": "index.html"
     }
   ],
-  "built_at_commit": "563d0c2ae956f5d0adc13aaf52864f38b0700872"
+  "built_at_commit": "add9bfb853813711a1edd205eee4abe571b2b6db"
 }
