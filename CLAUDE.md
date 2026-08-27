@@ -146,6 +146,23 @@ trabalho é ADITIVO, não reconstrução.
 - Ordenação por coluna clicável no comparativo: JÁ EXISTIA (`data-ord`/
   `alternarOrdem`) — engano meu no diagnóstico anterior, não precisou de
   trabalho.
+- **✅ BUG achado pelo Costa em produção e corrigido (27/08)**: tile "Ticket
+  médio do depósito" (totais Meta E Google) dizia "sem depósito" / "nenhum
+  depósito no período" mesmo quando `deposito` (o R$ bruto) era > 0 — bastava
+  faltar só a CONTAGEM (`t.depositos`, o `deposit_count` da TAP que entrou no
+  payload em 20/08/v14). O código já sabia que isso podia acontecer (comentário
+  próprio dizia "sem depósito em vez de imprimir uma divisão por zero"), mas o
+  texto de fallback mentia: lia como "não teve depósito nenhum" quando na
+  verdade só faltava o dado pra tirar a média. Corrigido em `pintarTotais()` e
+  `pintarGoogle()`: agora distingue os dois casos — sem contagem MAS com
+  dinheiro caído mostra "—" + o valor bruto ("R$X em depósito, sem contagem no
+  período"); só fala "sem depósito"/"nenhum depósito no período" quando o R$
+  também é zero. Não achei reproduzir ao vivo (testei Meta e Google em Hoje/
+  Ontem/7d/Mês/Mês ant./Datas em dia pré-v14 — todos com contagem presente);
+  o fix cobre a causa raiz documentada mesmo sem ter pego o payload exato que
+  o Costa viu (pode ter sido Costa e Lobão, que pede senha, ou um instante de
+  cache específico). Se reaparecer, o texto novo já diferencia os dois casos
+  em vez de esconder que teve dinheiro entrando.
 - **Gráfico de evolução: feito, testado, e REMOVIDO a pedido do Costa
   (26/08, mesmo dia)** — "ficou uma merda". Testei em 3 larguras (1512/820/
   390px) sem achar defeito visual reproduzível; hipótese não confirmada é

@@ -8793,14 +8793,19 @@ function pintarTotais(d, isHoje, raiz, rodape, nSelecionados) {
 
   /* Ticket médio do depósito: valor depositado ÷ QUANTIDADE de depósitos.
      `depositos` (deposit_count da TAP) entrou no payload em 20/08 -- período
-     fechado gravado antes da VERSAO_PAYLOAD v14 não tem o campo, e aí o tile
-     diz "sem depósito" em vez de imprimir uma divisão por zero. */
+     fechado gravado antes da VERSAO_PAYLOAD v14 não tem o campo. Antes disso
+     o tile dizia "sem depósito" mesmo quando `deposito` (o R$) era > 0 --
+     mentira: não é que não teve depósito, é que falta a CONTAGEM pra tirar a
+     média. Achado pelo Costa em produção (27/08) -- distingue os dois casos
+     agora: sem contagem mas com dinheiro caído mostra o valor bruto, nunca
+     lê como "nenhum depósito". */
   var qtdDep = ehNum(t.depositos) ? t.depositos : 0;
+  var temDepR = ehNum(t.deposito) && t.deposito > 0;
   var elDF = campo(raiz, 'totais.ticket_deposito');
-  escreve(elDF, qtdDep > 0 ? brl((t.deposito || 0) / qtdDep) : 'sem depósito');
+  escreve(elDF, qtdDep > 0 ? brl((t.deposito || 0) / qtdDep) : (temDepR ? '—' : 'sem depósito'));
   escreve(sub(elDF), qtdDep > 0
     ? inteiro(qtdDep) + (qtdDep === 1 ? ' depósito no período' : ' depósitos no período')
-    : 'nenhum depósito no período');
+    : (temDepR ? brl(t.deposito) + ' em depósito, sem contagem no período' : 'nenhum depósito no período'));
 
   /* Net dep é o único tile de dinheiro que a API NÃO manda no bloco `totais`
      (ela só tem por expert). Somar os experts do bloco dá o mesmo número --
@@ -10465,9 +10470,12 @@ function pintarGoogle(g, periodo) {
   pintar('google.ticket_ftd', temFtdG ? brl(ehNum(t.ticket_ftd) ? t.ticket_ftd : (t.valor_ftd || 0) / t.ftd) : 'sem FTD',
          temFtdG ? 'valor do 1º depósito · ' + brl(t.valor_ftd) + ' no total' : 'nenhum FTD no período');
   var qtdDepG = ehNum(t.depositos) ? t.depositos : 0;
+  var temDepRG = ehNum(t.deposito) && t.deposito > 0;
+  /* mesma correção do escopo Meta (ver pintarTotais): sem contagem mas com
+     depósito > 0 não é "sem depósito", é falta de dado pra tirar a média. */
   pintar('google.ticket_deposito',
-         qtdDepG > 0 ? brl(ehNum(t.ticket_deposito) ? t.ticket_deposito : (t.deposito || 0) / qtdDepG) : 'sem depósito',
-         qtdDepG > 0 ? inteiro(qtdDepG) + (qtdDepG === 1 ? ' depósito no período' : ' depósitos no período') : 'nenhum depósito no período');
+         qtdDepG > 0 ? brl(ehNum(t.ticket_deposito) ? t.ticket_deposito : (t.deposito || 0) / qtdDepG) : (temDepRG ? '—' : 'sem depósito'),
+         qtdDepG > 0 ? inteiro(qtdDepG) + (qtdDepG === 1 ? ' depósito no período' : ' depósitos no período') : (temDepRG ? brl(t.deposito) + ' em depósito, sem contagem no período' : 'nenhum depósito no período'));
 
   var elNd = campo(raiz, 'google.net_dep');
   escreve(elNd, brl(t.net_dep));
