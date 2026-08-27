@@ -11698,7 +11698,7 @@ function safraPorExpert(escopo, nome) {
   var d = estado.safra[escopo];
   if (!d || !d.meses) return null;
   var t = { ativos: 0, ftd: 0, cadastros: 0, net_pl: 0, net_dep: 0, volume: 0,
-            investimento: 0, investimento_disponivel: false, achou: false };
+            churned: 0, investimento: 0, investimento_disponivel: false, achou: false };
   d.meses.forEach(function (m) {
     (m.experts || []).forEach(function (e) {
       if (e.expert_name !== nome) return;
@@ -11709,6 +11709,7 @@ function safraPorExpert(escopo, nome) {
       t.net_pl    += e.net_pl || 0;
       t.net_dep   += e.net_dep || 0;
       t.volume    += e.volume || 0;
+      t.churned   += e.churned || 0;
       /* soma parcial DE PROPÓSITO (26/08): a coorte só tem linha pro mês em
          que a turma de FTD daquele expert existiu -- mês sem safra de FTD
          não é "rodízio atrasado", é ausência estrutural (o rodízio nunca
@@ -11824,7 +11825,7 @@ function safraLinhaFiltrada(escopo, nome, mes) {
   if (mes === 'todos') {
     return safraPorExpert(escopo, nome) ||
       { ativos: 0, ftd: 0, cadastros: 0, net_pl: 0, net_dep: 0, volume: 0,
-        investimento: null, investimento_disponivel: false, retencao: null };
+        churned: 0, investimento: null, investimento_disponivel: false, retencao: null };
   }
   var d = estado.safra[escopo];
   var m = (d && d.meses || []).filter(function (x) { return x.mes === mes; })[0];
@@ -11832,6 +11833,7 @@ function safraLinhaFiltrada(escopo, nome, mes) {
   var t = { ativos: (e && e.ativos) || 0, ftd: (e && e.ftd) || 0,
             cadastros: (e && e.cadastros) || 0, net_pl: (e && e.net_pl) || 0,
             net_dep: (e && e.net_dep) || 0, volume: (e && e.volume) || 0,
+            churned: (e && e.churned) || 0,
             investimento: e ? e.investimento : null,
             investimento_disponivel: !!(e && e.investimento_disponivel) };
   t.retencao = t.ftd ? (t.ativos / t.ftd) * 100 : null;
@@ -11842,7 +11844,7 @@ function safraLinhaFiltrada(escopo, nome, mes) {
    chamam esta MESMA função, pra nunca divergir um número do outro. */
 function somarLinhasSafra(linhas) {
   var t = { cadastros: 0, ftd: 0, ativos: 0, net_pl: 0, net_dep: 0, volume: 0,
-            investimento: 0, investimento_disponivel: false };
+            churned: 0, investimento: 0, investimento_disponivel: false };
   linhas.forEach(function (l) {
     t.cadastros += l.cadastros || 0;
     t.ftd       += l.ftd || 0;
@@ -11850,6 +11852,7 @@ function somarLinhasSafra(linhas) {
     t.net_pl    += l.net_pl || 0;
     t.net_dep   += l.net_dep || 0;
     t.volume    += l.volume || 0;
+    t.churned   += l.churned || 0;
     /* soma parcial DE PROPÓSITO (26/08) -- ver comentário em safraPorExpert.
        Mês sem safra de FTD naquele expert não entra na conta; qualquer mês
        real que entrar já marca a soma como disponível. */
@@ -12067,6 +12070,16 @@ function montarGradeSafra(caixa, escopo, marcadosNomes, meses, sel) {
       var val = document.createElement('span');
       val.textContent = brlCurto(c.net_pl);
       cel.appendChild(val);
+      /* mesma ordem da coorte (pedido do Costa 27/08, "idêntico"): valor,
+         ROAS (dourado) — GGR da própria célula sobre o investimento QUE
+         AQUELA TURMA gerou naquele mês de cadastro, não o acumulado da
+         linha —, seguem%, ativos, churn. */
+      if (c.investimento > 0 && ehNum(c.net_pl)) {
+        var ro2 = document.createElement('span');
+        ro2.className = 'mtz__roas';
+        ro2.textContent = 'ROAS ' + Math.round((c.net_pl / c.investimento) * 100) + '%';
+        cel.appendChild(ro2);
+      }
       if (ehNum(c.retencao)) {
         var ro = document.createElement('span');
         ro.className = 'mtz__roas';
@@ -12077,6 +12090,12 @@ function montarGradeSafra(caixa, escopo, marcadosNomes, meses, sel) {
       at.className = 'mtz__ativos';
       at.textContent = inteiro(c.ativos) + ' ativos';
       cel.appendChild(at);
+      if (c.cadastros > 0) {
+        var ch = document.createElement('span');
+        ch.className = 'mtz__ativos';
+        ch.textContent = 'churn ' + Math.round((c.churned / c.cadastros) * 100) + '%';
+        cel.appendChild(ch);
+      }
       if (mesEhCorrente) {
         var av = document.createElement('span');
         av.className = 'mtz__alerta';
