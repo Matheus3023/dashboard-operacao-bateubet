@@ -11673,7 +11673,7 @@ function safraPorExpert(escopo, nome) {
   var d = estado.safra[escopo];
   if (!d || !d.meses) return null;
   var t = { ativos: 0, ftd: 0, cadastros: 0, net_pl: 0, net_dep: 0, volume: 0,
-            investimento: 0, investimento_disponivel: true, achou: false };
+            investimento: 0, investimento_disponivel: false, achou: false };
   d.meses.forEach(function (m) {
     (m.experts || []).forEach(function (e) {
       if (e.expert_name !== nome) return;
@@ -11684,11 +11684,19 @@ function safraPorExpert(escopo, nome) {
       t.net_pl    += e.net_pl || 0;
       t.net_dep   += e.net_dep || 0;
       t.volume    += e.volume || 0;
-      /* investimento pela metade e pior que investimento ausente (mesma regra
-         da coorte): um mes sem gasto rastreado invalida a soma inteira, senao
-         o total mentiria pra baixo sem avisar. */
-      if (e.investimento_disponivel) { t.investimento += e.investimento || 0; }
-      else { t.investimento_disponivel = false; }
+      /* soma parcial DE PROPÓSITO (26/08): a coorte só tem linha pro mês em
+         que a turma de FTD daquele expert existiu -- mês sem safra de FTD
+         não é "rodízio atrasado", é ausência estrutural (o rodízio nunca
+         vai gravar um mês que não teve FTD nenhum). Exigir os 11 meses
+         batidos pra mostrar qualquer soma deixava o "ads" travado pra
+         sempre em expert que só começou a converter depois de outubro.
+         Soma-se o que existe; "disponível" é true assim que UM mês real
+         entrou na conta -- honesto o bastante, e mostra número em vez de
+         travessão pra sempre. */
+      if (e.investimento_disponivel) {
+        t.investimento += e.investimento || 0;
+        t.investimento_disponivel = true;
+      }
     });
   });
   if (!t.achou) return null;
@@ -11809,7 +11817,7 @@ function safraLinhaFiltrada(escopo, nome, mes) {
    chamam esta MESMA função, pra nunca divergir um número do outro. */
 function somarLinhasSafra(linhas) {
   var t = { cadastros: 0, ftd: 0, ativos: 0, net_pl: 0, net_dep: 0, volume: 0,
-            investimento: 0, investimento_disponivel: true };
+            investimento: 0, investimento_disponivel: false };
   linhas.forEach(function (l) {
     t.cadastros += l.cadastros || 0;
     t.ftd       += l.ftd || 0;
@@ -11817,10 +11825,13 @@ function somarLinhasSafra(linhas) {
     t.net_pl    += l.net_pl || 0;
     t.net_dep   += l.net_dep || 0;
     t.volume    += l.volume || 0;
-    /* mesma regra da coorte: um mês sem gasto rastreado invalida a soma
-       inteira, senão o total mentiria pra baixo sem avisar. */
-    if (l.investimento_disponivel) { t.investimento += l.investimento || 0; }
-    else { t.investimento_disponivel = false; }
+    /* soma parcial DE PROPÓSITO (26/08) -- ver comentário em safraPorExpert.
+       Mês sem safra de FTD naquele expert não entra na conta; qualquer mês
+       real que entrar já marca a soma como disponível. */
+    if (l.investimento_disponivel) {
+      t.investimento += l.investimento || 0;
+      t.investimento_disponivel = true;
+    }
   });
   t.retencao = t.ftd ? (t.ativos / t.ftd) * 100 : null;
   if (!t.investimento_disponivel) { t.investimento = null; }
