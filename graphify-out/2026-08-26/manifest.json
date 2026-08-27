@@ -1,0 +1,170 @@
+{
+  "api/cl-auth.js": {
+    "mtime": 1786849033.2972608,
+    "seen": 1787507252.274139,
+    "ast_hash": "0e642d08f5dda56a4eb29a5e6dcbfbe9",
+    "semantic_hash": "0e642d08f5dda56a4eb29a5e6dcbfbe9"
+  },
+  "api/conta.js": {
+    "mtime": 1786839990.5426295,
+    "seen": 1787507252.27414,
+    "ast_hash": "cc943718155fc5a8cc04f4d74262606c",
+    "semantic_hash": "cc943718155fc5a8cc04f4d74262606c"
+  },
+  "api/coorte.js": {
+    "mtime": 1787784395.067544,
+    "seen": 1787784506.039341,
+    "ast_hash": "df93c2401b218cafda9e2d975bfc51e7",
+    "semantic_hash": ""
+  },
+  "api/dashboard.js": {
+    "mtime": 1787776495.4106405,
+    "seen": 1787776590.571266,
+    "ast_hash": "8e1012338a3c71fe7a02a30dbc75b55d",
+    "semantic_hash": ""
+  },
+  "api/push-spend.js": {
+    "mtime": 1787157505.6639202,
+    "seen": 1787507252.2741408,
+    "ast_hash": "21c68d85479e68f20462b00c3f139e37",
+    "semantic_hash": "21c68d85479e68f20462b00c3f139e37"
+  },
+  "vercel.json": {
+    "mtime": 1787156481.3455508,
+    "seen": 1787507252.274142,
+    "ast_hash": "c28a37add64c6eec29a87da2e6ef02ed",
+    "semantic_hash": "c28a37add64c6eec29a87da2e6ef02ed"
+  },
+  "carregando-b.mp4": {
+    "mtime": 1786572015.708826,
+    "seen": 1787507252.274142,
+    "ast_hash": "bc2d2c9ca6079e70a88caf96ef1278bb",
+    "semantic_hash": "bc2d2c9ca6079e70a88caf96ef1278bb"
+  },
+  "README.md": {
+    "mtime": 1786073212.197337,
+    "seen": 1787711445.317014,
+    "ast_hash": "a50a7d49204884a94e52c83765871c7f",
+    "semantic_hash": "a50a7d49204884a94e52c83765871c7f"
+  },
+  "index.html": {
+    "mtime": 1787779828.5112782,
+    "seen": 1787779878.651913,
+    "ast_hash": "d0582a6354b670bf762c3d4385e78a19",
+    "semantic_hash": ""
+  },
+  "apple-touch-icon.png": {
+    "mtime": 1786052238.720679,
+    "seen": 1787711445.317015,
+    "ast_hash": "76b8174ddbdcfa9ab2165cd6821a7c8b",
+    "semantic_hash": "76b8174ddbdcfa9ab2165cd6821a7c8b"
+  },
+  "favicon-16x16.png": {
+    "mtime": 1786052238.7605548,
+    "seen": 1787711445.317015,
+    "ast_hash": "48de819405a7864e4019ebcd91826a6b",
+    "semantic_hash": "48de819405a7864e4019ebcd91826a6b"
+  },
+  "favicon-32x32.png": {
+    "mtime": 1786052238.7406363,
+    "seen": 1787711445.3170161,
+    "ast_hash": "6709f8c237f1d6b26aa86491e419e714",
+    "semantic_hash": "6709f8c237f1d6b26aa86491e419e714"
+  },
+  "fundo-marca.jpg": {
+    "mtime": 1787774639.5672524,
+    "seen": 1787774703.250657,
+    "ast_hash": "0632508a1457362a26bf617f22fed31d",
+    "semantic_hash": ""
+  },
+  "icon-512.png": {
+    "mtime": 1786052238.6996446,
+    "seen": 1787711445.317017,
+    "ast_hash": "a524d2d8c86c07253dd733fdd1c5b9a6",
+    "semantic_hash": "a524d2d8c86c07253dd733fdd1c5b9a6"
+  },
+  "icon.svg": {
+    "mtime": 1786052238.8197882,
+    "seen": 1787711445.317017,
+    "ast_hash": "68fa0c7e24aa0c7ee8cae642e958acea",
+    "semantic_hash": "68fa0c7e24aa0c7ee8cae642e958acea"
+  },
+  "logo-bateubet.svg": {
+    "mtime": 1786049815.0708928,
+    "seen": 1787711445.317017,
+    "ast_hash": "efde343d7cfd1d92b23f22270ce52496",
+    "semantic_hash": "efde343d7cfd1d92b23f22270ce52496"
+  },
+  "marca-b.png": {
+    "mtime": 1786572015.7176824,
+    "seen": 1787711445.317018,
+    "ast_hash": "7db2976d05326e50a083e14546393db0",
+    "semantic_hash": "7db2976d05326e50a083e14546393db0"
+  },
+  "og-image.jpg": {
+    "mtime": 1786052267.554712,
+    "seen": 1787711445.317018,
+    "ast_hash": "e7c1a70f65825f00410fa122b1e7c216",
+    "semantic_hash": "e7c1a70f65825f00410fa122b1e7c216"
+  },
+  ".claude/settings.json": {
+    "mtime": 1787714691.818839,
+    "seen": 1787766847.736031,
+    "ast_hash": "295a26634f20b2cafbc63c29911caf2d",
+    "semantic_hash": ""
+  },
+  "CLAUDE.md": {
+    "mtime": 1787780905.3010764,
+    "seen": 1787780911.684643,
+    "ast_hash": "0466ca1c24bfbcb4e56c1ae7c386e318",
+    "semantic_hash": ""
+  },
+  "api/auth/callback.js": {
+    "mtime": 1787771461.4350417,
+    "seen": 1787771555.401632,
+    "ast_hash": "5fcc81225bd7336a5e70547cc5390cd8",
+    "semantic_hash": ""
+  },
+  "api/auth/logout.js": {
+    "mtime": 1787770162.138795,
+    "seen": 1787770294.054226,
+    "ast_hash": "8f350815db882f32a7f73899f5a4395a",
+    "semantic_hash": ""
+  },
+  "api/auth/start.js": {
+    "mtime": 1787770131.2793326,
+    "seen": 1787770294.0542269,
+    "ast_hash": "80796856113ddfc911d8a90c88261b7b",
+    "semantic_hash": ""
+  },
+  "middleware.js": {
+    "mtime": 1787771024.8822436,
+    "seen": 1787771200.931763,
+    "ast_hash": "fb1226b60b3740d9988360005f1917e1",
+    "semantic_hash": ""
+  },
+  "login.html": {
+    "mtime": 1787774213.7288575,
+    "seen": 1787774703.250656,
+    "ast_hash": "46fef2c40f0429aff7a827c2d838c4db",
+    "semantic_hash": ""
+  },
+  "api/auth/me.js": {
+    "mtime": 1787771057.7805498,
+    "seen": 1787771200.931755,
+    "ast_hash": "8abae539c9932712560ffca27081f434",
+    "semantic_hash": ""
+  },
+  "api/auth/touch.js": {
+    "mtime": 1787771495.7746606,
+    "seen": 1787771555.4016378,
+    "ast_hash": "615b8fd8c19284414188f476eec231c0",
+    "semantic_hash": ""
+  },
+  "login-fundo.jpg": {
+    "mtime": 1787774206.3804057,
+    "seen": 1787774703.250658,
+    "ast_hash": "a13531b7574e063c17956b7184cac9e2",
+    "semantic_hash": ""
+  }
+}
