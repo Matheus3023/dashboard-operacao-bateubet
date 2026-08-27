@@ -347,28 +347,37 @@ EDERSON/GP DADOS/CHARLES/QZL/DANIEL100X, que também vivem nessa conta
 compartilhada). Pedido do gestor: RUSC passa a receber investimento numa
 conta dedicada, `1582424536794403`.
 
-Editado direto no n8n (`Dashboard Operação - Refresh Cache`, node "Montar
-experts", `update_workflow` + `publish_workflow`): `ad_account_id` trocado
-pra `1582424536794403`, `match_terms` virou `null` (conta dedicada não
-precisa mais recortar por nome de campanha — o padrão de TANOS, GREGORIO
-BIG e TALYSON). `btags` mantido (`548530`, é o mesmo funil na TAP). Sem
-`desde`, sem `excluir_geral` — nada disso mudou.
+**✅ Pedido seguinte do gestor: não perder o histórico da conta antiga.**
+Editado direto no n8n (`Dashboard Operação - Refresh Cache`,
+`update_workflow` + `publish_workflow`), replicando o padrão do DEKO/TANOS:
 
-**O saldo já investido na conta antiga (989562184047728, filtrado por
-RUSC) fica registrado no Meta normalmente — não apaguei nada lá.** Mas o
-painel é um sistema de leitura por período, não um livro-razão: ele não
-guarda saldo acumulado em lugar nenhum, só pergunta pro Meta "quanto essa
-conta gastou nesse intervalo" toda vez. Depois desta troca, qualquer
-período consultado (Mês passado, Datas custom antes de 27/08 etc.) vai
-perguntar pra conta NOVA, que não existia antes — então o card do RUSC
-mostra R$0 investido pra qualquer período anterior à migração, mesmo
-sabendo que ele gastou na conta antiga naquela época. Não existe merge de
-duas contas numa entidade só no escopo costa_lobao (esse padrão só existe
-em "Montar entidades Geral", ver DEKO/TANOS lá) — se um dia for pedido
-histórico contínuo (conta antiga + nova somadas), é uma segunda entrada
-tipo a do DEKO, só que isso precisa entrar direto em "Montar entidades
-Geral" (não em "Montar experts"), porque só lá existe o passo de
-agrupamento por nome que junta duas contas numa linha só.
+- `Montar experts` (costa_lobao): RUSC vira `ad_account_id: "1582424536794403"`,
+  `match_terms: null` (conta dedicada, sem precisar recortar por nome de
+  campanha) e ganhou `excluir_geral: true` — o recorte da dupla mostra só a
+  conta nova (esse pipeline não faz merge de duas contas numa entidade só).
+- `Montar entidades Geral`: RUSC ganhou DUAS entradas — a antiga
+  (`989562184047728`, `match_terms: ["RUSC"]`) e a nova (`1582424536794403`,
+  `match_terms: null`) — que `Agrupar por entidade Geral` soma numa
+  entidade só, com breakdown por conta preservado (`contas: []`).
+
+`btags` mantido (`548530`) nas duas. Testado ao vivo, execução manual
+(27/08 ~19:58): o Geral mostra **UMA linha "RUSC"** com as duas contas no
+array `contas` — a antiga ativa (R$198,48 investidos no dia) e a nova
+ainda zerada (acabou de trocar) — `valor_investido` total soma as duas.
+Nada se perde: à medida que a conta antiga for parando e a nova ganhando
+verba, o total do Geral continua contínuo. O recorte Costa e Lobão mostra
+só a conta nova (currently R$0), como esperado — quem quiser ver a soma
+das duas olha o Geral.
+
+**Pegadinha do dia (27/08): `update_workflow` + `publish_workflow` sozinho
+NÃO bastou pra pegar as duas primeiras vezes** — a execução seguinte
+continuou rodando o código antigo mesmo com `appliedOperations` retornando
+sucesso e `activeVersionId` mudando. O que resolveu de verdade foi
+`unpublish_workflow` seguido de `publish_workflow` (desativa e reativa o
+gatilho, força reload). Regra nova pra esse workflow especificamente:
+depois de editar node com `update_workflow`, sempre `unpublish` + `publish`
+antes de confiar que a próxima execução vai usar o código novo — só
+`publish` sobre um workflow já ativo não é suficiente aqui.
 
 ## Workflow deste projeto (instrução do Costa, 26/08)
 
