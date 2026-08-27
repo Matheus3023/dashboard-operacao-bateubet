@@ -478,12 +478,20 @@ NOTA SOBRE OS DADOS DE EXEMPLO
   /* escada de profundidade: canvas mais fundo (ponta escura do gradiente vinho),
      card na ponta clara do vinho (#4A0E2E), topo de card um ponto acima. Os dois
      hex oficiais da estratégia de marca aparecem inteiros na tela e ainda sobra
-     contraste entre camadas. */
+     contraste entre camadas.
+     Subida de um degrau em 27/08 (feedback "sem brilho, fosco" mesmo com o
+     Mac no brilho máximo): o comentário acima já dizia que CARD = a ponta
+     clara do vinho (#4A0E2E), mas a maioria dos `.block`/`.tile` do CSS
+     pintava com --surface na ponta ESCURA (#33101F, quase colado no --bg)
+     -- não era o brilho da tela, era pouco contraste real entre fundo e
+     card. Cada tom subiu pro degrau de cima; a veladura da textura (ver
+     comentário logo abaixo) fica ainda mais folgada com o novo --surface
+     mais claro, então a escada não corre risco de inverter. */
   --bg:#0A0308;
-  --surface:#33101F;
-  --surface-2:#4A0E2E;
+  --surface:#4A0E2E;
+  --surface-2:#5A1830;
   --surface-sunk:#1F0812;
-  --surface-3:#5A1830;
+  --surface-3:#6C2039;
 
   --line:rgba(255,255,255,.14);
   --line-soft:rgba(255,255,255,.075);
