@@ -338,6 +338,38 @@ com `safras: []` e `ainda_nao_calculado: true` até a vez dele chegar — o
 front trata isso como "sem dado ainda", não como erro. Rodei algumas
 execuções manuais em 26/08 pra adiantar a semeadura; o resto enche sozinho.
 
+## RUSC migra pra conta dedicada (27/08)
+
+RUSC rodava DENTRO da conta compartilhada "CA GABRIEL EXPERTS"
+(`989562184047728`, não existe expert Gabriel — é só o nome da conta),
+recortado por `match_terms: ["RUSC"]` no nome da campanha (mesmo padrão do
+EDERSON/GP DADOS/CHARLES/QZL/DANIEL100X, que também vivem nessa conta
+compartilhada). Pedido do gestor: RUSC passa a receber investimento numa
+conta dedicada, `1582424536794403`.
+
+Editado direto no n8n (`Dashboard Operação - Refresh Cache`, node "Montar
+experts", `update_workflow` + `publish_workflow`): `ad_account_id` trocado
+pra `1582424536794403`, `match_terms` virou `null` (conta dedicada não
+precisa mais recortar por nome de campanha — o padrão de TANOS, GREGORIO
+BIG e TALYSON). `btags` mantido (`548530`, é o mesmo funil na TAP). Sem
+`desde`, sem `excluir_geral` — nada disso mudou.
+
+**O saldo já investido na conta antiga (989562184047728, filtrado por
+RUSC) fica registrado no Meta normalmente — não apaguei nada lá.** Mas o
+painel é um sistema de leitura por período, não um livro-razão: ele não
+guarda saldo acumulado em lugar nenhum, só pergunta pro Meta "quanto essa
+conta gastou nesse intervalo" toda vez. Depois desta troca, qualquer
+período consultado (Mês passado, Datas custom antes de 27/08 etc.) vai
+perguntar pra conta NOVA, que não existia antes — então o card do RUSC
+mostra R$0 investido pra qualquer período anterior à migração, mesmo
+sabendo que ele gastou na conta antiga naquela época. Não existe merge de
+duas contas numa entidade só no escopo costa_lobao (esse padrão só existe
+em "Montar entidades Geral", ver DEKO/TANOS lá) — se um dia for pedido
+histórico contínuo (conta antiga + nova somadas), é uma segunda entrada
+tipo a do DEKO, só que isso precisa entrar direto em "Montar entidades
+Geral" (não em "Montar experts"), porque só lá existe o passo de
+agrupamento por nome que junta duas contas numa linha só.
+
 ## Workflow deste projeto (instrução do Costa, 26/08)
 
 - Toda mensagem do Costa referente a este projeto: antes de responder ou editar, rodar `graphify query "<pergunta derivada da mensagem>"` pra entender o estado atual do projeto pelo grafo. Depois de qualquer edição de código, rodar `graphify update .` (o hook post-commit já cobre o momento do commit, mas atualize também fora dele quando editar sem commitar na hora).
