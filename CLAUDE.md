@@ -338,6 +338,51 @@ com `safras: []` e `ainda_nao_calculado: true` até a vez dele chegar — o
 front trata isso como "sem dado ainda", não como erro. Rodei algumas
 execuções manuais em 26/08 pra adiantar a semeadura; o resto enche sozinho.
 
+## DEKO ganha conta dedicada (28/08)
+
+Pedido do gestor: a conta `2891168717909636` (dedicada, criada em 28/08, cinco
+campanhas `[DEKO]`) passa a ser a **única** que recebe verba do Deko daqui pra
+frente. Nada do que já foi investido pode sumir. Mesmo padrão do RUSC acima.
+
+O Deko rodava em duas contas: a compartilhada do Gabriel (`989562184047728`,
+recortada por `match_terms: ["DEKO"]`) e a "roleta" (`1970560716829162`). As
+três dividem o mesmo btag (`541420` + `474243`), então em nenhum lugar o btag
+pode ser lido duas vezes — foi assim que em agosto/26 entraram 195 cadastros,
+70 FTD e R$ 113.693,68 de depósito fantasmas.
+
+O que mudou, workflow a workflow:
+
+- `Dashboard Operação - Refresh Cache` / `Montar experts` (costa_lobao): DEKO
+  vira `ad_account_id: "2891168717909636"`, `match_terms: null`.
+  `excluir_geral: true` continua. Consequência aceita (a mesma do RUSC): o
+  **recorte da dupla mostra só a conta nova** — esse pipeline não funde duas
+  contas numa linha, e duas linhas com o mesmo btag dobrariam a TAP. A soma
+  histórica das três contas está no Geral.
+- `Refresh Cache` / `Montar entidades Geral`: DEKO ganhou uma **terceira**
+  entrada (`2891168717909636`, `match_terms: null`). `Agrupar por entidade
+  Geral` soma as três numa entidade só, com breakdown por conta em `contas[]`
+  e TAP lida uma vez. A entrada do Gabriel continua sendo a primeira do grupo
+  (é dela que saem os btags).
+- `Dashboard Operação - Coorte` / `Escolher Expert`: `CONTAS_META['DEKO']`
+  ganhou a conta nova. As duas antigas ficaram: sem elas, o investimento já
+  gasto sumiria do payback por safra e o Deko pareceria melhor do que é.
+- `Relatório Diário Experts - Bateu Bet` / `Montar experts`: segunda linha DEKO
+  com a conta nova, **mesmo `expert_name` e mesmo `grupo_id`**. Ali o
+  `Somar Meta por expert` funde por nome (Meta somado conta a conta, btags
+  deduplicados), então as duas contas entram no mesmo relatório sem dobrar o
+  funil — mesma receita do TANOS.
+- `Relatório` / `Montar contas` (alerta de saldo): `CA DEKO` entrou no **fim**
+  da lista (o nó `Montar alerta saldo` casa por índice).
+- Repo: `api/conta.js` (`BTAG_POR_CONTA`) e `index.html` (`CONTAS`) ganharam a
+  conta nova, senão a janela de conta abriria sem funil e o breakdown mostraria
+  "Conta ····9636".
+
+`Dashboard Operação - Safra` **não** precisou de mudança: ele mapeia por btag,
+não por conta, e `541420`/`474243` já estavam lá.
+
+A conta nova do RUSC (`1582424536794403`, 27/08) também tinha ficado de fora de
+`BTAG_POR_CONTA` e `CONTAS`; entrou junto neste commit.
+
 ## RUSC migra pra conta dedicada (27/08)
 
 RUSC rodava DENTRO da conta compartilhada "CA GABRIEL EXPERTS"

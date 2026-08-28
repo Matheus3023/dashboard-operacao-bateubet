@@ -6,9 +6,9 @@
     "semantic_hash": "0e642d08f5dda56a4eb29a5e6dcbfbe9"
   },
   "api/conta.js": {
-    "mtime": 1787840928.4862983,
-    "seen": 1787841017.2681441,
-    "ast_hash": "35a1f4b484966ea346589bc72a5d704b",
+    "mtime": 1787893614.1789877,
+    "seen": 1787893636.963448,
+    "ast_hash": "71ee8529ab4b8fbbd786a94c0f175345",
     "semantic_hash": ""
   },
   "api/coorte.js": {
@@ -48,9 +48,9 @@
     "semantic_hash": "a50a7d49204884a94e52c83765871c7f"
   },
   "index.html": {
-    "mtime": 1787857392.508979,
-    "seen": 1787857425.731631,
-    "ast_hash": "4ccce831f8c94e87526c2f8f50951569",
+    "mtime": 1787893614.1815217,
+    "seen": 1787893636.9634519,
+    "ast_hash": "e99450fb3e2f2ef74c5e463815d90de8",
     "semantic_hash": ""
   },
   "apple-touch-icon.png": {
@@ -114,9 +114,9 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1787857411.5766263,
-    "seen": 1787857425.731628,
-    "ast_hash": "67820e8d954a7589c63fe8a6f53cebb1",
+    "mtime": 1787893622.1965256,
+    "seen": 1787893636.963451,
+    "ast_hash": "bb413756408e362f81ac2b1cc9924146",
     "semantic_hash": ""
   },
   "api/auth/callback.js": {

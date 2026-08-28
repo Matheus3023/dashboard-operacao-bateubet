@@ -1,7 +1,7 @@
 # Graph Report - dashboard-operacao-bateubet  (2026-08-28)
 
 ## Corpus Check
-- 15 files · ~126,353 words
+- 15 files · ~126,346 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
