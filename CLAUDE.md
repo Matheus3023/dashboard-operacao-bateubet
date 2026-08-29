@@ -338,6 +338,36 @@ com `safras: []` e `ainda_nao_calculado: true` até a vez dele chegar — o
 front trata isso como "sem dado ainda", não como erro. Rodei algumas
 execuções manuais em 26/08 pra adiantar a semeadura; o resto enche sozinho.
 
+## Relatório das 10h ficou mudo em 28/08 (dois bugs somados)
+
+O cron das 10h de 28/08 (execução `63070`) durou **0,1s** e não enviou nada.
+Parou no primeiro nó depois das credenciais.
+
+**Bug 1, o que matou o envio.** O nó `Ler Cache TAP` (data table
+`report_tap_cache`, fallback de quando a TAP não responde) foi posto no
+CAMINHO CRÍTICO, entre `Credenciais` e `Calcular datas`. Nó de data table sem
+`alwaysOutputData` que não acha linha nenhuma devolve ZERO itens, e no n8n
+zero item para o fluxo ali, em silêncio, com status "success". Como a tabela
+só é povoada no FIM do próprio fluxo (`Salvar Cache TAP`), o desenho nasceu
+travado: sem cache o fluxo morre, e morrendo nunca grava cache. Corrigido em
+29/08 ligando `alwaysOutputData` no nó: sem cache ele emite um item vazio, o
+fluxo segue com a leitura ao vivo e a primeira execução boa popula a tabela.
+
+**Bug 2, a leva de 27/08 nunca entrou em vigor.** Os nós `Somar Meta por
+expert`, `Somar TAP e finalizar`, `Formatar mensagem` e `Montar experts` estão
+com DOIS códigos: o que roda, em `parameters.jsCode`, e outro em
+`parameters.parameters.jsCode`, que o n8n IGNORA (o Code node lê
+`getNodeParameter('jsCode')`, o objeto aninhado é lixo). Toda a leva de 27/08
+(flag `meta_falhou`, uso do cache da TAP, avisos honestos de "Meta indisponível"
+em vez de "sem campanha ativa", e a remoção do EDERSON do relatório) foi
+gravada no campo aninhado e está **inerte**. Provável causa: `updateNodeParameters`
+chamado com `{parameters: {jsCode: ...}}` em vez de `{jsCode: ...}`.
+
+**Regra ao editar node de Code deste n8n via MCP:** usar `setNodeParameter` com
+`path: "/jsCode"`, e depois CONFERIR que o valor foi parar em `parameters.jsCode`
+e não em `parameters.parameters.jsCode`. Um `appliedOperations: 1` de sucesso
+não garante que o código vai executar.
+
 ## DEKO ganha conta dedicada (28/08)
 
 Pedido do gestor: a conta `2891168717909636` (dedicada, criada em 28/08, cinco
