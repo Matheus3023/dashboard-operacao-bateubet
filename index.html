@@ -13023,7 +13023,7 @@ function pintarDiarioGbd(esc) {
              ' · hoje não entra em nenhuma conta (dia em andamento).';
   if (a.n < espA || b.n < espB) {
     nota += ' A comparação usa ' + a.n + ' de ' + espA + ' dias desta janela e ' +
-            b.n + ' de ' + espB + ' da anterior — o resto ainda não existe no histórico.';
+            b.n + ' de ' + espB + ' da anterior: o resto ainda não existe no histórico.';
   }
   $('[data-gbd-cobertura]', sec).textContent = nota;
 }
