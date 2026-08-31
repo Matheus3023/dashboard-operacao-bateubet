@@ -2638,6 +2638,70 @@ html.rolado .brand__logo{height:19px}
 .mtz__pb--ruim{background:rgba(239,68,68,.16);color:#f87171}
 .mtz__pb--na{background:var(--surface);color:var(--txt-3)}
 
+/* ── DIA A DIA DE UM EXPERT (hoje: Gregório Big) ─────────────────────────
+   Vive na aba "Por expert", abaixo dos cards. Reaproveita o container .mtz
+   (scroll horizontal + scrollbar da marca) e a tipografia .mtz__tit/__sub/
+   __nota, porque é a mesma família de leitura: uma grade de números com
+   cabeçalho fixo. O que é próprio daqui: a faixa de semana e os tiles de
+   comparação. */
+.gbd{margin-top:26px}
+.gbd__card{
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:14px;padding:16px 18px;
+}
+.gbd__sem{
+  list-style:none;margin:0 0 16px;padding:0;
+  display:grid;gap:10px;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+}
+.gbd__met{
+  background:var(--surface-sunk);border:1px solid var(--line-soft);
+  border-radius:10px;padding:10px 12px;min-width:0;
+}
+.gbd__met-lbl{display:block;font-size:.6875rem;color:var(--txt-3);margin-bottom:4px}
+.gbd__met-val{
+  display:block;font-size:1.0625rem;font-weight:660;color:var(--txt-1);
+  font-variant-numeric:tabular-nums;line-height:1.25;
+}
+.gbd__met-ant{display:block;font-size:.6875rem;color:var(--txt-3);margin-top:3px}
+.gbd__met-var{
+  display:inline-flex;align-items:center;gap:4px;margin-top:6px;
+  font-size:.6875rem;font-weight:640;color:var(--txt-2);
+  font-variant-numeric:tabular-nums;
+}
+.gbd__met-var.is-good{color:var(--good)}
+.gbd__met-var.is-bad{color:var(--bad)}
+/* grade dia a dia: 7 colunas, a primeira (o dia) mais larga e alinhada à
+   esquerda porque é rótulo, não número */
+.gbd__grade{display:grid;min-width:100%;width:max-content;gap:3px;
+  grid-template-columns:104px repeat(6,minmax(96px,1fr))}
+.gbd__c{
+  background:var(--surface-sunk);border-radius:7px;padding:7px 9px;
+  font-size:.8125rem;font-variant-numeric:tabular-nums;
+  text-align:right;white-space:nowrap;color:var(--txt-1);
+}
+.gbd__c--head{
+  background:transparent;color:var(--txt-3);font-size:.6875rem;
+  font-weight:640;text-transform:uppercase;letter-spacing:.04em;padding:4px 9px;
+}
+.gbd__c--dia{text-align:left;color:var(--txt-2);font-weight:600}
+.gbd__c--na{color:var(--txt-3)}
+.gbd__c--good{color:var(--good)}
+.gbd__c--warn{color:var(--warn)}
+.gbd__c--bad{color:var(--bad)}
+.gbd__c--neg{color:var(--bad)}
+/* faixa de semana: ocupa a linha inteira da grade e carrega o subtotal */
+.gbd__faixa{
+  grid-column:1 / -1;margin-top:8px;
+  display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+  padding:7px 9px;border-radius:7px;
+  background:var(--surface-2);border:1px solid var(--line-soft);
+}
+.gbd__faixa:first-child{margin-top:0}
+.gbd__faixa b{font-size:.8125rem;font-weight:660;color:var(--txt-1)}
+.gbd__faixa span{font-size:.75rem;color:var(--txt-3);font-variant-numeric:tabular-nums}
+.gbd__linha--tot .gbd__c{background:var(--surface-2);font-weight:640}
+
 /* ── RODAPÉ ─────────────────────────────────────────────────────────────── */
 .foot{
   margin-top:28px;padding-top:16px;border-top:1px solid var(--line-soft);
@@ -5672,6 +5736,26 @@ body.pnl-aberto{overflow:hidden}
 
     </section>
 
+    <!-- ═══ GREGÓRIO BIG · DIA A DIA ═══
+         Bloco de UM expert só, a pedido (31/08). Fonte: a mesma rota de
+         histórico do painel de análise (?tendencia=<expert>), que passou a
+         devolver 15 dias fechados em vez de 7. Hoje NUNCA entra: dia em
+         andamento sempre parece pior do que é. Some da tela quando o expert
+         não tem histórico no escopo. -->
+    <section class="gbd" data-gbd hidden>
+      <div class="section-head"><h2 class="eyebrow">Gregório Big · dia a dia</h2></div>
+      <div class="gbd__card">
+        <p class="mtz__tit">Semana contra semana</p>
+        <p class="mtz__sub" data-gbd-sub>—</p>
+        <p class="mtz__nota" data-gbd-estado>Buscando o histórico…</p>
+        <div data-gbd-corpo hidden>
+          <ul class="gbd__sem" data-gbd-semana></ul>
+          <div class="mtz" data-gbd-tabela></div>
+          <p class="mtz__nota" data-gbd-cobertura></p>
+        </div>
+      </div>
+    </section>
+
     </div><!-- ══════════ /ABA 2 · POR EXPERT ══════════ -->
 
     <!-- ══════════════════ ABA 3 · METAS (PLANO DE CARREIRA) ══════════════════
@@ -6753,6 +6837,22 @@ body.pnl-aberto{overflow:hidden}
 
       <!-- As outras 20 entidades saem daqui pelo JS, no mesmo molde. -->
 
+    </section>
+
+    <!-- ═══ GREGÓRIO BIG · DIA A DIA ═══ (mesmo bloco do recorte da dupla,
+         aqui lendo o histórico do escopo Geral) -->
+    <section class="gbd" data-gbd hidden>
+      <div class="section-head"><h2 class="eyebrow">Gregório Big · dia a dia</h2></div>
+      <div class="gbd__card">
+        <p class="mtz__tit">Semana contra semana</p>
+        <p class="mtz__sub" data-gbd-sub>—</p>
+        <p class="mtz__nota" data-gbd-estado>Buscando o histórico…</p>
+        <div data-gbd-corpo hidden>
+          <ul class="gbd__sem" data-gbd-semana></ul>
+          <div class="mtz" data-gbd-tabela></div>
+          <p class="mtz__nota" data-gbd-cobertura></p>
+        </div>
+      </div>
     </section>
 
     </div><!-- ══════════ /GERAL · ABA 2 ══════════ -->
@@ -12511,6 +12611,12 @@ function carregar(opts) {
       if (!CL_TRANCADO) buscarLoteTendencia('cl');
       if (d.geral && d.geral.experts) buscarLoteTendencia('geral');
 
+      /* dia a dia do Gregório Big (aba "Por expert"): mesma natureza do lote
+         acima -- série de dias fechados, uma busca por sessão, nenhum pixel
+         da tela depende dela pra existir */
+      if (!CL_TRANCADO) buscarDiarioGbd('cl');
+      if (d.geral && d.geral.experts) buscarDiarioGbd('geral');
+
       /* só o dia corrente se atualiza sozinho */
       agendar(estado.isHoje ? REFRESH_MS : null);
 
@@ -12653,6 +12759,273 @@ function buscarPeriodoAnterior(preset, r) {
     .then(function (resp) { return resp.ok ? resp.json() : null; })
     .then(function (d) { if (id === reqIdAnterior) pintarDeltas(d); })
     .catch(function () { if (id === reqIdAnterior) pintarDeltas(null); });
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   9a-bis. GREGÓRIO BIG · DIA A DIA + SEMANA CONTRA SEMANA  (pedido, 31/08)
+   ══════════════════════════════════════════════════════════════════════════
+   Bloco de UM expert só, dentro da aba "Por expert" dos dois escopos que o
+   têm. Não é uma aba nova nem um card do painel: é a resposta a "como foi
+   cada dia dele e a semana está melhor ou pior que a outra".
+
+   FONTE: a MESMA rota de histórico que o painel de análise já usava
+   (?tendencia=<expert>&escopo=…), alargada no n8n de 7 pra 15 dias fechados
+   (nó "Calcular Tendencia" do workflow "Dashboard Operação - Webhook API").
+   O painel continua cortando em 7 -- nada do que existia mudou de leitura.
+
+   HOJE NUNCA ENTRA. Dia em andamento sempre parece pior do que é, e mistura
+   dia pela metade com dia cheio na mesma coluna.
+
+   SEMANA = SEGUNDA A DOMINGO (mesmo recorte do relatório semanal da Bateu),
+   e a comparação é de TRECHO IGUAL: segunda até ontem contra segunda até o
+   mesmo dia da semana passada. Comparar meia semana com semana cheia daria
+   uma queda inventada toda segunda-feira.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+var GBD_EXPERT = 'GREGORIO BIG';
+var GBD_CACHE  = {};                       /* por escopo: cl | geral         */
+var GBD_DOW    = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+var GBD_COLS   = ['Dia', 'Investido', 'Cadastros', 'FTD', 'CPA', 'Depósito', 'Net PL'];
+/* tom: 'bom' = subir é bom; 'ruim' = subir é ruim (CPA); 'neutro' = investir
+   mais não é bom nem ruim por si só -- mesma polaridade dos tiles-herói. */
+var GBD_MET = [
+  { chave: 'investimento_total', rot: 'Investido',     fmt: brl,     tom: 'neutro' },
+  { chave: 'cadastros',          rot: 'Cadastros',     fmt: inteiro, tom: 'bom' },
+  { chave: 'ftd',                rot: 'FTD',           fmt: inteiro, tom: 'bom' },
+  { chave: 'cpa',                rot: 'Custo por FTD', fmt: brl,     tom: 'ruim' },
+  { chave: 'deposito',           rot: 'Depósito',      fmt: brl,     tom: 'bom' },
+  { chave: 'net_pl',             rot: 'Net PL',        fmt: brl,     tom: 'bom' }
+];
+
+function dowDe(iso) {
+  var p = String(iso).split('-');
+  return GBD_DOW[new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])).getUTCDay()];
+}
+/* segunda-feira da semana do dia informado */
+function segundaDe(iso) {
+  var p = String(iso).split('-');
+  var dow = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])).getUTCDay();  /* 0 = dom */
+  return somaDias(iso, dow === 0 ? -6 : 1 - dow);
+}
+/* as duas janelas comparadas. Segunda-feira é o caso limite: a semana
+   corrente ainda não tem NENHUM dia fechado, então nesse dia a leitura vira
+   semana passada cheia × retrasada cheia -- e o rótulo diz isso, em vez de
+   mostrar uma coluna zerada como se o expert tivesse parado. */
+function janelasSemana() {
+  var hoje = hojeSP(), ontem = somaDias(hoje, -1), segAtual = segundaDe(hoje);
+  if (ontem < segAtual) {
+    var segPas = somaDias(segAtual, -7);
+    return {
+      modo: 'cheias',
+      a: { de: segPas, ate: somaDias(segAtual, -1) },
+      b: { de: somaDias(segPas, -7), ate: somaDias(segPas, -1) }
+    };
+  }
+  var n = diasEntreCliente(segAtual, ontem) + 1;
+  var segAnt = somaDias(segAtual, -7);
+  return {
+    modo: 'trecho',
+    a: { de: segAtual, ate: ontem },
+    b: { de: segAnt,   ate: somaDias(segAnt, n - 1) }
+  };
+}
+/* soma de uma janela. CPA é RECALCULADO (investido ÷ FTD da janela inteira),
+   nunca a média dos CPAs diários: média de razão mente quando os dias têm
+   volumes diferentes. net_pl fica null quando nenhum dia da janela trouxe o
+   campo -- 0 diria "deu zero", null diz "não sei". */
+function somarJanela(dias, de, ate) {
+  var s = { investimento_total: 0, cadastros: 0, ftd: 0, deposito: 0, net_pl: null, n: 0 };
+  (dias || []).forEach(function (d) {
+    if (!d || !d.data || d.data < de || d.data > ate) return;
+    s.n++;
+    if (ehNum(d.investimento_total)) s.investimento_total += d.investimento_total;
+    if (ehNum(d.cadastros))          s.cadastros          += d.cadastros;
+    if (ehNum(d.ftd))                s.ftd                += d.ftd;
+    if (ehNum(d.deposito))           s.deposito           += d.deposito;
+    if (ehNum(d.net_pl))             s.net_pl = (s.net_pl || 0) + d.net_pl;
+  });
+  s.cpa = (s.ftd > 0 && s.investimento_total > 0) ? s.investimento_total / s.ftd : null;
+  return s;
+}
+
+function buscarDiarioGbd(esc, forcar) {
+  var c = GBD_CACHE[esc];
+  /* série de dias fechados não muda durante o dia: uma busca por sessão,
+     igual à tendência. Só 'erro' se refaz. */
+  if (c && !forcar && c.estado !== 'erro') { pintarDiarioGbd(esc); return; }
+
+  GBD_CACHE[esc] = { estado: 'carregando' };
+  pintarDiarioGbd(esc);
+
+  var url = ENDPOINT + '?tendencia=' + encodeURIComponent(GBD_EXPERT) +
+            '&escopo=' + encodeURIComponent(ESCOPO_API[esc] || 'geral');
+  if (esc === 'cl' && CL_TOKEN) url += '&_s=' + CL_NONCE;
+
+  fetch(url, { cache: 'no-store', headers: cabecalhoCl({ accept: 'application/json' }) })
+    .then(function (resp) {
+      return resp.text().then(function (txt) {
+        var json = null;
+        try { json = JSON.parse(txt); } catch (err) {}
+        if (!resp.ok) throw new Error((json && (json.detail || json.error)) || ('HTTP ' + resp.status));
+        return json;
+      });
+    })
+    .then(function (json) {
+      if (!json || !Array.isArray(json.dias)) GBD_CACHE[esc] = { estado: 'sem-endpoint' };
+      else if (!json.dias.length)             GBD_CACHE[esc] = { estado: 'vazio' };
+      else GBD_CACHE[esc] = { estado: 'ok', dias: json.dias.slice() };
+    })
+    .catch(function (err) {
+      GBD_CACHE[esc] = { estado: 'erro', msg: String((err && err.message) || err) };
+    })
+    .then(function () { pintarDiarioGbd(esc); });
+}
+
+function celGbd(txt, classe) {
+  var d = document.createElement('div');
+  d.className = 'gbd__c' + (classe ? ' ' + classe : '');
+  if (txt == null) { d.textContent = '—'; d.classList.add('gbd__c--na'); }
+  else d.textContent = txt;
+  return d;
+}
+/* CPA usa a MESMA régua de faixa do resto do painel (FAIXA_BOA/FAIXA_ALTA),
+   pra um número não ser "bom" aqui e "ruim" no card ao lado */
+function classeCpaGbd(v) {
+  if (!ehNum(v) || v <= 0) return null;
+  var f = faixaChip(v);
+  return f === 'chip--good' ? 'gbd__c--good' : (f === 'chip--warn' ? 'gbd__c--warn' : 'gbd__c--bad');
+}
+function tileGbd(m, a, b) {
+  var li = document.createElement('li');
+  li.className = 'gbd__met';
+  var lbl = document.createElement('span');
+  lbl.className = 'gbd__met-lbl'; lbl.textContent = m.rot;
+  var val = document.createElement('span');
+  val.className = 'gbd__met-val'; val.textContent = m.fmt(a[m.chave]) || '—';
+  var ant = document.createElement('span');
+  ant.className = 'gbd__met-ant'; ant.textContent = 'antes ' + (m.fmt(b[m.chave]) || '—');
+  li.appendChild(lbl); li.appendChild(val); li.appendChild(ant);
+
+  var v = variacao(b[m.chave], a[m.chave]);
+  if (v) {
+    var s = document.createElement('span');
+    s.className = 'gbd__met-var';
+    s.textContent = (v.dir === 'subiu' ? '▲' : (v.dir === 'desceu' ? '▼' : '●')) +
+                    ' ' + pct(Math.abs(v.pct));
+    if (m.tom !== 'neutro' && v.dir !== 'estavel') {
+      s.classList.add((v.dir === 'subiu') === (m.tom === 'bom') ? 'is-good' : 'is-bad');
+    }
+    li.appendChild(s);
+  }
+  return li;
+}
+function faixaSemanaGbd(dias, seg) {
+  var dom = somaDias(seg, 6);
+  var s = somarJanela(dias, seg, dom);
+  var segHoje = segundaDe(hojeSP());
+  var marca = seg === segHoje ? 'Esta semana'
+            : (seg === somaDias(segHoje, -7) ? 'Semana passada'
+            : (seg === somaDias(segHoje, -14) ? 'Semana retrasada' : 'Semana'));
+
+  var f = document.createElement('div');
+  f.className = 'gbd__faixa';
+  var b = document.createElement('b');
+  b.textContent = marca + ' · ' + dataCurta(seg) + ' a ' + dataCurta(dom);
+  var sp = document.createElement('span');
+  sp.textContent = s.n + (s.n === 1 ? ' dia' : ' dias') + ' no histórico · ' +
+    (brl(s.investimento_total) || '—') + ' investido · ' +
+    (inteiro(s.ftd) || '0') + ' FTD · CPA ' + (brl(s.cpa) || '—') + ' · ' +
+    (brl(s.deposito) || '—') + ' em depósito';
+  f.appendChild(b); f.appendChild(sp);
+  return f;
+}
+function gradeGbd(dias) {
+  var g = document.createElement('div');
+  g.className = 'mtz__grade gbd__grade';
+  GBD_COLS.forEach(function (t, i) {
+    g.appendChild(celGbd(t, 'gbd__c--head' + (i === 0 ? ' gbd__c--dia' : '')));
+  });
+
+  /* mais recente em cima: a pergunta de quem abre é "como foi ontem", não
+     "como foi há duas semanas" */
+  var ord = dias.slice().sort(function (a, b) { return a.data < b.data ? 1 : -1; });
+  var semanaCorrente = null;
+
+  ord.forEach(function (d) {
+    var seg = segundaDe(d.data);
+    if (seg !== semanaCorrente) {
+      semanaCorrente = seg;
+      g.appendChild(faixaSemanaGbd(dias, seg));
+    }
+    var cpa = (ehNum(d.custo_por_ftd) && d.custo_por_ftd > 0) ? d.custo_por_ftd : null;
+    g.appendChild(celGbd(dataCurta(d.data) + ' ' + dowDe(d.data), 'gbd__c--dia'));
+    g.appendChild(celGbd(brl(d.investimento_total)));
+    g.appendChild(celGbd(inteiro(d.cadastros)));
+    g.appendChild(celGbd(inteiro(d.ftd)));
+    g.appendChild(celGbd(brl(cpa), classeCpaGbd(cpa)));
+    g.appendChild(celGbd(brl(d.deposito)));
+    g.appendChild(celGbd(brl(d.net_pl), ehNum(d.net_pl) && d.net_pl < 0 ? 'gbd__c--neg' : null));
+  });
+  return g;
+}
+
+function pintarDiarioGbd(esc) {
+  var raiz = esc === 'cl' ? RAIZ_CL : RAIZ_GERAL;
+  var sec = raiz ? $('[data-gbd]', raiz) : null;
+  if (!sec) return;
+
+  var c = GBD_CACHE[esc] || { estado: 'carregando' };
+  var elEstado = $('[data-gbd-estado]', sec);
+  var corpo    = $('[data-gbd-corpo]', sec);
+
+  if (c.estado !== 'ok') {
+    /* sem histórico nenhum (ou endpoint antigo) o bloco SOME: seção vazia com
+       texto de desculpa ocupa espaço e não informa nada */
+    if (c.estado === 'vazio' || c.estado === 'sem-endpoint') { sec.hidden = true; return; }
+    sec.hidden = false;
+    corpo.hidden = true;
+    elEstado.hidden = false;
+    elEstado.textContent = c.estado === 'erro'
+      ? 'Não foi possível carregar o dia a dia' + (c.msg ? ' (' + c.msg + ')' : '') + '.'
+      : 'Buscando o histórico…';
+    return;
+  }
+
+  sec.hidden = false;
+  elEstado.hidden = true;
+  corpo.hidden = false;
+
+  var j = janelasSemana();
+  var a = somarJanela(c.dias, j.a.de, j.a.ate);
+  var b = somarJanela(c.dias, j.b.de, j.b.ate);
+
+  $('[data-gbd-sub]', sec).textContent =
+    (j.modo === 'cheias'
+      ? 'A semana começou hoje, ainda sem dia fechado: comparando as duas últimas semanas cheias'
+      : 'Semana corrente (segunda até ontem) contra o mesmo trecho da semana passada') +
+    ' · ' + dataCurta(j.a.de) + '–' + dataCurta(j.a.ate) +
+    ' vs. ' + dataCurta(j.b.de) + '–' + dataCurta(j.b.ate);
+
+  var ul = $('[data-gbd-semana]', sec);
+  ul.innerHTML = '';
+  GBD_MET.forEach(function (m) { ul.appendChild(tileGbd(m, a, b)); });
+
+  var tab = $('[data-gbd-tabela]', sec);
+  tab.innerHTML = '';
+  tab.appendChild(gradeGbd(c.dias));
+
+  /* cobertura: o histórico começou em 07/08 e um dia pode faltar. Dizer de
+     quantos dias a comparação é feita evita ler queda onde só falta dado. */
+  var espA = diasEntreCliente(j.a.de, j.a.ate) + 1;
+  var espB = diasEntreCliente(j.b.de, j.b.ate) + 1;
+  var nota = 'Histórico de ' + dataCurta(c.dias[0].data) + ' a ' +
+             dataCurta(c.dias[c.dias.length - 1].data) +
+             ' · hoje não entra em nenhuma conta (dia em andamento).';
+  if (a.n < espA || b.n < espB) {
+    nota += ' A comparação usa ' + a.n + ' de ' + espA + ' dias desta janela e ' +
+            b.n + ' de ' + espB + ' da anterior — o resto ainda não existe no histórico.';
+  }
+  $('[data-gbd-cobertura]', sec).textContent = nota;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════

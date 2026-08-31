@@ -454,6 +454,46 @@ depois de editar node com `update_workflow`, sempre `unpublish` + `publish`
 antes de confiar que a próxima execução vai usar o código novo — só
 `publish` sobre um workflow já ativo não é suficiente aqui.
 
+## Gregório Big · dia a dia + semana contra semana (31/08)
+
+Pedido do Costa: na aba **Por expert**, quebrar o Gregório Big por dia e
+comparar a semana atual com a anterior. Decisões fechadas com ele antes de
+codar: bloco novo NA ABA (não dentro do painel do expert), semana **seg→dom
+com trecho igual**, e **só o Gregório Big** (não é um recurso genérico de
+todo expert).
+
+- **Dado**: reaproveita a rota que já existia (`?tendencia=<expert>&escopo=…`),
+  sem endpoint novo. O que mudou no n8n (`Dashboard Operação - Webhook API`):
+  nó `Buscar Historico Expert` de `limit: 8` → `20` e nó `Calcular Tendencia`
+  de `.slice(-7)` → `.slice(-15)`. Pior caso da comparação (domingo) precisa
+  de segunda-passada até ontem = 13 dias; 15 dá folga. A rota EM LOTE
+  (`?tendencia=*`, nó `Calcular Tendencias Lote`) ficou intocada em 7 dias, e
+  o front continua cortando `slice(-7)` na tendência do painel do expert —
+  nada do que já existia mudou de leitura. `update_workflow` +
+  `publish_workflow` (conferido que o código caiu em `parameters.jsCode`, não
+  no aninhado inerte) e validado com chamada real ao webhook: 15 dias, 16/08
+  a 30/08, nos dois escopos.
+- **Front** (`index.html`, seção JS "9a-bis"): `buscarDiarioGbd()` /
+  `pintarDiarioGbd()` + `janelasSemana()` / `somarJanela()` / `segundaDe()`.
+  Seção `[data-gbd]` existe nos dois escopos que têm o expert (C&L e Geral),
+  logo abaixo da lista de cards. Nasce `hidden` e só aparece quando a busca
+  começa — com o recorte da dupla trancado a chamada nem sai, então a seção
+  simplesmente não existe na tela (nada de "Buscando…" eterno).
+- **Regras que o bloco respeita** (as mesmas do resto do painel):
+  hoje nunca entra (dia em andamento); CPA da semana é RECALCULADO
+  (investido ÷ FTD da janela), nunca média dos CPAs diários; `net_pl` some
+  como `null` quando nenhum dia trouxe o campo (0 diria "deu zero");
+  polaridade dos selos igual à dos tiles-herói (investido neutro, CPA subir é
+  ruim, o resto subir é bom); cor do CPA pela faixa oficial
+  (`FAIXA_BOA`/`FAIXA_ALTA`), pra não ser "bom" aqui e "ruim" no card ao lado.
+- **Segunda-feira é o caso limite**: a semana corrente ainda não tem nenhum
+  dia fechado, então nesse dia a leitura vira semana passada CHEIA ×
+  retrasada cheia, com o rótulo dizendo isso. Foi assim que o bloco nasceu
+  (31/08 caiu numa segunda) — não confundir com bug.
+- **Cobertura honesta**: o rodapé do bloco diz de quantos dias cada janela é
+  feita quando falta dia no histórico (que só existe desde ~07/08), pra
+  ninguém ler queda onde só falta dado.
+
 ## Workflow deste projeto (instrução do Costa, 26/08)
 
 - Toda mensagem do Costa referente a este projeto: antes de responder ou editar, rodar `graphify query "<pergunta derivada da mensagem>"` pra entender o estado atual do projeto pelo grafo. Depois de qualquer edição de código, rodar `graphify update .` (o hook post-commit já cobre o momento do commit, mas atualize também fora dele quando editar sem commitar na hora).
