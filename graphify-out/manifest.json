@@ -48,9 +48,9 @@
     "semantic_hash": "a50a7d49204884a94e52c83765871c7f"
   },
   "index.html": {
-    "mtime": 1788220798.4629655,
-    "seen": 1788220910.446389,
-    "ast_hash": "32fafb915224648bbca8a54e5ab97646",
+    "mtime": 1788221712.6660252,
+    "seen": 1788221990.181607,
+    "ast_hash": "86bdd2f17019cb6b902df866b1983c7c",
     "semantic_hash": ""
   },
   "apple-touch-icon.png": {
@@ -114,9 +114,9 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1788220910.1300793,
-    "seen": 1788220910.446388,
-    "ast_hash": "b267ff56fc4d68b8ec50ef363372d940",
+    "mtime": 1788221989.8476899,
+    "seen": 1788221990.1816058,
+    "ast_hash": "a4ca0821d73f993e303273cbb200e6c3",
     "semantic_hash": ""
   },
   "api/auth/callback.js": {

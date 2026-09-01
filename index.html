@@ -4295,6 +4295,20 @@ body.pnl-aberto{overflow:hidden}
       (<span data-field="atualizado_em" data-tz="America/Sao_Paulo">12:03</span>). Tentando de novo…
     </div>
 
+    <!-- TAP RECUSOU A LEITURA. A TAP responde HTTP 200 mesmo quando nega
+         (rate limit ou chave trocada), e antes disso virava funil ZERADO na
+         tela, indistinguível de "não teve cadastro" — foi o que o operador
+         viu numa call com o cliente. Agora o back marca `tap_indisponivel` e
+         a tela diz que o funil não veio, em vez de mostrar zero com cara de
+         resultado. Investimento (Meta) continua válido: quem falhou foi a
+         TAP. -->
+    <div class="errbar errbar--warn" id="tap-banner" hidden role="status">
+      A TAP não respondeu nesta leitura, então <b>cadastros, FTD, depósito e
+      net PL podem estar zerados ou incompletos</b> abaixo. O investimento da
+      Meta não é afetado. Esta leitura não foi guardada em cache: recarregue
+      em alguns minutos.
+    </div>
+
     <!-- PERÍODO DIVERGENTE. Não é erro de rede: é a API devolvendo um período
          diferente do pedido (hoje ela devolve sempre "hoje", veja o contrato no
          filtro). Exibir sempre que resposta.periodo != filtro escolhido.
@@ -12643,6 +12657,9 @@ function carregar(opts) {
       if (estado.painel.aberto) pintarPainel();
 
       $('#erro-banner').hidden = true;
+      /* funil da TAP recusado nesta leitura (rate limit / chave): o back
+         marca, a tela avisa. Sem isso o zero passa por resultado. */
+      $('#tap-banner').hidden = (d.tap_indisponivel !== true);
       $('#boot').hidden = true;
       ROOT.setAttribute('data-state', 'pronto');
       /* a espera acabou: sai o skeleton da primeira carga e NUNCA mais volta.

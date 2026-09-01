@@ -733,6 +733,18 @@
       "source_location": "L371"
     },
     {
+      "id": "claude_filtro_de_data_lento_tap_zerada_causa_raiz_e_corre\u00e7\u00e3o_31_08",
+      "label": "Filtro de data lento + TAP zerada: causa raiz e corre\u00e7\u00e3o (31/08)",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "CLAUDE.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "filtro de data lento + tap zerada: causa raiz e correcao (31/08)",
+      "source_file": "CLAUDE.md",
+      "source_location": "L505"
+    },
+    {
       "id": "claude_graphify",
       "label": "graphify",
       "_origin": "ast",
@@ -862,7 +874,7 @@
       "node_kind": "heading",
       "norm_label": "workflow deste projeto (instrucao do costa, 26/08)",
       "source_file": "CLAUDE.md",
-      "source_location": "L505"
+      "source_location": "L550"
     },
     {
       "id": "middleware",
@@ -2688,13 +2700,24 @@
     },
     {
       "source": "claude",
-      "target": "claude_workflow_deste_projeto_instru\u00e7\u00e3o_do_costa_26_08",
+      "target": "claude_filtro_de_data_lento_tap_zerada_causa_raiz_e_corre\u00e7\u00e3o_31_08",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "CLAUDE.md",
       "source_location": "L505",
+      "weight": 1.0
+    },
+    {
+      "source": "claude",
+      "target": "claude_workflow_deste_projeto_instru\u00e7\u00e3o_do_costa_26_08",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CLAUDE.md",
+      "source_location": "L550",
       "weight": 1.0
     },
     {
@@ -3349,5 +3372,5 @@
       "source_file": "index.html"
     }
   ],
-  "built_at_commit": "2121690eeccd544688b8a81c000566a503a45a52"
+  "built_at_commit": "1dd1a9ad302b127bddd3955ce364bf1c968ff1a0"
 }

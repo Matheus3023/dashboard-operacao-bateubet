@@ -502,6 +502,51 @@ todo expert).
   feita quando falta dia no histórico (que só existe desde ~07/08), pra
   ninguém ler queda onde só falta dado.
 
+## Filtro de data lento + TAP zerada: causa raiz e correção (31/08)
+
+Reclamação do Costa depois de uma call com o Gregório: "o filtro por data
+demora e às vezes o dado da TAP vem zerado". Os dois sintomas tinham a MESMA
+causa raiz, e não era lentidão de rede.
+
+**Medido antes de mexer**: `hoje` respondia em 0,45s (cache), mas `7d` e
+`mês` levavam 36-40s **toda vez**, inclusive na segunda chamada seguida. Ou
+seja, o cache de período não estava gravando nunca.
+
+**Causa raiz**: o nó `Vale cachear?` (Webhook API) reprovava o payload por
+uma heurística — "expert com investimento > 0 e funil todo zerado é suspeito
+de leitura ruim". Com 40 entidades no Geral, basta UM expert legitimamente
+sem cadastro no período pra reprovar tudo. Na leitura auditada era o
+**JUNIOR SANTANA** (R$ 382 investidos, funil 0 real). Consequências em
+cadeia: nenhum período era cacheado → toda consulta com filtro rodava ao
+vivo (35-40s) → e o aquecedor de 10 em 10 min também rodava ao vivo e
+**queimava cota da TAP à toa**, o que aumenta a chance do `errCode:3 Too
+many requests` — o tal "dado zerado". Um problema alimentava o outro.
+
+**Correção (a mesma nos dois workflows)**: a falha da TAP virou sinal
+EXPLÍCITO em vez de palpite. `Montar JSON final` lê a resposta crua dos nós
+`TAP Insights` e `TAP Insights Geral` (`tapRecusou()`: sem `data` array, ou
+com `errCode`/`error`, é recusa — lembrando que a TAP recusa com HTTP 200) e
+publica `tap_indisponivel` no payload.
+
+- **Webhook API**: `Vale cachear?` agora reprova por `tap_indisponivel ===
+  true` (e mantém `invOk`/`funilOk`/`investimento_pendente`, que são sinais
+  explícitos). A heurística do "expert com verba e funil zerado" saiu.
+  **Resultado medido**: 7d caiu de 35s para **0,66s** na segunda chamada.
+- **Refresh Cache**: nó novo `TAP respondeu?` entre `Adicionar Google` e
+  (`Salvar Cache`, `Preparar Historico`). Esse workflow roda a cada 2 min e
+  grava a linha do dia em `dashboard_historico` — que é a fonte do dia a dia
+  e do comparativo de semana do painel. Uma leitura recusada sobrescrevia o
+  dia com ZERO, em silêncio. Agora, sem leitura boa, não grava: o dado
+  anterior fica de pé.
+- **Front**: banner `#tap-banner` quando `tap_indisponivel` vem true — a tela
+  diz que o funil não veio em vez de mostrar zero com cara de resultado
+  (investimento da Meta segue válido, quem falhou foi a TAP).
+
+**Regra que fica**: guarda de qualidade de dado não se faz por heurística
+sobre o resultado ("esse número parece estranho"), e sim pelo status da
+leitura que o produziu. Heurística sobre resultado tem falso positivo, e
+falso positivo aqui custou 35s por consulta e cota de API todo dia.
+
 ## Workflow deste projeto (instrução do Costa, 26/08)
 
 - Toda mensagem do Costa referente a este projeto: antes de responder ou editar, rodar `graphify query "<pergunta derivada da mensagem>"` pra entender o estado atual do projeto pelo grafo. Depois de qualquer edição de código, rodar `graphify update .` (o hook post-commit já cobre o momento do commit, mas atualize também fora dele quando editar sem commitar na hora).
