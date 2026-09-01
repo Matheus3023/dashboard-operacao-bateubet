@@ -1,16 +1,16 @@
-# Graph Report - dashboard-operacao-bateubet  (2026-08-29)
+# Graph Report - dashboard-operacao-bateubet  (2026-08-31)
 
 ## Corpus Check
-- 15 files · ~126,647 words
+- 15 files · ~129,089 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 123 nodes · 153 edges · 17 communities (12 shown, 5 thin omitted)
+- 124 nodes · 154 edges · 17 communities (12 shown, 5 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 2 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `03466bec`
+- Built from commit: `94842b92`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -95,8 +95,8 @@ Cohesion: 0.83
 Nodes (3): entregar(), entregarComTrava(), numeroOuZero()
 
 ### Community 10 - "CLAUDE.md"
-Cohesion: 0.15
-Nodes (12): ✅ Coorte de FTD migrada pra tabela pré-calculada (26/08), DEKO ganha conta dedicada (28/08), graphify, Identidade visual: migração pra Estratégia de Marca (26/08), Login Google (26/08), QA de preview com login Google (26/08), Redesign de BI (26/08, em andamento por fase), Relatório das 10h ficou mudo em 28/08 (dois bugs somados) (+4 more)
+Cohesion: 0.14
+Nodes (13): ✅ Coorte de FTD migrada pra tabela pré-calculada (26/08), DEKO ganha conta dedicada (28/08), graphify, Gregório Big · dia a dia + semana contra semana (31/08), Identidade visual: migração pra Estratégia de Marca (26/08), Login Google (26/08), QA de preview com login Google (26/08), Redesign de BI (26/08, em andamento por fase) (+5 more)
 
 ### Community 11 - "middleware.js"
 Cohesion: 0.43
@@ -111,7 +111,7 @@ Cohesion: 0.67
 Nodes (4): ehDestravarBarato(), moeda(), vereditoConta(), vereditoLinha()
 
 ## Knowledge Gaps
-- **34 isolated node(s):** `crypto`, `crypto`, `crypto`, `crypto`, `crypto` (+29 more)
+- **35 isolated node(s):** `crypto`, `crypto`, `crypto`, `crypto`, `crypto` (+30 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **5 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -119,8 +119,10 @@ Nodes (4): ehDestravarBarato(), moeda(), vereditoConta(), vereditoLinha()
 _Questions this graph is uniquely positioned to answer:_
 
 - **What connects `crypto`, `crypto`, `crypto` to the rest of the system?**
-  _34 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _35 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `index.html · Painel Operação ao vivo` be split into smaller, more focused modules?**
   _Cohesion score 0.13405797101449277 - nodes in this community are weakly interconnected._
 - **Should `conta.js` be split into smaller, more focused modules?**
   _Cohesion score 0.13333333333333333 - nodes in this community are weakly interconnected._
+- **Should `CLAUDE.md` be split into smaller, more focused modules?**
+  _Cohesion score 0.14285714285714285 - nodes in this community are weakly interconnected._

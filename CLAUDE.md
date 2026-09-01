@@ -490,6 +490,14 @@ todo expert).
   dia fechado, então nesse dia a leitura vira semana passada CHEIA ×
   retrasada cheia, com o rótulo dizendo isso. Foi assim que o bloco nasceu
   (31/08 caiu numa segunda) — não confundir com bug.
+- **Também dentro do painel do expert (31/08, mesmo dia)**: o operador clicou
+  no card do Gregório procurando a comparação e não achou, porque o bloco só
+  existia na aba. O MESMO markup virou o card `#pnl-gbd` do painel de análise,
+  pintado pela mesma função (`pintarGbdEm`), então os dois nunca divergem.
+  `pintarGbdPainel()` só mostra o card quando o painel aberto é o do
+  `GBD_EXPERT` e no escopo dele; painel de outro expert nunca mostra número do
+  Gregório. Lição: onde o operador PROCURA vale mais que onde a informação
+  "cabe" na arquitetura da tela.
 - **Cobertura honesta**: o rodapé do bloco diz de quantos dias cada janela é
   feita quando falta dia no histórico (que só existe desde ~07/08), pra
   ninguém ler queda onde só falta dado.

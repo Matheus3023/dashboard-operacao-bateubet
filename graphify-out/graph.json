@@ -862,7 +862,7 @@
       "node_kind": "heading",
       "norm_label": "workflow deste projeto (instrucao do costa, 26/08)",
       "source_file": "CLAUDE.md",
-      "source_location": "L497"
+      "source_location": "L505"
     },
     {
       "id": "middleware",
@@ -2694,7 +2694,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "CLAUDE.md",
-      "source_location": "L497",
+      "source_location": "L505",
       "weight": 1.0
     },
     {
@@ -3349,5 +3349,5 @@
       "source_file": "index.html"
     }
   ],
-  "built_at_commit": "94842b926fbaed73dbdde3848fe41ee1eaa5fa54"
+  "built_at_commit": "2121690eeccd544688b8a81c000566a503a45a52"
 }
