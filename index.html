@@ -2709,6 +2709,12 @@ html.rolado .brand__logo{height:19px}
 .gbd-pnl .gbd__met-val{font-size:.9375rem}
 .gbd-pnl .gbd__grade{grid-template-columns:96px repeat(6,minmax(88px,1fr))}
 .gbd-pnl .gbd__faixa{flex-direction:column;gap:2px}
+/* seletor de recorte: reaproveita o segmented control da matriz de safra
+   (.mtz__gran), que já é o padrão do painel pra "duas leituras do mesmo
+   dado" */
+.gbd__topo{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.gbd__modos{flex:none}
+.gbd-pnl .gbd__modos{margin:0 0 10px}
 
 /* ── RODAPÉ ─────────────────────────────────────────────────────────────── */
 .foot{
@@ -5753,7 +5759,13 @@ body.pnl-aberto{overflow:hidden}
     <section class="gbd" data-gbd hidden>
       <div class="section-head"><h2 class="eyebrow">Gregório Big · dia a dia</h2></div>
       <div class="gbd__card">
-        <p class="mtz__tit">Semana contra semana</p>
+        <div class="gbd__topo">
+          <p class="mtz__tit">Semana contra semana</p>
+        <div class="mtz__gran gbd__modos" role="group" aria-label="Recorte da comparação">
+          <button type="button" data-gbd-modo="fechadas" aria-pressed="true">Semanas fechadas</button>
+          <button type="button" data-gbd-modo="curso" aria-pressed="false">Semana em curso</button>
+        </div>
+        </div>
         <p class="mtz__sub" data-gbd-sub>—</p>
         <p class="mtz__nota" data-gbd-estado>Buscando o histórico…</p>
         <div data-gbd-corpo hidden>
@@ -6852,7 +6864,13 @@ body.pnl-aberto{overflow:hidden}
     <section class="gbd" data-gbd hidden>
       <div class="section-head"><h2 class="eyebrow">Gregório Big · dia a dia</h2></div>
       <div class="gbd__card">
-        <p class="mtz__tit">Semana contra semana</p>
+        <div class="gbd__topo">
+          <p class="mtz__tit">Semana contra semana</p>
+        <div class="mtz__gran gbd__modos" role="group" aria-label="Recorte da comparação">
+          <button type="button" data-gbd-modo="fechadas" aria-pressed="true">Semanas fechadas</button>
+          <button type="button" data-gbd-modo="curso" aria-pressed="false">Semana em curso</button>
+        </div>
+        </div>
         <p class="mtz__sub" data-gbd-sub>—</p>
         <p class="mtz__nota" data-gbd-estado>Buscando o histórico…</p>
         <div data-gbd-corpo hidden>
@@ -7307,6 +7325,10 @@ body.pnl-aberto{overflow:hidden}
           Semana contra semana
           <small>dia a dia dos últimos dias fechados · hoje nunca entra</small>
         </h3>
+        <div class="mtz__gran gbd__modos" role="group" aria-label="Recorte da comparação">
+          <button type="button" data-gbd-modo="fechadas" aria-pressed="true">Semanas fechadas</button>
+          <button type="button" data-gbd-modo="curso" aria-pressed="false">Semana em curso</button>
+        </div>
         <p class="mtz__sub" data-gbd-sub>—</p>
         <p class="mtz__nota" data-gbd-estado>Buscando o histórico…</p>
         <div data-gbd-corpo hidden>
@@ -12810,6 +12832,10 @@ function buscarPeriodoAnterior(preset, r) {
 
 var GBD_EXPERT = 'GREGORIO BIG';
 var GBD_CACHE  = {};                       /* por escopo: cl | geral         */
+/* 'fechadas' (padrão) = semana passada × retrasada, as duas inteiras. É a
+   pergunta do operador: "o que eu mudei na semana passada deu resultado?".
+   'curso' = semana em andamento contra o mesmo trecho da anterior. */
+var GBD_MODO   = 'fechadas';
 var GBD_DOW    = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 var GBD_COLS   = ['Dia', 'Investido', 'Cadastros', 'FTD', 'CPA', 'Depósito', 'Net PL'];
 /* tom: 'bom' = subir é bom; 'ruim' = subir é ruim (CPA); 'neutro' = investir
@@ -12833,26 +12859,36 @@ function segundaDe(iso) {
   var dow = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])).getUTCDay();  /* 0 = dom */
   return somaDias(iso, dow === 0 ? -6 : 1 - dow);
 }
-/* as duas janelas comparadas. Segunda-feira é o caso limite: a semana
-   corrente ainda não tem NENHUM dia fechado, então nesse dia a leitura vira
-   semana passada cheia × retrasada cheia -- e o rótulo diz isso, em vez de
-   mostrar uma coluna zerada como se o expert tivesse parado. */
-function janelasSemana() {
+/* AS DUAS JANELAS COMPARADAS, em dois modos:
+
+   'fechadas' (PADRÃO, pedido do operador): semana passada INTEIRA contra a
+   retrasada INTEIRA, as duas seg→dom completas. É a leitura que responde "a
+   mudança que eu fiz na operação deu resultado?" -- semana cheia contra
+   semana cheia, sem dia pela metade puxando o número pra baixo.
+
+   'curso': semana corrente (segunda até ontem) contra o MESMO TRECHO da
+   semana passada, pra acompanhar no meio do caminho. Comparar meia semana
+   com semana cheia daria uma queda inventada, por isso o trecho é igual dos
+   dois lados. Na segunda-feira esse modo não tem nenhum dia fechado, e aí a
+   tela diz isso em vez de mostrar coluna zerada. */
+function janelasSemana(modo) {
   var hoje = hojeSP(), ontem = somaDias(hoje, -1), segAtual = segundaDe(hoje);
-  if (ontem < segAtual) {
-    var segPas = somaDias(segAtual, -7);
+  var segPas = somaDias(segAtual, -7);
+
+  if (modo !== 'curso') {
     return {
-      modo: 'cheias',
+      modo: 'fechadas',
       a: { de: segPas, ate: somaDias(segAtual, -1) },
       b: { de: somaDias(segPas, -7), ate: somaDias(segPas, -1) }
     };
   }
+  if (ontem < segAtual) return { modo: 'curso', vazio: true };
+
   var n = diasEntreCliente(segAtual, ontem) + 1;
-  var segAnt = somaDias(segAtual, -7);
   return {
-    modo: 'trecho',
+    modo: 'curso',
     a: { de: segAtual, ate: ontem },
-    b: { de: segAnt,   ate: somaDias(segAnt, n - 1) }
+    b: { de: segPas,   ate: somaDias(segPas, n - 1) }
   };
 }
 /* soma de uma janela. CPA é RECALCULADO (investido ÷ FTD da janela inteira),
@@ -13022,38 +13058,74 @@ function pintarGbdEm(sec, c) {
   elEstado.hidden = true;
   corpo.hidden = false;
 
-  var j = janelasSemana();
+  /* o botão do modo escolhido fica marcado nos DOIS lugares onde o bloco
+     existe (aba e painel), senão trocar num deles deixaria o outro mentindo */
+  $$('[data-gbd-modo]', sec).forEach(function (b) {
+    b.setAttribute('aria-pressed', b.getAttribute('data-gbd-modo') === GBD_MODO ? 'true' : 'false');
+  });
+
+  var ul = $('[data-gbd-semana]', sec);
+  ul.innerHTML = '';
+
+  var j = janelasSemana(GBD_MODO);
+  if (j.vazio) {
+    /* segunda-feira no modo "em curso": não existe dia fechado nesta semana.
+       Dizer isso vale mais que somar zero com zero. */
+    $('[data-gbd-sub]', sec).textContent =
+      'A semana começou hoje e ainda não tem nenhum dia fechado. ' +
+      'Use "Semanas fechadas" pra ver a semana passada contra a retrasada.';
+    montarTabelaGbd(sec, c);
+    return;
+  }
+
   var a = somarJanela(c.dias, j.a.de, j.a.ate);
   var b = somarJanela(c.dias, j.b.de, j.b.ate);
 
   $('[data-gbd-sub]', sec).textContent =
-    (j.modo === 'cheias'
-      ? 'A semana começou hoje, ainda sem dia fechado: comparando as duas últimas semanas cheias'
-      : 'Semana corrente (segunda até ontem) contra o mesmo trecho da semana passada') +
+    (j.modo === 'fechadas'
+      ? 'Semana passada inteira contra a retrasada inteira, seg a dom fechadas'
+      : 'Semana em curso (segunda até ontem) contra o mesmo trecho da semana passada') +
     ' · ' + dataCurta(j.a.de) + '–' + dataCurta(j.a.ate) +
     ' vs. ' + dataCurta(j.b.de) + '–' + dataCurta(j.b.ate);
 
-  var ul = $('[data-gbd-semana]', sec);
-  ul.innerHTML = '';
   GBD_MET.forEach(function (m) { ul.appendChild(tileGbd(m, a, b)); });
 
+  montarTabelaGbd(sec, c, j, a, b);
+}
+
+/* tabela dia a dia + nota de cobertura. Separada porque o modo "em curso" na
+   segunda-feira não tem comparação nenhuma pra mostrar, mas o dia a dia
+   continua valendo. */
+function montarTabelaGbd(sec, c, j, a, b) {
   var tab = $('[data-gbd-tabela]', sec);
   tab.innerHTML = '';
   tab.appendChild(gradeGbd(c.dias));
 
   /* cobertura: o histórico começou em 07/08 e um dia pode faltar. Dizer de
      quantos dias a comparação é feita evita ler queda onde só falta dado. */
-  var espA = diasEntreCliente(j.a.de, j.a.ate) + 1;
-  var espB = diasEntreCliente(j.b.de, j.b.ate) + 1;
   var nota = 'Histórico de ' + dataCurta(c.dias[0].data) + ' a ' +
              dataCurta(c.dias[c.dias.length - 1].data) +
              ' · hoje não entra em nenhuma conta (dia em andamento).';
-  if (a.n < espA || b.n < espB) {
-    nota += ' A comparação usa ' + a.n + ' de ' + espA + ' dias desta janela e ' +
-            b.n + ' de ' + espB + ' da anterior: o resto ainda não existe no histórico.';
+  if (j && !j.vazio) {
+    var espA = diasEntreCliente(j.a.de, j.a.ate) + 1;
+    var espB = diasEntreCliente(j.b.de, j.b.ate) + 1;
+    if (a.n < espA || b.n < espB) {
+      nota += ' A comparação usa ' + a.n + ' de ' + espA + ' dias desta janela e ' +
+              b.n + ' de ' + espB + ' da anterior: o resto ainda não existe no histórico.';
+    }
   }
   $('[data-gbd-cobertura]', sec).textContent = nota;
 }
+
+/* troca de modo: um clique repinta os DOIS lugares (aba e painel) */
+document.addEventListener('click', function (ev) {
+  var b = ev.target.closest ? ev.target.closest('[data-gbd-modo]') : null;
+  if (!b) return;
+  GBD_MODO = b.getAttribute('data-gbd-modo') === 'curso' ? 'curso' : 'fechadas';
+  ['cl', 'geral'].forEach(function (esc) {
+    if (GBD_CACHE[esc]) pintarDiarioGbd(esc);
+  });
+});
 
 function pintarDiarioGbd(esc) {
   var raiz = esc === 'cl' ? RAIZ_CL : RAIZ_GERAL;
