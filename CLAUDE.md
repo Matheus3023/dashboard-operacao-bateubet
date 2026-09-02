@@ -547,6 +547,66 @@ sobre o resultado ("esse número parece estranho"), e sim pelo status da
 leitura que o produziu. Heurística sobre resultado tem falso positivo, e
 falso positivo aqui custou 35s por consulta e cota de API todo dia.
 
+## ✅ Safra sumida pra parte dos experts: 3 causas no n8n (02/09)
+
+Sintoma: aba Safra e card de safra do expert vazios pra vários experts
+(TALYSON, RUSC, DANIEL100X no Costa e Lobão; os 8 cards EX- do Pedro Junior,
+ICARO, GEGE ROLETA, HENRIQUE 500K, GIOVANNI ROLETA no Geral), e os meses
+fechados parados em 27/08. Nada no repo: tudo no workflow
+`Dashboard Operação - Safra` (`qfPu6Ldr5ORXbB2A`) e na tabela `dashboard_safra`.
+
+**Como a safra chega na tela (pra não esquecer):** o workflow roda a cada
+15 min, refaz UM mês por rodada (rodízio pelo `updated_at` mais velho, mês
+corrente fura a fila a cada 1h) e grava em `dashboard_safra` (upsert por
+mes+escopo+expert_name). O Webhook API lê a tabela em `?safra=1&escopo=`
+e o front casa cada expert pelo `expert_name` LETRA POR LETRA
+(`expertsDaSafra` / `safraPorExpert` no `index.html`). Expert sem linha com
+o nome exato simplesmente não existe na aba Safra.
+
+**Causa 1 - mapa estático desatualizado.** A lista de btags e o mapa
+btag→expert do workflow eram cópias à mão e não acompanhavam `Montar
+experts` / `Montar entidades Geral` do Refresh Cache. Faltavam 12 btags.
+Corrigido: o mapa virou LISTA ÚNICA no nó `Escolher mes` (BTAGS é derivado
+dele; `Montar Linhas Safra` lê `$('Escolher mes').first().json.mapa`).
+**Pra somar/renomear expert na safra, mexer SÓ ali** - e conferir contra o
+painel. Entidade sem btag (EMPIRE, JUNIOR SANTANA, CREMOSINHO, JC EXPERTS,
+BMIDIA) nunca vai ter safra.
+
+**Causa 2 - nome diferente entre painel e tabela.** O painel passou a
+mostrar nome limpo (`TALYSON`, `GIOVANNI ROLETA`, `HENRIQUE 500K`) e a safra
+seguia gravando `BATEU - TALYSON` / `BATEU BET - ...`. Corrigido no mapa e
+as linhas existentes foram RENOMEADAS (update, não delete) em
+`dashboard_safra` e `dashboard_safra_hist` pra não perder o histórico.
+
+**Causa 3 - rodízio pinado em junho desde 27/08.** Dois ingredientes:
+(a) as linhas de junho de TALYSON/GIOVANNI/HENRIQUE ainda tinham o
+sentinela manual `updated_at = 2000-01-01` da sessão de debug de 27/08
+(ver "Safra do Google"); (b) esses btags têm ZERO cadastro em junho, e como
+`Buscar Registros` tem `alwaysOutputData`, resposta vazia chegava em
+`Somar Safra do Btag` como item `{}` - que a regra de 27/08 tratava como
+leitura FALHA, então a linha nunca era regravada e o sentinela nunca saía.
+Junho era sempre o mês "mais atrasado" e o rodízio refazia junho toda rodada.
+As linhas congeladas de `REINAN TIPS` (renomeado pra MARCO TULIO em 27/08,
+upsert nunca apaga nome velho) fariam o mesmo assim que junho destravasse.
+Corrigido nos dois lados: item `{}` agora é zero cadastro de verdade (só
+item com conteúdo sem `registration_date` é falha), e `Escolher mes` ignora
+no rodízio linha cujo (escopo, expert) não está no mapa. `REINAN TIPS` foi
+apagado das duas tabelas.
+
+**Regra pra próxima troca de nome/btag de expert:** além dos 4 lugares da
+memória `painel-bateubet-expert-reinan-marco-tulio`, apagar (ou renomear)
+as linhas com o nome velho em `dashboard_safra` e `dashboard_safra_hist`.
+Não existe nó de leitura/edição de data table via MCP: o jeito é um
+workflow descartável com Data Table `deleteRows`/`update` filtrando por
+`expert_name` (modelo: "TEMP - Safra: renomear e apagar linhas orfas",
+arquivado após o uso).
+
+**Sintoma de saúde do rodízio:** `atualizado_em` de cada mês no payload
+`?safra=1`. Rodízio sadio = meses fechados com carimbo espaçado de 15 min
+girando por todos; dois carimbos só (mês corrente + um fixo) = pinado.
+Execuções de sucesso não são salvas (`saveDataSuccessExecution: none`),
+então o payload é a única evidência.
+
 ## Workflow deste projeto (instrução do Costa, 26/08)
 
 - Toda mensagem do Costa referente a este projeto: antes de responder ou editar, rodar `graphify query "<pergunta derivada da mensagem>"` pra entender o estado atual do projeto pelo grafo. Depois de qualquer edição de código, rodar `graphify update .` (o hook post-commit já cobre o momento do commit, mas atualize também fora dele quando editar sem commitar na hora).

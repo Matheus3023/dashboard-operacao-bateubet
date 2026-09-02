@@ -114,9 +114,9 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1788389803.205986,
-    "seen": 1788389843.4607801,
-    "ast_hash": "3451d5947fdf670110e24ab88b42bb51",
+    "mtime": 1788221989.8476899,
+    "seen": 1788221990.1816058,
+    "ast_hash": "a4ca0821d73f993e303273cbb200e6c3",
     "semantic_hash": ""
   },
   "api/auth/callback.js": {
