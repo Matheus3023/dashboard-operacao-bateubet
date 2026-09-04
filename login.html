@@ -105,19 +105,52 @@
     line-height:1.45;
     text-align:left;
   }
+  /* Central de operação: identidade própria, autenticação Google preservada. */
+  body{padding:clamp(18px,4vw,64px);background:#120c11;color:#f5eff3;font-family:"Avenir Next","Segoe UI",sans-serif}
+  .login-shell{width:min(1240px,100%);min-height:650px;display:grid;grid-template-columns:1.25fr 1fr;border:1px solid #39252f;border-radius:24px;overflow:hidden;background:#1c131a}
+  .login-story{position:relative;padding:48px;display:flex;flex-direction:column;justify-content:space-between;background:linear-gradient(180deg,rgba(20,9,16,.38),rgba(20,9,16,.94)),url('login-fundo.jpg') center/cover}
+  .login-story::after{content:"";position:absolute;inset:22px;border:1px solid rgba(255,255,255,.13);border-radius:12px;pointer-events:none}
+  .login-story img{width:150px;height:auto}
+  .login-kicker{font:11px ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;color:#f67aaa;margin:0 0 20px}
+  .login-story h2{font-size:clamp(36px,4.7vw,64px);line-height:1.04;letter-spacing:-.055em;margin:0 0 24px;max-width:470px;font-weight:650}
+  .login-story p{max-width:360px;color:#d6bac9;font-size:15px;line-height:1.7}
+  .login-capabilities{display:flex;gap:20px;font:10px ui-monospace,monospace;text-transform:uppercase;letter-spacing:.1em;color:#cbb1bf;border-top:1px solid #61404e;padding-top:24px}
+  .card{align-self:center;max-width:none;padding:clamp(28px,5vw,68px);background:none;border:0;border-radius:0;box-shadow:none;text-align:left}
+  .card .brand{justify-content:flex-start;margin-bottom:44px}
+  .card .brand img{height:30px}
+  .card h1{font-size:30px;letter-spacing:-.04em;margin-bottom:14px}
+  p.sub{font-size:14px;line-height:1.7;margin-bottom:30px;color:#cbbcc5}
+  p.sub b{color:#f2e7ed}
+  .btn-google{min-height:54px;border-radius:9px;font-weight:600;box-shadow:0 7px 24px #0003}
+  .btn-google:focus-visible{outline:3px solid #f65b96;outline-offset:5px}
+  .login-security{margin-top:24px;padding-top:22px;border-top:1px solid #39252f;color:#b5a5af;font-size:12px;line-height:1.6}
+  .login-security strong{display:block;color:#e1d6dd;font-weight:500;margin-bottom:4px}
+  .erro{font-size:13px}
+  @media(max-width:760px){body{height:auto;min-height:100vh;padding:16px}.login-shell{min-height:0;grid-template-columns:1fr}.login-story{padding:30px;min-height:300px;gap:28px}.login-story::after{inset:12px}.login-story h2{font-size:38px;margin-bottom:12px}.login-story p{margin:0}.login-capabilities{display:none}.card{padding:32px 26px}.card .brand{display:none}.card h1{font-size:27px}}
 </style>
 </head>
 <body>
 
-  <div class="card">
+  <main class="login-shell">
+  <section class="login-story" aria-label="Central de operação Bateu Bet">
+    <img src="logo-bateubet.svg" alt="Bateu Bet" width="150" height="32">
+    <div>
+      <div class="login-kicker">Performance · Inteligência · Operação</div>
+      <h2>Uma visão.<br>Toda a operação.</h2>
+      <p>Investimento, resultado e safras conectados para orientar cada decisão do time.</p>
+    </div>
+    <div class="login-capabilities"><span>01 / Aquisição</span><span>02 / Experts</span><span>03 / Safras</span></div>
+  </section>
+  <section class="card" aria-labelledby="login-title">
     <div class="brand">
       <img src="logo-bateubet.svg" alt="Bateu Bet" width="112" height="24">
     </div>
 
-    <h1>Acesso restrito</h1>
-    <p class="sub">Só com conta Google <b>@bateubet.com</b>.</p>
+    <div class="login-kicker">Painel Bateu Bet</div>
+    <h1 id="login-title">Entre na operação.</h1>
+    <p class="sub">Entre com seu Google da Bateu.</p>
 
-    <p class="erro" id="erro-msg"></p>
+    <p class="erro" id="erro-msg" role="alert"></p>
 
     <a class="btn-google" id="btn-entrar" href="/api/auth/start">
       <svg viewBox="0 0 48 48" aria-hidden="true">
@@ -128,7 +161,9 @@
       </svg>
       Entrar com o Google
     </a>
-  </div>
+    <div class="login-security">Acesso exclusivo do time Bateu.</div>
+  </section>
+  </main>
 
 <script>
   /* mensagem de erro vem por querystring, escrita pelo callback do OAuth
