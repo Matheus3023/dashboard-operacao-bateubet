@@ -51,7 +51,7 @@ function lerCookie(req, nome) {
 }
 
 function paraLogin(res, erro) {
-  res.writeHead(302, { Location: '/login.html?erro=' + encodeURIComponent(erro) });
+  res.writeHead(302, { Location: '/login?erro=' + encodeURIComponent(erro) });
   res.end();
 }
 

@@ -26,7 +26,7 @@ export const config = {
      imagem/ícone que a TELA DE LOGIN também precisa carregar -- sem essa
      última exceção o painel logado carrega os ícones, mas a tela de login
      (que roda ANTES de qualquer sessão existir) ficaria sem logo. */
-  matcher: '/((?!_vercel/|api/auth/|api/push-spend|login\\.html|.*\\.(?:svg|png|jpg|jpeg|ico|webp)$).*)'
+  matcher: '/((?!_vercel/|api/auth/|api/push-spend|login(?:\\.html)?$|.*\\.(?:svg|png|jpg|jpeg|ico|webp)$).*)'
 };
 
 const COOKIE = 'bateu_sessao';
@@ -71,7 +71,7 @@ function lerCookie(request, nome) {
 
 function paraLogin(request) {
   const destino = new URL(request.url);
-  const url = new URL('/login.html', destino);
+  const url = new URL('/login', destino);
   /* só o caminho, nunca a URL inteira -- host errado (proxy, preview antigo)
      não deve virar redirect pra fora do painel na volta do login. */
   url.searchParams.set('voltar', destino.pathname + destino.search);

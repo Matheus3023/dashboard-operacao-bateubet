@@ -1,5 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    { "source": "/login.html", "destination": "/login", "permanent": true }
+  ],
+  "rewrites": [
+    { "source": "/login", "destination": "/login.html" }
+  ],
   "functions": {
     "api/dashboard.js": {
       "maxDuration": 60

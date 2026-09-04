@@ -5,6 +5,6 @@
 module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('Set-Cookie', 'bateu_sessao=; Path=/; Max-Age=0');
-  res.writeHead(302, { Location: '/login.html' });
+  res.writeHead(302, { Location: '/login' });
   res.end();
 };
