@@ -1,6 +1,18 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { totalsOf, aggregateHistory, tickerValue } = require('../dashboard-ui.js');
+const { totalsOf, aggregateHistory, tickerValue, investmentRange } = require('../dashboard-ui.js');
+
+test('safra começa no investimento positivo registrado, sem inferir início ausente', () => {
+  const months = [
+    { mes: '2026-03', experts: [{ expert_name: 'A', investimento: 0, investimento_disponivel: true }] },
+    { mes: '2026-05', experts: [{ expert_name: 'A', investimento: 100, investimento_disponivel: true }] },
+    { mes: '2026-06', experts: [{ expert_name: 'B', investimento: 200, investimento_disponivel: true }] }
+  ];
+  assert.equal(investmentRange(months, ['A']).start, '2026-05');
+  assert.equal(investmentRange(months, ['B']).start, '2026-06');
+  assert.equal(investmentRange(months, ['A','B']).start, '2026-05');
+  assert.equal(investmentRange(months, ['A','Novo']).start, null);
+});
 
 test('ticker separa saldo positivo de queda e negativo de recuperação', () => {
   assert.deepEqual(tickerValue(100, 150), { value: 100, balance: 'positive', delta: -50 });

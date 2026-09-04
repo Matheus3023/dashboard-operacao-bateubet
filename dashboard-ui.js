@@ -71,6 +71,14 @@
       balance: !num(current) ? 'unknown' : current > 0 ? 'positive' : current < 0 ? 'negative' : 'neutral',
       delta: num(current) && num(before) ? current - before : null };
   }
+  function investmentRange(months, names) {
+    var starts = {}, unknown = [];
+    names.forEach(function (name) {
+      var invested = months.filter(function (m) { return (m.experts || []).some(function (e) { return e.expert_name === name && e.investimento_disponivel && num(e.investimento) && e.investimento > 0; }); }).map(function (m) { return m.mes; }).sort();
+      if (invested.length) starts[name] = invested[0]; else unknown.push(name);
+    });
+    return { starts: starts, start: unknown.length ? null : Object.values(starts).sort()[0] || null, unknown: unknown };
+  }
   function initTicker() {
     var bar = el('section', 'desk-ticker'); bar.setAttribute('aria-label', 'GGR dos experts no período selecionado');
     var label = el('div', 'desk-ticker-label');
@@ -350,6 +358,15 @@
       p.retry.hidden = !(lote && lote.estado === 'erro'); return;
     }
     var svg = svgEl('svg', { viewBox: '0 0 800 290', role: 'img', 'aria-label': 'Evolução financeira em reais, por dia fechado. Consulte os pontos ou a tabela acessível.' });
+    var tooltip = el('div', 'desk-chart-tooltip'); tooltip.hidden = true; tooltip.setAttribute('role', 'status');
+    function showPoint(m, d) {
+      tooltip.textContent = m.label + ' · ' + d.data.split('-').reverse().join('/') + '\n' + brl(d[m.key]);
+      tooltip.hidden = false;
+      svg.querySelectorAll('path[data-series]').forEach(function (line) { line.style.opacity = line.dataset.series === m.key ? '1' : '.22'; });
+    }
+    function clearPoint() { tooltip.hidden = true; svg.querySelectorAll('path[data-series]').forEach(function (line) { line.style.opacity = '1'; }); }
+    svg.addEventListener('pointerleave', clearPoint);
+    svg.addEventListener('keydown', function (event) { if (event.key === 'Escape') clearPoint(); });
     var low = Math.min(0, Math.min.apply(null, vals)), high = Math.max(0, Math.max.apply(null, vals));
     if (low === high) high = low + 1;
     var pad = (high - low) * 0.08; high += pad; if (low < 0) low -= pad;
@@ -369,14 +386,20 @@
         if (!num(d[m.key])) { open = false; return; }
         path += (open ? ' L ' : ' M ') + x(i) + ' ' + y(d[m.key]); open = true;
       });
-      svg.appendChild(svgEl('path', { d: path, fill: 'none', stroke: m.color, 'stroke-width': 2.5, 'stroke-dasharray': m.dash }));
+      var line = svgEl('path', { d: path, fill: 'none', stroke: m.color, 'stroke-width': 2.5, 'stroke-dasharray': m.dash, 'data-series': m.key });
+      line.addEventListener('pointerenter', function () { tooltip.textContent = m.label + '\nPasse sobre um ponto para ver data e valor.'; tooltip.hidden = false; });
+      svg.appendChild(line);
       rows.forEach(function (d, i) {
         if (!num(d[m.key])) return;
         var dot = svgEl('circle', { cx: x(i), cy: y(d[m.key]), r: 4, fill: m.color, tabindex: 0, 'aria-label': d.data + ' · ' + m.label + ': ' + brl(d[m.key]) });
+        dot.addEventListener('pointerenter', function () { showPoint(m, d); });
+        dot.addEventListener('focus', function () { showPoint(m, d); });
+        dot.addEventListener('blur', clearPoint);
+        dot.addEventListener('click', function () { showPoint(m, d); });
         var title = svgEl('title'); title.textContent = d.data + ' · ' + m.label + ': ' + brl(d[m.key]); dot.appendChild(title); svg.appendChild(dot);
       });
     });
-    p.graph.appendChild(svg);
+    p.graph.append(svg, tooltip);
     var details = el('details', 'desk-chart-table'); details.appendChild(el('summary', '', 'Ver valores por dia'));
     var table = el('table', 'desk-table'), head = el('thead'), hr = el('tr'), body = el('tbody');
     ['Dia'].concat(serie.map(function (m) { return m.label; })).forEach(function (name) { var th = el('th', '', name); th.scope = 'col'; hr.appendChild(th); }); head.appendChild(hr);
@@ -401,9 +424,18 @@
       });
       detail.prepend(shortcuts);
     }
+    ['pnl', 'pnlc'].forEach(function (id) {
+      var box = $('#' + id + ' .pnl__box'); if (!box) return;
+      var footer = el('footer', 'desk-modal-footer');
+      footer.append(el('span', '', 'Role o conteúdo dentro desta janela'), button('Fechar análise', 'desk-modal-close', function () {
+        var close = $('#' + id + ' [data-' + (id === 'pnl' ? 'pnl' : 'pnlc') + '-fechar]');
+        if (close) close.click();
+      }));
+      box.appendChild(footer);
+    });
     /* Skeleton e erro do carregador original também abrangem o novo resumo. */
   }
-  var exported = { init: init, renderScope: renderScope, renderGoogle: renderGoogle, renderExpert: renderExpert, refreshCharts: refreshCharts, aggregateHistory: aggregateHistory, totalsOf: totalsOf, tickerValue: tickerValue, setPrevious: setPrevious, setStatus: setStatus, setUser: setUser };
+  var exported = { init: init, renderScope: renderScope, renderGoogle: renderGoogle, renderExpert: renderExpert, refreshCharts: refreshCharts, aggregateHistory: aggregateHistory, totalsOf: totalsOf, tickerValue: tickerValue, investmentRange: investmentRange, setPrevious: setPrevious, setStatus: setStatus, setUser: setUser };
   if (typeof module !== 'undefined' && module.exports) module.exports = exported;
   else global.BateuUI = exported;
 })(typeof window !== 'undefined' ? window : globalThis);

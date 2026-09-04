@@ -10003,10 +10003,11 @@ function filtrarListaOps(cx, termo) {
    3 escopos, e etiquetar um por um daria 51 lugares pra esquecer de mexer
    quando um rótulo mudasse. O preço é que renomear um rótulo reseta a
    escolha daquela métrica — barato perto de manter 51 âncoras à mão. */
-var MET_CHAVE = 'bateu.painel.metricas.v2-completa';
+var MET_CHAVE = 'bateu.painel.metricas.v3-resumo';
 
-/* A versão completa começa com tudo visível, sem apagar preferências da v1. */
-var MET_OCULTAS_PADRAO = [];
+/* Resumo básico por padrão; métricas extras continuam disponíveis no seletor. */
+var MET_OCULTAS_PADRAO = ['investimento-grupo', 'trafego-pro-perfil',
+  'custo-por-cadastro', 'roas-no-ftd', 'pago-a-afiliados', 'lucro-da-operacao', 'custo-por-ftd'];
 
 function metSlug(txt) {
   return String(txt || '')
@@ -11834,6 +11835,7 @@ setInterval(function () {
 /* Redesenha a matriz do painel que estiver aberto. Chamada quando o dado chega
    e quando o painel abre — as duas pontas vivem em ciclos diferentes. */
 function pintarCoorteDoExpert() {
+  pintarCoortesDaAba();
   if (!estado.painel.aberto) return;
   var caixa = document.getElementById('pnl-coorte');
   if (!caixa) return;
@@ -11868,7 +11870,7 @@ function chipPayback(s, gran) {
     el.title = 'Esta operação não tem conta de Meta Ads mapeada na rota da coorte.';
   } else if (!pb) {
     el.className = 'mtz__pb mtz__pb--na';
-    el.textContent = 'sem gasto no período';
+    el.textContent = s.investimento > 0 ? 'mês de recuperação não informado' : 'sem gasto no período';
   } else if (pb.status === 'pago') {
     el.className = 'mtz__pb mtz__pb--ok';
     el.textContent = 'pagou em ' + (gran === 'semana' ? 'S' : 'M') + pb.idade +
@@ -11880,12 +11882,14 @@ function chipPayback(s, gran) {
        projetar", "sem ritmo", "não fecha no ritmo atual"). Só sobra chip de
        FATO: pagou, sem gasto, invest. não rastreado. O que ainda não pagou se
        lê pelo % de volta e pela cor das células. */
-    return null;
+    el.className = 'mtz__pb mtz__pb--na';
+    el.textContent = s.retorno && ehNum(s.retorno.ggr) && s.retorno.ggr < s.investimento
+      ? 'ainda não recuperou o investimento' : 'mês de recuperação não informado';
   }
   return el;
 }
 
-function pintarCoorte(caixa, escopo, nome) {
+function pintarCoorte(caixa, escopo, nome, mesesPermitidos) {
   caixa.innerHTML = '';
 
   if (!COORTE_ESCOPO_API[escopo]) return;   /* Google é um btag só, sem expert */
@@ -11951,12 +11955,25 @@ function pintarCoorte(caixa, escopo, nome) {
   }
 
   var safras = d.safras || [];
+  if (mesesPermitidos) safras = safras.filter(function (s) { return mesesPermitidos.indexOf(String(s.mes).slice(0, 7)) !== -1; });
+  var mesesComVerba = ((estado.safra[escopo] || {}).meses || []).filter(function (m) {
+    return (!mesesPermitidos || mesesPermitidos.indexOf(m.mes) !== -1) && (m.experts || []).some(function (e) {
+      return e.expert_name === nome && e.investimento_disponivel && e.investimento > 0;
+    });
+  });
+  var faltantes = mesesComVerba.filter(function (m) { return !safras.some(function (s) { return String(s.mes).slice(0, 7) === m.mes; }); });
+  if (faltantes.length) {
+    var avisoCobertura = document.createElement('p'); avisoCobertura.className = 'mtz__nota';
+    avisoCobertura.textContent = 'Há investimento registrado em ' + faltantes.map(function (m) { return mesCurto(m.mes); }).join(', ') +
+      ', mas a integração não trouxe coortes de FTD correspondentes. O retorno dessas safras não pode ser confirmado nesta leitura.';
+    caixa.appendChild(avisoCobertura);
+  }
   if (!safras.length) {
     var vazio = document.createElement('p');
     vazio.className = 'mtz__nota';
     vazio.textContent = d.ainda_nao_calculado
       ? 'A safra deste expert ainda aguarda cálculo no n8n. A consulta será refeita automaticamente.'
-      : 'Nenhuma safra de primeiro depósito encontrada no período calculado.';
+      : 'Nenhuma safra de primeiro depósito encontrada no período selecionado.';
     caixa.appendChild(vazio);
     return;
   }
@@ -12084,6 +12101,10 @@ function pintarCoorte(caixa, escopo, nome) {
       var classes = 'mtz__c--mes' + degrau(c.ggr) +
                     (c.parcial ? ' mtz__c--parcial' : '');
       var cel = celula(classes);
+
+      var calendario = document.createElement('span'); calendario.className = 'desk-coorte-calendario';
+      calendario.textContent = c.mes_ref ? rotuloCoorte(gran, c.mes_ref) + ' · ' + letra + i : letra + i + ' · data não informada';
+      cel.appendChild(calendario);
 
       /* O VALOR NÃO GANHA COR DE TEXTO aqui, ao contrário do resto do painel:
          nesta matriz quem diz o sinal é o FUNDO da célula. Verde no texto sobre
@@ -12419,11 +12440,15 @@ function montarGradeSafra(caixa, escopo, marcadosNomes, meses, sel) {
   caixa.innerHTML = '';
 
   var hoje = mesCorrente();
+  var inicios = sel.experts && sel.desdeInvestimento !== false && window.BateuUI
+    ? window.BateuUI.investmentRange((estado.safra[escopo] || {}).meses || [], marcadosNomes).starts : {};
 
   /* por expert: uma célula por mês visível + resumo = soma dessas células
      (nunca uma conta à parte -- resumo e colunas sempre batem). */
   var linhas = marcadosNomes.map(function (nome) {
-    var celulas = meses.map(function (mes) { return safraLinhaFiltrada(escopo, nome, mes); });
+    var celulas = meses.map(function (mes) {
+      return inicios[nome] && mes < inicios[nome] ? { foraDoInvestimento: true } : safraLinhaFiltrada(escopo, nome, mes);
+    });
     return { nome: nome, celulas: celulas, resumo: somarLinhasSafra(celulas) };
   }).sort(function (a, b) { return (b.resumo.net_pl || 0) - (a.resumo.net_pl || 0); });
 
@@ -12532,6 +12557,11 @@ function montarGradeSafra(caixa, escopo, marcadosNomes, meses, sel) {
        codificações de cor brigando entre si atrapalham a leitura em vez de
        ajudar). */
     celulas.forEach(function (c, i) {
+      if (c.foraDoInvestimento) {
+        var anteriorInv = celula('mtz__c--mes'); anteriorInv.textContent = '—';
+        anteriorInv.title = 'Antes do primeiro investimento registrado para este expert; fora do recorte.';
+        return;
+      }
       var mesEhCorrente = meses[i] === hoje;
       var classes = 'mtz__c--mes' + degrau(c.net_pl) +
         (mesEhCorrente ? ' mtz__c--parcial' : '') + extra;
@@ -12549,17 +12579,7 @@ function montarGradeSafra(caixa, escopo, marcadosNomes, meses, sel) {
         ro2.textContent = 'ROAS ' + Math.round((c.net_pl / c.investimento) * 100) + '%';
         cel.appendChild(ro2);
       }
-      /* "X% seguem" tirado da Safra do Google (pedido do Costa 27/08): com o
-         volume pequeno da conta (poucas dezenas de ativos por mês), a
-         retenção oscila demais e o percentual mais confunde do que ajuda.
-         Meta e Costa e Lobão mantêm -- lá o volume por expert sustenta a
-         leitura. */
-      if (escopo !== 'google' && ehNum(c.retencao)) {
-        var ro = document.createElement('span');
-        ro.className = 'mtz__roas';
-        ro.textContent = pct(c.retencao) + ' seguem';
-        cel.appendChild(ro);
-      }
+      /* Retenção continua nos dados, mas o rótulo "seguem" saiu desta matriz. */
       var at = document.createElement('span');
       at.className = 'mtz__ativos';
       at.textContent = inteiro(c.ativos) + ' ativos';
@@ -12623,6 +12643,8 @@ function pintarSafraFiltro(escopo) {
   var estadoTxt = $('[data-sf-estado]', view);
   var subEl     = $('[data-sf-sub]', view);
   var tabBox    = $('[data-sf-tabela]', view);
+  var coortesAnteriores = $('.desk-coortes-safra', view);
+  if (coortesAnteriores) coortesAnteriores.hidden = true;
 
   var d = estado.safra[escopo];
   if (!d) {
@@ -12640,6 +12662,15 @@ function pintarSafraFiltro(escopo) {
      escolha sobrevive à repintura, só cai pra "todos" se o mês escolhido
      tiver saído da lista */
   var sel = safraSel(geral);
+  var origem = $('.desk-safra-origin', view);
+  if (!origem) {
+    origem = document.createElement('label'); origem.className = 'desk-safra-origin';
+    var cbOrigem = document.createElement('input'); cbOrigem.type = 'checkbox';
+    cbOrigem.checked = sel.desdeInvestimento !== false;
+    cbOrigem.addEventListener('change', function () { sel.desdeInvestimento = cbOrigem.checked; pintarSafraFiltro(escopo); });
+    origem.appendChild(cbOrigem); origem.appendChild(document.createTextNode('Ao filtrar experts, mostrar desde o primeiro investimento registrado'));
+    tabBox.before(origem);
+  }
   var mesesOrdenados = (d.meses || []).slice().sort(function (a, b) {
     return mesOrdinal(a.mes) - mesOrdinal(b.mes);
   });
@@ -12699,12 +12730,59 @@ function pintarSafraFiltro(escopo) {
   }
 
   var meses = mesesVisiveis(d, sel);
+  if (sel.experts && sel.desdeInvestimento !== false && window.BateuUI) {
+    var janela = window.BateuUI.investmentRange(d.meses || [], marcados);
+    if (janela.start) {
+      meses = meses.filter(function (mes) { return mes >= janela.start && mes <= mesCorrente(); });
+      if (subEl) subEl.textContent = subEl.textContent.replace('Toda a carteira', 'Carteira desde o investimento') + ' · Primeiro gasto disponível: ' + mesCurto(janela.start) + ' · ' + meses.length + ' meses no recorte';
+    } else if (subEl) {
+      subEl.textContent += ' · Início do investimento não identificado para todos os selecionados; histórico preservado';
+    }
+  }
   if (!meses.length) {
     if (tabBox) tabBox.innerHTML = '<p class="mtz__nota">A varredura ainda não terminou nenhum mês.</p>';
     return;
   }
 
   if (tabBox) montarGradeSafra(tabBox, escopo, marcados, meses, sel);
+  montarCoortesDaAba(view, escopo, marcados, meses);
+}
+
+/* A matriz de FTD mantém sua fonte e seu payback; não calcula idade a partir
+   da grade de cadastros, que não contém o retorno por idade da turma. */
+function montarCoortesDaAba(view, escopo, nomes, meses) {
+  var sec = $('.desk-coortes-safra', view);
+  if (!sec) {
+    sec = document.createElement('section'); sec.className = 'desk-coortes-safra';
+    $('[data-sf-tabela]', view).before(sec);
+  }
+  sec.hidden = false;
+  var assinatura = JSON.stringify([escopo, nomes, meses]);
+  if (sec.dataset.assinatura === assinatura) { pintarCoortesDaAba(); return; }
+  sec.dataset.assinatura = assinatura; sec.innerHTML = '';
+  var titulo = document.createElement('h3'); titulo.textContent = 'Quando cada safra pagou o investimento'; sec.appendChild(titulo);
+  var nota = document.createElement('p');
+  nota.textContent = 'Safras de primeiro depósito: investimento × GGR acumulado, com o mês de recuperação confirmado. M0 é o mês de entrada; M2 é dois meses depois. O filtro de meses seleciona a origem da turma; o retorno acompanha toda a vida dela disponível. Abra um expert abaixo.';
+  sec.appendChild(nota);
+  nomes.forEach(function (nome) {
+    var grupo = document.createElement('details');
+    var resumo = document.createElement('summary'); resumo.textContent = nomeExpert(nome) + ' · investimento → retorno';
+    var corpo = document.createElement('div'); corpo.dataset.coorteExpert = nome; corpo.dataset.coorteEscopo = escopo;
+    corpo.dataset.coorteMeses = JSON.stringify(meses);
+    grupo.appendChild(resumo); grupo.appendChild(corpo); sec.appendChild(grupo);
+    grupo.addEventListener('toggle', function () {
+      if (!grupo.open) return;
+      $$('details', sec).forEach(function (outro) { if (outro !== grupo) outro.open = false; });
+      carregarCoorte(escopo, nome);
+    });
+    if (nomes.length === 1) grupo.open = true;
+  });
+}
+function pintarCoortesDaAba() {
+  $$('[data-coorte-expert]').forEach(function (corpo) {
+    if (!corpo.parentElement.open || corpo.closest('.desk-coortes-safra').hidden) return;
+    pintarCoorte(corpo, corpo.dataset.coorteEscopo, corpo.dataset.coorteExpert, JSON.parse(corpo.dataset.coorteMeses));
+  });
 }
 
 function fecharTodosSffil() {

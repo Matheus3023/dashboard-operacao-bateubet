@@ -21,8 +21,12 @@ const payload = (q) => {
 };
 const safra = {escopo:'geral',meses:Array.from({length:3},(_,i)=>{
   const date=new Date(today+'T12:00:00Z');date.setUTCDate(1);date.setUTCMonth(date.getUTCMonth()-2+i);
-  return {mes:date.toISOString().slice(0,7),experts:experts.map(e=>({expert_name:e.expert_name,...e.tap,ativos:30,churned:12,investimento:e.investimento_total,investimento_disponivel:true}))};
+  return {mes:date.toISOString().slice(0,7),experts:experts.map(e=>({expert_name:e.expert_name,...e.tap,ativos:30,churned:12,investimento:i===0 && e.expert_name==='TALYSON' ? 0 : e.investimento_total,investimento_disponivel:true}))};
 })};
+const coorte = {safras:safra.meses.map((origem, j)=>({mes:origem.mes,jogadores:30,investimento:[30000,24000,18000][j],
+  retorno:{ggr:[33000,16000,4000][j],net_dep:[42000,28000,14000][j],volume:[120000,80000,40000][j]},
+  payback:j===0 ? {status:'pago',idade:2,periodo:safra.meses[2].mes} : {status:'nao_pago'},
+  celulas:safra.meses.slice(j).map((m,i)=>({mes_ref:m.mes,ggr:j===0?[9000,11000,13000][i]:j===1?[7000,9000][i]:4000,net_dep:14000,volume:40000,ativos:28-i,parcial:i===2-j}))}))};
 async function run() {
   const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
   const browser = await chromium.launch({headless:true});
@@ -37,7 +41,7 @@ async function run() {
       let data;
       if(url.pathname==='/api/auth/me') data={ok:true,nome:'Prévia de teste',email:'teste@bateu.bet.br'};
       else if(url.pathname==='/api/cl-auth') return route.fulfill({status:403,contentType:'application/json',body:'{}'});
-      else if(url.pathname==='/api/coorte') data={safras:[],ainda_nao_calculado:true};
+      else if(url.pathname==='/api/coorte') data=coorte;
       else if(url.searchParams.has('tendencia')) data={escopo:'geral',experts:experts.map(e=>({expert_name:e.expert_name,dias})),dias};
       else if(url.searchParams.has('safra')) data=safra;
       else data={...payload(url.searchParams),tap_indisponivel:failedTap};
@@ -55,7 +59,18 @@ async function run() {
   assert.equal(await page.locator('#escopo-geral .desk-number').count(),4);
   assert.match(await page.locator('#escopo-geral .desk-number').first().innerText(),/49\.400/);
   assert.equal(await page.locator('.desk-ticker-group:not(.desk-ticker-copy) .desk-ticker-item').count(),5);
-  assert.equal(await page.locator('#escopo-geral .tcard--off').count(),0);
+  assert.ok(await page.locator('#escopo-geral .tcard--off').count()>0);
+  await page.locator('#escopo-geral .desk-plot circle').first().hover();
+  assert.match(await page.locator('#escopo-geral .desk-chart-tooltip').innerText(),/Investimento.*\nR\$/);
+  assert.equal(await page.locator('#escopo-geral .tabs').evaluate(e=>getComputedStyle(e).position),'static');
+  const sticky = await page.locator('#escopo-geral .cmp').evaluate(async e=>{
+    const body=e.querySelector('.cmp__body'), row=body.querySelector('.cmp__row');
+    const copies=Array.from({length:20},()=>row.cloneNode(true)); copies.forEach(r=>body.append(r));
+    e.scrollTop=250; await new Promise(requestAnimationFrame);
+    const result={table:e.getBoundingClientRect().top,head:e.querySelector('.cmp__row--head').getBoundingClientRect().top,scroll:e.scrollTop};
+    copies.forEach(r=>r.remove()); e.scrollTop=0; return result;
+  });
+  assert.ok(sticky.scroll>0 && Math.abs(sticky.table-sticky.head)<3,'Cabeçalho acompanha rolagem dentro do comparativo');
   assert.equal(await page.locator('.desk-user-status').innerText(),'Google · conectado');
   assert.equal(await page.locator('.scopebar label[for="e-google"] .desk-channel-status').innerText(),'Dados recebidos');
   await page.waitForFunction(()=>document.querySelector('.desk-ticker-delta').textContent.includes('↑'));
@@ -76,8 +91,12 @@ async function run() {
   assert.equal(await page.locator('#escopo-geral .desk-expert-list .desk-table tbody tr').count(),1);
   await page.locator('#escopo-geral .desk-expert-open').click();
   await page.waitForSelector('.pnl:not([hidden])');
+  const modal=await page.locator('#pnl .pnl__box').boundingBox();
+  assert.ok(modal.y>=0 && modal.y+modal.height<=1050,'Modal deve caber na janela');
   await page.screenshot({path:'/private/tmp/bateu-redesign-expert.png'});
-  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#pnl .desk-modal-footer').isVisible(),true);
+  await page.locator('#pnl .desk-modal-close').click();
+  assert.equal(await page.locator('#pnl').isVisible(),false);
   await page.locator('#escopo-geral .desk-search').fill('gregorio');
   await page.locator('#escopo-geral .desk-expert-open').click();
   await page.waitForSelector('#pnl-gbd:not([hidden])');
@@ -89,7 +108,23 @@ async function run() {
   await page.locator('.desk-nav button[data-view="v-safra"]').click();
   assert.equal(await page.locator('#escopo-geral .view--safra').isVisible(),true);
   await page.waitForSelector('#escopo-geral .view--safra .mtz__grade');
+  await page.locator('#escopo-geral .desk-coortes-safra > details > summary').first().click();
+  await page.waitForSelector('#escopo-geral .desk-coortes-safra .mtz__pb--ok');
+  assert.match(await page.locator('#escopo-geral .desk-coortes-safra .mtz__pb--ok').innerText(),/pagou em M2/);
+  assert.equal(await page.locator('#escopo-geral .desk-coortes-safra .mtz__c--turma').count(),3);
+  assert.equal(await page.locator('#escopo-geral .desk-coortes-safra .desk-coorte-calendario').count(),6);
+  assert.match(await page.locator('#escopo-geral .desk-coortes-safra').innerText(),/ainda não recuperou o investimento/);
+  await page.screenshot({path:'/private/tmp/bateu-safra-payback.png'});
+  await page.locator('#escopo-geral .desk-coortes-safra > details > summary').first().click();
   assert.ok(await page.locator('#escopo-geral .view--safra .mtz__c--parcial').count()>0);
+  assert.doesNotMatch(await page.locator('#escopo-geral [data-sf-tabela] .mtz__grade').innerText(),/seguem/);
+  await page.locator('#escopo-geral .sffil__btn').click();
+  for(const name of names.filter(n=>n!=='TALYSON')) await page.locator('#escopo-geral .sffil__lista input[value="'+name+'"]').uncheck();
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#escopo-geral [data-sf-tabela] .mtz__c--head').count(),4);
+  await page.locator('#escopo-geral .desk-safra-origin input').uncheck();
+  assert.equal(await page.locator('#escopo-geral [data-sf-tabela] .mtz__c--head').count(),5);
+  await page.locator('#escopo-geral .desk-safra-origin input').check();
   await page.screenshot({path:'/private/tmp/bateu-redesign-safra.png'});
   await page.locator('.desk-nav button[data-view="v-geral"]').click();
   assert.equal(await page.locator('#escopo-geral .desk-all-metrics .totals').isVisible(),true);
@@ -112,6 +147,13 @@ async function run() {
     await page.setViewportSize({width,height:1000});
     const size=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth}));
     assert.ok(size.scroll<=size.width+1,'Overflow horizontal em '+width+': '+size.scroll);
+    assert.equal(await page.locator('#escopo-geral .cmp .cmp__volume').first().isVisible(),true);
+    const comparison=await page.locator('#escopo-geral .cmp').evaluate(e=>({scroll:e.scrollWidth,width:e.clientWidth,overflow:getComputedStyle(e).overflowX}));
+    assert.ok(comparison.scroll>comparison.width && comparison.overflow==='auto');
+    await page.locator('.desk-ticker-group:not(.desk-ticker-copy) .desk-ticker-item').first().click();
+    const expertBox=await page.locator('#pnl .pnl__box').boundingBox();
+    assert.ok(expertBox.y>=0 && expertBox.y+expertBox.height<=1000 && expertBox.x>=0 && expertBox.x+expertBox.width<=width,'Modal sem corte em '+width);
+    await page.keyboard.press('Escape');
     await page.screenshot({path:'/private/tmp/bateu-redesign-'+width+'.png'});
   }
   failedTap=true;
@@ -126,5 +168,5 @@ async function run() {
   console.log('OK: dados, gráfico, experts, painel, safra, métricas, canais, período, erro de rede, falha TAP e 4 larguras.');
   await browser.close();
 }
-module.exports={payload,experts,dias,today,safra};
+module.exports={payload,experts,dias,today,safra,coorte};
 if(require.main===module)run().catch(e=>{console.error(e);process.exit(1)});
