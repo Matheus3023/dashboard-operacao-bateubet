@@ -4018,7 +4018,259 @@ body.pnl-aberto{overflow:hidden}
   .scope-aviso{padding:11px 13px;font-size:.8125rem;line-height:1.45}
 }
 
+/* ========================================================================
+   DESIGN vNext · SPORTS TRADING DESK
+   Camada visual isolada: preserva os contratos de DOM consumidos pelo JS.
+   ======================================================================== */
+:root{
+  --bg:#11090d;
+  --surface:#1c1016;
+  --surface-2:#25151d;
+  --surface-sunk:#0d070a;
+  --surface-3:#301a24;
+  --line:rgba(255,244,248,.10);
+  --line-soft:rgba(255,244,248,.055);
+  --line-strong:rgba(255,244,248,.18);
+  --txt:#f7f2f4;
+  --txt-2:rgba(247,242,244,.68);
+  --txt-3:rgba(247,242,244,.43);
+  --acao:#f01662;
+  --acao-2:#c90e4d;
+  --acao-3:#9b0b3d;
+  --acao-soft:rgba(240,22,98,.13);
+  --acao-line:rgba(240,22,98,.38);
+  --gold:#e6b74a;
+  --gold-2:#c9972f;
+  --gold-soft:rgba(230,183,74,.11);
+  --gold-line:rgba(230,183,74,.3);
+  --good:#4ac489;
+  --good-soft:rgba(74,196,137,.12);
+  --warn:#eda54a;
+  --warn-soft:rgba(237,165,74,.12);
+  --bad:#ef6570;
+  --bad-soft:rgba(239,101,112,.12);
+  --r:8px;
+  --gap:12px;
+}
+
+html{scrollbar-color:var(--surface-3) var(--bg)}
+body{
+  min-height:100vh;
+  background:
+    linear-gradient(180deg,rgba(17,9,13,.79) 0%,rgba(17,9,13,.96) 32%,var(--bg) 66%),
+    url("fundo-marca.jpg") top center/100% auto no-repeat,
+    var(--bg);
+  background-attachment:fixed,fixed,fixed;
+  font-family:"Avenir Next",Avenir,"Segoe UI Variable","Segoe UI",sans-serif;
+  font-size:15px;
+  letter-spacing:-.006em;
+}
+body::before{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,.017) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.014) 1px,transparent 1px);
+  background-size:48px 48px;
+  -webkit-mask-image:linear-gradient(to bottom,#000,transparent 55%);
+  mask-image:linear-gradient(to bottom,#000,transparent 55%);
+}
+::selection{background:var(--acao);color:#fff}
+.wrap{max-width:1660px;padding-inline:clamp(14px,2.1vw,34px);padding-bottom:80px}
+.eyebrow,.tcard__lbl,.sinal__lbl,.verdict__lbl,.rangebar__lbl{letter-spacing:.11em}
+
+/* command center */
+.topbar{
+  background:rgba(13,7,10,.94);
+  border-bottom-color:var(--line-soft);
+  box-shadow:0 12px 32px rgba(0,0,0,.22);
+}
+.topbar::before{height:2px;background:var(--acao)}
+.topbar__in{max-width:1660px;padding:10px clamp(14px,2.1vw,34px);gap:14px}
+.brand{padding-right:14px;border-right:1px solid var(--line)}
+.brand__logo{height:25px}
+.scopebar,.seg{
+  background:#120a0e;border-color:var(--line-soft);border-radius:7px;padding:3px;
+}
+.scopebar label{min-height:34px;border-radius:5px;padding-inline:11px}
+.scopebar__nome{font-size:.76rem;letter-spacing:.01em}
+.scopebar__nome::before{width:5px;height:5px}
+.seg label{min-height:30px;border-radius:4px;font-size:.72rem;padding-inline:10px}
+.seg input:checked + label,
+#e-cl:checked ~ .topbar .scopebar label[for="e-geral"],
+#e-geral:checked ~ .topbar .scopebar label[for="e-geral"],
+#e-google:checked ~ .topbar .scopebar label[for="e-google"],
+#e-tiktok:checked ~ .topbar .scopebar label[for="e-tiktok"],
+#e-kwai:checked ~ .topbar .scopebar label[for="e-kwai"],
+#e-taboola:checked ~ .topbar .scopebar label[for="e-taboola"]{
+  background:var(--surface-3);border-color:var(--line);box-shadow:none;
+}
+.sortpop__sum,.status{background:#120a0e;border-color:var(--line-soft);border-radius:7px}
+.sortpop__sum:hover{background:var(--surface-2);border-color:var(--line)}
+.status{padding-inline:10px}
+.tabs{
+  background:rgba(17,9,13,.9);border-bottom:1px solid var(--line-soft);
+  backdrop-filter:blur(14px);
+}
+.tabs__in{max-width:1660px;padding-inline:clamp(14px,2.1vw,34px)}
+.tab{min-height:46px;padding-inline:16px;color:var(--txt-3);font-size:.76rem}
+.tab::after{height:2px;border-radius:0;background:var(--acao)}
+.tab:hover{color:var(--txt);background:rgba(255,255,255,.025)}
+
+/* feedback and notices */
+.errbar,.scope-aviso,.periodo-banner{
+  border-radius:7px;border:1px solid var(--line);background:var(--surface);
+  box-shadow:none;
+}
+.errbar--warn,.scope-aviso{border-left:3px solid var(--warn)}
+
+/* decision layer */
+.placar{
+  margin-top:22px;gap:1px;padding:1px;border-radius:9px;
+  background:var(--line-soft);border:0;overflow:hidden;
+}
+.verdict,.sinal{
+  border:0!important;border-radius:0!important;background:var(--surface)!important;
+  min-height:122px;padding:20px!important;box-shadow:none!important;
+}
+.verdict{position:relative;overflow:hidden}
+.verdict::after{
+  content:"";position:absolute;left:0;top:18px;bottom:18px;width:3px;background:var(--acao);
+}
+.verdict__txt{font-size:clamp(1.15rem,1.7vw,1.6rem);letter-spacing:-.035em;line-height:1.15}
+.verdict__why,.sinal__sub{color:var(--txt-3)}
+.sinal__val{font-size:1.24rem;letter-spacing:-.035em}
+
+/* metric hierarchy */
+.totals{gap:1px;padding:1px;border-radius:9px;background:var(--line-soft);overflow:hidden}
+.tcard{
+  min-height:112px;border:0!important;border-radius:0!important;
+  background:var(--surface)!important;padding:17px 18px;box-shadow:none!important;
+  transition:background-color .16s ease,transform .16s ease;
+}
+.tcard:hover{background:var(--surface-2)!important;z-index:1}
+.tcard--hero{min-height:142px;padding:22px;background:var(--surface-2)!important}
+.tcard--hero::before{height:2px!important;background:var(--acao)!important}
+.tcard--cpa::before{background:var(--good)!important}
+.tcard__lbl{font-family:var(--mono);font-size:.59rem;color:var(--txt-3)}
+.tcard__val{font-size:clamp(1.18rem,1.65vw,1.55rem);font-weight:610;letter-spacing:-.045em}
+.tcard--hero .tcard__val{font-size:clamp(2rem,3vw,2.75rem);font-weight:630}
+.tcard__sub{font-size:.72rem;color:var(--txt-3)}
+.totals__fin{background:var(--surface-sunk);border-color:var(--line-soft);border-radius:7px}
+
+/* sections and tables */
+.section-head{margin-top:34px;margin-bottom:12px}
+.section-head h2,.cmp__title{font-size:.95rem;letter-spacing:-.015em}
+.cmp,.ops,.metas,.safra,.gbd__card{
+  border:0;border-radius:9px;background:var(--surface);box-shadow:none;overflow:hidden;
+}
+.cmp__head,.ops__head,.metas__head,.safra__head{
+  background:var(--surface-2);border-bottom:1px solid var(--line-soft);padding:15px 17px;
+}
+.cmp__row{border-color:var(--line-soft)}
+.cmp__row:not(.cmp__row--head):hover{background:rgba(255,255,255,.025)}
+.cmp__row--head{background:#140b10;color:var(--txt-3)}
+.cmp__rank{color:var(--txt-3)}
+.cmp__name{font-weight:620;color:var(--txt)}
+.bar{height:4px;background:var(--line-soft)}
+.bar i{background:var(--acao);box-shadow:none}
+.chip{border-radius:4px;border-color:transparent;font-family:var(--mono);font-size:.58rem}
+
+/* experts become concise operational dossiers */
+.experts{gap:14px}
+.expert{
+  border:1px solid var(--line-soft);border-radius:9px;background:var(--surface);
+  box-shadow:none;overflow:hidden;transition:border-color .16s ease,background-color .16s ease;
+}
+.expert:hover{border-color:var(--line-strong);background:var(--surface-2);transform:none}
+.expert:focus-visible{outline:2px solid var(--acao);outline-offset:3px}
+.expert__head{
+  min-height:76px;padding:15px 17px;background:var(--surface-2);
+  border-bottom:1px solid var(--line-soft);
+}
+.expert__name{font-size:1.05rem;letter-spacing:-.025em}
+.expert__body{gap:1px;background:var(--line-soft);padding:0}
+.block{border:0!important;border-radius:0!important;background:var(--surface)!important;padding:17px!important}
+.block--tap{background:#190e14!important}
+.block__title{font-size:.66rem;letter-spacing:.1em;color:var(--txt-2)}
+.metrics{gap:11px 15px}
+.m__label{font-size:.62rem;color:var(--txt-3)}
+.m__value{font-size:.95rem;font-weight:590;letter-spacing:-.025em}
+.crtvs,.contas{border-color:var(--line-soft);border-radius:6px;background:var(--surface-sunk)}
+.crtvs > summary,.contas > summary{min-height:44px}
+.crtv{border-color:var(--line-soft)}
+
+/* menus and analysis drawer */
+.sortpop__pop,.dpk,.metfil__pop,.opsfil__pop,.sffil__pop{
+  background:var(--surface-2);border-color:var(--line-strong);border-radius:8px;
+  box-shadow:0 24px 60px rgba(0,0,0,.48);
+}
+.pnl__sheet{background:var(--surface);border-left-color:var(--line);box-shadow:-28px 0 70px rgba(0,0,0,.5)}
+.pnl__head{background:var(--surface-2);border-color:var(--line-soft)}
+.pnl__card{background:var(--surface-sunk);border-color:var(--line-soft);border-radius:7px}
+button,select,input,summary,label{-webkit-tap-highlight-color:transparent}
+
+@media (hover:hover){
+  .tcard:hover{transform:translateY(-1px)}
+}
+@media (max-width:1179px){
+  .topbar__in{gap:9px}
+  .brand{border-right:0;padding-right:4px}
+  .placar{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:759px){
+  body{font-size:14px;background-image:linear-gradient(180deg,rgba(17,9,13,.9),var(--bg) 440px),url("fundo-marca.jpg")}
+  body::before{display:none}
+  .wrap{padding-inline:12px;padding-bottom:54px}
+  .topbar__in{padding:8px 12px}
+  .brand{width:100%;justify-content:space-between;padding-bottom:7px;border-bottom:1px solid var(--line-soft)}
+  .brand__logo{height:22px}
+  .scopebar,.seg{min-width:0;overflow-x:auto;scrollbar-width:none}
+  .scopebar::-webkit-scrollbar,.seg::-webkit-scrollbar{display:none}
+  .scopebar label,.seg label{min-height:42px}
+  .tabs__in{padding-inline:8px;overflow-x:auto;scrollbar-width:none}
+  .tab{min-height:48px;padding-inline:13px;white-space:nowrap}
+  .placar{grid-template-columns:1fr;margin-top:14px}
+  .verdict,.sinal{min-height:auto;padding:16px!important}
+  .totals{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tcard,.tcard--hero{min-height:108px;padding:15px}
+  .tcard--hero .tcard__val{font-size:1.75rem}
+  .expert__head{padding:14px}
+  .block{padding:15px!important}
+  .cmp{border-radius:7px}
+}
+@media (max-width:420px){
+  .totals{grid-template-columns:1fr 1fr}
+  .tcard__val{font-size:1.08rem}
+  .tcard--hero .tcard__val{font-size:1.55rem}
+}
+@media (prefers-reduced-motion:reduce){
+  .tcard,.expert{transition:none!important}
+}
+/* Ampliação da central de comando, com cards independentes e contraste legível. */
+:root{--bg:#141016;--surface:#211a23;--surface-2:#2b222e;--surface-3:#382b39;--surface-sunk:#18121b;--txt-2:#c9bbc9;--txt-3:#ad9ead}
+.wrap,.topbar__in{max-width:1920px}
+.wrap{padding-inline:clamp(16px,2.4vw,48px)}
+.topbar{background:#18121b;backdrop-filter:none}
+.tabs{background:#18121b;backdrop-filter:none}
+.totals{gap:14px;padding:0;background:none;overflow:visible;border-radius:0}
+.tcard{border-radius:12px!important;min-height:128px;padding:22px!important;outline:1px solid var(--line-soft)}
+.tcard--hero{min-height:164px;background:linear-gradient(115deg,#3b2235,#2b222e)!important;position:relative;overflow:hidden}
+.tcard--hero::after{content:"";position:absolute;right:-14px;top:25px;width:110px;height:110px;border:1px solid #ffffff09;transform:rotate(35deg);pointer-events:none}
+.tcard__lbl{font-size:11px;color:#c9bbc9;letter-spacing:.08em}
+.tcard__sub{font-size:12px;color:#b9aab9}
+.tcard__val{font-size:clamp(24px,2vw,34px)}
+.tcard--hero .tcard__val{font-size:clamp(32px,3.3vw,52px)}
+.expert{border-radius:14px;border-color:#ffffff12}
+.expert__head{padding:22px;min-height:94px}
+.expert__name{font-size:22px}
+.block{padding:22px!important}
+.cmp{border-radius:12px;outline:1px solid var(--line-soft)}
+.cmp__row:not(.cmp__row--head){min-height:60px}
+.pnl__sheet{width:min(1320px,96vw)}
+.coorte-atualizar{min-height:44px;padding:0 14px;background:var(--surface-3);color:var(--txt);border:1px solid var(--line-strong);border-radius:7px;cursor:pointer}
+.coorte-atualizar:disabled{opacity:.5;cursor:wait}
+.coorte-atualizar:focus-visible{outline:2px solid var(--acao);outline-offset:3px}
+@media(max-width:759px){.totals{gap:10px}.tcard{min-height:116px;padding:15px!important}.tcard__val{font-size:22px}.tcard--hero .tcard__val{font-size:29px}.expert__head{padding:16px}.block{padding:16px!important}.pnl__sheet{width:100%}.brand{width:auto;border:0;padding:0}.scopebar label,.seg label{min-height:44px}}
 </style>
+<link rel="stylesheet" href="dashboard.css">
 </head>
 
 <body>
@@ -7434,6 +7686,7 @@ body.pnl-aberto{overflow:hidden}
   </form>
 </dialog>
 
+<script src="dashboard-ui.js"></script>
 <script>
 (function () {
 'use strict';
@@ -7999,8 +8252,9 @@ var estado = {
   /* SAFRA (13/08). Buscada SOB DEMANDA, na primeira vez que a aba é aberta, e
      não junto com o painel: é uma rota separada, ninguém abre essa aba toda
      hora, e carregar de cara atrasaria a tela que a operação olha o dia
-     inteiro. Uma busca por escopo por sessão basta — o workflow recalcula em
-     rodízio de 15 min, e o número não muda de minuto em minuto. */
+     inteiro. O resultado fica na sessão enquanto já contiver o mês corrente.
+     Na virada do mês, o refresh de 5 min tenta de novo até a nova safra
+     aparecer; depois volta ao cache normal. */
   safra: { cl: null, geral: null },
   safraBuscando: {},
   /* filtro da aba Safra (26/08, virou intervalo em 27/08): de que mês até
@@ -9399,6 +9653,7 @@ function pintarTotaisFiltrados(d, isHoje, raiz, geral) {
     : d;
   /* o rodapé descreve a média do escopo inteiro: recorte não reescreve ele. */
   pintarTotais(bloco, isHoje, raiz, !geral && !filtrando, filtrando ? sel.length : 0);
+  if (window.BateuUI) window.BateuUI.renderScope(geral ? 'geral' : 'cl', bloco);
 
   /* Com recorte ativo, o veredito logo acima continua falando da operação
      inteira e os tiles falam dos marcados — dois números diferentes de custo
@@ -9748,18 +10003,10 @@ function filtrarListaOps(cx, termo) {
    3 escopos, e etiquetar um por um daria 51 lugares pra esquecer de mexer
    quando um rótulo mudasse. O preço é que renomear um rótulo reseta a
    escolha daquela métrica — barato perto de manter 51 âncoras à mão. */
-var MET_CHAVE = 'bateu.painel.metricas.v1';
+var MET_CHAVE = 'bateu.painel.metricas.v2-completa';
 
-/* O que sai escondido de fábrica (pedido do operador em 13/08): os dois de
-   canal (a splitbar logo abaixo já conta essa divisão), custo por cadastro
-   (o que decide é o custo por FTD), ROAS no FTD, e as duas pontas de
-   comissão/lucro, que são leitura de fechamento e não de acompanhamento. */
-var MET_OCULTAS_PADRAO = ['investimento-grupo', 'trafego-pro-perfil',
-                          'custo-por-cadastro', 'roas-no-ftd',
-                          'pago-a-afiliados', 'lucro-da-operacao',
-                          /* o numero agora vive embaixo do FTD, com a mesma
-                             cor de faixa -- o tile virava repeticao */
-                          'custo-por-ftd'];
+/* A versão completa começa com tudo visível, sem apagar preferências da v1. */
+var MET_OCULTAS_PADRAO = [];
 
 function metSlug(txt) {
   return String(txt || '')
@@ -9838,7 +10085,7 @@ function aplicarMetricas() {
 
    Só acima de 760px: no celular a folha manda (2 colunas, span automático) e
    inline style ganharia da media query. */
-var TOTAIS_MAX_POR_LINHA = 6;   /* nível 2 e 3 em tela cheia */
+var TOTAIS_MAX_POR_LINHA = 4;   /* indicadores com largura de leitura confortável */
 
 function distribuirSpans(tiles, colunas, maxPorLinha) {
   var n = tiles.length;
@@ -10170,6 +10417,7 @@ function buscarLoteTendencia(esc) {
     })
     .then(function () {
       if (estado.painel.aberto && estado.painel.escopo === esc) pintarPainel();
+      if (window.BateuUI) window.BateuUI.refreshCharts();
     });
 }
 
@@ -10844,6 +11092,7 @@ function horaBR(iso, el) {
 }
 
 function pintarStatus(modo) {
+  if (window.BateuUI) window.BateuUI.setStatus(modo);
   var pill = $('#status-pill');
   var meta = $('.freshness__meta');
   $$('[data-field="atualizado_em"]').forEach(function (el) {
@@ -11185,7 +11434,14 @@ var SAFRA_ESCOPO_API = { cl: 'costa_lobao', geral: 'geral', google: 'google' };
 
 function carregarSafra(escopo) {
   if (!escopo || !SAFRA_ESCOPO_API[escopo]) return;
-  if (estado.safra[escopo]) { pintarSafraDoExpert(); pintarSafraFiltro(escopo); return; }
+  var anterior = estado.safra[escopo];
+  var temMesAtual = anterior && (anterior.meses || []).some(function (m) {
+    return m.mes === mesCorrente();
+  });
+  /* O refresh principal chama carregarSafra() a cada 5 min. Durante o mês,
+     a resposta em memória basta; na virada, ela fica velha por definição e
+     é revalidada até o workflow de 15 min gravar a primeira linha nova. */
+  if (temMesAtual) { pintarSafraDoExpert(); pintarSafraFiltro(escopo); return; }
   if (estado.safraBuscando[escopo]) return;
   estado.safraBuscando[escopo] = true;
 
@@ -11208,7 +11464,9 @@ function carregarSafra(escopo) {
       estado.safraFalhou[escopo] = false;
     })
     .catch(function () {
-      estado.safra[escopo] = null;
+      /* Revalidação falhou: mantém a safra anterior visível. Na primeira
+         busca não existe anterior, então o estado continua sendo erro real. */
+      estado.safra[escopo] = anterior || null;
       estado.safraFalhou[escopo] = true;
       var est = document.getElementById('pnl-safra-estado');
       if (est) {
@@ -11522,18 +11780,25 @@ function chaveCoorte(escopo, nome) {
   return escopo + '|' + nome + '|' + estado.coorteGran;
 }
 
-function carregarCoorte(escopo, nome) {
+var coorteRecebidaEm = {};
+function carregarCoorte(escopo, nome, forcar) {
   var api = COORTE_ESCOPO_API[escopo];
   if (!api || !nome) return;
   var k = chaveCoorte(escopo, nome);
-  if (estado.coorte[k] || estado.coorteBuscando[k]) { pintarCoorteDoExpert(); return; }
+  var anterior = estado.coorte[k];
+  var ttl = anterior && anterior.ainda_nao_calculado ? 60000 : 300000;
+  if (estado.coorteBuscando[k] || (!forcar && anterior &&
+      Date.now() - (coorteRecebidaEm[k] || 0) < ttl)) { pintarCoorteDoExpert(); return; }
   estado.coorteBuscando[k] = true;
+  var ctrlCoorte = new AbortController();
+  var limiteCoorte = setTimeout(function () { ctrlCoorte.abort(); }, 20000);
+  pintarCoorteDoExpert();
 
   fetch('/api/coorte?escopo=' + encodeURIComponent(api) +
         '&expert=' + encodeURIComponent(nome) +
         '&gran=' + estado.coorteGran +
         (escopo === 'cl' && CL_TOKEN ? '&_s=' + CL_NONCE : ''),
-        { cache: 'no-store', headers: cabecalhoCl({}) })
+        { cache: 'no-store', headers: cabecalhoCl({}), signal: ctrlCoorte.signal })
     .then(function (r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
@@ -11543,18 +11808,28 @@ function carregarCoorte(escopo, nome) {
        chegou inteiro e ainda escreve "não deu pra carregar" numa tela que
        carregou. O catch aqui só responde por falha de REDE. */
     .then(function (d) {
+      if (!d || !Array.isArray(d.safras)) throw new Error('Resposta inválida');
       estado.coorte[k] = d;
+      coorteRecebidaEm[k] = Date.now();
       estado.coorteFalhou[k] = false;
     })
     .catch(function () {
-      estado.coorte[k] = null;
+      estado.coorte[k] = anterior || null;
       estado.coorteFalhou[k] = true;
     })
     .then(function () {
+      clearTimeout(limiteCoorte);
       estado.coorteBuscando[k] = false;
       pintarCoorteDoExpert();
     });
 }
+
+/* Revalida somente o expert aberto, sem refazer a operação inteira. */
+setInterval(function () {
+  if (!document.hidden && estado.painel.aberto) {
+    carregarCoorte(estado.painel.escopo, estado.painel.nome);
+  }
+}, 60000);
 
 /* Redesenha a matriz do painel que estiver aberto. Chamada quando o dado chega
    e quando o painel abre — as duas pontas vivem em ciclos diferentes. */
@@ -11653,6 +11928,13 @@ function pintarCoorte(caixa, escopo, nome) {
     alternador.appendChild(b);
   });
   topo.appendChild(alternador);
+  var atualizar = document.createElement('button');
+  atualizar.type = 'button';
+  atualizar.className = 'coorte-atualizar';
+  atualizar.textContent = 'Atualizar safra';
+  atualizar.disabled = !!estado.coorteBuscando[chaveCoorte(escopo, nome)];
+  atualizar.addEventListener('click', function () { carregarCoorte(escopo, nome, true); });
+  topo.appendChild(atualizar);
   caixa.appendChild(topo);
 
   var k = chaveCoorte(escopo, nome);
@@ -11662,8 +11944,7 @@ function pintarCoorte(caixa, escopo, nome) {
     var est = document.createElement('p');
     est.className = 'mtz__nota';
     est.textContent = estado.coorteFalhou[k]
-      ? 'Não deu pra montar a matriz agora. Costuma ser limite de chamadas da ' +
-        'casa — reabrir o painel em alguns segundos resolve.'
+      ? 'Não foi possível consultar a safra. Tente atualizar; uma nova tentativa será feita automaticamente.'
       : 'Montando a matriz…';
     caixa.appendChild(est);
     return;
@@ -11673,8 +11954,9 @@ function pintarCoorte(caixa, escopo, nome) {
   if (!safras.length) {
     var vazio = document.createElement('p');
     vazio.className = 'mtz__nota';
-    vazio.textContent = 'Nenhuma safra ainda: esta operação não teve primeiro ' +
-      'depósito no período medido.';
+    vazio.textContent = d.ainda_nao_calculado
+      ? 'A safra deste expert ainda aguarda cálculo no n8n. A consulta será refeita automaticamente.'
+      : 'Nenhuma safra de primeiro depósito encontrada no período calculado.';
     caixa.appendChild(vazio);
     return;
   }
@@ -12537,6 +12819,7 @@ function carregar(opts) {
      MESMO recorte e não pode piscar a tela de quem está lendo. */
   var interativo = !!opts.interativo;
   estado.carregando = true;
+  if (window.BateuUI) window.BateuUI.setStatus('carregando');
   ROOT.setAttribute('data-state', (primeira || interativo) ? 'carregando' : 'atualizando');
   /* DUAS ESPERAS, DOIS TRATAMENTOS (ver o CSS, bloco ESPERA).
      primeira  -> SKELETON: não existe número real na tela, o que está atrás é
@@ -12666,6 +12949,7 @@ function carregar(opts) {
          Da segunda leitura em diante existe número real na tela, e o
          tratamento de espera passa a ser o desfoque (ver o CSS). */
       ROOT.removeAttribute('data-carga');
+      if (window.BateuUI) window.BateuUI.renderGoogle(d.google, d.periodo);
       elApply.disabled = false; elApply.textContent = 'Aplicar';
 
       /* TENDÊNCIA EM LOTE: uma chamada por escopo, revalidada aqui a cada
@@ -12807,6 +13091,7 @@ function aplicarDeltasBloco(raiz, atual, anterior) {
 function pintarDeltas(anteriorJson) {
   var d = estado.dados;
   if (!d) return;
+  if (window.BateuUI) window.BateuUI.setPrevious(anteriorJson);
   aplicarDeltasBloco(RAIZ_CL,
     d.experts ? totaisResumo(d) : null,
     anteriorJson && anteriorJson.experts ? totaisResumo(anteriorJson) : null);
@@ -12817,13 +13102,14 @@ function pintarDeltas(anteriorJson) {
 function buscarPeriodoAnterior(preset, r) {
   var ant = periodoAnteriorDe(preset, r);
   var id = ++reqIdAnterior;
+  var dadosDaConsulta = estado.dados, requisicao = estado.reqId;
   if (!ant) { pintarDeltas(null); return; }
   var url = ENDPOINT + '?de=' + encodeURIComponent(ant.de) + '&ate=' + encodeURIComponent(ant.ate);
   if (CL_TOKEN) url += '&_s=' + CL_NONCE;
   fetch(url, { cache: 'no-store', headers: cabecalhoCl({ accept: 'application/json' }) })
     .then(function (resp) { return resp.ok ? resp.json() : null; })
-    .then(function (d) { if (id === reqIdAnterior) pintarDeltas(d); })
-    .catch(function () { if (id === reqIdAnterior) pintarDeltas(null); });
+    .then(function (d) { if (id === reqIdAnterior && estado.reqId === requisicao && estado.dados === dadosDaConsulta) pintarDeltas(d); })
+    .catch(function () { if (id === reqIdAnterior && estado.reqId === requisicao && estado.dados === dadosDaConsulta) pintarDeltas(null); });
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -13059,14 +13345,14 @@ function pintarGbdEm(sec, c) {
   var corpo    = $('[data-gbd-corpo]', sec);
 
   if (c.estado !== 'ok') {
-    /* sem histórico nenhum (ou endpoint antigo) o bloco SOME: seção vazia com
-       texto de desculpa ocupa espaço e não informa nada */
-    if (c.estado === 'vazio' || c.estado === 'sem-endpoint') { sec.hidden = true; return; }
+    /* Ausência de dados fica explícita na análise, sem fazer a seção sumir. */
     sec.hidden = false;
     corpo.hidden = true;
     elEstado.hidden = false;
     elEstado.textContent = c.estado === 'erro'
       ? 'Não foi possível carregar o dia a dia' + (c.msg ? ' (' + c.msg + ')' : '') + '.'
+      : c.estado === 'vazio' ? 'Nenhum histórico recebido para este expert.'
+      : c.estado === 'sem-endpoint' ? 'A integração ainda não disponibiliza este histórico.'
       : 'Buscando o histórico…';
     return;
   }
@@ -13146,8 +13432,9 @@ document.addEventListener('click', function (ev) {
 
 function pintarDiarioGbd(esc) {
   var raiz = esc === 'cl' ? RAIZ_CL : RAIZ_GERAL;
-  var c = GBD_CACHE[esc] || { estado: 'carregando' };
-  if (raiz) pintarGbdEm($('[data-gbd]', raiz), c);
+  /* A comparação semanal pertence à análise do Big, não à lista de experts. */
+  var externo = raiz && $('[data-gbd]', raiz);
+  if (externo) externo.hidden = true;
   pintarGbdPainel();
 }
 
@@ -13510,6 +13797,7 @@ function pintarPainel() {
   var cc = chipCusto(e);
   PNL.chip.className = 'chip ' + cc.classe;
   PNL.chip.textContent = cc.txt;
+  if (window.BateuUI) window.BateuUI.renderExpert(e, esc);
 
   var r = textoResumo(e, cpa);
   PNL.resumo.className = 'pnl-card pnl-resumo pnl-resumo--' + r.tom;
@@ -14538,6 +14826,7 @@ function ligarUsuario() {
       nomeEl.textContent = d.nome || nomeDoEmail(d.email);
       nomeEl.title = d.email || '';
       caixa.hidden = false;
+      if (window.BateuUI) window.BateuUI.setUser(d);
     })
     .catch(function () {});
 }
@@ -15600,7 +15889,7 @@ document.addEventListener('visibilitychange', function () {
 });
 
 /* a pílula envelhece sozinha mesmo sem fetch novo */
-setInterval(function () { if (estado.dados) pintarStatus('ok'); }, 30000);
+setInterval(function () { if (estado.dados) pintarStatus($('#erro-banner').hidden ? 'ok' : 'erro'); }, 30000);
 
 /* PORTA FECHADA A CADA CARGA. Roda depois do hash: link salvo em #cl/... não
    pode entrar no recorte sem passar pela senha — e já abre o diálogo, porque
@@ -15608,6 +15897,14 @@ setInterval(function () { if (estado.dados) pintarStatus('ok'); }, 30000);
 trancaCl(true);
 if (VEIO_PARA_CL) abrirPortaCl();
 
+if (window.BateuUI) window.BateuUI.init({
+  state: estado,
+  openExpert: abrirPainel,
+  filterExperts: filtrarOps,
+  orderExperts: ordenarExperts,
+  today: hojeSP,
+  retryHistory: buscarLoteTendencia
+});
 carregar();
 })();
 </script>
