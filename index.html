@@ -2408,6 +2408,10 @@ html.rolado .brand__logo{height:19px}
    resumo traz cadastros/seguem/por-FTD em vez de invest→retorno. Reaproveita
    as classes .mtz__* inteiras -- cor, hachura, legenda e nota são as MESMAS
    regras, só o conteúdo muda (ver pintarSafraFiltro). */
+/* matriz M0/M1 do Google (04/09): respira depois da lista de contas */
+.google-coorte { margin-top: 32px; }
+.google-coorte:empty { display: none; }
+
 .sf-topo{margin:0 0 6px}
 .sf-filtros{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 /* TOTAL fecha o grid: um traço mais forte separa ele das linhas de expert. */
@@ -7350,6 +7354,12 @@ button,select,input,summary,label{-webkit-tap-highlight-color:transparent}
            não tem o que escolher) e sem filtro de mês (matriz sempre inteira):
            JS em pintarSafraGoogle(). Mesmas classes .mtz da coorte/safra dos
            outros dois escopos. -->
+
+      <!-- Matriz M0/M1/M2 por safra de FTD (04/09): mesma rota /api/coorte
+           dos experts, expert 'GOOGLE'. Desenhada por pintarCoorte() via
+           pintarCoorteDoExpert(); a busca sai de pintarGoogle(). -->
+      <div class="google-coorte" data-google-coorte></div>
+
       <div class="mtz__topo sf-topo">
         <div>
           <p class="mtz__tit">Safra · turma por mês de cadastro</p>
@@ -10793,10 +10803,19 @@ function pintarGoogle(g, periodo) {
   /* safra é busca sob demanda, uma vez por sessão (mesma regra dos outros
      dois escopos) -- carregarSafra é idempotente, com o dado em mãos só repinta */
   carregarSafra('google');
+  /* matriz M0/M1/M2 por safra de FTD (pedido do Costa 04/09: "tem que
+     aparecer M0, M1 de junho") -- mesma rota /api/coorte dos experts, com
+     TTL de 5 min dentro de carregarCoorte, então repetir aqui a cada refresh
+     não custa chamada nova. */
+  carregarCoorte('google', 'GOOGLE');
 
   var t = g.tap || {};
   var inv = ehNum(g.investimento_total) ? g.investimento_total : null;
   var pend = !!g.investimento_pendente;
+  /* TAP RECUSOU A LEITURA (rate limit / chave): o back marca em
+     google.tap_indisponivel (04/09). Sem isso o funil zerado passava por
+     resultado -- foi o que congelou agosto/26 em 0 cadastro no cache. */
+  var tapFalhou = !!g.tap_indisponivel || !!(estado.dados && estado.dados.tap_indisponivel);
 
   escreve(campo(raiz, 'periodo_label'), rotuloPeriodo(periodo));
   escreve(campo(raiz, 'google.mcc'), g.mcc || '—');
@@ -10810,8 +10829,13 @@ function pintarGoogle(g, periodo) {
 
   var aviso = $('#google-aviso', raiz);
   if (aviso) {
-    aviso.hidden = !pend;
-    if (pend) {
+    aviso.hidden = !pend && !tapFalhou;
+    if (tapFalhou) {
+      aviso.innerHTML = '<b>A TAP recusou a leitura do funil do Google nesta consulta</b> ' +
+        '(limite de requisições ou chave). O investimento é real; cadastros, FTD, ' +
+        'depósito e volume aparecem como — em vez de R$ 0,00, porque zero aqui ' +
+        'seria lido como "não converteu". Recarregue em alguns minutos.';
+    } else if (pend) {
       aviso.innerHTML = '<b>O investimento do Google ainda não entra sozinho.</b> ' +
         'O funil abaixo (cadastros, FTD, depósito, volume) é real e vem da TAP pelo btag ' +
         (g.btag || '—') + '. O gasto por conta depende da credencial da Google Ads API, ' +
@@ -10965,6 +10989,20 @@ function pintarGoogle(g, periodo) {
     escreve(elSobraG, pend ? 'aguardando API' : brl(netPlG - comissaoG));
     escreve(sub(elSobraG), pend ? 'sem o gasto do Google não dá pra fechar a conta'
                                 : 'net PL − comissão · nada investido');
+  }
+
+  if (tapFalhou) {
+    $$('[data-field^="google."]', raiz).forEach(function (el) {
+      var n = el.getAttribute('data-field');
+      if (n === 'google.mcc' || n === 'google.investimento_total') return;
+      escreve(el, '—');
+      el.classList.remove('val--good', 'val--warn', 'val--bad', 'num--pos', 'num--neg');
+      var s = sub(el);
+      if (s) { escreve(s, 'funil da TAP indisponível nesta leitura'); s.classList.remove('is-good', 'is-warn', 'is-bad'); }
+    });
+    /* o investimento fica, mas "por cadastro" não tem base sem o funil */
+    var subInvG = sub(campo(raiz, 'google.investimento_total'));
+    if (subInvG) escreve(subInvG, 'custo por cadastro sem base: funil da TAP indisponível');
   }
 
   /* lista de contas da MCC */
@@ -11764,7 +11802,7 @@ function pintarSafraDoExpert() {
    Por que a matriz é um triângulo: safra nova ainda não teve tempo de
    envelhecer. Célula que falta é mês que NÃO CHEGOU — e por isso não é
    desenhada. Zero desenhado é a turma que teve o mês e não gerou nada. */
-var COORTE_ESCOPO_API = { cl: 'costa_lobao', geral: 'geral' };
+var COORTE_ESCOPO_API = { cl: 'costa_lobao', geral: 'geral', google: 'google' };
 
 /* SEM CENTAVOS, ao contrário do brl() do resto do painel. Numa matriz de 11
    colunas os ",00" empurram a largura de cada célula e não dizem nada: a
@@ -11836,6 +11874,12 @@ setInterval(function () {
    e quando o painel abre — as duas pontas vivem em ciclos diferentes. */
 function pintarCoorteDoExpert() {
   pintarCoortesDaAba();
+  /* Google (04/09): a matriz M0/M1/M2 por safra de FTD mora dentro do próprio
+     escopo, não num painel de expert -- é uma conta só ('GOOGLE' na rota da
+     coorte). Repinta junto com as outras porque o dado chega pelo mesmo
+     carregarCoorte(). */
+  var caixaGoogle = RAIZ_GOOGLE ? $('[data-google-coorte]', RAIZ_GOOGLE) : null;
+  if (caixaGoogle) pintarCoorte(caixaGoogle, 'google', 'GOOGLE');
   if (!estado.painel.aberto) return;
   var caixa = document.getElementById('pnl-coorte');
   if (!caixa) return;
@@ -11892,7 +11936,7 @@ function chipPayback(s, gran) {
 function pintarCoorte(caixa, escopo, nome, mesesPermitidos) {
   caixa.innerHTML = '';
 
-  if (!COORTE_ESCOPO_API[escopo]) return;   /* Google é um btag só, sem expert */
+  if (!COORTE_ESCOPO_API[escopo]) return;
 
   var gran = estado.coorteGran;
   var semana = gran === 'semana';

@@ -104,6 +104,7 @@ module.exports = async function handler(req, res) {
     } finally {
       clearTimeout(timer);
     }
+    if (!r.ok) throw new Error('Falha HTTP do upstream');
     corpo = await r.json();
   } catch (e) {
     /* n8n fora do ar ou lento — resposta rápida e honesta, sem travar o
@@ -124,7 +125,7 @@ module.exports = async function handler(req, res) {
      cada rodízio de ~15 min na melhor das hipóteses, e cada expert leva
      bem mais que isso pra dar a volta completa) — meia hora de borda tira
      o peso de cima do n8n sem ninguém notar dado velho. */
-  res.setHeader('Cache-Control',
-    'public, max-age=0, s-maxage=1800, stale-while-revalidate=86400');
+  /* Dados privados e estados pendentes nunca ficam presos no cache de borda. */
+  res.setHeader('Cache-Control', 'private, no-store');
   return res.status(200).json(corpo);
 };

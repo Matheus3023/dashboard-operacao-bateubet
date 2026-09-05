@@ -314,7 +314,7 @@
   function renderScope(scope, block) {
     var p = panels[scope]; if (!p || !block) return;
     blocks[scope] = block;
-    var t = totalsOf(block), failed = api.state.dados && api.state.dados.tap_indisponivel;
+    var t = totalsOf(block), failed = (api.state.dados && api.state.dados.tap_indisponivel) || !!block.tap_indisponivel;
     metrics.forEach(function (m) { p.values[m.key].textContent = brl(failed && m.key !== 'investimento_total' ? null : t[m.key]); });
     var per = block.periodo || {};
     var date = function (s) { return s ? s.slice(8) + '/' + s.slice(5, 7) + '/' + s.slice(0, 4) : '—'; };
@@ -329,7 +329,7 @@
   }
   function renderGoogle(g, period) {
     if (!g) return;
-    renderScope('google', { totais: Object.assign({}, g.tap || {}, { investimento_total: g.investimento_pendente ? null : g.investimento_total }), experts: [], periodo: period });
+    renderScope('google', { totais: Object.assign({}, g.tap || {}, { investimento_total: g.investimento_pendente ? null : g.investimento_total }), experts: [], periodo: period, tap_indisponivel: !!g.tap_indisponivel });
   }
   function renderExpert(expert, scope) {
     var p = panels.detail;

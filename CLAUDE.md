@@ -607,6 +607,75 @@ girando por todos; dois carimbos só (mês corrente + um fixo) = pinado.
 Execuções de sucesso não são salvas (`saveDataSuccessExecution: none`),
 então o payload é a única evidência.
 
+**✅ Mês novo não aparecia sem reload (02/09):** `carregarSafra()` guardava
+a resposta uma vez por sessão. O auto-refresh de 5 min repintava a dashboard,
+mas devolvia cedo ao encontrar `estado.safra[escopo]`; uma aba aberta antes da
+primeira linha de setembro ficava em agosto para sempre. Agora o cache só é
+aceito quando `d.meses` contém `mesCorrente()`. Enquanto o workflow ainda não
+gravou o mês novo, cada refresh de 5 min revalida a rota; assim que aparece,
+volta ao cache de sessão. Falha durante a revalidação preserva a safra velha
+na tela em vez de apagá-la.
+
+## Google: agosto zerado no cache + matriz M0/M1 (04/09)
+
+Costa: "google ta com erro em puxar as informacoes na dashboard e também está
+com safra errada, tem que aparecer m0, m1 de junho".
+
+**Erro real: período fechado gravado com o funil do Google zerado.** O
+"Mês ant." (01 a 31/08) mostrava R$ 220k de investimento e 0 cadastro / 0
+FTD / R$ 0 de depósito no Google, enquanto a TAP tinha 2.885 cadastros e
+1.120 FTD. Causa: `Vale cachear?` (Webhook API) só recusava gravar quando a
+TAP do **Meta** era recusada (`tap_indisponivel` da raiz, lido de `TAP
+Insights` e `TAP Insights Geral`). A TAP do btag 543779 (`TAP Google`) podia
+ser recusada por rate limit no meio do cálculo, `Montar Google` somava zero
+por cima e o período fechado congelava assim pra sempre (gravado em 02/09
+10:30). Mesma família do bug de 27/08 na Safra: node HTTP com
+`onError: continueRegularOutput` + soma que não distingue "lista vazia" de
+"leitura recusada".
+
+Correção (n8n, publicada nos dois workflows):
+- `Montar Google` (Webhook API `DVktMsSnzZXHjHnL` e Refresh Cache
+  `pkJn786DgYd4BjxL`): lê a resposta crua de `TAP Google` e publica
+  `google.tap_indisponivel` (true se `errCode`/`error` presente ou `data` não
+  é array).
+- `Vale cachear?`: além de `p.tap_indisponivel`, recusa com
+  `p.google.tap_indisponivel === true`.
+- `Calcular datas hoje`: `VERSAO_PAYLOAD` v16 → **v17**, descartando todo
+  período fechado gravado com o Google zerado. Validado: agosto refeito ao
+  vivo em 36s com 2.885 cadastros / 1.132 FTD / R$ 660k de depósito.
+- A flag NÃO entra no `tap_indisponivel` da raiz de propósito: no Refresh
+  Cache, `TAP respondeu?` segura o snapshot `hoje` inteiro quando a raiz está
+  true, e uma recusa só do Google travaria o Meta junto. O Google avisa por
+  conta própria.
+
+Front (`index.html` + `dashboard-ui.js`): `pintarGoogle()` lê
+`g.tap_indisponivel` (ou o da raiz), troca o `#google-aviso` pelo texto de
+"TAP recusou a leitura" e escreve `—` em todo `[data-field^="google."]` menos
+MCC e investimento (sub "funil da TAP indisponível nesta leitura").
+`renderScope()` aceita `block.tap_indisponivel` e `renderGoogle()` repassa —
+o shell mostra "Dados TAP indisponíveis" e traços, sem R$ 0,00.
+
+**Matriz M0/M1 do Google (a "safra errada").** A seção do Google só tinha a
+safra por mês de CADASTRO (`pintarSafraGoogle`); a coorte por safra de FTD
+(M0, M1, M2… por mês de primeiro depósito) estava desligada de propósito
+(`COORTE_ESCOPO_API` sem `google` e um `return` em `pintarCoorte`), apesar de
+`/api/coorte?escopo=google&expert=GOOGLE` já responder desde 26/08. Ligada:
+`COORTE_ESCOPO_API.google = 'google'`, caixa `[data-google-coorte]` no HTML do
+escopo (antes da safra por cadastro), `pintarGoogle()` chama
+`carregarCoorte('google', 'GOOGLE')` e `pintarCoorteDoExpert()` repinta essa
+caixa junto com as outras. Mesmo componente dos experts (toggle Mês/Semana,
+"Atualizar safra", chip de payback). Verificado na prévia local
+(`node tests/preview.cjs`, porta 4180) com o fetch de `/api/dashboard`
+remendado pra `google.tap_indisponivel = true`: traços + aviso, e a matriz
+M0/M1/M2 desenhada dentro do Google.
+
+**Achado colateral, não corrigido**: o workflow `Dashboard Operação - Coorte`
+(`eURadR19TlocBv1C`) está falhando ~150×/dia em "TAP incompleta em N
+janela(s)" na granularidade SEMANA (16 janelas = 16 chamadas por execução,
+rate limit no meio). Cada falha queima cota da TAP e é parte do motivo de a
+TAP recusar leituras dos outros workflows. Vale reduzir a janela semanal ou
+serializar com backoff.
+
 ## Workflow deste projeto (instrução do Costa, 26/08)
 
 - Toda mensagem do Costa referente a este projeto: antes de responder ou editar, rodar `graphify query "<pergunta derivada da mensagem>"` pra entender o estado atual do projeto pelo grafo. Depois de qualquer edição de código, rodar `graphify update .` (o hook post-commit já cobre o momento do commit, mas atualize também fora dele quando editar sem commitar na hora).
