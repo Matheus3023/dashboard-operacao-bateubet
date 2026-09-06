@@ -11935,6 +11935,8 @@ function chipPayback(s, gran) {
 
 function pintarCoorte(caixa, escopo, nome, mesesPermitidos) {
   caixa.innerHTML = '';
+  /* O rótulo da verba segue o escopo: no Google a coluna "ads" é Google Ads. */
+  var plataformaAds = escopo === 'google' ? 'Google Ads' : 'Meta Ads';
 
   if (!COORTE_ESCOPO_API[escopo]) return;
 
@@ -12129,7 +12131,7 @@ function pintarCoorte(caixa, escopo, nome, mesesPermitidos) {
     resumo.appendChild(linhaRes);
     var chip = chipPayback(s, gran);
     if (chip) resumo.appendChild(chip);
-    resumo.title = 'Investimento em Meta Ads d' +
+    resumo.title = 'Investimento em ' + plataformaAds + ' d' +
       (semana ? 'a semana' : 'o mês') + ' da safra × o acumulado que a turma ' +
       'gerou até hoje. O gasto do período também trouxe gente que ainda não ' +
       'depositou — é régua de comparação, não extrato.';
@@ -12219,7 +12221,7 @@ function pintarCoorte(caixa, escopo, nome, mesesPermitidos) {
     'Cada célula é só o GGR DAQUELE período — não é acumulado; o acumulado ' +
     'mora na coluna "invest → retorno", junto com o net dep, o volume ' +
     'apostado e o payback. ' +
-    '"ads" é o gasto de Meta Ads do período da safra (aproximação: parte ' +
+    '"ads" é o gasto de ' + plataformaAds + ' do período da safra (aproximação: parte ' +
     'dessa verba trouxe gente que ainda não depositou). ' +
     'Célula em branco é período que ainda não chegou; hachurada ' +
     'é o corrente, que ainda vai subir.';
