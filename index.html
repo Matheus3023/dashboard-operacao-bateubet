@@ -2527,6 +2527,15 @@ html.rolado .brand__logo{height:19px}
 }
 .mtz__tit{margin:0 0 2px;font-size:1rem;font-weight:700;color:var(--txt-1)}
 .mtz__sub{margin:0 0 12px;font-size:.75rem;color:var(--txt-3);line-height:1.5}
+/* Safra real (07/09): tabela simples Safra|Investido|Net real|ROI, acumulado
+   por safra — não é uma grade M0/M1/M2, então não reaproveita .mtz__grade. */
+.safrareal__tb{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.8125rem}
+.safrareal__tb th{text-align:left;padding:6px 10px;font-family:var(--mono);font-size:.625rem;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-3);font-weight:600;border-bottom:1px solid var(--line-strong)}
+.safrareal__tb td{padding:8px 10px;border-bottom:1px solid var(--line);color:var(--txt)}
+.safrareal__tb tbody tr:last-child td{border-bottom:none}
+.safrareal__pool td{font-weight:700;color:var(--txt-1);border-top:2px solid var(--line-strong)}
+.val--pos{color:var(--good)}
+.val--neg{color:var(--bad)}
 .mtz__grade{display:grid;min-width:100%;width:max-content;gap:3px}
 .mtz__c{
   padding:9px 10px;font-size:.8125rem;font-weight:700;border-radius:5px;
@@ -7628,6 +7637,15 @@ button,select,input,summary,label{-webkit-tap-highlight-color:transparent}
         <div id="pnl-coorte"></div>
       </section>
 
+      <!-- 4c. SAFRA REAL (07/09) · ROI por safra usando net_real (net depósito
+           − saldo em carteira), não net_pl cru. Acumulado por safra, SEM
+           M0/M1/M2 — a versão mensal ainda tem uma divergência de ~8% não
+           resolvida (ver api/safra-real.js). Card próprio porque a fonte é um
+           arquivo estático recalculado manualmente, não o rodízio do n8n. -->
+      <section class="pnl-card" id="pnl-safra-real-card">
+        <div id="pnl-safra-real"></div>
+      </section>
+
       <!-- 5. RECOMENDAÇÃO -->
       <section class="pnl-card pnl-rec pnl-rec--na" id="pnl-rec">
         <p class="pnl-rec__acao" id="pnl-rec-acao">Recomendação</p>
@@ -11867,8 +11885,133 @@ function carregarCoorte(escopo, nome, forcar) {
 setInterval(function () {
   if (!document.hidden && estado.painel.aberto) {
     carregarCoorte(estado.painel.escopo, estado.painel.nome);
+    carregarSafraReal(estado.painel.escopo, estado.painel.nome);
   }
 }, 60000);
+
+/* ── SAFRA REAL (07/09) ──────────────────────────────────────────────────
+   ROI por safra com net_real = net_deposit − saldo_carteira, acumulado (sem
+   M0/M1/M2 — ver nota em api/safra-real.js). Fonte é um arquivo estático
+   recalculado manualmente, não o rodízio do n8n; por isso o TTL de cache
+   aqui é bem mais folgado (2h) que o da coorte (5min) — não faz sentido
+   martelar uma rota cujo dado só muda quando alguém roda o pipeline manual
+   de novo. */
+estado.safraReal = {};
+estado.safraRealBuscando = {};
+var safraRealRecebidaEm = {};
+function carregarSafraReal(escopo, nome, forcar) {
+  if (!nome) return;
+  var k = escopo + '|' + nome;
+  var anterior = estado.safraReal[k];
+  var ttl = 2 * 60 * 60 * 1000;
+  if (estado.safraRealBuscando[k] || (!forcar && anterior &&
+      Date.now() - (safraRealRecebidaEm[k] || 0) < ttl)) { pintarSafraRealDoExpert(); return; }
+  estado.safraRealBuscando[k] = true;
+  pintarSafraRealDoExpert();
+
+  fetch('/api/safra-real?escopo=' + encodeURIComponent(escopo) +
+        '&expert=' + encodeURIComponent(nome) +
+        (escopo === 'cl' && CL_TOKEN ? '&_s=' + CL_NONCE : ''),
+        { cache: 'no-store', headers: cabecalhoCl({}) })
+    .then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function (d) {
+      if (!d || !Array.isArray(d.safras)) throw new Error('Resposta inválida');
+      estado.safraReal[k] = d;
+      safraRealRecebidaEm[k] = Date.now();
+    })
+    .catch(function () {
+      estado.safraReal[k] = anterior || null;
+    })
+    .then(function () {
+      estado.safraRealBuscando[k] = false;
+      pintarSafraRealDoExpert();
+    });
+}
+
+function pintarSafraRealDoExpert() {
+  if (!estado.painel.aberto) return;
+  var caixa = document.getElementById('pnl-safra-real');
+  if (!caixa) return;
+  pintarSafraReal(caixa, estado.painel.escopo, estado.painel.nome);
+}
+
+function pintarSafraReal(caixa, escopo, nome) {
+  caixa.innerHTML = '';
+  var k = escopo + '|' + nome;
+  var d = estado.safraReal[k];
+
+  var topo = document.createElement('div');
+  topo.className = 'mtz__topo';
+  var topoTxt = document.createElement('div');
+  var tit = document.createElement('p');
+  tit.className = 'mtz__tit';
+  tit.textContent = 'ROI por safra (net real, acumulado)';
+  topoTxt.appendChild(tit);
+  var sub = document.createElement('p');
+  sub.className = 'mtz__sub';
+  sub.textContent = 'net real = net depósito − saldo em carteira · não é o mesmo cálculo da matriz M0/M1/M2 acima';
+  topoTxt.appendChild(sub);
+  topo.appendChild(topoTxt);
+  caixa.appendChild(topo);
+
+  if (estado.safraRealBuscando[k] && !d) {
+    var carregando = document.createElement('p');
+    carregando.className = 'mtz__nota';
+    carregando.textContent = 'Buscando…';
+    caixa.appendChild(carregando);
+    return;
+  }
+  if (!d || d.ainda_nao_calculado || !d.safras || !d.safras.length) {
+    var vazio = document.createElement('p');
+    vazio.className = 'mtz__nota';
+    vazio.textContent = 'Sem safra real calculada pra este expert ainda.';
+    caixa.appendChild(vazio);
+    return;
+  }
+
+  var tabela = document.createElement('table');
+  tabela.className = 'safrareal__tb';
+  var thead = document.createElement('thead');
+  thead.innerHTML = '<tr><th>Safra</th><th>Investido</th><th>Net real</th><th>ROI</th><th>Jogadores</th></tr>';
+  tabela.appendChild(thead);
+  var tbody = document.createElement('tbody');
+
+  function linha(mes, inv, real, roi, jog, ehPool) {
+    var tr = document.createElement('tr');
+    if (ehPool) tr.className = 'safrareal__pool';
+    var tdMes = document.createElement('td');
+    tdMes.textContent = mes;
+    var tdInv = document.createElement('td');
+    tdInv.textContent = inv == null ? 'sem dado' : (brl(inv) || 'R$ 0,00');
+    var tdReal = document.createElement('td');
+    tdReal.textContent = brl(real) || 'R$ 0,00';
+    tdReal.className = real > 0 ? 'val--pos' : (real < 0 ? 'val--neg' : '');
+    var tdRoi = document.createElement('td');
+    tdRoi.textContent = roi == null ? '—' : vezes(roi);
+    var tdJog = document.createElement('td');
+    tdJog.textContent = inteiro(jog) || '0';
+    tr.appendChild(tdMes); tr.appendChild(tdInv); tr.appendChild(tdReal); tr.appendChild(tdRoi); tr.appendChild(tdJog);
+    tbody.appendChild(tr);
+  }
+
+  d.safras.forEach(function (s) {
+    linha(mesCurto(s.safra), s.investido, s.net_real, s.roi, s.jogadores, false);
+  });
+  linha('Pool', d.pool_investido, d.pool_net_real, d.pool_roi, d.pool_jogadores, true);
+  tabela.appendChild(tbody);
+  caixa.appendChild(tabela);
+
+  if (d.gerado_em) {
+    var nota = document.createElement('p');
+    nota.className = 'mtz__nota';
+    nota.textContent = 'Calculado manualmente em ' + new Date(d.gerado_em).toLocaleString('pt-BR') +
+      ' — não atualiza sozinho (ver api/safra-real.js).';
+    caixa.appendChild(nota);
+  }
+}
 
 /* Redesenha a matriz do painel que estiver aberto. Chamada quando o dado chega
    e quando o painel abre — as duas pontas vivem em ciclos diferentes. */
@@ -14228,6 +14371,7 @@ function abrirPainel(nome, esc, origem) {
      escopo), custa ~11 leituras da TAP, e o desenho precisa saber de quem é o
      painel aberto pra não pintar a matriz do expert anterior. */
   carregarCoorte(esc, nome);
+  carregarSafraReal(esc, nome);
   PNL.x.focus();
 }
 

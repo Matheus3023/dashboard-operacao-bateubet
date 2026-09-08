@@ -1,0 +1,1064 @@
+{
+  "gerado_em": "2026-09-07T20:00:00-03:00",
+  "metodo": "net_real = net_deposit - saldo_carteira (Databricks player_summary), jogador por jogador via TAP af2_regs_op, acumulado por safra (mes do FTD). Nao decompoe em M0/M1/M2 -- isso ainda nao foi validado.",
+  "experts": {
+    "BATEU - TALYSON": {
+      "safras": [
+        {
+          "safra": "2026-07",
+          "investido": 0.0,
+          "net_real": 106662.98,
+          "roi": null,
+          "jogadores": 22
+        },
+        {
+          "safra": "2026-08",
+          "investido": 31731.39,
+          "net_real": 415920.13,
+          "roi": 13.11,
+          "jogadores": 166
+        },
+        {
+          "safra": "2026-09",
+          "investido": 28524.74,
+          "net_real": 13827.69,
+          "roi": 0.48,
+          "jogadores": 115
+        }
+      ],
+      "pool_investido": 60256.13,
+      "pool_net_real": 536410.8,
+      "pool_roi": 8.9,
+      "pool_jogadores": 303
+    },
+    "BATEU BET - GIOVANNI ROLETA": {
+      "safras": [
+        {
+          "safra": "2026-08",
+          "investido": 7938.53,
+          "net_real": -113794.34,
+          "roi": -14.33,
+          "jogadores": 123
+        }
+      ],
+      "pool_investido": 7938.53,
+      "pool_net_real": -113794.34,
+      "pool_roi": -14.33,
+      "pool_jogadores": 123
+    },
+    "BATEU BET - HENRIQUE 500K": {
+      "safras": [
+        {
+          "safra": "2026-08",
+          "investido": 11239.65,
+          "net_real": 58435.31,
+          "roi": 5.2,
+          "jogadores": 143
+        },
+        {
+          "safra": "2026-09",
+          "investido": 5986.32,
+          "net_real": 10793.84,
+          "roi": 1.8,
+          "jogadores": 90
+        }
+      ],
+      "pool_investido": 17225.97,
+      "pool_net_real": 69229.15,
+      "pool_roi": 4.02,
+      "pool_jogadores": 233
+    },
+    "CAIO TIPS": {
+      "safras": [
+        {
+          "safra": "2025-10",
+          "investido": 0.0,
+          "net_real": 22065.45,
+          "roi": null,
+          "jogadores": 334
+        },
+        {
+          "safra": "2025-11",
+          "investido": 0.0,
+          "net_real": 14350.08,
+          "roi": null,
+          "jogadores": 243
+        },
+        {
+          "safra": "2025-12",
+          "investido": 0.0,
+          "net_real": 3288.33,
+          "roi": null,
+          "jogadores": 191
+        },
+        {
+          "safra": "2026-01",
+          "investido": 0.0,
+          "net_real": 2660.58,
+          "roi": null,
+          "jogadores": 181
+        },
+        {
+          "safra": "2026-02",
+          "investido": 0.0,
+          "net_real": 4049.58,
+          "roi": null,
+          "jogadores": 46
+        },
+        {
+          "safra": "2026-03",
+          "investido": 0.0,
+          "net_real": 2326.08,
+          "roi": null,
+          "jogadores": 35
+        },
+        {
+          "safra": "2026-04",
+          "investido": 0.0,
+          "net_real": 5731.37,
+          "roi": null,
+          "jogadores": 106
+        },
+        {
+          "safra": "2026-05",
+          "investido": 0.0,
+          "net_real": -305.37,
+          "roi": null,
+          "jogadores": 179
+        },
+        {
+          "safra": "2026-06",
+          "investido": 22442.57,
+          "net_real": 45486.15,
+          "roi": 2.03,
+          "jogadores": 1277
+        },
+        {
+          "safra": "2026-07",
+          "investido": 2551.13,
+          "net_real": 1894.63,
+          "roi": 0.74,
+          "jogadores": 154
+        },
+        {
+          "safra": "2026-08",
+          "investido": 0.0,
+          "net_real": 69.99,
+          "roi": null,
+          "jogadores": 10
+        },
+        {
+          "safra": "2026-09",
+          "investido": 0.0,
+          "net_real": 34.4,
+          "roi": null,
+          "jogadores": 4
+        }
+      ],
+      "pool_investido": 24993.7,
+      "pool_net_real": 101651.27,
+      "pool_roi": 4.07,
+      "pool_jogadores": 2760
+    },
+    "CHARLES": {
+      "safras": [
+        {
+          "safra": "2026-07",
+          "investido": 282.68,
+          "net_real": 9975.93,
+          "roi": 35.29,
+          "jogadores": 29
+        },
+        {
+          "safra": "2026-08",
+          "investido": 4545.75,
+          "net_real": 46941.33,
+          "roi": 10.33,
+          "jogadores": 23
+        },
+        {
+          "safra": "2026-09",
+          "investido": 0.0,
+          "net_real": 3430.64,
+          "roi": null,
+          "jogadores": 2
+        }
+      ],
+      "pool_investido": 4828.43,
+      "pool_net_real": 60347.9,
+      "pool_roi": 12.5,
+      "pool_jogadores": 54
+    },
+    "COSTA E LOBAO": {
+      "safras": [
+        {
+          "safra": "2026-04",
+          "investido": 0.0,
+          "net_real": 20.0,
+          "roi": null,
+          "jogadores": 1
+        },
+        {
+          "safra": "2026-05",
+          "investido": 0.0,
+          "net_real": 1073.7,
+          "roi": null,
+          "jogadores": 13
+        },
+        {
+          "safra": "2026-06",
+          "investido": 0.0,
+          "net_real": 610.07,
+          "roi": null,
+          "jogadores": 32
+        },
+        {
+          "safra": "2026-07",
+          "investido": 7514.2,
+          "net_real": 952.94,
+          "roi": 0.13,
+          "jogadores": 108
+        },
+        {
+          "safra": "2026-08",
+          "investido": 8338.81,
+          "net_real": 349.92,
+          "roi": 0.04,
+          "jogadores": 55
+        },
+        {
+          "safra": "2026-09",
+          "investido": 3709.31,
+          "net_real": -23.54,
+          "roi": -0.01,
+          "jogadores": 16
+        }
+      ],
+      "pool_investido": 19562.32,
+      "pool_net_real": 2983.09,
+      "pool_roi": 0.15,
+      "pool_jogadores": 225
+    },
+    "DEKO": {
+      "safras": [
+        {
+          "safra": "2025-09",
+          "investido": 0.0,
+          "net_real": 528145.88,
+          "roi": null,
+          "jogadores": 342
+        },
+        {
+          "safra": "2025-10",
+          "investido": 0.0,
+          "net_real": 112486.36,
+          "roi": null,
+          "jogadores": 270
+        },
+        {
+          "safra": "2025-11",
+          "investido": 0.0,
+          "net_real": -1371.27,
+          "roi": null,
+          "jogadores": 89
+        },
+        {
+          "safra": "2025-12",
+          "investido": 0.0,
+          "net_real": 1060.61,
+          "roi": null,
+          "jogadores": 6
+        },
+        {
+          "safra": "2026-01",
+          "investido": 0.0,
+          "net_real": -9270.38,
+          "roi": null,
+          "jogadores": 3
+        },
+        {
+          "safra": "2026-02",
+          "investido": 0.0,
+          "net_real": 242.05,
+          "roi": null,
+          "jogadores": 2
+        },
+        {
+          "safra": "2026-03",
+          "investido": 0.0,
+          "net_real": 1670.42,
+          "roi": null,
+          "jogadores": 5
+        },
+        {
+          "safra": "2026-04",
+          "investido": 0.0,
+          "net_real": -1.59,
+          "roi": null,
+          "jogadores": 3
+        },
+        {
+          "safra": "2026-05",
+          "investido": 3552.79,
+          "net_real": 2746.23,
+          "roi": 0.77,
+          "jogadores": 17
+        },
+        {
+          "safra": "2026-06",
+          "investido": 4128.94,
+          "net_real": 9440.11,
+          "roi": 2.29,
+          "jogadores": 44
+        },
+        {
+          "safra": "2026-07",
+          "investido": 6359.18,
+          "net_real": 47944.44,
+          "roi": 7.54,
+          "jogadores": 97
+        },
+        {
+          "safra": "2026-08",
+          "investido": 36457.88,
+          "net_real": 33556.45,
+          "roi": 0.92,
+          "jogadores": 182
+        },
+        {
+          "safra": "2026-09",
+          "investido": 0.0,
+          "net_real": 3236.32,
+          "roi": null,
+          "jogadores": 47
+        }
+      ],
+      "pool_investido": 50498.79,
+      "pool_net_real": 729885.63,
+      "pool_roi": 14.45,
+      "pool_jogadores": 1107
+    },
+    "DIEGO LUGO": {
+      "safras": [
+        {
+          "safra": "2026-06",
+          "investido": 1031.47,
+          "net_real": 276162.28,
+          "roi": 267.74,
+          "jogadores": 85
+        },
+        {
+          "safra": "2026-07",
+          "investido": 21406.61,
+          "net_real": 274.53,
+          "roi": 0.01,
+          "jogadores": 128
+        },
+        {
+          "safra": "2026-08",
+          "investido": 21485.86,
+          "net_real": 21000.42,
+          "roi": 0.98,
+          "jogadores": 121
+        },
+        {
+          "safra": "2026-09",
+          "investido": 2173.99,
+          "net_real": 275.26,
+          "roi": 0.13,
+          "jogadores": 17
+        }
+      ],
+      "pool_investido": 46097.93,
+      "pool_net_real": 297712.49,
+      "pool_roi": 6.46,
+      "pool_jogadores": 351
+    },
+    "EDERSON": {
+      "safras": [
+        {
+          "safra": "2026-05",
+          "investido": 0.0,
+          "net_real": 67554.78,
+          "roi": null,
+          "jogadores": 39
+        },
+        {
+          "safra": "2026-06",
+          "investido": 0.0,
+          "net_real": 126288.81,
+          "roi": null,
+          "jogadores": 13
+        },
+        {
+          "safra": "2026-07",
+          "investido": 214.32,
+          "net_real": 57799.74,
+          "roi": 269.69,
+          "jogadores": 16
+        },
+        {
+          "safra": "2026-08",
+          "investido": 1242.53,
+          "net_real": 2913.44,
+          "roi": 2.34,
+          "jogadores": 11
+        },
+        {
+          "safra": "2026-09",
+          "investido": 0.0,
+          "net_real": -33.33,
+          "roi": null,
+          "jogadores": 3
+        }
+      ],
+      "pool_investido": 1456.85,
+      "pool_net_real": 254523.44,
+      "pool_roi": 174.71,
+      "pool_jogadores": 82
+    },
+    "FELIPE BORGES": {
+      "safras": [
+        {
+          "safra": "2025-10",
+          "investido": 0.0,
+          "net_real": 34803.5,
+          "roi": null,
+          "jogadores": 51
+        },
+        {
+          "safra": "2025-11",
+          "investido": 0.0,
+          "net_real": -29504.87,
+          "roi": null,
+          "jogadores": 116
+        },
+        {
+          "safra": "2025-12",
+          "investido": 0.0,
+          "net_real": 10837.35,
+          "roi": null,
+          "jogadores": 148
+        },
+        {
+          "safra": "2026-01",
+          "investido": 0.0,
+          "net_real": -124198.59,
+          "roi": null,
+          "jogadores": 237
+        },
+        {
+          "safra": "2026-02",
+          "investido": 0.0,
+          "net_real": 11351.89,
+          "roi": null,
+          "jogadores": 93
+        },
+        {
+          "safra": "2026-03",
+          "investido": 0.0,
+          "net_real": 28952.77,
+          "roi": null,
+          "jogadores": 57
+        },
+        {
+          "safra": "2026-04",
+          "investido": 0.0,
+          "net_real": 51303.33,
+          "roi": null,
+          "jogadores": 482
+        },
+        {
+          "safra": "2026-05",
+          "investido": 0.0,
+          "net_real": 44677.24,
+          "roi": null,
+          "jogadores": 785
+        },
+        {
+          "safra": "2026-06",
+          "investido": 33849.79,
+          "net_real": -8619.99,
+          "roi": -0.25,
+          "jogadores": 772
+        },
+        {
+          "safra": "2026-07",
+          "investido": 654.06,
+          "net_real": 4470.4,
+          "roi": 6.83,
+          "jogadores": 223
+        },
+        {
+          "safra": "2026-08",
+          "investido": 0.0,
+          "net_real": -307.67,
+          "roi": null,
+          "jogadores": 46
+        },
+        {
+          "safra": "2026-09",
+          "investido": 0.0,
+          "net_real": 490.93,
+          "roi": null,
+          "jogadores": 5
+        }
+      ],
+      "pool_investido": 34503.85,
+      "pool_net_real": 24256.29,
+      "pool_roi": 0.7,
+      "pool_jogadores": 3015
+    },
+    "GP DADOS": {
+      "safras": [
+        {
+          "safra": "2025-05",
+          "investido": 0.0,
+          "net_real": 11727.38,
+          "roi": null,
+          "jogadores": 1
+        },
+        {
+          "safra": "2026-04",
+          "investido": 0.0,
+          "net_real": 15618.61,
+          "roi": null,
+          "jogadores": 46
+        },
+        {
+          "safra": "2026-05",
+          "investido": 0.0,
+          "net_real": 63514.48,
+          "roi": null,
+          "jogadores": 140
+        },
+        {
+          "safra": "2026-06",
+          "investido": 0.0,
+          "net_real": 36872.87,
+          "roi": null,
+          "jogadores": 15
+        },
+        {
+          "safra": "2026-07",
+          "investido": 11892.56,
+          "net_real": 10146.27,
+          "roi": 0.85,
+          "jogadores": 87
+        },
+        {
+          "safra": "2026-08",
+          "investido": 38440.02,
+          "net_real": 916.58,
+          "roi": 0.02,
+          "jogadores": 171
+        },
+        {
+          "safra": "2026-09",
+          "investido": 325.05,
+          "net_real": -20.3,
+          "roi": -0.06,
+          "jogadores": 7
+        }
+      ],
+      "pool_investido": 50657.63,
+      "pool_net_real": 138775.89,
+      "pool_roi": 2.74,
+      "pool_jogadores": 467
+    },
+    "GREGORIO BIG": {
+      "safras": [
+        {
+          "safra": "2025-05",
+          "investido": 0.0,
+          "net_real": -1018.32,
+          "roi": null,
+          "jogadores": 1
+        },
+        {
+          "safra": "2025-06",
+          "investido": 0.0,
+          "net_real": -548.73,
+          "roi": null,
+          "jogadores": 2
+        },
+        {
+          "safra": "2025-08",
+          "investido": 0.0,
+          "net_real": -65.17,
+          "roi": null,
+          "jogadores": 1
+        },
+        {
+          "safra": "2025-10",
+          "investido": 0.0,
+          "net_real": 129.92,
+          "roi": null,
+          "jogadores": 1
+        },
+        {
+          "safra": "2026-07",
+          "investido": 0.0,
+          "net_real": -309.12,
+          "roi": null,
+          "jogadores": 1
+        },
+        {
+          "safra": "2026-08",
+          "investido": 22978.76,
+          "net_real": 2498.38,
+          "roi": 0.11,
+          "jogadores": 139
+        },
+        {
+          "safra": "2026-09",
+          "investido": 2471.45,
+          "net_real": 2226.73,
+          "roi": 0.9,
+          "jogadores": 22
+        }
+      ],
+      "pool_investido": 25450.21,
+      "pool_net_real": 2913.69,
+      "pool_roi": 0.11,
+      "pool_jogadores": 167
+    },
+    "JOTA PE": {
+      "safras": [
+        {
+          "safra": "2026-06",
+          "investido": 55000.0,
+          "net_real": 31178.1,
+          "roi": 0.57,
+          "jogadores": 1512
+        },
+        {
+          "safra": "2026-07",
+          "investido": 67486.74,
+          "net_real": 61411.11,
+          "roi": 0.91,
+          "jogadores": 3293
+        },
+        {
+          "safra": "2026-08",
+          "investido": 98827.52,
+          "net_real": -1551.32,
+          "roi": -0.02,
+          "jogadores": 2701
+        },
+        {
+          "safra": "2026-09",
+          "investido": 1766.92,
+          "net_real": 267.48,
+          "roi": 0.15,
+          "jogadores": 21
+        }
+      ],
+      "pool_investido": 223081.18,
+      "pool_net_real": 91305.37,
+      "pool_roi": 0.41,
+      "pool_jogadores": 7527
+    },
+    "LEO FREITAS": {
+      "safras": [
+        {
+          "safra": "2026-06",
+          "investido": 0.0,
+          "net_real": 16077.25,
+          "roi": null,
+          "jogadores": 396
+        },
+        {
+          "safra": "2026-07",
+          "investido": 0.0,
+          "net_real": 11493.08,
+          "roi": null,
+          "jogadores": 474
+        },
+        {
+          "safra": "2026-08",
+          "investido": 8054.05,
+          "net_real": 55.02,
+          "roi": 0.01,
+          "jogadores": 258
+        },
+        {
+          "safra": "2026-09",
+          "investido": 0.0,
+          "net_real": 1.0,
+          "roi": null,
+          "jogadores": 2
+        }
+      ],
+      "pool_investido": 8054.05,
+      "pool_net_real": 27626.35,
+      "pool_roi": 3.43,
+      "pool_jogadores": 1130
+    },
+    "NATHAN ROSENO": {
+      "safras": [
+        {
+          "safra": "2026-06",
+          "investido": 20049.69,
+          "net_real": 60819.81,
+          "roi": 3.03,
+          "jogadores": 482
+        },
+        {
+          "safra": "2026-07",
+          "investido": 23867.54,
+          "net_real": 37176.41,
+          "roi": 1.56,
+          "jogadores": 349
+        },
+        {
+          "safra": "2026-08",
+          "investido": 2910.85,
+          "net_real": 115.98,
+          "roi": 0.04,
+          "jogadores": 150
+        },
+        {
+          "safra": "2026-09",
+          "investido": 0.0,
+          "net_real": 519.41,
+          "roi": null,
+          "jogadores": 3
+        }
+      ],
+      "pool_investido": 46828.08,
+      "pool_net_real": 98631.61,
+      "pool_roi": 2.11,
+      "pool_jogadores": 984
+    },
+    "PEDRO FOOTBALL": {
+      "safras": [
+        {
+          "safra": "2026-05",
+          "investido": 0.0,
+          "net_real": 101639.62,
+          "roi": null,
+          "jogadores": 37
+        },
+        {
+          "safra": "2026-06",
+          "investido": 0.0,
+          "net_real": 47659.88,
+          "roi": null,
+          "jogadores": 22
+        },
+        {
+          "safra": "2026-07",
+          "investido": 344.96,
+          "net_real": 67386.21,
+          "roi": 195.34,
+          "jogadores": 20
+        },
+        {
+          "safra": "2026-08",
+          "investido": 74.42,
+          "net_real": -852.83,
+          "roi": -11.46,
+          "jogadores": 9
+        },
+        {
+          "safra": "2026-09",
+          "investido": 0.0,
+          "net_real": 226.75,
+          "roi": null,
+          "jogadores": 3
+        }
+      ],
+      "pool_investido": 419.38,
+      "pool_net_real": 216059.63,
+      "pool_roi": 515.19,
+      "pool_jogadores": 91
+    },
+    "PR TIPSTER": {
+      "safras": [
+        {
+          "safra": "2026-06",
+          "investido": 13397.52,
+          "net_real": -50.15,
+          "roi": -0.0,
+          "jogadores": 831
+        },
+        {
+          "safra": "2026-07",
+          "investido": 0.0,
+          "net_real": 13.44,
+          "roi": null,
+          "jogadores": 5
+        },
+        {
+          "safra": "2026-08",
+          "investido": 0.0,
+          "net_real": 60.0,
+          "roi": null,
+          "jogadores": 2
+        }
+      ],
+      "pool_investido": 13397.52,
+      "pool_net_real": 23.29,
+      "pool_roi": 0.0,
+      "pool_jogadores": 838
+    },
+    "QZL": {
+      "safras": [
+        {
+          "safra": "2026-05",
+          "investido": 0.0,
+          "net_real": 5926.35,
+          "roi": null,
+          "jogadores": 99
+        },
+        {
+          "safra": "2026-06",
+          "investido": 0.0,
+          "net_real": 11573.78,
+          "roi": null,
+          "jogadores": 463
+        },
+        {
+          "safra": "2026-07",
+          "investido": 3254.15,
+          "net_real": 8717.7,
+          "roi": 2.68,
+          "jogadores": 332
+        },
+        {
+          "safra": "2026-08",
+          "investido": 3518.51,
+          "net_real": 10986.59,
+          "roi": 3.12,
+          "jogadores": 216
+        },
+        {
+          "safra": "2026-09",
+          "investido": 0.0,
+          "net_real": -135.12,
+          "roi": null,
+          "jogadores": 5
+        }
+      ],
+      "pool_investido": 6772.66,
+      "pool_net_real": 37069.3,
+      "pool_roi": 5.47,
+      "pool_jogadores": 1115
+    },
+    "REINAN TIPS": {
+      "safras": [
+        {
+          "safra": "2026-04",
+          "investido": null,
+          "net_real": 14241.66,
+          "roi": null,
+          "jogadores": 134
+        },
+        {
+          "safra": "2026-05",
+          "investido": null,
+          "net_real": 517210.05,
+          "roi": null,
+          "jogadores": 2228
+        },
+        {
+          "safra": "2026-06",
+          "investido": null,
+          "net_real": 81657.32,
+          "roi": null,
+          "jogadores": 1137
+        },
+        {
+          "safra": "2026-07",
+          "investido": null,
+          "net_real": 38247.15,
+          "roi": null,
+          "jogadores": 398
+        },
+        {
+          "safra": "2026-08",
+          "investido": null,
+          "net_real": 27336.86,
+          "roi": null,
+          "jogadores": 1084
+        },
+        {
+          "safra": "2026-09",
+          "investido": null,
+          "net_real": 876.1,
+          "roi": null,
+          "jogadores": 81
+        }
+      ],
+      "pool_investido": null,
+      "pool_net_real": 679569.14,
+      "pool_roi": null,
+      "pool_jogadores": 5062
+    },
+    "SHELGUIMA": {
+      "safras": [
+        {
+          "safra": "2025-11",
+          "investido": null,
+          "net_real": 127.29,
+          "roi": null,
+          "jogadores": 7
+        },
+        {
+          "safra": "2025-12",
+          "investido": null,
+          "net_real": 845.45,
+          "roi": null,
+          "jogadores": 14
+        },
+        {
+          "safra": "2026-01",
+          "investido": null,
+          "net_real": 30.27,
+          "roi": null,
+          "jogadores": 3
+        },
+        {
+          "safra": "2026-04",
+          "investido": null,
+          "net_real": 458.25,
+          "roi": null,
+          "jogadores": 15
+        },
+        {
+          "safra": "2026-05",
+          "investido": null,
+          "net_real": -16.23,
+          "roi": null,
+          "jogadores": 2
+        },
+        {
+          "safra": "2026-06",
+          "investido": null,
+          "net_real": 19843.46,
+          "roi": null,
+          "jogadores": 44
+        },
+        {
+          "safra": "2026-07",
+          "investido": null,
+          "net_real": 509.5,
+          "roi": null,
+          "jogadores": 15
+        },
+        {
+          "safra": "2026-08",
+          "investido": null,
+          "net_real": 317.52,
+          "roi": null,
+          "jogadores": 8
+        },
+        {
+          "safra": "2026-09",
+          "investido": null,
+          "net_real": 107.99,
+          "roi": null,
+          "jogadores": 3
+        }
+      ],
+      "pool_investido": null,
+      "pool_net_real": 22223.5,
+      "pool_roi": null,
+      "pool_jogadores": 111
+    },
+    "TANOS": {
+      "safras": [
+        {
+          "safra": "2026-06",
+          "investido": 11387.01,
+          "net_real": 6065.86,
+          "roi": 0.53,
+          "jogadores": 83
+        },
+        {
+          "safra": "2026-07",
+          "investido": 34869.89,
+          "net_real": 25136.46,
+          "roi": 0.72,
+          "jogadores": 159
+        },
+        {
+          "safra": "2026-08",
+          "investido": 46064.48,
+          "net_real": 73456.43,
+          "roi": 1.59,
+          "jogadores": 95
+        },
+        {
+          "safra": "2026-09",
+          "investido": 7957.07,
+          "net_real": -1005.46,
+          "roi": -0.13,
+          "jogadores": 14
+        }
+      ],
+      "pool_investido": 100278.45,
+      "pool_net_real": 103653.29,
+      "pool_roi": 1.03,
+      "pool_jogadores": 351
+    },
+    "ZECA": {
+      "safras": [
+        {
+          "safra": "2026-03",
+          "investido": 0.0,
+          "net_real": -439.37,
+          "roi": null,
+          "jogadores": 7
+        },
+        {
+          "safra": "2026-04",
+          "investido": 0.0,
+          "net_real": 239723.25,
+          "roi": null,
+          "jogadores": 3012
+        },
+        {
+          "safra": "2026-05",
+          "investido": 35672.49,
+          "net_real": 89109.73,
+          "roi": 2.5,
+          "jogadores": 1439
+        },
+        {
+          "safra": "2026-06",
+          "investido": 58317.92,
+          "net_real": 64749.34,
+          "roi": 1.11,
+          "jogadores": 2193
+        },
+        {
+          "safra": "2026-07",
+          "investido": 30469.0,
+          "net_real": 8385.12,
+          "roi": 0.28,
+          "jogadores": 645
+        },
+        {
+          "safra": "2026-08",
+          "investido": 15243.32,
+          "net_real": 1569.91,
+          "roi": 0.1,
+          "jogadores": 473
+        },
+        {
+          "safra": "2026-09",
+          "investido": 0.0,
+          "net_real": 216.67,
+          "roi": null,
+          "jogadores": 11
+        }
+      ],
+      "pool_investido": 139702.73,
+      "pool_net_real": 403314.65,
+      "pool_roi": 2.89,
+      "pool_jogadores": 7780
+    }
+  }
+}
