@@ -2,7 +2,7 @@
   "gerado_em": "2026-09-07T20:00:00-03:00",
   "metodo": "net_real = net_deposit - saldo_carteira (Databricks player_summary), jogador por jogador via TAP af2_regs_op, acumulado por safra (mes do FTD). Nao decompoe em M0/M1/M2 -- isso ainda nao foi validado.",
   "experts": {
-    "BATEU - TALYSON": {
+    "TALYSON": {
       "safras": [
         {
           "safra": "2026-07",
@@ -31,7 +31,7 @@
       "pool_roi": 8.9,
       "pool_jogadores": 303
     },
-    "BATEU BET - GIOVANNI ROLETA": {
+    "GIOVANNI ROLETA": {
       "safras": [
         {
           "safra": "2026-08",
@@ -46,7 +46,7 @@
       "pool_roi": -14.33,
       "pool_jogadores": 123
     },
-    "BATEU BET - HENRIQUE 500K": {
+    "HENRIQUE 500K": {
       "safras": [
         {
           "safra": "2026-08",
@@ -846,7 +846,7 @@
       "pool_roi": 5.47,
       "pool_jogadores": 1115
     },
-    "REINAN TIPS": {
+    "MARCO TULIO": {
       "safras": [
         {
           "safra": "2026-04",
