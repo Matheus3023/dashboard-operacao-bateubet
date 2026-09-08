@@ -12000,9 +12000,21 @@ function pintarSafraReal(caixa, escopo, nome) {
   d.safras.forEach(function (s) {
     linha(mesCurto(s.safra), s.investido, s.net_real, s.roi, s.jogadores, false);
   });
-  linha('Pool', d.pool_investido, d.pool_net_real, d.pool_roi, d.pool_jogadores, true);
+  linha('Pool pago', d.pool_investido_pago, d.pool_net_real_pago, d.pool_roi_pago, d.pool_jogadores, true);
   tabela.appendChild(tbody);
   caixa.appendChild(tabela);
+
+  /* "Pago" só soma safra com verba conhecida — é o número certo pra ROI.
+     "Total" inclui safra orgânica/sem verba (ex: base antiga, tráfego não
+     pago) no net_real, mas essa parte NUNCA deveria dividir por investimento
+     de outro mês. Achado da auditoria do bateubet-analise, 08/09. */
+  if (ehNum(d.pool_net_real_total) && d.pool_net_real_total !== d.pool_net_real_pago) {
+    var notaTotal = document.createElement('p');
+    notaTotal.className = 'mtz__nota';
+    notaTotal.textContent = 'Net real de TODA a base (incluindo safra sem verba/orgânica): ' +
+      (brl(d.pool_net_real_total) || 'R$ 0,00') + ' — não use isso pra calcular ROI, é só volume.';
+    caixa.appendChild(notaTotal);
+  }
 
   if (d.gerado_em) {
     var nota = document.createElement('p');

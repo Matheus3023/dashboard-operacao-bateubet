@@ -1,6 +1,6 @@
 {
-  "gerado_em": "2026-09-07T20:00:00-03:00",
-  "metodo": "net_real = net_deposit - saldo_carteira (Databricks player_summary), jogador por jogador via TAP af2_regs_op, acumulado por safra (mes do FTD). Nao decompoe em M0/M1/M2 -- isso ainda nao foi validado.",
+  "gerado_em": "2026-09-08T09:00:00-03:00",
+  "metodo": "net_real = net_deposit - saldo_carteira (Databricks player_summary), jogador por jogador via TAP af2_regs_op, acumulado por safra (mes do FTD). pool_*_pago considera SO safras com investimento em midia paga conhecido (safra organica/sem verba entra no pool_net_real_total mas NAO no ROI). Auditado de forma independente pelo bateubet-analise em 08/09/2026 (achou e corrigiu: ROI misturando net_real total com investido parcial; conta dedicada do Deko faltando no lookup de investimento). Nao decompoe em M0/M1/M2 -- isso ainda nao foi validado.",
   "experts": {
     "TALYSON": {
       "safras": [
@@ -26,9 +26,11 @@
           "jogadores": 115
         }
       ],
-      "pool_investido": 60256.13,
-      "pool_net_real": 536410.8,
-      "pool_roi": 8.9,
+      "pool_investido_total": 60256.13,
+      "pool_net_real_total": 536410.8,
+      "pool_investido_pago": 60256.13,
+      "pool_net_real_pago": 429747.82,
+      "pool_roi_pago": 7.13,
       "pool_jogadores": 303
     },
     "GIOVANNI ROLETA": {
@@ -41,9 +43,11 @@
           "jogadores": 123
         }
       ],
-      "pool_investido": 7938.53,
-      "pool_net_real": -113794.34,
-      "pool_roi": -14.33,
+      "pool_investido_total": 7938.53,
+      "pool_net_real_total": -113794.34,
+      "pool_investido_pago": 7938.53,
+      "pool_net_real_pago": -113794.34,
+      "pool_roi_pago": -14.33,
       "pool_jogadores": 123
     },
     "HENRIQUE 500K": {
@@ -63,9 +67,11 @@
           "jogadores": 90
         }
       ],
-      "pool_investido": 17225.97,
-      "pool_net_real": 69229.15,
-      "pool_roi": 4.02,
+      "pool_investido_total": 17225.97,
+      "pool_net_real_total": 69229.15,
+      "pool_investido_pago": 17225.97,
+      "pool_net_real_pago": 69229.15,
+      "pool_roi_pago": 4.02,
       "pool_jogadores": 233
     },
     "CAIO TIPS": {
@@ -155,9 +161,11 @@
           "jogadores": 4
         }
       ],
-      "pool_investido": 24993.7,
-      "pool_net_real": 101651.27,
-      "pool_roi": 4.07,
+      "pool_investido_total": 24993.7,
+      "pool_net_real_total": 101651.27,
+      "pool_investido_pago": 24993.7,
+      "pool_net_real_pago": 47380.78,
+      "pool_roi_pago": 1.9,
       "pool_jogadores": 2760
     },
     "CHARLES": {
@@ -184,9 +192,11 @@
           "jogadores": 2
         }
       ],
-      "pool_investido": 4828.43,
-      "pool_net_real": 60347.9,
-      "pool_roi": 12.5,
+      "pool_investido_total": 4828.43,
+      "pool_net_real_total": 60347.9,
+      "pool_investido_pago": 4828.43,
+      "pool_net_real_pago": 56917.26,
+      "pool_roi_pago": 11.79,
       "pool_jogadores": 54
     },
     "COSTA E LOBAO": {
@@ -234,9 +244,11 @@
           "jogadores": 16
         }
       ],
-      "pool_investido": 19562.32,
-      "pool_net_real": 2983.09,
-      "pool_roi": 0.15,
+      "pool_investido_total": 19562.32,
+      "pool_net_real_total": 2983.09,
+      "pool_investido_pago": 19562.32,
+      "pool_net_real_pago": 1279.32,
+      "pool_roi_pago": 0.07,
       "pool_jogadores": 225
     },
     "DEKO": {
@@ -320,22 +332,24 @@
         },
         {
           "safra": "2026-08",
-          "investido": 36457.88,
+          "investido": 41457.85,
           "net_real": 33556.45,
-          "roi": 0.92,
+          "roi": 0.81,
           "jogadores": 182
         },
         {
           "safra": "2026-09",
-          "investido": 0.0,
+          "investido": 12335.01,
           "net_real": 3236.32,
-          "roi": null,
+          "roi": 0.26,
           "jogadores": 47
         }
       ],
-      "pool_investido": 50498.79,
-      "pool_net_real": 729885.63,
-      "pool_roi": 14.45,
+      "pool_investido_total": 67833.77,
+      "pool_net_real_total": 729885.63,
+      "pool_investido_pago": 67833.77,
+      "pool_net_real_pago": 96923.55,
+      "pool_roi_pago": 1.43,
       "pool_jogadores": 1107
     },
     "DIEGO LUGO": {
@@ -369,9 +383,11 @@
           "jogadores": 17
         }
       ],
-      "pool_investido": 46097.93,
-      "pool_net_real": 297712.49,
-      "pool_roi": 6.46,
+      "pool_investido_total": 46097.93,
+      "pool_net_real_total": 297712.49,
+      "pool_investido_pago": 46097.93,
+      "pool_net_real_pago": 297712.49,
+      "pool_roi_pago": 6.46,
       "pool_jogadores": 351
     },
     "EDERSON": {
@@ -412,9 +428,11 @@
           "jogadores": 3
         }
       ],
-      "pool_investido": 1456.85,
-      "pool_net_real": 254523.44,
-      "pool_roi": 174.71,
+      "pool_investido_total": 1456.85,
+      "pool_net_real_total": 254523.44,
+      "pool_investido_pago": 1456.85,
+      "pool_net_real_pago": 60713.18,
+      "pool_roi_pago": 41.67,
       "pool_jogadores": 82
     },
     "FELIPE BORGES": {
@@ -504,9 +522,11 @@
           "jogadores": 5
         }
       ],
-      "pool_investido": 34503.85,
-      "pool_net_real": 24256.29,
-      "pool_roi": 0.7,
+      "pool_investido_total": 34503.85,
+      "pool_net_real_total": 24256.29,
+      "pool_investido_pago": 34503.85,
+      "pool_net_real_pago": -4149.59,
+      "pool_roi_pago": -0.12,
       "pool_jogadores": 3015
     },
     "GP DADOS": {
@@ -561,9 +581,11 @@
           "jogadores": 7
         }
       ],
-      "pool_investido": 50657.63,
-      "pool_net_real": 138775.89,
-      "pool_roi": 2.74,
+      "pool_investido_total": 50657.63,
+      "pool_net_real_total": 138775.89,
+      "pool_investido_pago": 50657.63,
+      "pool_net_real_pago": 11042.55,
+      "pool_roi_pago": 0.22,
       "pool_jogadores": 467
     },
     "GREGORIO BIG": {
@@ -618,9 +640,11 @@
           "jogadores": 22
         }
       ],
-      "pool_investido": 25450.21,
-      "pool_net_real": 2913.69,
-      "pool_roi": 0.11,
+      "pool_investido_total": 25450.21,
+      "pool_net_real_total": 2913.69,
+      "pool_investido_pago": 25450.21,
+      "pool_net_real_pago": 4725.11,
+      "pool_roi_pago": 0.19,
       "pool_jogadores": 167
     },
     "JOTA PE": {
@@ -654,9 +678,11 @@
           "jogadores": 21
         }
       ],
-      "pool_investido": 223081.18,
-      "pool_net_real": 91305.37,
-      "pool_roi": 0.41,
+      "pool_investido_total": 223081.18,
+      "pool_net_real_total": 91305.37,
+      "pool_investido_pago": 223081.18,
+      "pool_net_real_pago": 91305.37,
+      "pool_roi_pago": 0.41,
       "pool_jogadores": 7527
     },
     "LEO FREITAS": {
@@ -690,9 +716,11 @@
           "jogadores": 2
         }
       ],
-      "pool_investido": 8054.05,
-      "pool_net_real": 27626.35,
-      "pool_roi": 3.43,
+      "pool_investido_total": 8054.05,
+      "pool_net_real_total": 27626.35,
+      "pool_investido_pago": 8054.05,
+      "pool_net_real_pago": 55.02,
+      "pool_roi_pago": 0.01,
       "pool_jogadores": 1130
     },
     "NATHAN ROSENO": {
@@ -726,9 +754,11 @@
           "jogadores": 3
         }
       ],
-      "pool_investido": 46828.08,
-      "pool_net_real": 98631.61,
-      "pool_roi": 2.11,
+      "pool_investido_total": 46828.08,
+      "pool_net_real_total": 98631.61,
+      "pool_investido_pago": 46828.08,
+      "pool_net_real_pago": 98112.2,
+      "pool_roi_pago": 2.1,
       "pool_jogadores": 984
     },
     "PEDRO FOOTBALL": {
@@ -769,9 +799,11 @@
           "jogadores": 3
         }
       ],
-      "pool_investido": 419.38,
-      "pool_net_real": 216059.63,
-      "pool_roi": 515.19,
+      "pool_investido_total": 419.38,
+      "pool_net_real_total": 216059.63,
+      "pool_investido_pago": 419.38,
+      "pool_net_real_pago": 66533.38,
+      "pool_roi_pago": 158.65,
       "pool_jogadores": 91
     },
     "PR TIPSTER": {
@@ -798,9 +830,11 @@
           "jogadores": 2
         }
       ],
-      "pool_investido": 13397.52,
-      "pool_net_real": 23.29,
-      "pool_roi": 0.0,
+      "pool_investido_total": 13397.52,
+      "pool_net_real_total": 23.29,
+      "pool_investido_pago": 13397.52,
+      "pool_net_real_pago": -50.15,
+      "pool_roi_pago": -0.0,
       "pool_jogadores": 838
     },
     "QZL": {
@@ -841,9 +875,11 @@
           "jogadores": 5
         }
       ],
-      "pool_investido": 6772.66,
-      "pool_net_real": 37069.3,
-      "pool_roi": 5.47,
+      "pool_investido_total": 6772.66,
+      "pool_net_real_total": 37069.3,
+      "pool_investido_pago": 6772.66,
+      "pool_net_real_pago": 19704.29,
+      "pool_roi_pago": 2.91,
       "pool_jogadores": 1115
     },
     "MARCO TULIO": {
@@ -891,9 +927,11 @@
           "jogadores": 81
         }
       ],
-      "pool_investido": null,
-      "pool_net_real": 679569.14,
-      "pool_roi": null,
+      "pool_investido_total": null,
+      "pool_net_real_total": 679569.14,
+      "pool_investido_pago": null,
+      "pool_net_real_pago": null,
+      "pool_roi_pago": null,
       "pool_jogadores": 5062
     },
     "SHELGUIMA": {
@@ -962,9 +1000,11 @@
           "jogadores": 3
         }
       ],
-      "pool_investido": null,
-      "pool_net_real": 22223.5,
-      "pool_roi": null,
+      "pool_investido_total": null,
+      "pool_net_real_total": 22223.5,
+      "pool_investido_pago": null,
+      "pool_net_real_pago": null,
+      "pool_roi_pago": null,
       "pool_jogadores": 111
     },
     "TANOS": {
@@ -998,9 +1038,11 @@
           "jogadores": 14
         }
       ],
-      "pool_investido": 100278.45,
-      "pool_net_real": 103653.29,
-      "pool_roi": 1.03,
+      "pool_investido_total": 100278.45,
+      "pool_net_real_total": 103653.29,
+      "pool_investido_pago": 100278.45,
+      "pool_net_real_pago": 103653.29,
+      "pool_roi_pago": 1.03,
       "pool_jogadores": 351
     },
     "ZECA": {
@@ -1055,9 +1097,11 @@
           "jogadores": 11
         }
       ],
-      "pool_investido": 139702.73,
-      "pool_net_real": 403314.65,
-      "pool_roi": 2.89,
+      "pool_investido_total": 139702.73,
+      "pool_net_real_total": 403314.65,
+      "pool_investido_pago": 139702.73,
+      "pool_net_real_pago": 163814.1,
+      "pool_roi_pago": 1.17,
       "pool_jogadores": 7780
     }
   }

@@ -84,9 +84,15 @@ module.exports = async function handler(req, res) {
     gerado_em: payload.gerado_em,
     metodo: payload.metodo,
     safras: dados.safras,
-    pool_investido: dados.pool_investido,
-    pool_net_real: dados.pool_net_real,
-    pool_roi: dados.pool_roi,
+    /* 08/09: auditoria do bateubet-analise achou que misturar net_real de TODA
+       safra (incluindo a sem verba/organica) com investido só das safras pagas
+       inflava o ROI publicado (Talyson 8,90x->7,13x real, Zeca 2,89x->1,17x,
+       Deko 14,45x->1,43x). "pago" é o número certo pra decisão de verba;
+       "total" existe só pra mostrar o net_real gerado pela base inteira. */
+    pool_investido_pago: dados.pool_investido_pago,
+    pool_net_real_pago: dados.pool_net_real_pago,
+    pool_roi_pago: dados.pool_roi_pago,
+    pool_net_real_total: dados.pool_net_real_total,
     pool_jogadores: dados.pool_jogadores
   });
 };
