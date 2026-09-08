@@ -8280,11 +8280,17 @@ var estado = {
   /* SAFRA (13/08). Buscada SOB DEMANDA, na primeira vez que a aba é aberta, e
      não junto com o painel: é uma rota separada, ninguém abre essa aba toda
      hora, e carregar de cara atrasaria a tela que a operação olha o dia
-     inteiro. O resultado fica na sessão enquanto já contiver o mês corrente.
-     Na virada do mês, o refresh de 5 min tenta de novo até a nova safra
-     aparecer; depois volta ao cache normal. */
+     inteiro. O resultado fica na sessão, mas com PRAZO DE VALIDADE: o
+     workflow refaz o mês corrente a cada 1h, então o dado envelhece dentro
+     da própria sessão. Sem prazo, quem deixava a aba aberta via os números
+     da hora em que abriu o dia inteiro (o refresh de 5 min repintava o mesmo
+     objeto) e só um F5 trazia número novo -- foi o "a safra do Talyson não
+     atualizou" de 08/09. Na virada do mês vale a mesma regra: sem o mês
+     corrente na resposta, revalida em toda passada até ele aparecer. */
   safra: { cl: null, geral: null },
   safraBuscando: {},
+  /* quando cada escopo foi buscado (Date.now()); alimenta SAFRA_VALIDADE_MS */
+  safraBuscadaEm: {},
   /* filtro da aba Safra (26/08, virou intervalo em 27/08): de que mês até
      que mês + quais experts entram na tabela. `mesDe`/`mesAte: 'todos'` é
      a ponta em aberto (desde o início / até hoje) -- os dois em 'todos' é
@@ -11489,16 +11495,27 @@ function pintarBoot(texto) {
    pedir o dado que já existia. */
 var SAFRA_ESCOPO_API = { cl: 'costa_lobao', geral: 'geral', google: 'google' };
 
-function carregarSafra(escopo) {
+/* Quanto tempo a safra em memória vale. O workflow `Dashboard Operação -
+   Safra` refaz UM mês a cada 15 min e fura a fila com o mês corrente a cada
+   1h, então nada muda mais rápido que isso -- 15 min é o passo mais curto da
+   origem e não gera busca à toa. */
+var SAFRA_VALIDADE_MS = 15 * 60 * 1000;
+
+function carregarSafra(escopo, forcar) {
   if (!escopo || !SAFRA_ESCOPO_API[escopo]) return;
   var anterior = estado.safra[escopo];
   var temMesAtual = anterior && (anterior.meses || []).some(function (m) {
     return m.mes === mesCorrente();
   });
-  /* O refresh principal chama carregarSafra() a cada 5 min. Durante o mês,
-     a resposta em memória basta; na virada, ela fica velha por definição e
-     é revalidada até o workflow de 15 min gravar a primeira linha nova. */
-  if (temMesAtual) { pintarSafraDoExpert(); pintarSafraFiltro(escopo); return; }
+  var buscadaEm = estado.safraBuscadaEm[escopo] || 0;
+  var fresca = Date.now() - buscadaEm < SAFRA_VALIDADE_MS;
+  /* O refresh principal chama carregarSafra() a cada 5 min. Reaproveita a
+     resposta em memória enquanto ela tiver o mês corrente E estiver dentro da
+     validade; passou de 15 min, revalida (o mês corrente lá na origem já pode
+     ter sido reescrito). Falha na revalidação preserva o que está na tela. */
+  if (temMesAtual && fresca && !forcar) {
+    pintarSafraDoExpert(); pintarSafraFiltro(escopo); return;
+  }
   if (estado.safraBuscando[escopo]) return;
   estado.safraBuscando[escopo] = true;
 
@@ -11518,6 +11535,7 @@ function carregarSafra(escopo) {
        se ele quebrar, o erro aparece como erro. */
     .then(function (d) {
       estado.safra[escopo] = d;
+      estado.safraBuscadaEm[escopo] = Date.now();
       estado.safraFalhou[escopo] = false;
     })
     .catch(function () {
@@ -12138,7 +12156,14 @@ function pintarCoorte(caixa, escopo, nome, mesesPermitidos) {
   atualizar.className = 'coorte-atualizar';
   atualizar.textContent = 'Atualizar safra';
   atualizar.disabled = !!estado.coorteBuscando[chaveCoorte(escopo, nome)];
-  atualizar.addEventListener('click', function () { carregarCoorte(escopo, nome, true); });
+  /* Duas rotas por trás desta tela: a matriz vem de /api/coorte e os números
+     de safra (cadastros, FTD, investimento) vêm de ?safra=1. O botão forçava
+     só a coorte, então quem clicava aqui continuava vendo a safra da sessão
+     -- o dado que o botão promete atualizar. Agora força as duas. */
+  atualizar.addEventListener('click', function () {
+    carregarCoorte(escopo, nome, true);
+    carregarSafra(escopo, true);
+  });
   topo.appendChild(atualizar);
   caixa.appendChild(topo);
 
