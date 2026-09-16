@@ -7760,6 +7760,8 @@ var RETRY_MS   = 60000;                        /* nova tentativa depois de falha
    rápido: ela está olhando a tela esperando. Falha de refresh silencioso pode
    esperar o minuto inteiro — ninguém está travado por ela. */
 var RETRY_INTERATIVO_MS = 8000;
+/* intervalo pra perguntar de novo quando o período está em cálculo no n8n */
+var CALCULANDO_MS = 10000;
 var TZ         = 'America/Sao_Paulo';
 /* FAIXA OFICIAL DO CLIENTE (v4). Cuidado com os extremos: R$ 300 exato é BOM
    e R$ 350 exato é ALTO. Quem carrega essa regra é faixaChip(), e o veredito
@@ -13159,6 +13161,16 @@ function carregar(opts) {
         /* `totais` é o bloco do recorte da dupla, e ele NÃO vem quando a porta
            está fechada (cl_bloqueado) — isso é resposta boa, não falha. O que
            não pode faltar em leitura nenhuma é o Meta inteiro. */
+        /* PERÍODO EM CÁLCULO (16/09): período sem cache não é mais calculado
+           com a tela pendurada. O n8n responde na hora com {calculando:true}
+           e faz a conta em segundo plano, um período por vez, respeitando a
+           cota da TAP. Não é falha: a tela avisa e pergunta de novo. */
+        if (json && json.calculando) {
+          var ec = new Error(json.mensagem || 'Período em cálculo.');
+          ec.calculando = true;
+          ec.naFila = !!json.na_fila;
+          throw ec;
+        }
         var faltaTudo = !json || (!json.totais && !json.cl_bloqueado);
         var faltaGeral = json && json.cl_bloqueado && !(json.geral && json.geral.totais);
         if (faltaTudo || faltaGeral) throw new Error('resposta sem dados');
@@ -13272,12 +13284,29 @@ function carregar(opts) {
 
       /* só o dia corrente se atualiza sozinho */
       agendar(estado.isHoje ? REFRESH_MS : null);
+      /* leitura VENCIDA servida enquanto o n8n refaz o período por trás:
+         volta em 30s pra pegar a versão nova */
+      if (d.recalculando) agendar(CALCULANDO_MS * 3);
 
       /* comparação com o período anterior (enhancement, ver função) */
       buscarPeriodoAnterior(preset, r);
     })
     .catch(function (e) {
       if (id !== estado.reqId) return;
+      if (e && e.calculando) {
+        /* Não é erro: o período está sendo montado no n8n. Tela segue em
+           espera (desfocada/skeleton) e pergunta de novo sozinha. */
+        var aviso = $('#erro-banner');
+        aviso.textContent = (e.naFila
+          ? 'Montando ' + rotuloPreset(preset, r) + ' (tem outro período na frente). '
+          : 'Montando ' + rotuloPreset(preset, r) + ' direto da TAP. ') +
+          'Na primeira vez leva de 1 a 4 minutos; depois abre na hora. A tela atualiza sozinha.';
+        aviso.hidden = false;
+        $('#boot').hidden = true;
+        ROOT.setAttribute('data-state', 'carregando');
+        agendar(CALCULANDO_MS, { interativo: interativo });
+        return;
+      }
       estado.carregando = false;
       $('#boot').hidden = true;
       elApply.disabled = false; elApply.textContent = 'Aplicar';
@@ -13412,6 +13441,7 @@ function buscarPeriodoAnterior(preset, r) {
   if (CL_TOKEN) url += '&_s=' + CL_NONCE;
   fetch(url, { cache: 'no-store', headers: cabecalhoCl({ accept: 'application/json' }) })
     .then(function (resp) { return resp.ok ? resp.json() : null; })
+    .then(function (d) { if (d && (d.calculando || !d.totais && !d.geral)) d = null; return d; })
     .then(function (d) { if (id === reqIdAnterior && estado.reqId === requisicao && estado.dados === dadosDaConsulta) pintarDeltas(d); })
     .catch(function () { if (id === reqIdAnterior && estado.reqId === requisicao && estado.dados === dadosDaConsulta) pintarDeltas(null); });
 }
@@ -14825,6 +14855,12 @@ function mtCarregarHistorico() {
     fetch(url, { cache: 'no-store', headers: cabecalhoCl({ accept: 'application/json' }) })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
       .then(function (res) {
+        /* mês ainda sendo montado no n8n (16/09): volta pra frente da fila e
+           pergunta de novo em 15s, até ~8 min, em vez de virar "sem dado" */
+        if (res.ok && res.j && res.j.calculando && (m.tentativas = (m.tentativas || 0) + 1) <= 32) {
+          m.esperar = true;
+          return;
+        }
         if (!res.ok || !res.j || res.j.cl_bloqueado || !res.j.totais) {
           m.erro = 'sem dado do recorte';
           return;
@@ -14836,6 +14872,7 @@ function mtCarregarHistorico() {
       })
       .catch(function (e) { m.erro = (e && e.message) || 'falha de rede'; })
       .then(function () {
+        if (m.esperar) { m.esperar = false; fila.unshift(m); setTimeout(proximo, 15000); return; }
         /* mês lido é mês que pode ter promovido — aplica antes de repintar */
         if (estado.dados) pintarMetas(estado.dados);
         proximo();

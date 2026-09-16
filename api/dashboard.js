@@ -316,6 +316,14 @@ module.exports = async function handler(req, res) {
       return res.status(200).json(dados);
     }
 
+    /* PERÍODO EM CÁLCULO (16/09): o n8n responde na hora e monta o período
+       em segundo plano, um por vez. Nunca pode ir pra borda: a próxima
+       pergunta tem que chegar no n8n pra pegar o resultado pronto. */
+    if (dados && dados.calculando === true) {
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(200).json(dados);
+    }
+
     if (!dados || !dados.totais || !Array.isArray(dados.experts)) {
       res.setHeader('Cache-Control', 'no-store');
       return res.status(502).json({
@@ -361,7 +369,7 @@ module.exports = async function handler(req, res) {
        versão pública, e é ela que segura o n8n. */
     res.setHeader(
       'Cache-Control',
-      liberado
+      (liberado || dados.recalculando)
         ? 'private, no-store'
         : (incluiHoje
             ? 'public, max-age=0, s-maxage=45, stale-while-revalidate=120'
