@@ -13125,6 +13125,7 @@ function carregar(opts) {
      MESMO recorte e não pode piscar a tela de quem está lendo. */
   var interativo = !!opts.interativo;
   estado.carregando = true;
+  estado.inicioCarga = Date.now();
   if (window.BateuUI) window.BateuUI.setStatus('carregando');
   ROOT.setAttribute('data-state', (primeira || interativo) ? 'carregando' : 'atualizando');
   /* DUAS ESPERAS, DOIS TRATAMENTOS (ver o CSS, bloco ESPERA).
@@ -16230,8 +16231,29 @@ document.addEventListener('visibilitychange', function () {
   else agendar(REFRESH_MS - idade);
 });
 
+/* VIGIA DO AUTO-REFRESH (18/09). O ciclo de 5 min dependia só do
+   visibilitychange pra religar depois que a aba ficava oculta. No Mac o Chrome
+   marca a aba como oculta quando a janela é coberta, o monitor dorme ou a aba
+   congela, e o evento de volta às vezes não chega: o timer ficava em null e o
+   painel parava no número velho até alguém dar F5 ("não atualiza sozinho").
+   Aqui ninguém depende de evento: se o recorte ainda recebe dado, a aba está
+   visível, não tem busca em voo e a última leitura boa passou do ciclo, busca. */
+function vigiarRefresh() {
+  if (document.hidden || !estado.isHoje) return;
+  /* busca em voo não se duplica, mas a Vercel corta em 60s: carregando preso
+     além de 90s (timer de retentativa cancelado com a aba oculta) não pode
+     segurar o vigia pra sempre */
+  if (estado.carregando && Date.now() - (estado.inicioCarga || 0) < 90000) return;
+  if (Date.now() - estado.ultimoOk >= REFRESH_MS + 15000) carregar();
+}
+window.addEventListener('focus', vigiarRefresh);
+window.addEventListener('pageshow', vigiarRefresh);
+
 /* a pílula envelhece sozinha mesmo sem fetch novo */
-setInterval(function () { if (estado.dados) pintarStatus($('#erro-banner').hidden ? 'ok' : 'erro'); }, 30000);
+setInterval(function () {
+  if (estado.dados) pintarStatus($('#erro-banner').hidden ? 'ok' : 'erro');
+  vigiarRefresh();
+}, 30000);
 
 /* PORTA FECHADA A CADA CARGA. Roda depois do hash: link salvo em #cl/... não
    pode entrar no recorte sem passar pela senha — e já abre o diálogo, porque

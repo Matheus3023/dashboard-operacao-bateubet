@@ -71,6 +71,43 @@
       balance: !num(current) ? 'unknown' : current > 0 ? 'positive' : current < 0 ? 'negative' : 'neutral',
       delta: num(current) && num(before) ? current - before : null };
   }
+  /* Série do mini-gráfico do letreiro (18/09, formato app Bolsa): GGR dos dias
+     fechados do lote de tendência e, quando o recorte é só hoje, o dia em
+     andamento como último ponto. Dia sem o campo não vira zero: sai da linha. */
+  function tickerSeries(entry, current, today, isToday) {
+    var pts = [];
+    if (entry && entry.estado === 'ok') (entry.dias || []).forEach(function (d) {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(d.data) && d.data < today && num(d.net_pl)) pts.push({ data: d.data, v: d.net_pl });
+    });
+    pts.sort(function (a, b) { return a.data < b.data ? -1 : 1; });
+    pts = pts.slice(-7);
+    if (isToday && num(current)) pts.push({ data: today, v: current });
+    return pts.length >= 2 ? pts : null;
+  }
+  /* Linha tracejada = referência do "fechamento anterior": o penúltimo ponto.
+     Cor = a variação contra o período anterior (a mesma do texto); sem ela,
+     o último ponto contra a referência. */
+  function sparkline(pts, delta) {
+    var W = 62, H = 34, pad = 2, ref = pts[pts.length - 2].v, last = pts[pts.length - 1].v;
+    var vals = pts.map(function (p) { return p.v; }).concat([ref]);
+    var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals), span = max - min || 1;
+    var x = function (i) { return pad + i * (W - pad * 2) / (pts.length - 1); };
+    var y = function (v) { return pad + (H - pad * 2) * (1 - (v - min) / span); };
+    /* cor segue a variação escrita embaixo do valor quando ela existe */
+    var dir = num(delta) ? delta : last - ref;
+    var tone = dir > 0 ? 'up' : dir < 0 ? 'down' : 'flat';
+    var line = pts.map(function (p, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p.v).toFixed(1); }).join(' ');
+    var area = line + ' L' + x(pts.length - 1).toFixed(1) + ' ' + H + ' L' + x(0).toFixed(1) + ' ' + H + ' Z';
+    var gid = 'tk' + Math.random().toString(36).slice(2, 8);
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'desk-ticker-spark is-' + tone, 'aria-hidden': 'true', focusable: 'false' });
+    var defs = svgEl('defs'), grad = svgEl('linearGradient', { id: gid, x1: 0, y1: 0, x2: 0, y2: 1 });
+    grad.append(svgEl('stop', { offset: '0', 'stop-color': 'currentColor', 'stop-opacity': '.35' }), svgEl('stop', { offset: '1', 'stop-color': 'currentColor', 'stop-opacity': '0' }));
+    defs.appendChild(grad);
+    svg.append(defs, svgEl('path', { d: area, fill: 'url(#' + gid + ')' }),
+      svgEl('line', { x1: 0, x2: W, y1: y(ref).toFixed(1), y2: y(ref).toFixed(1), class: 'desk-ticker-ref' }),
+      svgEl('path', { d: line, class: 'desk-ticker-line' }));
+    return svg;
+  }
   function investmentRange(months, names) {
     var starts = {}, unknown = [];
     names.forEach(function (name) {
@@ -117,9 +154,13 @@
     var scope = $('input[name="escopo"]:checked').id.slice(2), d = api.state.dados;
     var block = d && (scope === 'cl' ? d : d[scope]);
     var base = previousFor === d && previous && !previous.tap_indisponivel ? (scope === 'cl' ? previous : previous[scope]) : null;
+    var tend = api.state.tendencia || {}, today = api.today(), per0 = (d && d.periodo) || {};
+    var isToday = per0.de === today && per0.ate === today;
     var before = new Map(((base || {}).experts || []).map(function (e) { return [e.expert_name, (e.tap || {}).net_pl]; }));
     var rows = ((block || {}).experts || []).map(function (e) {
-      return { name: e.expert_name, metric: tickerValue(d.tap_indisponivel ? null : (e.tap || {}).net_pl, before.get(e.expert_name)) };
+      var cur = d.tap_indisponivel ? null : (e.tap || {}).net_pl;
+      return { name: e.expert_name, metric: tickerValue(cur, before.get(e.expert_name)),
+        serie: scope === 'google' ? null : tickerSeries(tend[scope + '|' + e.expert_name], cur, today, isToday) };
     });
     var status = api.state.carregando ? 'Atualizando período…' : loadStatus === 'erro' ? 'Falha na atualização · leitura anterior' : '';
     var signature = JSON.stringify([scope, rows, status, d && d.periodo]);
@@ -138,7 +179,13 @@
       delta.textContent = m.delta === null ? '·' : m.delta > 0 ? '↑' : m.delta < 0 ? '↓' : '→';
       delta.setAttribute('aria-label', deltaText);
       item.setAttribute('aria-label', row.name + ' · GGR ' + brl(m.value) + ' · ' + deltaText + '. Abrir análise');
-      item.append(el('span', 'desk-ticker-name', row.name), el('span', 'desk-ticker-key', 'GGR'), value, delta);
+      var signed = m.delta === null ? '' : (m.delta > 0 ? '+' : m.delta < 0 ? '−' : '') + brl(Math.abs(m.delta)).replace('R$\u00a0', '').replace('R$ ', '');
+      var change = el('span', 'desk-ticker-change' + (m.delta === null ? '' : m.delta > 0 ? ' is-positive' : m.delta < 0 ? ' is-negative' : ''), m.delta === null ? 'sem comparação' : signed);
+      var text = el('span', 'desk-ticker-text');
+      text.append(el('span', 'desk-ticker-name', row.name), value, change);
+      item.appendChild(text);
+      if (row.serie) item.appendChild(sparkline(row.serie, m.delta));
+      void delta;
       item.title = row.name + ' · GGR = Net PL bruto: ' + brl(m.value) + '. Saldo ' + balance + '. ' + deltaText + '. Clique para abrir a análise.';
       group.appendChild(item);
     });
@@ -407,7 +454,7 @@
     table.append(head, body); details.appendChild(table); p.graph.appendChild(details);
     p.note.textContent = rows[0].data + ' a ' + rows[rows.length - 1].data + ' · Valores diários, não acumulados. Lacunas = cobertura incompleta. O período dos indicadores acima é independente.';
   }
-  function refreshCharts() { Object.keys(panels).forEach(drawChart); }
+  function refreshCharts() { Object.keys(panels).forEach(drawChart); renderTicker(); }
   function init(context) {
     api = context; initShell();
     ['cl', 'geral', 'google'].forEach(function (scope) { var root = $('#escopo-' + scope); if (root) createPanel(scope, root); });
